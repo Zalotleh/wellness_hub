@@ -1,0 +1,308 @@
+'use client';
+
+import React, { useState } from 'react';
+import { DefenseSystem } from '@prisma/client';
+import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
+import { Plus, X, Check, Loader2 } from 'lucide-react';
+
+interface ProgressTrackerProps {
+  currentProgress?: {
+    [key in DefenseSystem]?: {
+      foods: string[];
+      count: number;
+    };
+  };
+  onLogFood: (system: DefenseSystem, foods: string[], notes?: string) => Promise<void>;
+  date?: Date;
+}
+
+export default function ProgressTracker({
+  currentProgress = {},
+  onLogFood,
+  date = new Date(),
+}: ProgressTrackerProps) {
+  const [selectedSystem, setSelectedSystem] = useState<DefenseSystem | null>(null);
+  const [foodInputs, setFoodInputs] = useState<string[]>(['']);
+  const [notes, setNotes] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  const handleAddFoodInput = () => {
+    if (foodInputs.length < 5) {
+      setFoodInputs([...foodInputs, '']);
+    }
+  };
+
+  const handleRemoveFoodInput = (index: number) => {
+    setFoodInputs(foodInputs.filter((_, i) => i !== index));
+  };
+
+  const handleFoodChange = (index: number, value: string) => {
+    const newInputs = [...foodInputs];
+    newInputs[index] = value;
+    setFoodInputs(newInputs);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!selectedSystem) return;
+
+    const validFoods = foodInputs.filter((food) => food.trim() !== '');
+
+    if (validFoods.length === 0) return;
+
+    setIsSubmitting(true);
+
+    try {
+      await onLogFood(selectedSystem, validFoods, notes);
+
+      // Show success feedback
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 2000);
+
+      // Reset form
+      setSelectedSystem(null);
+      setFoodInputs(['']);
+      setNotes('');
+    } catch (error) {
+      console.error('Error logging food:', error);
+      alert('Failed to log food. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const getSystemProgress = (system: DefenseSystem) => {
+    const progress = currentProgress[system];
+    return {
+      count: progress?.count || 0,
+      foods: progress?.foods || [],
+      percentage: ((progress?.count || 0) / 5) * 100,
+    };
+  };
+
+  const totalCompletion = Object.values(DefenseSystem).reduce((sum, system) => {
+    return sum + getSystemProgress(system).percentage;
+  }, 0) / 5;
+
+  return (
+    <div className="space-y-6">
+      {/* Overall Progress */}
+      <div className="bg-gradient-to-r from-green-500 to-blue-500 rounded-lg p-6 text-white">
+        <h3 className="text-lg font-bold mb-2">Today's Progress</h3>
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-3xl font-bold">{Math.round(totalCompletion)}%</span>
+          <span className="text-sm opacity-90">
+            {date.toLocaleDateString('en-US', {
+              weekday: 'long',
+              month: 'long',
+              day: 'numeric',
+            })}
+          </span>
+        </div>
+        <div className="w-full bg-white bg-opacity-30 rounded-full h-3">
+          <div
+            className="bg-white h-3 rounded-full transition-all duration-500"
+            style={{ width: `${totalCompletion}%` }}
+          />
+        </div>
+      </div>
+
+      {/* System Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {Object.values(DefenseSystem).map((system) => {
+          const systemInfo = DEFENSE_SYSTEMS[system];
+          const progress = getSystemProgress(system);
+          const isComplete = progress.count >= 5;
+          const isSelected = selectedSystem === system;
+
+          return (
+            <div
+              key={system}
+              className={`border-2 rounded-lg p-4 transition-all cursor-pointer ${
+                isSelected
+                  ? `${systemInfo.borderColor} ${systemInfo.bgColor} scale-105 shadow-lg`
+                  : 'border-gray-200 bg-white hover:shadow-md'
+              } ${isComplete ? 'ring-2 ring-green-500' : ''}`}
+              onClick={() => setSelectedSystem(isSelected ? null : system)}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-2">
+                  <span className="text-2xl">{systemInfo.icon}</span>
+                  <span className="font-bold text-sm">{systemInfo.displayName}</span>
+                </div>
+                {isComplete && (
+                  <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                    <Check className="w-4 h-4 text-white" />
+                  </div>
+                )}
+              </div>
+
+              {/* Progress Bar */}
+              <div className="mb-3">
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <span className="font-medium">
+                    {progress.count}/5 foods
+                  </span>
+                  <span className="text-gray-500">{Math.round(progress.percentage)}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      isComplete ? 'bg-green-500' : `bg-${systemInfo.color}`
+                    }`}
+                    style={{ width: `${progress.percentage}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Foods Logged */}
+              {progress.foods.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  {progress.foods.map((food, idx) => (
+                    <span
+                      key={idx}
+                      className="text-xs bg-white px-2 py-1 rounded border"
+                    >
+                      {food}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Food Logging Form */}
+      {selectedSystem && (
+        <div className="bg-white border-2 border-green-500 rounded-lg p-6 shadow-lg">
+          <form onSubmit={handleSubmit}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-800">
+                Log Foods for {DEFENSE_SYSTEMS[selectedSystem].displayName}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setSelectedSystem(null)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            {/* System Info */}
+            <div
+              className={`mb-4 p-3 rounded-lg ${DEFENSE_SYSTEMS[selectedSystem].bgColor}`}
+            >
+              <p className="text-sm font-medium mb-2">
+                {DEFENSE_SYSTEMS[selectedSystem].description}
+              </p>
+              <div className="flex flex-wrap gap-1">
+                <span className="text-xs font-semibold">Suggested foods:</span>
+                {DEFENSE_SYSTEMS[selectedSystem].keyFoods.slice(0, 5).map((food) => (
+                  <button
+                    key={food}
+                    type="button"
+                    onClick={() => {
+                      const emptyIndex = foodInputs.findIndex((f) => f === '');
+                      if (emptyIndex !== -1) {
+                        handleFoodChange(emptyIndex, food);
+                      } else if (foodInputs.length < 5) {
+                        setFoodInputs([...foodInputs, food]);
+                      }
+                    }}
+                    className="text-xs bg-white px-2 py-1 rounded hover:bg-gray-50 transition-colors"
+                  >
+                    {food}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Food Inputs */}
+            <div className="space-y-3 mb-4">
+              <label className="block text-sm font-semibold text-gray-700">
+                What did you eat? (Max 5 foods)
+              </label>
+              {foodInputs.map((food, index) => (
+                <div key={index} className="flex items-center space-x-2">
+                  <input
+                    type="text"
+                    value={food}
+                    onChange={(e) => handleFoodChange(index, e.target.value)}
+                    className="flex-1 px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none"
+                    placeholder={`Food ${index + 1} (e.g., Tomatoes)`}
+                  />
+                  {foodInputs.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveFoodInput(index)}
+                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  )}
+                </div>
+              ))}
+
+              {foodInputs.length < 5 && (
+                <button
+                  type="button"
+                  onClick={handleAddFoodInput}
+                  className="flex items-center space-x-2 text-green-600 hover:text-green-700 font-medium"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add another food</span>
+                </button>
+              )}
+            </div>
+
+            {/* Notes */}
+            <div className="mb-4">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Notes (optional)
+              </label>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={2}
+                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none"
+                placeholder="How did you feel? Any observations?"
+              />
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={
+                isSubmitting ||
+                foodInputs.filter((f) => f.trim()).length === 0
+              }
+              className="w-full bg-green-500 text-white py-3 rounded-lg font-bold hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>Logging...</span>
+                </>
+              ) : (
+                <span>Log Foods</span>
+              )}
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* Success Message */}
+      {showSuccess && (
+        <div className="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2 animate-slide-up">
+          <Check className="w-5 h-5" />
+          <span className="font-medium">Foods logged successfully!</span>
+        </div>
+      )}
+    </div>
+  );
+}
