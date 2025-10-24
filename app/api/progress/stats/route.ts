@@ -3,7 +3,40 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { startOfWeek, endOfWeek, eachDayOfInterval, format } from 'date-fns';
-import { DefenseSystem } from '@prisma/client';
+import { DefenseSystem } from '@/types';
+
+interface ProgressEntry {
+  id: string;
+  userId: string;
+  date: Date;
+  defenseSystem: DefenseSystem;
+  foodsConsumed: string[];
+  count: number;
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface SystemAverage {
+  average: number;
+  percentage: number;
+  daysLogged: number;
+}
+
+type SystemAverages = {
+  [key in DefenseSystem]: SystemAverage;
+};
+
+type SystemStats = {
+  count: number;
+  foods: string[];
+  isComplete: boolean;
+  percentage: number;
+};
+
+type DailySystemStats = {
+  [key in DefenseSystem]: SystemStats;
+};
 
 // GET /api/progress/stats - Get progress statistics
 export async function GET(request: NextRequest) {
@@ -18,12 +51,13 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
+    const dateParam = searchParams.get('date');
     const range = searchParams.get('range') || 'week'; // 'week' or 'month'
 
-    // Calculate date range
-    const now = new Date();
-    const startDate = startOfWeek(now, { weekStartsOn: 1 });
-    const endDate = endOfWeek(now, { weekStartsOn: 1 });
+    // Calculate date range based on provided date or current date
+    const baseDate = dateParam ? new Date(dateParam) : new Date();
+    const startDate = startOfWeek(baseDate, { weekStartsOn: 1 });
+    const endDate = endOfWeek(baseDate, { weekStartsOn: 1 });
 
     // Fetch all progress for the range
     const progressEntries = await prisma.progress.findMany({
@@ -35,23 +69,26 @@ export async function GET(request: NextRequest) {
         },
       },
       orderBy: { date: 'asc' },
-    });
+    }) as ProgressEntry[];
 
     // Calculate daily progress for each day
     const daysInRange = eachDayOfInterval({ start: startDate, end: endDate });
     
     const dailyStats = daysInRange.map((day) => {
-      const dayStart = new Date(day.setHours(0, 0, 0, 0));
+      const dayString = format(day, 'yyyy-MM-dd');
       const dayEntries = progressEntries.filter(
-        (entry) => entry.date.getTime() === dayStart.getTime()
+        (entry: ProgressEntry) => {
+          const entryString = format(new Date(entry.date), 'yyyy-MM-dd');
+          return entryString === dayString;
+        }
       );
 
-      const systems: any = {};
+      const systems: DailySystemStats = {} as DailySystemStats;
       let totalFoods = 0;
       let systemsCompleted = 0;
 
-      Object.values(DefenseSystem).forEach((system) => {
-        const entry = dayEntries.find((e) => e.defenseSystem === system);
+      Object.values(DefenseSystem).forEach((system: DefenseSystem) => {
+        const entry = dayEntries.find((e: ProgressEntry) => e.defenseSystem === system);
         const count = entry?.count || 0;
         const isComplete = count >= 5;
 
@@ -78,14 +115,14 @@ export async function GET(request: NextRequest) {
     });
 
     // Calculate system averages for the week
-    const systemAverages: any = {};
-    Object.values(DefenseSystem).forEach((system) => {
+    const systemAverages: SystemAverages = {} as SystemAverages;
+    Object.values(DefenseSystem).forEach((system: DefenseSystem) => {
       const systemEntries = progressEntries.filter(
-        (entry) => entry.defenseSystem === system
+        (entry: ProgressEntry) => entry.defenseSystem === system
       );
       const avgCount =
         systemEntries.length > 0
-          ? systemEntries.reduce((sum, entry) => sum + entry.count, 0) / daysInRange.length
+          ? systemEntries.reduce((sum: number, entry: ProgressEntry) => sum + entry.count, 0) / daysInRange.length
           : 0;
       
       systemAverages[system] = {
@@ -97,7 +134,7 @@ export async function GET(request: NextRequest) {
 
     // Calculate overall weekly stats
     const totalFoodsLogged = progressEntries.reduce(
-      (sum, entry) => sum + entry.count,
+      (sum: number, entry: ProgressEntry) => sum + entry.count,
       0
     );
     const maxPossibleFoods = daysInRange.length * 5 * 5; // days × systems × foods
@@ -105,7 +142,7 @@ export async function GET(request: NextRequest) {
 
     // Find best and worst performing systems
     const systemPerformance = Object.entries(systemAverages)
-      .map(([system, data]: [string, any]) => ({
+      .map(([system, data]: [string, SystemAverage]) => ({
         system,
         percentage: data.percentage,
       }))
@@ -121,7 +158,7 @@ export async function GET(request: NextRequest) {
         weeklyStats: {
           totalFoodsLogged,
           overallCompletion,
-          daysActive: progressEntries.length > 0 ? [...new Set(progressEntries.map(e => e.date.getTime()))].length : 0,
+          daysActive: progressEntries.length > 0 ? [...new Set(progressEntries.map((e: ProgressEntry) => e.date.getTime()))].length : 0,
           bestSystem: bestSystem.system,
           worstSystem: worstSystem.system,
         },

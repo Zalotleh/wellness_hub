@@ -25,19 +25,28 @@ export async function GET(request: NextRequest) {
     let startDate: Date;
     let endDate: Date;
 
-    if (range === 'today') {
-      startDate = startOfDay(new Date());
-      endDate = endOfDay(new Date());
+    // Helper function to parse dates consistently
+    const parseAndNormalizeDate = (dateString?: string | null) => {
+      if (!dateString) return new Date();
+      const date = new Date(dateString);
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    };
+
+    if (startDateParam && endDateParam) {
+      // If specific dates are provided, use those
+      const parsedStartDate = parseAndNormalizeDate(startDateParam);
+      const parsedEndDate = parseAndNormalizeDate(endDateParam);
+      startDate = startOfDay(parsedStartDate);
+      endDate = endOfDay(parsedEndDate);
     } else if (range === 'week') {
-      startDate = startOfWeek(new Date(), { weekStartsOn: 1 }); // Monday
-      endDate = endOfWeek(new Date(), { weekStartsOn: 1 });
-    } else if (startDateParam && endDateParam) {
-      startDate = startOfDay(new Date(startDateParam));
-      endDate = endOfDay(new Date(endDateParam));
+      const today = parseAndNormalizeDate();
+      startDate = startOfWeek(today, { weekStartsOn: 1 }); // Monday
+      endDate = endOfWeek(today, { weekStartsOn: 1 });
     } else {
       // Default to today
-      startDate = startOfDay(new Date());
-      endDate = endOfDay(new Date());
+      const today = parseAndNormalizeDate();
+      startDate = startOfDay(today);
+      endDate = endOfDay(today);
     }
 
     const progress = await prisma.progress.findMany({
@@ -79,10 +88,20 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = progressSchema.parse(body);
 
-    // Set date to start of day to avoid duplicates
-    const progressDate = validatedData.date
-      ? startOfDay(new Date(validatedData.date))
-      : startOfDay(new Date());
+    // Parse the date and normalize it
+    // Convert the input date to the user's local timezone and strip time
+    const normalizeDate = (dateInput?: string | Date | null) => {
+      const date = dateInput ? new Date(dateInput) : new Date();
+      // Create a new date using local components to avoid timezone offset
+      return new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+        12  // Set to noon to avoid any timezone issues
+      );
+    };
+
+    const progressDate = normalizeDate(validatedData.date);
 
     // Upsert progress entry (update if exists, create if not)
     const progress = await prisma.progress.upsert({

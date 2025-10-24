@@ -48,10 +48,19 @@ export function useProgress(date?: Date) {
       setLoading(true);
       setError(null);
 
-      const dateParam = date ? format(date, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');
+      let targetDate = date || new Date();
+      // Normalize to local date at noon
+      targetDate = new Date(
+        targetDate.getFullYear(),
+        targetDate.getMonth(),
+        targetDate.getDate(),
+        12
+      );
+      console.log('Fetching progress for date:', targetDate);
+      const dateParam = format(targetDate, 'yyyy-MM-dd');
       
       const response = await fetch(
-        `/api/progress?range=today&startDate=${dateParam}&endDate=${dateParam}`
+        `/api/progress?startDate=${dateParam}&endDate=${dateParam}`
       );
 
       if (!response.ok) {
@@ -62,7 +71,7 @@ export function useProgress(date?: Date) {
       setProgress(data);
 
       // Calculate daily progress
-      const daily = calculateDailyProgress(data);
+      const daily = calculateDailyProgress(data, date || new Date());
       setDailyProgress(daily);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -81,13 +90,23 @@ export function useProgress(date?: Date) {
     notes?: string
   ) => {
     try {
+      const targetDate = date || new Date();
+      // Ensure we're using the date in local timezone
+      const localDate = new Date(
+        targetDate.getFullYear(),
+        targetDate.getMonth(),
+        targetDate.getDate(),
+        12 // Set to noon to avoid any timezone issues
+      );
+      console.log('Logging food for date:', localDate);
+      
       const response = await fetch('/api/progress', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           defenseSystem,
           foods,
-          date: date || new Date(),
+          date: localDate.toISOString(),
           notes,
         }),
       });
@@ -185,7 +204,39 @@ export function useProgressStats(range: 'week' | 'month' = 'week') {
 }
 
 // Helper function to calculate daily progress
-function calculateDailyProgress(progressEntries: Progress[]): DailyProgress {
+function calculateDailyProgress(progressEntries: Progress[], selectedDate: Date = new Date()): DailyProgress {
+  // Normalize the selected date to noon in local time
+  const normalizedSelectedDate = new Date(
+    selectedDate.getFullYear(),
+    selectedDate.getMonth(),
+    selectedDate.getDate(),
+    12
+  );
+  
+  console.log('Calculating progress for date:', normalizedSelectedDate);
+  console.log('Available entries:', progressEntries.map(entry => ({
+    date: entry.date,
+    formattedDate: format(new Date(entry.date), 'yyyy-MM-dd'),
+    system: entry.defenseSystem,
+    foods: entry.foodsConsumed
+  })));
+
+  // Filter entries for the selected date
+  const dayEntries = progressEntries.filter((entry) => {
+    // Normalize the entry date to local time
+    const entryDate = new Date(entry.date);
+    const normalizedEntryDate = format(new Date(
+      entryDate.getFullYear(),
+      entryDate.getMonth(),
+      entryDate.getDate(),
+      12
+    ), 'yyyy-MM-dd');
+    
+    const targetDate = format(normalizedSelectedDate, 'yyyy-MM-dd');
+    console.log('Comparing dates:', { normalizedEntryDate, targetDate });
+    return normalizedEntryDate === targetDate;
+  });
+
   const systems: Record<DefenseSystem, {
     foods: string[];
     count: number;
@@ -194,7 +245,7 @@ function calculateDailyProgress(progressEntries: Progress[]): DailyProgress {
   }> = {} as Record<DefenseSystem, any>;
   
   Object.values(DefenseSystem).forEach((system) => {
-    const entry = progressEntries.find((p) => p.defenseSystem === system);
+    const entry = dayEntries.find((p) => p.defenseSystem === system);
     systems[system] = {
       foods: (entry?.foodsConsumed as string[]) || [],
       count: entry?.count || 0,
@@ -210,7 +261,7 @@ function calculateDailyProgress(progressEntries: Progress[]): DailyProgress {
     ) / 5;
 
   return {
-    date: new Date(),
+    date: selectedDate,
     systems,
     totalCompletion: Math.round(totalCompletion),
   };

@@ -4,8 +4,8 @@ import React, { useState } from 'react';
 import { DefenseSystem } from '@/types';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
 import { Plus, X, Check, Loader2 } from 'lucide-react';
-import { format, isToday } from 'date-fns';
-import { Calendar } from '@/components/ui/Calendar';
+import { format } from 'date-fns';
+import { isToday, format } from 'date-fns';
 
 interface ProgressTrackerProps {
   currentProgress?: {
@@ -18,18 +18,14 @@ interface ProgressTrackerProps {
   };
   onLogFood?: (system: DefenseSystem, foods: string[], notes?: string) => Promise<void>;
   date?: Date;
-  onDateChange?: (date: Date) => void;
   isHistoricalView?: boolean;
-  daysWithProgress?: Date[];
 }
 
 export default function ProgressTracker({
   currentProgress = {},
   onLogFood,
   date = new Date(),
-  onDateChange,
   isHistoricalView = false,
-  daysWithProgress = [],
 }: ProgressTrackerProps) {
   const [selectedSystem, setSelectedSystem] = useState<DefenseSystem | null>(null);
   const [foodInputs, setFoodInputs] = useState<string[]>(['']);
@@ -59,13 +55,10 @@ export default function ProgressTracker({
     setFoodInputs(newInputs);
   };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!selectedSystem || !onLogFood) {
-      console.warn('onLogFood is not provided or selectedSystem is null');
-      return;
-    }
+    if (!selectedSystem) return;
 
     const validFoods = foodInputs.filter((food) => food.trim() !== '');
 
@@ -109,45 +102,31 @@ export default function ProgressTracker({
     <div className="space-y-6">
       {/* Overall Progress */}
       <div className="bg-gradient-to-r from-green-500 to-blue-500 rounded-lg p-6 text-white">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Progress Information */}
-          <div>
-            <h3 className="text-lg font-bold mb-2">
-              {isToday(date) ? "Today's Progress" : "Progress for Selected Date"}
-            </h3>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-3xl font-bold">{Math.round(totalCompletion)}%</span>
-              <span className="text-sm opacity-90">
-                {format(date, 'EEEE, MMMM d')}
-              </span>
-            </div>
-            <div className="w-full bg-white bg-opacity-30 rounded-full h-3">
-              <div
-                className="bg-white h-3 rounded-full transition-all duration-500"
-                style={{ width: `${totalCompletion}%` }}
-              />
-            </div>
+        <h3 className="text-lg font-bold mb-2">
+          {isToday(date) ? "Today's Progress" : "Progress for Selected Date"}
+        </h3>
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-3xl font-bold">{Math.round(totalCompletion)}%</span>
+          <div className="flex flex-col items-end">
+            <span className="text-sm opacity-90">
+              {format(date, 'EEEE, MMMM d')}
+            </span>
             {!isToday(date) && (
               <button
-                onClick={() => onDateChange?.(new Date())}
-                className="mt-4 text-sm bg-white/20 px-4 py-2 rounded hover:bg-white/30 transition-colors"
+                onClick={() => window.location.reload()}
+                className="text-xs bg-white/20 px-2 py-1 rounded mt-1 hover:bg-white/30"
               >
                 Return to Today
               </button>
             )}
           </div>
-
-          {/* Calendar */}
-          <div className="bg-white rounded-lg p-4">
-            <div className="min-w-[280px]">
-              <Calendar
-                selected={date}
-                onSelect={(newDate: Date) => onDateChange?.(newDate)}
-                daysWithProgress={daysWithProgress}
-                className="w-full"
-              />
-            </div>
-          </div>
+          </span>
+        </div>
+        <div className="w-full bg-white bg-opacity-30 rounded-full h-3">
+          <div
+            className="bg-white h-3 rounded-full transition-all duration-500"
+            style={{ width: `${totalCompletion}%` }}
+          />
         </div>
       </div>
 
@@ -224,7 +203,7 @@ export default function ProgressTracker({
           <form onSubmit={handleSubmit}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-gray-800">
-                Log Foods for {getSystemInfo(selectedSystem)?.displayName}
+                Log Foods for {DEFENSE_SYSTEMS[selectedSystem].displayName}
               </h3>
               <button
                 type="button"
@@ -237,14 +216,14 @@ export default function ProgressTracker({
 
             {/* System Info */}
             <div
-              className={`mb-4 p-3 rounded-lg ${getSystemInfo(selectedSystem)?.bgColor}`}
+              className={`mb-4 p-3 rounded-lg ${DEFENSE_SYSTEMS[selectedSystem].bgColor}`}
             >
               <p className="text-sm font-medium mb-2">
-                {getSystemInfo(selectedSystem)?.description}
+                {DEFENSE_SYSTEMS[selectedSystem].description}
               </p>
               <div className="flex flex-wrap gap-1">
                 <span className="text-xs font-semibold">Suggested foods:</span>
-                {getSystemInfo(selectedSystem)?.keyFoods.slice(0, 5).map((food: string) => (
+                {DEFENSE_SYSTEMS[selectedSystem].keyFoods.slice(0, 5).map((food) => (
                   <button
                     key={food}
                     type="button"

@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useRecipes } from '@/hooks/useRecipes';
 import RecipeCard from '@/components/recipes/RecipeCard';
-import { DefenseSystem } from '@prisma/client';
+import { DefenseSystem } from '@/types';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
 import { Search, SlidersHorizontal, Plus, Sparkles, ChefHat, Loader2 } from 'lucide-react';
 import Link from 'next/link';
@@ -16,7 +16,7 @@ export default function RecipesPage() {
 
   const { recipes, loading, pagination, goToPage, nextPage, prevPage } = useRecipes({
     search: searchQuery,
-    system: selectedSystem || undefined,
+    system: selectedSystem as DefenseSystem | undefined,
     sortBy,
   });
 

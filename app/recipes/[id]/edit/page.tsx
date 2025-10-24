@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
 import EditRecipeForm from '@/components/recipes/EditRecipeForm';
+import { RecipeWithRelations, DefenseSystem } from '@/types';
 
 export default async function EditRecipePage({
   params,
@@ -18,6 +19,33 @@ export default async function EditRecipePage({
   const resolvedParams = await params;
   const recipe = await prisma.recipe.findUnique({
     where: { id: resolvedParams.id },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          image: true,
+        },
+      },
+      ratings: true,
+      comments: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              image: true,
+            },
+          },
+        },
+      },
+      _count: {
+        select: {
+          comments: true,
+          favorites: true,
+        },
+      },
+    },
   });
 
   if (!recipe) {
@@ -33,5 +61,35 @@ export default async function EditRecipePage({
     redirect('/recipes'); // Redirect to recipes list if not the owner
   }
 
-  return <EditRecipeForm recipe={recipe} />;
+  // Transform recipe data to match the expected type
+  const transformedRecipe: RecipeWithRelations = {
+    id: recipe.id,
+    title: recipe.title,
+    description: recipe.description,
+    ingredients: Array.isArray(recipe.ingredients) ? recipe.ingredients : [],
+    instructions: Array.isArray(recipe.instructions) 
+      ? recipe.instructions 
+      : typeof recipe.instructions === 'string'
+      ? recipe.instructions.split('\n').filter(Boolean)
+      : [],
+    prepTime: recipe.prepTime,
+    cookTime: recipe.cookTime,
+    servings: recipe.servings,
+    defenseSystem: recipe.defenseSystem as DefenseSystem,
+    nutrients: recipe.nutrients || {},
+    imageUrl: recipe.imageUrl,
+    userId: recipe.userId,
+    createdAt: recipe.createdAt,
+    updatedAt: recipe.updatedAt,
+    user: {
+      id: recipe.user.id,
+      name: recipe.user.name,
+      image: recipe.user.image,
+    },
+    ratings: recipe.ratings,
+    comments: recipe.comments,
+    _count: recipe._count,
+  };
+
+  return <EditRecipeForm recipe={transformedRecipe} />;
 }

@@ -18,14 +18,19 @@ import {
   PolarRadiusAxis,
   Radar,
 } from 'recharts';
-import { DefenseSystem } from '@prisma/client';
+import { DefenseSystem } from '@/types';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
 
 interface ProgressChartsProps {
   weeklyData: {
     dailyStats: Array<{
       date: string;
-      systems: any;
+      systems: Record<DefenseSystem, {
+        foods: string[];
+        count: number;
+        target: number;
+        percentage: number;
+      }>;
       totalFoods: number;
       totalCompletion: number;
     }>;
@@ -42,13 +47,15 @@ interface ProgressChartsProps {
 
 export default function ProgressCharts({ weeklyData }: ProgressChartsProps) {
   // Prepare data for weekly trend chart
-  const weeklyTrendData = weeklyData.dailyStats.map((day) => ({
-    date: new Date(day.date).toLocaleDateString('en-US', {
-      weekday: 'short',
-    }),
-    completion: day.totalCompletion,
-    foods: day.totalFoods,
-  }));
+  const weeklyTrendData = weeklyData.dailyStats.map((day) => {
+    return {
+      date: new Date(day.date).toLocaleDateString('en-US', {
+        weekday: 'short',
+      }),
+      completion: Math.round(day.totalCompletion || 0),
+      foods: day.totalFoods || 0,
+    };
+  });
 
   // Prepare data for system comparison
   const systemComparisonData = Object.entries(weeklyData.systemAverages).map(
@@ -83,7 +90,7 @@ export default function ProgressCharts({ weeklyData }: ProgressChartsProps) {
 
     Object.entries(day.systems).forEach(([system, sysData]: [string, any]) => {
       const systemInfo = DEFENSE_SYSTEMS[system as DefenseSystem];
-      data[systemInfo.displayName] = sysData.count;
+      data[systemInfo.displayName] = sysData.count || 0;
     });
 
     return data;
@@ -148,31 +155,43 @@ export default function ProgressCharts({ weeklyData }: ProgressChartsProps) {
         <h3 className="text-lg font-bold text-gray-800 mb-4">
           Weekly Progress Trend
         </h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={weeklyTrendData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Line
-              type="monotone"
-              dataKey="completion"
-              stroke="#22c55e"
-              strokeWidth={3}
-              name="Completion %"
-              dot={{ fill: '#22c55e', r: 5 }}
-            />
-            <Line
-              type="monotone"
-              dataKey="foods"
-              stroke="#3b82f6"
-              strokeWidth={2}
-              name="Total Foods"
-              dot={{ fill: '#3b82f6', r: 4 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+        {weeklyTrendData.length === 0 || weeklyTrendData.every(d => d.completion === 0 && d.foods === 0) ? (
+          <div className="flex items-center justify-center h-[300px] text-gray-400">
+            <div className="text-center">
+              <p className="text-lg font-medium mb-2">No data to display</p>
+              <p className="text-sm">Start logging your daily foods to see your progress trend</p>
+            </div>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={weeklyTrendData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" />
+              <YAxis yAxisId="left" />
+              <YAxis yAxisId="right" orientation="right" />
+              <Tooltip />
+              <Legend />
+              <Line
+                yAxisId="left"
+                type="monotone"
+                dataKey="completion"
+                stroke="#22c55e"
+                strokeWidth={3}
+                name="Completion %"
+                dot={{ fill: '#22c55e', r: 5 }}
+              />
+              <Line
+                yAxisId="right"
+                type="monotone"
+                dataKey="foods"
+                stroke="#3b82f6"
+                strokeWidth={2}
+                name="Total Foods"
+                dot={{ fill: '#3b82f6', r: 4 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        )}
       </div>
 
       {/* System Comparison */}
@@ -238,24 +257,35 @@ export default function ProgressCharts({ weeklyData }: ProgressChartsProps) {
         <h3 className="text-lg font-bold text-gray-800 mb-4">
           Daily System Breakdown
         </h3>
-        <ResponsiveContainer width="100%" height={350}>
-          <BarChart data={dailyBreakdownData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            {Object.keys(systemColors).map((system) => (
-              <Bar
-                key={system}
-                dataKey={system}
-                stackId="a"
-                fill={systemColors[system as keyof typeof systemColors]}
-                name={system}
-              />
-            ))}
-          </BarChart>
-        </ResponsiveContainer>
+        {dailyBreakdownData.length === 0 || dailyBreakdownData.every(d => 
+          Object.keys(systemColors).every(sys => (d[sys] || 0) === 0)
+        ) ? (
+          <div className="flex items-center justify-center h-[350px] text-gray-400">
+            <div className="text-center">
+              <p className="text-lg font-medium mb-2">No data to display</p>
+              <p className="text-sm">Log foods for each defense system to see the daily breakdown</p>
+            </div>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={350}>
+            <BarChart data={dailyBreakdownData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              {Object.keys(systemColors).map((system) => (
+                <Bar
+                  key={system}
+                  dataKey={system}
+                  stackId="a"
+                  fill={systemColors[system as keyof typeof systemColors]}
+                  name={system}
+                />
+              ))}
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       </div>
 
       {/* System Averages Table */}

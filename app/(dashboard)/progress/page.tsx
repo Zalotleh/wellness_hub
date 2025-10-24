@@ -2,8 +2,11 @@
 
 import { useState } from 'react';
 import { useProgress, useProgressStats } from '@/hooks/useProgress';
+import { useProgressDays } from '@/hooks/useProgressDays';
 import ProgressTracker from '@/components/progress/ProgressTracker';
 import ProgressCharts from '@/components/progress/ProgressCharts';
+import { addDays, subDays, isToday, format } from 'date-fns';
+import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { TrendingUp, Calendar, BarChart3 } from 'lucide-react';
 
 export default function ProgressPage() {
@@ -12,6 +15,7 @@ export default function ProgressPage() {
 
   const { progress, dailyProgress, loading: progressLoading, logFood } = useProgress(selectedDate);
   const { stats, loading: statsLoading } = useProgressStats('week');
+  const { daysWithProgress } = useProgressDays();
 
   const handleLogFood = async (system: any, foods: string[], notes?: string) => {
     await logFood(system, foods, notes);
@@ -78,22 +82,12 @@ export default function ProgressPage() {
                 currentProgress={currentProgress}
                 onLogFood={handleLogFood}
                 date={selectedDate}
+                onDateChange={setSelectedDate}
+                daysWithProgress={daysWithProgress}
               />
             )}
 
-            {/* Date Selector */}
-            <div className="mt-8 bg-white rounded-lg shadow-md p-6">
-              <h3 className="text-lg font-bold text-gray-800 mb-4">
-                View Progress for Different Date
-              </h3>
-              <input
-                type="date"
-                value={selectedDate.toISOString().split('T')[0]}
-                onChange={(e) => setSelectedDate(new Date(e.target.value))}
-                max={new Date().toISOString().split('T')[0]}
-                className="px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none"
-              />
-            </div>
+
 
             {/* Quick Tips */}
             <div className="mt-8 bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
