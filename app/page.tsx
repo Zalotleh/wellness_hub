@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Heart, ChefHat, TrendingUp, Users, Sparkles, ArrowRight, Check } from 'lucide-react';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
-import { DefenseSystem } from '@prisma/client';
+import { DefenseSystem } from '@/types';
 
 export default function HomePage() {
   const features = [

@@ -1,23 +1,34 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { useRecipes } from '@/hooks/useRecipes';
 import RecipeCard from '@/components/recipes/RecipeCard';
 import { DefenseSystem } from '@/types';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
-import { Search, SlidersHorizontal, Plus, Sparkles, ChefHat, Loader2 } from 'lucide-react';
+import { Search, SlidersHorizontal, Plus, Sparkles, ChefHat, Loader2, User, X, Info } from 'lucide-react';
 import Link from 'next/link';
 
 export default function RecipesPage() {
+  const { data: session } = useSession();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSystem, setSelectedSystem] = useState<DefenseSystem | null>(null);
   const [sortBy, setSortBy] = useState<'recent' | 'popular' | 'rating'>('recent');
   const [showFilters, setShowFilters] = useState(false);
+  const [filterByUser, setFilterByUser] = useState<string | null>(null);
+  const [showHelpBanner, setShowHelpBanner] = useState(() => {
+    // Check if user has dismissed the banner before
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('hideCreatorTip') !== 'true';
+    }
+    return true;
+  });
 
   const { recipes, loading, pagination, goToPage, nextPage, prevPage } = useRecipes({
     search: searchQuery,
     system: selectedSystem as DefenseSystem | undefined,
     sortBy,
+    userId: filterByUser || undefined,
   });
 
   const handleSearch = (value: string) => {
@@ -28,12 +39,27 @@ export default function RecipesPage() {
     setSearchQuery('');
     setSelectedSystem(null);
     setSortBy('recent');
+    setFilterByUser(null);
+  };
+
+  const handleFilterByCreator = (userId: string, userName: string) => {
+    setFilterByUser(userId);
+    setShowFilters(true);
+    // Optionally scroll to top or show a notification
+  };
+
+  const dismissHelpBanner = () => {
+    setShowHelpBanner(false);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('hideCreatorTip', 'true');
+    }
   };
 
   const activeFiltersCount = [
     searchQuery,
     selectedSystem,
     sortBy !== 'recent',
+    filterByUser,
   ].filter(Boolean).length;
 
   return (
@@ -83,7 +109,7 @@ export default function RecipesPage() {
                   value={searchQuery}
                   onChange={(e) => handleSearch(e.target.value)}
                   className="block w-full pl-10 pr-3 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors"
-                  placeholder="Search recipes by name or ingredient..."
+                  placeholder="Search by recipe name, ingredient, or creator..."
                 />
               </div>
 
@@ -97,6 +123,21 @@ export default function RecipesPage() {
                 <option value="popular">Most Popular</option>
                 <option value="rating">Highest Rated</option>
               </select>
+
+              {/* My Recipes Quick Filter */}
+              {session?.user?.id && (
+                <button
+                  onClick={() => setFilterByUser(filterByUser === session.user.id ? null : session.user.id)}
+                  className={`flex items-center space-x-2 px-4 py-3 rounded-lg font-medium transition-colors ${
+                    filterByUser === session.user.id
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  <User className="w-5 h-5" />
+                  <span className="hidden lg:inline">My Recipes</span>
+                </button>
+              )}
 
               {/* Filter Toggle */}
               <button
@@ -163,10 +204,88 @@ export default function RecipesPage() {
                     );
                   })}
                 </div>
+
+                {/* Creator Filter */}
+                <div className="mt-6 pt-4 border-t border-gray-200">
+                  <h3 className="font-semibold text-gray-800 mb-3">Filter by Creator</h3>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => setFilterByUser(null)}
+                      className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                        filterByUser === null
+                          ? 'bg-green-500 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      <ChefHat className="w-4 h-4" />
+                      <span>All Creators</span>
+                    </button>
+                    
+                    {session?.user?.id && (
+                      <button
+                        onClick={() => setFilterByUser(filterByUser === session.user.id ? null : session.user.id)}
+                        className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                          filterByUser === session.user.id
+                            ? 'bg-blue-500 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        <User className="w-4 h-4" />
+                        <span>My Recipes</span>
+                      </button>
+                    )}
+                  </div>
+                  
+                  {filterByUser && (
+                    <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+                      <p className="text-sm text-blue-600">
+                        {filterByUser === session?.user?.id ? (
+                          <>
+                            <span className="font-medium">Showing only recipes created by you</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="font-medium">Filtering by a specific creator</span>
+                            <br />
+                            <span className="text-xs">Click "All Creators" to remove filter</span>
+                          </>
+                        )}
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
         </div>
+
+        {/* Help Banner - Dismissible Tip */}
+        {showHelpBanner && !filterByUser && recipes.length > 0 && (
+          <div className="mb-6 bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 rounded-lg p-4 animate-fade-in">
+            <div className="flex items-start justify-between">
+              <div className="flex items-start space-x-3">
+                <div className="flex-shrink-0">
+                  <Info className="w-5 h-5 text-blue-600 mt-0.5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold text-blue-900 mb-1">
+                    💡 Quick Tip: Discover Recipes by Creator
+                  </h4>
+                  <p className="text-sm text-blue-700">
+                    Click on any <span className="font-semibold underline">creator's name</span> on a recipe card to view all their recipes instantly!
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={dismissHelpBanner}
+                className="flex-shrink-0 p-1 hover:bg-blue-100 rounded-lg transition-colors"
+                aria-label="Dismiss tip"
+              >
+                <X className="w-4 h-4 text-blue-600" />
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Results Summary */}
         <div className="mb-6 flex items-center justify-between">
@@ -182,6 +301,9 @@ export default function RecipesPage() {
                 )}
                 {selectedSystem && (
                   <span> in {DEFENSE_SYSTEMS[selectedSystem].displayName}</span>
+                )}
+                {filterByUser === session?.user?.id && (
+                  <span className="text-blue-600 font-medium"> (My Recipes)</span>
                 )}
               </>
             )}
@@ -231,7 +353,11 @@ export default function RecipesPage() {
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {recipes.map((recipe) => (
-                <RecipeCard key={recipe.id} recipe={recipe} />
+                <RecipeCard 
+                  key={recipe.id} 
+                  recipe={recipe}
+                  onFilterByCreator={handleFilterByCreator}
+                />
               ))}
             </div>
 

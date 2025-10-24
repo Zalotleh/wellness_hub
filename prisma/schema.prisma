@@ -72,13 +72,13 @@ model Recipe {
   id            String        @id @default(cuid())
   title         String
   description   String?       @db.Text
-  ingredients   Json          // Array of ingredient objects: [{name: string, amount: string}]
-  instructions  String        @db.Text
-  prepTime      String?
-  cookTime      String?
-  servings      Int?
-  defenseSystem DefenseSystem
-  nutrients     Json?         // Key nutrients: {vitamin_c: "20mg", lycopene: "5mg"}
+  ingredients     Json            // Array of ingredient objects: [{name: string, amount: string}]
+  instructions    String          @db.Text
+  prepTime        String?
+  cookTime        String?
+  servings        Int?
+  defenseSystems  DefenseSystem[] // Array of defense systems the recipe supports
+  nutrients       Json?           // Key nutrients: {vitamin_c: "20mg", lycopene: "5mg"}
   imageUrl      String?
   userId        String
   createdAt     DateTime      @default(now())
@@ -91,7 +91,6 @@ model Recipe {
   favorites     Favorite[]
   
   @@index([userId])
-  @@index([defenseSystem])
   @@index([createdAt])
 }
 

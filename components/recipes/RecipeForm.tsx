@@ -6,14 +6,6 @@ import { Plus, X, Clock, Users, ChefHat, Loader2 } from 'lucide-react';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
 
 interface RecipeFormProps {
-  initialData?: Partial<RecipeFormData>;
-  onSubmit: (data: RecipeFormData) => Promise<void>;
-  onCancel?: () => void;
-  showCancelButton?: boolean;
-  submitButtonText?: string;
-}
-
-interface RecipeFormProps {
   onSubmit: (data: RecipeFormData) => Promise<void>;
   initialData?: Partial<RecipeFormData>;
   submitButtonText?: string;
@@ -40,7 +32,7 @@ export default function RecipeForm({
     prepTime: initialData?.prepTime || '',
     cookTime: initialData?.cookTime || '',
     servings: initialData?.servings || undefined,
-    defenseSystem: initialData?.defenseSystem || DefenseSystem.ANGIOGENESIS,
+    defenseSystems: initialData?.defenseSystems || [],
     nutrients: initialData?.nutrients || {},
     imageUrl: initialData?.imageUrl || '',
   });
@@ -49,16 +41,11 @@ export default function RecipeForm({
   const validateStep1 = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.title.trim() || formData.title.length < 3) {
-      newErrors.title = 'Title must be at least 3 characters';
+    if (!formData.title.trim()) {
+      newErrors.title = 'Title is required';
     }
-
-    if (formData.description && formData.description.length > 500) {
-      newErrors.description = 'Description is too long (max 500 characters)';
-    }
-
-    if (!formData.defenseSystem) {
-      newErrors.defenseSystem = 'Please select a defense system';
+    if (!formData.defenseSystems || formData.defenseSystems.length === 0) {
+      newErrors.defenseSystems = 'Please select at least one defense system';
     }
 
     setErrors(newErrors);
@@ -138,6 +125,19 @@ export default function RecipeForm({
     }));
   };
 
+  // Defense systems management
+  const toggleDefenseSystem = (system: DefenseSystem) => {
+    setFormData((prev) => {
+      const isSelected = prev.defenseSystems.includes(system);
+      return {
+        ...prev,
+        defenseSystems: isSelected
+          ? prev.defenseSystems.filter((s) => s !== system)
+          : [...prev.defenseSystems, system],
+      };
+    });
+  };
+
   // Navigation
   const nextStep = () => {
     let isValid = false;
@@ -182,8 +182,6 @@ export default function RecipeForm({
       setIsSubmitting(false);
     }
   };
-
-  const selectedSystemInfo = DEFENSE_SYSTEMS[formData.defenseSystem];
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -284,47 +282,77 @@ export default function RecipeForm({
               )}
             </div>
 
-            {/* Defense System */}
+            {/* Defense Systems - Multiple Selection */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Defense System *
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
+                Defense Systems * (Select all that apply)
               </label>
-              <select
-                name="defenseSystem"
-                value={formData.defenseSystem}
-                onChange={handleChange}
-                className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none transition-colors ${
-                  errors.defenseSystem
-                    ? 'border-red-500 focus:border-red-600'
-                    : 'border-gray-300 focus:border-green-500'
-                }`}
-              >
+              <p className="text-sm text-gray-600 mb-4">
+                Choose which defense systems this recipe supports
+              </p>
+              {errors.defenseSystems && (
+                <p className="mb-3 text-sm text-red-600">{errors.defenseSystems}</p>
+              )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {Object.values(DefenseSystem).map((system) => {
                   const info = DEFENSE_SYSTEMS[system];
+                  const isSelected = formData.defenseSystems.includes(system);
+                  
                   return (
-                    <option key={system} value={system}>
-                      {info.icon} {info.displayName}
-                    </option>
+                    <button
+                      key={system}
+                      type="button"
+                      onClick={() => toggleDefenseSystem(system)}
+                      className={`p-4 border-2 rounded-lg text-left transition-all ${
+                        isSelected
+                          ? `${info.bgColor} ${info.borderColor} ring-2 ring-offset-2 ring-green-500`
+                          : 'border-gray-300 hover:border-gray-400 bg-white'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-5 h-5 border-2 rounded flex items-center justify-center ${
+                          isSelected ? 'bg-green-500 border-green-500' : 'border-gray-300'
+                        }`}>
+                          {isSelected && (
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                        <span className="text-2xl">{info.icon}</span>
+                        <div className="flex-1">
+                          <div className="font-semibold text-gray-800">{info.displayName}</div>
+                          <div className="text-xs text-gray-600 mt-0.5">{info.description.slice(0, 50)}...</div>
+                        </div>
+                      </div>
+                    </button>
                   );
                 })}
-              </select>
-              {errors.defenseSystem && (
-                <p className="mt-1 text-sm text-red-600">{errors.defenseSystem}</p>
-              )}
-              {selectedSystemInfo && (
-                <div
-                  className={`mt-3 p-4 rounded-lg border-2 ${selectedSystemInfo.bgColor} ${selectedSystemInfo.borderColor}`}
-                >
-                  <p className="text-sm font-medium">{selectedSystemInfo.description}</p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {selectedSystemInfo.keyFoods.slice(0, 5).map((food) => (
-                      <span
-                        key={food}
-                        className="text-xs bg-white px-2 py-1 rounded-full"
-                      >
-                        {food}
-                      </span>
-                    ))}
+              </div>
+              
+              {/* Show key foods for selected systems */}
+              {formData.defenseSystems.length > 0 && (
+                <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-3">Key Foods for Selected Systems:</h4>
+                  <div className="space-y-2">
+                    {formData.defenseSystems.map((system) => {
+                      const info = DEFENSE_SYSTEMS[system];
+                      return (
+                        <div key={system} className="flex items-start space-x-2">
+                          <span className="text-lg">{info.icon}</span>
+                          <div className="flex-1">
+                            <div className="text-sm font-medium text-gray-800">{info.displayName}:</div>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {info.keyFoods.slice(0, 5).map((food) => (
+                                <span key={food} className="text-xs bg-white px-2 py-1 rounded-full border border-gray-200">
+                                  {food}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -382,16 +410,9 @@ export default function RecipeForm({
         {/* Step 2: Ingredients */}
         {currentStep === 2 && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between mb-6">
+            <div className="mb-6">
               <h2 className="text-2xl font-bold text-gray-800">Ingredients</h2>
-              <button
-                type="button"
-                onClick={addIngredient}
-                className="flex items-center space-x-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Add Ingredient</span>
-              </button>
+              <p className="text-sm text-gray-600 mt-1">Add all ingredients needed for your recipe</p>
             </div>
 
             {errors.ingredients && (
@@ -436,8 +457,25 @@ export default function RecipeForm({
               ))}
             </div>
 
+            {/* Add Ingredient Button - Enhanced Card Style */}
+            <button
+              type="button"
+              onClick={addIngredient}
+              className="w-full p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-all group"
+            >
+              <div className="flex flex-col items-center space-y-2">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center group-hover:bg-green-500 transition-colors">
+                  <Plus className="w-6 h-6 text-green-600 group-hover:text-white transition-colors" />
+                </div>
+                <span className="text-sm font-medium text-gray-600 group-hover:text-green-600 transition-colors">
+                  Add Another Ingredient
+                </span>
+                <span className="text-xs text-gray-400">Click to add more ingredients to your recipe</span>
+              </div>
+            </button>
+
             <p className="text-sm text-gray-600 mt-4">
-              💡 Tip: Include ingredients that support the {selectedSystemInfo?.displayName} system
+              💡 Tip: Include ingredients that support your selected defense systems
             </p>
           </div>
         )}
@@ -481,14 +519,22 @@ export default function RecipeForm({
             <h2 className="text-2xl font-bold text-gray-800 mb-6">Review Your Recipe</h2>
 
             <div className="space-y-6">
-              {/* Title & System */}
+              {/* Title & Systems */}
               <div>
                 <h3 className="text-xl font-bold text-gray-800">{formData.title}</h3>
-                <div
-                  className={`inline-flex items-center space-x-2 mt-2 px-3 py-1 rounded-full text-sm font-medium ${selectedSystemInfo?.bgColor} ${selectedSystemInfo?.textColor}`}
-                >
-                  <span>{selectedSystemInfo?.icon}</span>
-                  <span>{selectedSystemInfo?.displayName}</span>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {formData.defenseSystems.map((system) => {
+                    const info = DEFENSE_SYSTEMS[system];
+                    return (
+                      <div
+                        key={system}
+                        className={`inline-flex items-center space-x-2 px-3 py-1 rounded-full text-sm font-medium ${info.bgColor} ${info.textColor}`}
+                      >
+                        <span>{info.icon}</span>
+                        <span>{info.displayName}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 

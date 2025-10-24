@@ -75,7 +75,7 @@ export default async function EditRecipePage({
     prepTime: recipe.prepTime,
     cookTime: recipe.cookTime,
     servings: recipe.servings,
-    defenseSystem: recipe.defenseSystem as DefenseSystem,
+    defenseSystems: recipe.defenseSystems,
     nutrients: recipe.nutrients || {},
     imageUrl: recipe.imageUrl,
     userId: recipe.userId,

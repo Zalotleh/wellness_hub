@@ -21,11 +21,17 @@ import {
 } from 'lucide-react';
 import { RecipeWithRelations } from '@/types';
 
+interface RecipeDetail extends RecipeWithRelations {
+  totalRatings?: number;
+  userRating?: number;
+  averageRating?: number;
+}
+
 export default function RecipeDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { data: session } = useSession();
-  const [recipe, setRecipe] = useState<RecipeWithRelations | null>(null);
+  const [recipe, setRecipe] = useState<RecipeDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [userRating, setUserRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
@@ -123,7 +129,7 @@ export default function RecipeDetailPage() {
     if (navigator.share) {
       await navigator.share({
         title: recipe?.title,
-        text: recipe?.description,
+        text: recipe?.description || undefined,
         url: window.location.href,
       });
     } else {
@@ -145,7 +151,6 @@ export default function RecipeDetailPage() {
 
   if (!recipe) return null;
 
-  const systemInfo = DEFENSE_SYSTEMS[recipe.defenseSystem];
   const ingredients = recipe.ingredients as Array<{ name: string; amount: string }>;
   const isOwner = session?.user?.id === recipe.user.id;
 
@@ -206,11 +211,19 @@ export default function RecipeDetailPage() {
           <div className="p-8">
             {/* Title & System */}
             <div className="mb-6">
-              <div
-                className={`inline-flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-bold mb-4 ${systemInfo.bgColor} ${systemInfo.textColor}`}
-              >
-                <span>{systemInfo.icon}</span>
-                <span>{systemInfo.displayName}</span>
+              <div className="flex flex-wrap gap-2 mb-4">
+                {recipe.defenseSystems.map((system) => {
+                  const systemInfo = DEFENSE_SYSTEMS[system];
+                  return (
+                    <div
+                      key={system}
+                      className={`inline-flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-bold ${systemInfo.bgColor} ${systemInfo.textColor}`}
+                    >
+                      <span>{systemInfo.icon}</span>
+                      <span>{systemInfo.displayName}</span>
+                    </div>
+                  );
+                })}
               </div>
 
               <h1 className="text-4xl font-bold text-gray-900 mb-4">

@@ -34,7 +34,7 @@ export default function EditRecipeForm({ recipe }: EditRecipeFormProps) {
     prepTime: recipe.prepTime || '',
     cookTime: recipe.cookTime || '',
     servings: recipe.servings || undefined,
-    defenseSystem: recipe.defenseSystem,
+    defenseSystems: recipe.defenseSystems,
     nutrients: typeof recipe.nutrients === 'object' && recipe.nutrients !== null
       ? Object.entries(recipe.nutrients).reduce((acc, [key, value]) => {
           acc[key] = String(value);

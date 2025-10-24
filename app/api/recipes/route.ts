@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { recipeSchema } from '@/lib/validations';
-import { DefenseSystem } from '@prisma/client';
+import { DefenseSystem } from '@/types';
 
 // GET /api/recipes - Get all recipes with filters
 export async function GET(request: NextRequest) {
@@ -22,13 +22,16 @@ export async function GET(request: NextRequest) {
     const where: any = {};
 
     if (system && Object.values(DefenseSystem).includes(system)) {
-      where.defenseSystem = system;
+      where.defenseSystems = {
+        has: system,
+      };
     }
 
     if (search) {
       where.OR = [
         { title: { contains: search, mode: 'insensitive' } },
         { description: { contains: search, mode: 'insensitive' } },
+        { user: { name: { contains: search, mode: 'insensitive' } } },
       ];
     }
 
@@ -121,8 +124,14 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
 
+    // Clean up empty strings for optional fields
+    const cleanedBody = {
+      ...body,
+      imageUrl: body.imageUrl === '' ? undefined : body.imageUrl,
+    };
+
     // Validate request body
-    const validatedData = recipeSchema.parse(body);
+    const validatedData = recipeSchema.parse(cleanedBody);
 
     // Create recipe
     const recipe = await prisma.recipe.create({

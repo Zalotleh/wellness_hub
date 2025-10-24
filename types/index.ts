@@ -43,7 +43,7 @@ export type RecipeWithRelations = {
   prepTime: string | null;
   cookTime: string | null;
   servings: number | null;
-  defenseSystem: DefenseSystem;
+  defenseSystems: DefenseSystem[];
   nutrients: any;
   imageUrl: string | null;
   userId: string;
@@ -91,7 +91,7 @@ export interface RecipeFormData {
   prepTime?: string;
   cookTime?: string;
   servings?: number;
-  defenseSystem: DefenseSystem;
+  defenseSystems: DefenseSystem[];
   nutrients?: Record<string, string>;
   imageUrl?: string;
 }

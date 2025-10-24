@@ -3,7 +3,6 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { recipeSchema } from '@/lib/validations';
-import { Prisma } from '@prisma/client';
 
 // GET /api/recipes/[id] - Get single recipe
 export async function GET(

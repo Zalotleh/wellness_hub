@@ -128,7 +128,7 @@ export default function AIRecipeGenerator({
           })
         : [],
       instructions: generatedRecipe.instructions || '',
-      defenseSystem: generatedRecipe.defenseSystem || defenseSystem,
+      defenseSystems: generatedRecipe.defenseSystems || [defenseSystem],
       // Optional fields
       description: generatedRecipe.description,
       prepTime: generatedRecipe.prepTime,
@@ -266,13 +266,22 @@ export default function AIRecipeGenerator({
                   )}
                 </div>
               ))}
+              
+              {/* Add Ingredient Button - Enhanced Card Style */}
               <button
                 type="button"
                 onClick={handleAddIngredient}
-                className="flex items-center space-x-2 text-purple-600 hover:text-purple-700 font-medium"
+                className="w-full p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all group mt-3"
               >
-                <Plus className="w-4 h-4" />
-                <span>Add ingredient</span>
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center group-hover:bg-purple-500 transition-colors">
+                    <Plus className="w-6 h-6 text-purple-600 group-hover:text-white transition-colors" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-600 group-hover:text-purple-600 transition-colors">
+                    Add Another Ingredient
+                  </span>
+                  <span className="text-xs text-gray-400">Optional: Specify more ingredients you want to use</span>
+                </div>
               </button>
             </div>
           </div>

@@ -1,4 +1,5 @@
-import { PrismaClient, DefenseSystem } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
+import { DefenseSystem } from '@/types';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -70,7 +71,7 @@ async function main() {
       prepTime: '15 min',
       cookTime: '5 min',
       servings: 6,
-      defenseSystem: DefenseSystem.ANGIOGENESIS,
+      defenseSystems: [DefenseSystem.ANGIOGENESIS],
       nutrients: {
         lycopene: '8.2mg',
         vitamin_c: '28mg',
@@ -100,7 +101,7 @@ async function main() {
 8. Enjoy immediately for best texture.`,
       prepTime: '10 min',
       servings: 1,
-      defenseSystem: DefenseSystem.MICROBIOME,
+      defenseSystems: [DefenseSystem.MICROBIOME],
       nutrients: {
         probiotics: '1 billion CFU',
         fiber: '8g',
@@ -130,7 +131,7 @@ async function main() {
 8. Drink within 10 minutes for maximum nutrient retention.`,
       prepTime: '5 min',
       servings: 1,
-      defenseSystem: DefenseSystem.DNA_PROTECTION,
+      defenseSystems: [DefenseSystem.DNA_PROTECTION],
       nutrients: {
         egcg: '70mg',
         vitamin_k: '145mcg',
@@ -164,7 +165,7 @@ async function main() {
       prepTime: '10 min',
       cookTime: '25 min',
       servings: 4,
-      defenseSystem: DefenseSystem.IMMUNITY,
+      defenseSystems: [DefenseSystem.IMMUNITY],
       nutrients: {
         allicin: 'High',
         gingerol: '25mg',
@@ -197,7 +198,7 @@ async function main() {
       prepTime: '10 min',
       cookTime: '20 min',
       servings: 2,
-      defenseSystem: DefenseSystem.REGENERATION,
+      defenseSystems: [DefenseSystem.REGENERATION],
       nutrients: {
         omega_3: '2.2g',
         vitamin_d: '450 IU',
@@ -230,7 +231,7 @@ async function main() {
       prepTime: '5 min',
       cookTime: '10 min',
       servings: 2,
-      defenseSystem: DefenseSystem.MICROBIOME,
+      defenseSystems: [DefenseSystem.MICROBIOME],
       nutrients: {
         probiotics: '2.6 billion CFU',
         vitamin_k: '68mcg',

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Users, Trophy, TrendingUp, MessageSquare, Heart, Award, Star, ChefHat } from 'lucide-react';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
-import { DefenseSystem } from '@prisma/client';
+import { DefenseSystem } from '@/types';
 
 export default function CommunityPage() {
   const [activeTab, setActiveTab] = useState<'contributors' | 'discussions' | 'leaderboard'>('contributors');
