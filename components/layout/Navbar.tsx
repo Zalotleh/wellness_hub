@@ -1,3 +1,4 @@
+// components/layout/Navbar.tsx
 'use client';
 
 import { useState } from 'react';
@@ -16,6 +17,8 @@ import {
   Settings,
   Menu,
   X,
+  MessageCircle,
+  Calendar,
 } from 'lucide-react';
 
 export default function Navbar() {
@@ -26,7 +29,9 @@ export default function Navbar() {
 
   const navLinks = [
     { href: '/recipes', label: 'Recipes', icon: ChefHat },
+    { href: '/meal-planner', label: 'Meal Planner', icon: Calendar },
     { href: '/progress', label: 'Progress', icon: TrendingUp },
+    { href: '/advisor', label: 'AI Advisor', icon: MessageCircle },
     { href: '/learn', label: 'Learn 5x5x5', icon: BookOpen },
     { href: '/community', label: 'Community', icon: Users },
   ];
@@ -48,26 +53,26 @@ export default function Navbar() {
             </div>
             <div className="hidden sm:block">
               <span className="text-xl font-bold text-gray-800">5x5x5 Wellness</span>
-              <span className="block text-xs text-gray-600">Eat to Beat Disease</span>
+              {/* <span className="block text-xs text-gray-600">Eat to Beat Disease</span> */}
             </div>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-1">
+          <div className="hidden lg:flex items-center space-x-1">
             {navLinks.map((link) => {
               const Icon = link.icon;
               return (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg font-medium transition-colors ${
                     isActive(link.href)
                       ? 'bg-green-100 text-green-700'
                       : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                   }`}
                 >
-                  <Icon className="w-5 h-5" />
-                  <span>{link.label}</span>
+                  <Icon className="w-4 h-4" />
+                  <span className="text-sm">{link.label}</span>
                 </Link>
               );
             })}
@@ -78,7 +83,7 @@ export default function Navbar() {
             {/* AI Generate Button */}
             <Link
               href="/recipes/ai-generate"
-              className="hidden lg:flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all font-medium"
+              className="hidden xl:flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all font-medium text-sm"
             >
               <Sparkles className="w-4 h-4" />
               <span>AI Generate</span>
@@ -148,7 +153,7 @@ export default function Navbar() {
             ) : (
               <Link
                 href="/login"
-                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium"
+                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium text-sm"
               >
                 Sign In
               </Link>
@@ -157,7 +162,7 @@ export default function Navbar() {
             {/* Mobile Menu Toggle */}
             <button
               onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="md:hidden p-2 rounded-lg hover:bg-gray-100"
+              className="lg:hidden p-2 rounded-lg hover:bg-gray-100"
             >
               {showMobileMenu ? (
                 <X className="w-6 h-6 text-gray-700" />
@@ -170,7 +175,7 @@ export default function Navbar() {
 
         {/* Mobile Menu */}
         {showMobileMenu && (
-          <div className="md:hidden py-4 border-t border-gray-200">
+          <div className="lg:hidden py-4 border-t border-gray-200">
             <div className="space-y-1">
               {navLinks.map((link) => {
                 const Icon = link.icon;
