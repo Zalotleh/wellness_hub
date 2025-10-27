@@ -14,7 +14,8 @@ export async function GET(
     const { id } = params;
     const session = await getServerSession(authOptions);
 
-    const recipe = await prisma.recipe.findUnique({
+    // Try to find regular recipe first
+    let recipe = await prisma.recipe.findUnique({
       where: { id },
       include: {
         user: {
@@ -40,6 +41,62 @@ export async function GET(
         }),
       },
     });
+
+    // If not found, try generated recipe
+    if (!recipe) {
+      const generatedRecipe = await prisma.generatedRecipe.findUnique({
+        where: { id },
+        include: {
+          user: {
+            select: { id: true, name: true, image: true, bio: true },
+          },
+          meal: {
+            select: { 
+              mealName: true,
+              dailyMenu: {
+                select: {
+                  date: true,
+                  mealPlan: {
+                    select: { title: true }
+                  }
+                }
+              }
+            },
+          },
+        },
+      });
+
+      if (generatedRecipe) {
+        // Transform generated recipe to match Recipe interface
+        recipe = {
+          id: generatedRecipe.id,
+          title: generatedRecipe.name,
+          description: generatedRecipe.description,
+          ingredients: generatedRecipe.ingredients,
+          instructions: generatedRecipe.instructions,
+          prepTime: generatedRecipe.prepTime,
+          cookTime: generatedRecipe.cookTime,
+          totalTime: generatedRecipe.totalTime,
+          servings: generatedRecipe.servings,
+          difficulty: generatedRecipe.difficulty || 'medium',
+          cuisine: null,
+          tags: generatedRecipe.tags || [],
+          defenseSystems: generatedRecipe.defenseSystems || [],
+          imageUrl: null,
+          isPublic: generatedRecipe.isPublic,
+          createdAt: generatedRecipe.createdAt,
+          updatedAt: generatedRecipe.updatedAt,
+          userId: generatedRecipe.userId,
+          user: generatedRecipe.user,
+          ratings: [], // Generated recipes don't have ratings yet
+          comments: [], // Generated recipes don't have comments yet
+          _count: { comments: 0, favorites: 0 },
+          // Add generated recipe specific fields
+          generatedBy: generatedRecipe.generatedBy,
+          mealContext: `${generatedRecipe.meal.mealName} from ${generatedRecipe.meal.dailyMenu.mealPlan.title}`,
+        } as any;
+      }
+    }
 
     if (!recipe) {
       return NextResponse.json(

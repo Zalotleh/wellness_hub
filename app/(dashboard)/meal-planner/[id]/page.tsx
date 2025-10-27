@@ -2,18 +2,22 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import EnhancedMealPlanner from '@/components/meal-planner/EnhancedMealPlanner';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Trash2 } from 'lucide-react';
+import { DeleteConfirmationDialog } from '@/components/ui/ConfirmationDialog';
 
 export default function MealPlanViewPage() {
   const params = useParams();
+  const router = useRouter();
   const { data: session } = useSession();
   const [mealPlan, setMealPlan] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (params.id && session?.user) {
@@ -86,6 +90,43 @@ export default function MealPlanViewPage() {
     }
   };
 
+  const handleDeletePlan = async () => {
+    setIsDeleting(true);
+    
+    try {
+      const response = await fetch(`/api/meal-planner/${params.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        if (response.status === 409 && errorData.warning) {
+          // Plan has interactions, ask for force delete
+          const forceResponse = await fetch(`/api/meal-planner/${params.id}?force=true`, {
+            method: 'DELETE',
+          });
+          
+          if (!forceResponse.ok) {
+            const forceErrorData = await forceResponse.json();
+            throw new Error(forceErrorData.error || 'Failed to delete meal plan');
+          }
+        } else {
+          throw new Error(errorData.error || 'Failed to delete meal plan');
+        }
+      }
+
+      // Redirect to saved plans page after successful deletion
+      router.push('/saved-plans');
+      
+    } catch (error) {
+      console.error('Error deleting meal plan:', error);
+      setError(error instanceof Error ? error.message : 'Failed to delete meal plan');
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteModalOpen(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center">
@@ -114,15 +155,29 @@ export default function MealPlanViewPage() {
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
       <div className="p-4">
         <div className="max-w-7xl mx-auto">
-          <div className="mb-6">
+          <div className="mb-6 flex items-center justify-between">
             <Link 
               href="/saved-plans"
-              className="inline-flex items-center text-gray-600 hover:text-gray-800 mb-4"
+              className="inline-flex items-center text-gray-600 hover:text-gray-800"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Saved Plans
             </Link>
+            
+            <button
+              onClick={() => setIsDeleteModalOpen(true)}
+              className="inline-flex items-center px-3 py-2 text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete Plan
+            </button>
           </div>
+          
+          {error && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-600">{error}</p>
+            </div>
+          )}
           
           <EnhancedMealPlanner
             initialPlan={mealPlan}
@@ -136,6 +191,15 @@ export default function MealPlanViewPage() {
           />
         </div>
       </div>
+
+      <DeleteConfirmationDialog
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDeletePlan}
+        itemName={mealPlan?.name}
+        itemType="meal plan"
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

@@ -25,6 +25,8 @@ interface RecipeDetail extends RecipeWithRelations {
   totalRatings?: number;
   userRating?: number;
   averageRating?: number;
+  generatedBy?: string;
+  mealContext?: string;
 }
 
 export default function RecipeDetailPage() {
@@ -151,7 +153,26 @@ export default function RecipeDetailPage() {
 
   if (!recipe) return null;
 
-  const ingredients = recipe.ingredients as Array<{ name: string; amount: string }>;
+  // Handle both old and new ingredient formats
+  const ingredients = Array.isArray(recipe.ingredients) 
+    ? recipe.ingredients.map((ing: any) => {
+        if (typeof ing === 'object' && ing.name) {
+          // New AI-generated format: {name, amount, unit, notes}
+          return {
+            name: ing.name,
+            amount: ing.unit ? `${ing.amount} ${ing.unit}` : ing.amount,
+            notes: ing.notes
+          };
+        } else if (typeof ing === 'object' && ing.amount) {
+          // Old format: {name, amount}
+          return ing;
+        } else {
+          // String format or other
+          return { name: String(ing), amount: '' };
+        }
+      })
+    : [];
+
   const isOwner = session?.user?.id === recipe.user.id;
 
   return (
@@ -212,7 +233,7 @@ export default function RecipeDetailPage() {
             {/* Title & System */}
             <div className="mb-6">
               <div className="flex flex-wrap gap-2 mb-4">
-                {recipe.defenseSystems.map((system) => {
+                {(recipe.defenseSystems || []).map((system) => {
                   const systemInfo = DEFENSE_SYSTEMS[system];
                   return (
                     <div
@@ -224,6 +245,12 @@ export default function RecipeDetailPage() {
                     </div>
                   );
                 })}
+                {recipe.generatedBy && (
+                  <div className="inline-flex items-center space-x-1 px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">
+                    <ChefHat className="w-3 h-3" />
+                    <span>AI-Enhanced Recipe</span>
+                  </div>
+                )}
               </div>
 
               <h1 className="text-4xl font-bold text-gray-900 mb-4">
@@ -232,6 +259,14 @@ export default function RecipeDetailPage() {
 
               {recipe.description && (
                 <p className="text-lg text-gray-600 mb-4">{recipe.description}</p>
+              )}
+
+              {recipe.mealContext && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                  <p className="text-sm text-blue-700">
+                    <span className="font-medium">From meal plan:</span> {recipe.mealContext}
+                  </p>
+                </div>
               )}
 
               {/* Meta Info */}
@@ -320,16 +355,27 @@ export default function RecipeDetailPage() {
                 Ingredients
               </h2>
               <ul className="space-y-3">
-                {ingredients.map((ingredient, index) => (
+                {ingredients.map((ingredient: any, index: number) => (
                   <li
                     key={index}
-                    className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg"
+                    className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg"
                   >
-                    <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0" />
-                    <span className="font-semibold text-gray-900">
-                      {ingredient.amount}
-                    </span>
-                    <span className="text-gray-700">{ingredient.name}</span>
+                    <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0 mt-2" />
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2">
+                        {ingredient.amount && (
+                          <span className="font-semibold text-gray-900">
+                            {ingredient.amount}
+                          </span>
+                        )}
+                        <span className="text-gray-700 font-medium">{ingredient.name}</span>
+                      </div>
+                      {ingredient.notes && (
+                        <p className="text-sm text-gray-600 mt-1 italic">
+                          {ingredient.notes}
+                        </p>
+                      )}
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -341,9 +387,29 @@ export default function RecipeDetailPage() {
                 Instructions
               </h2>
               <div className="bg-gray-50 rounded-lg p-6">
-                <pre className="whitespace-pre-wrap font-sans text-gray-700 leading-relaxed">
-                  {recipe.instructions}
-                </pre>
+                {Array.isArray(recipe.instructions) ? (
+                  <ol className="space-y-4">
+                    {recipe.instructions.map((instruction: any, index: number) => (
+                      <li key={index} className="flex items-start space-x-3">
+                        <span className="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                          {typeof instruction === 'object' ? instruction.step || (index + 1) : (index + 1)}
+                        </span>
+                        <div className="flex-1">
+                          <p className="text-gray-700 leading-relaxed">
+                            {typeof instruction === 'object' ? instruction.instruction : instruction}
+                          </p>
+                          {typeof instruction === 'object' && instruction.time && (
+                            <p className="text-sm text-gray-500 mt-1">⏱️ {instruction.time}</p>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
+                ) : (
+                  <pre className="whitespace-pre-wrap font-sans text-gray-700 leading-relaxed">
+                    {recipe.instructions}
+                  </pre>
+                )}
               </div>
             </div>
 

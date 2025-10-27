@@ -34,6 +34,11 @@ export default function Navbar() {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
+  // Debug: Log current tier (remove in production)
+  if (process.env.NODE_ENV === 'development' && session?.user) {
+    console.log('Navbar tier:', tier, 'user:', (session.user as any)?.subscriptionTier);
+  }
+
   // Mock usage data - in real app, fetch from API
   const userMealPlans = ((session?.user as any)?.mealPlansThisMonth) || 0;
   const userAIQuestions = ((session?.user as any)?.aiQuestionsThisMonth) || 0;
@@ -102,11 +107,29 @@ export default function Navbar() {
                 <TierBadge />
                 {tier === 'FREE' && !isTrialing && (
                   <Link
-                    href="/upgrade"
+                    href="/pricing"
                     className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all font-medium text-sm"
                   >
                     <Crown className="w-4 h-4" />
                     <span>Upgrade to Premium</span>
+                  </Link>
+                )}
+                {String(tier) === 'PREMIUM' && (
+                  <Link
+                    href="/subscription/manage"
+                    className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all font-medium text-sm"
+                  >
+                    <Crown className="w-4 h-4" />
+                    <span>Premium Plan</span>
+                  </Link>
+                )}
+                {String(tier) === 'FAMILY' && (
+                  <Link
+                    href="/subscription/manage"
+                    className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 transition-all font-medium text-sm"
+                  >
+                    <Crown className="w-4 h-4" />
+                    <span>Family Plan</span>
                   </Link>
                 )}
               </div>
@@ -222,14 +245,28 @@ export default function Navbar() {
                             </div>
                           </div>
 
-                          {!isTrialing && (
+                          {!isTrialing && tier === 'FREE' && (
                             <Link
-                              href="/upgrade"
+                              href="/pricing"
                               className="flex items-center justify-center space-x-2 w-full mt-3 px-3 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all font-medium text-sm"
                               onClick={() => setShowUserMenu(false)}
                             >
                               <Crown className="w-4 h-4" />
                               <span>Upgrade to Premium</span>
+                            </Link>
+                          )}
+                          {(String(tier) === 'PREMIUM' || String(tier) === 'FAMILY') && (
+                            <Link
+                              href="/subscription/manage"
+                              className={`flex items-center justify-center space-x-2 w-full mt-3 px-3 py-2 text-white rounded-lg transition-all font-medium text-sm ${
+                                String(tier) === 'PREMIUM' 
+                                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700'
+                                  : 'bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700'
+                              }`}
+                              onClick={() => setShowUserMenu(false)}
+                            >
+                              <Crown className="w-4 h-4" />
+                              <span>{String(tier) === 'PREMIUM' ? 'Premium Plan' : 'Family Plan'}</span>
                             </Link>
                           )}
                         </div>
@@ -337,14 +374,28 @@ export default function Navbar() {
                     </div>
                   </div>
                 </div>
-                {!isTrialing && (
+                {!isTrialing && tier === 'FREE' && (
                   <Link
-                    href="/upgrade"
+                    href="/pricing"
                     onClick={() => setShowMobileMenu(false)}
                     className="flex items-center justify-center space-x-2 w-full mt-3 px-3 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all font-medium text-sm"
                   >
                     <Crown className="w-4 h-4" />
                     <span>Upgrade to Premium</span>
+                  </Link>
+                )}
+                {(String(tier) === 'PREMIUM' || String(tier) === 'FAMILY') && (
+                  <Link
+                    href="/subscription/manage"
+                    onClick={() => setShowMobileMenu(false)}
+                    className={`flex items-center justify-center space-x-2 w-full mt-3 px-3 py-2 text-white rounded-lg transition-all font-medium text-sm ${
+                      String(tier) === 'PREMIUM' 
+                        ? 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700'
+                        : 'bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700'
+                    }`}
+                  >
+                    <Crown className="w-4 h-4" />
+                    <span>{String(tier) === 'PREMIUM' ? 'Premium Plan' : 'Family Plan'}</span>
                   </Link>
                 )}
               </div>

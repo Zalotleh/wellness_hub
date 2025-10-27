@@ -52,7 +52,7 @@ export default function PricingPage() {
 
   const fetchPricingData = async () => {
     try {
-      const response = await fetch('/api/checkout');
+      const response = await fetch('/api/pricing');
       if (!response.ok) {
         throw new Error('Failed to fetch pricing data');
       }
@@ -76,6 +76,7 @@ export default function PricingPage() {
     setError(null);
 
     try {
+      // Try Stripe checkout first
       const response = await fetch('/api/checkout', {
         method: 'POST',
         headers: {
@@ -89,14 +90,37 @@ export default function PricingPage() {
 
       const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create checkout session');
+      if (response.ok && data.url) {
+        window.location.href = data.url;
+        return;
       }
 
-      if (data.url) {
-        window.location.href = data.url;
+      // If Stripe fails, fall back to test upgrade for development
+      console.log('Stripe checkout failed, using test upgrade:', data.error);
+      
+      const testResponse = await fetch('/api/upgrade-test', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          plan,
+          interval,
+        }),
+      });
+
+      const testData = await testResponse.json();
+
+      if (testResponse.ok) {
+        // Show success message and redirect
+        alert(`🎉 ${testData.message}\n\nNote: This is a test upgrade for development purposes.`);
+        if (testData.redirectUrl) {
+          router.push(testData.redirectUrl);
+        } else {
+          router.push('/dashboard');
+        }
       } else {
-        throw new Error('No checkout URL received');
+        throw new Error(testData.error || 'Failed to upgrade subscription');
       }
     } catch (error) {
       console.error('Checkout error:', error);

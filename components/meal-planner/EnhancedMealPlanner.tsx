@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { DefenseSystem, Meal } from '@/types';
 import SystemSelector from './SystemSelector';
 import MealCard from './MealCard';
@@ -55,6 +56,7 @@ export default function EnhancedMealPlanner({
   initialPlan,
 }: EnhancedMealPlannerProps) {
   const { data: session } = useSession();
+  const router = useRouter();
   const { isMobile, isTablet } = useResponsive();
 
   // Main state
@@ -542,28 +544,42 @@ export default function EnhancedMealPlanner({
     setOptimisticAction('Regenerating meal');
     
     try {
-      const response = await fetch(`/api/ai/generate`, {
+      if (!mealPlan.id) {
+        throw new Error('Meal plan must be saved before generating recipes');
+      }
+
+      const response = await fetch(`/api/meal-planner/${mealPlan.id}/recipes`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          type: 'regenerate-meal',
           mealId,
-          configuration,
+          forceRegenerate: true,
+          customInstructions: configuration.customInstructions,
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to regenerate meal');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to regenerate meal');
       }
 
-      const updatedMeal = await response.json();
+      const responseData = await response.json();
+      
+      // The API returns the generated recipe
+      const generatedRecipe = responseData.data;
       
       setMealPlan(prev => ({
         ...prev,
         meals: prev.meals.map(meal => 
-          meal.id === mealId ? updatedMeal : meal
+          meal.id === mealId 
+            ? { 
+                ...meal, 
+                recipeGenerated: true, 
+                recipeId: generatedRecipe.id 
+              } 
+            : meal
         ),
       }));
 
@@ -580,32 +596,60 @@ export default function EnhancedMealPlanner({
     setOptimisticAction(`Regenerating ${day}'s meals`);
     
     try {
-      const response = await fetch('/api/ai/generate', {
+      if (!mealPlan.id) {
+        throw new Error('Meal plan must be saved before generating recipes');
+      }
+
+      // Get meals for the specific day
+      const dayMeals = mealPlan.meals.filter(meal => meal.day === day);
+      const mealIds = dayMeals.map(meal => meal.id);
+
+      if (mealIds.length === 0) {
+        throw new Error(`No meals found for ${day}`);
+      }
+
+      const response = await fetch(`/api/meal-planner/${mealPlan.id}/recipes`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          type: 'regenerate-day',
-          day,
-          planId: mealPlan.id,
-          configuration,
+          mealIds,
+          batch: true,
+          forceRegenerate: true,
+          customInstructions: configuration.customInstructions,
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to regenerate day');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to regenerate day');
       }
 
-      const updatedMeals = await response.json();
+      const responseData = await response.json();
       
+      // The batch API returns an array of recipe results
+      const recipeResults = responseData.data || [];
+      
+      // Update meals with generated recipes
       setMealPlan(prev => ({
         ...prev,
-        meals: prev.meals.map(meal => 
-          meal.day === day 
-            ? updatedMeals.find((updated: Meal) => updated.id === meal.id) || meal
-            : meal
-        ),
+        meals: prev.meals.map(meal => {
+          if (meal.day !== day) return meal;
+          
+          const recipeResult = recipeResults.find((result: any) => 
+            result.success && result.mealId === meal.id
+          );
+          
+          if (recipeResult) {
+            return {
+              ...meal,
+              recipeGenerated: true,
+              recipeId: recipeResult.data?.id,
+            };
+          }
+          return meal;
+        }),
       }));
 
     } catch (error) {
@@ -616,38 +660,55 @@ export default function EnhancedMealPlanner({
     }
   }, [mealPlan.id, configuration]);
 
+  // Handle view recipe
+  const handleViewRecipe = useCallback((recipeId: string) => {
+    // Navigate to the recipe view page
+    router.push(`/recipes/${recipeId}`);
+  }, [router]);
+
   // Generate shopping list
   const handleGenerateShoppingList = useCallback(async () => {
     setOptimisticAction('Generating shopping list');
     
     try {
-      const response = await fetch('/api/shopping-list', {
+      if (!mealPlan.id) {
+        throw new Error('Meal plan must be saved before generating shopping list');
+      }
+
+      const response = await fetch(`/api/meal-planner/${mealPlan.id}/shopping-list`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          planId: mealPlan.id,
-          meals: mealPlan.meals,
+          filterPantry: false, // Could be made configurable
+          includeNutrition: true, // Include nutrition data
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to generate shopping list');
+        const errorData = await response.json();
+        if (errorData.code === 'NO_RECIPES') {
+          throw new Error('Please generate recipes for your meals before creating a shopping list.');
+        }
+        throw new Error(errorData.error || 'Failed to generate shopping list');
       }
 
-      const shoppingList = await response.json();
+      const shoppingListData = await response.json();
       
       // Handle shopping list (could open modal, download PDF, etc.)
-      console.log('Shopping list generated:', shoppingList);
+      console.log('Shopping list generated:', shoppingListData);
+      
+      // TODO: Display shopping list in modal or redirect to shopping list page
+      alert(`Shopping list generated with ${shoppingListData.data?.items?.length || 0} items!`);
 
     } catch (error) {
       console.error('Error generating shopping list:', error);
-      setError('Failed to generate shopping list');
+      setError(error instanceof Error ? error.message : 'Failed to generate shopping list');
     } finally {
       setOptimisticAction(null);
     }
-  }, [mealPlan]);
+  }, [mealPlan.id]);
 
   // Save plan
   const handleSavePlan = useCallback(async (updates: Partial<MealPlan>) => {
@@ -849,6 +910,7 @@ export default function EnhancedMealPlanner({
             onMealCopy={handleMealCopy}
             onAddMeal={handleAddMeal}
             onRegenerateMeal={handleRegenerateMeal}
+            onViewRecipe={handleViewRecipe}
             onGenerateShoppingList={handleGenerateShoppingList}
             onBulkRegenerate={handleBulkRegenerate}
             isGenerating={isGenerating}

@@ -28,6 +28,7 @@ interface MealPlanViewProps {
   onMealCopy: (meal: Meal) => void;
   onAddMeal: (day: string, slot: string) => void;
   onRegenerateMeal: (mealId: string) => void;
+  onViewRecipe: (recipeId: string) => void;
   onGenerateShoppingList: () => void;
   onBulkRegenerate: (day: string) => void;
   isGenerating?: boolean;
@@ -48,6 +49,7 @@ export default function MealPlanView({
   onMealCopy,
   onAddMeal,
   onRegenerateMeal,
+  onViewRecipe,
   onGenerateShoppingList,
   onBulkRegenerate,
   isGenerating = false,
@@ -266,9 +268,7 @@ export default function MealPlanView({
                           onMealUpdate(meal.id, updates);
                         }}
                         onGenerateRecipe={() => onRegenerateMeal(meal.id)}
-                        onViewRecipe={(recipeId: string) => {
-                          // Handle view recipe if needed
-                        }}
+                        onViewRecipe={onViewRecipe}
                         isGeneratingRecipe={isGenerating}
                       />
                     ))}

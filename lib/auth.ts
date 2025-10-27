@@ -64,8 +64,39 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      if (session?.user) {
+      if (session?.user && token.id) {
         session.user.id = token.id as string;
+        
+        // Fetch fresh user data including subscription info
+        try {
+          const userData = await prisma.user.findUnique({
+            where: { id: token.id as string },
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              image: true,
+              subscriptionTier: true,
+              subscriptionStatus: true,
+              trialEndsAt: true,
+              subscriptionEndsAt: true,
+              mealPlansThisMonth: true,
+              aiQuestionsThisMonth: true,
+            },
+          });
+          
+          if (userData) {
+            // Add subscription data to session
+            (session.user as any).subscriptionTier = userData.subscriptionTier;
+            (session.user as any).subscriptionStatus = userData.subscriptionStatus;
+            (session.user as any).trialEndsAt = userData.trialEndsAt;
+            (session.user as any).subscriptionEndsAt = userData.subscriptionEndsAt;
+            (session.user as any).mealPlansThisMonth = userData.mealPlansThisMonth;
+            (session.user as any).aiQuestionsThisMonth = userData.aiQuestionsThisMonth;
+          }
+        } catch (error) {
+          console.error('Error fetching user subscription data:', error);
+        }
       }
       return session;
     },

@@ -240,22 +240,29 @@ async function generateSingleRecipe(
   }
 
   // Build context about the meal and defense systems
-  const systemsContext = meal.defenseSystems
-    .map((system: string) => {
-      const info = DEFENSE_SYSTEMS[system as keyof typeof DEFENSE_SYSTEMS];
-      return info ? `${info.displayName}: Focus on ${info.keyFoods.slice(0, 3).join(', ')}` : '';
-    })
-    .filter(Boolean)
-    .join('\n');
-
   const servings = meal.dailyMenu.servings || mealPlan.defaultServings || 2;
+  
+  // Prepare defense systems context with intelligent assignment
+  const mealDefenseSystems = meal.defenseSystems && meal.defenseSystems.length > 0 
+    ? meal.defenseSystems 
+    : null;
+
+  const systemsContext = mealDefenseSystems
+    ? mealDefenseSystems.map((system: string) => {
+        const info = DEFENSE_SYSTEMS[system as keyof typeof DEFENSE_SYSTEMS];
+        return info ? `${info.displayName}: ${info.description}. Key foods: ${info.keyFoods.join(', ')}` : '';
+      }).filter(Boolean).join('\n')
+    : 'All defense systems available - choose the most appropriate ones based on ingredients and meal type';
 
   const prompt = `Create a detailed recipe for: ${meal.mealName}
 
 Context:
 - Meal Type: ${meal.mealType}
 - Servings: ${servings}
-- Defense Systems to support: ${meal.defenseSystems.join(', ')}
+${mealDefenseSystems 
+  ? `- Target Defense Systems: ${mealDefenseSystems.join(', ')} (focus specifically on these)`
+  : `- Defense Systems: Choose 1-3 most appropriate systems based on ingredients (ANGIOGENESIS, REGENERATION, MICROBIOME, DNA_PROTECTION, IMMUNITY)`
+}
 - Estimated prep time: ${meal.prepTime || 'flexible'}
 ${mealPlan.dietaryRestrictions?.length > 0 ? `- Dietary restrictions: ${mealPlan.dietaryRestrictions.join(', ')}` : ''}
 ${customInstructions ? `- Special instructions: ${customInstructions}` : ''}
@@ -264,23 +271,29 @@ ${meal.customInstructions ? `- Meal-specific instructions: ${meal.customInstruct
 Defense Systems Context:
 ${systemsContext}
 
-Create a recipe that incorporates foods known to support these defense systems. Make it practical, delicious, and nutritionally balanced.
+${mealDefenseSystems 
+  ? `Create a recipe that specifically incorporates foods known to support these defense systems: ${mealDefenseSystems.join(', ')}.`
+  : `Analyze the meal name and type, then choose 1-3 most appropriate defense systems and incorporate foods that support them. Base your choice on the natural ingredients that would work best for this dish.`
+}
+
+Make the recipe practical, delicious, and nutritionally balanced.
 
 Provide a complete recipe with:
-1. Brief description (2-3 sentences)
+1. Brief description (2-3 sentences) highlighting health benefits
 2. Detailed ingredients list with exact quantities
 3. Step-by-step instructions
 4. Prep time, cook time, and total time
 5. Difficulty level (easy/medium/hard)
-6. Basic nutritional information (calories, protein, carbs, fat)
+6. Basic nutritional information (calories, protein, carbs, fat, fiber)
+7. Defense systems this recipe supports (either the specified ones or your intelligent selection)
 
 Format your response as valid JSON:
 {
   "title": "Recipe name",
-  "description": "Brief description highlighting health benefits",
+  "description": "Brief description highlighting health benefits and defense systems supported",
   "servings": ${servings},
   "prepTime": "15 min",
-  "cookTime": "20 min",
+  "cookTime": "20 min", 
   "totalTime": "35 min",
   "difficulty": "easy",
   "ingredients": [
@@ -298,7 +311,7 @@ Format your response as valid JSON:
     "fiber": 8
   },
   "tips": ["Helpful cooking tips or variations"],
-  "defenseSystems": ${JSON.stringify(meal.defenseSystems)}
+  "defenseSystems": ${mealDefenseSystems ? JSON.stringify(mealDefenseSystems) : '["SYSTEM1", "SYSTEM2"]'}
 }
 
 Respond ONLY with valid JSON, no additional text or formatting.`;
@@ -322,7 +335,7 @@ Respond ONLY with valid JSON, no additional text or formatting.`;
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-3-sonnet-20240229', // Updated to valid model name
+        model: 'claude-sonnet-4-5-20250929', // Updated to requested model name
         max_tokens: 2048,
         messages: [
           {
@@ -387,8 +400,11 @@ Respond ONLY with valid JSON, no additional text or formatting.`;
         carbs: recipeData.nutrition?.carbs || null,
         fat: recipeData.nutrition?.fat || null,
         fiber: recipeData.nutrition?.fiber || null,
-        defenseSystems: meal.defenseSystems,
-        generatedBy: 'claude-3-sonnet-20240229',
+        // Use AI-determined defense systems if meal had none, otherwise use meal's systems
+        defenseSystems: recipeData.defenseSystems && Array.isArray(recipeData.defenseSystems) 
+          ? recipeData.defenseSystems 
+          : meal.defenseSystems || [],
+        generatedBy: 'claude-sonnet-4-5-20250929',
         customPrompt: customInstructions || null,
       },
     });

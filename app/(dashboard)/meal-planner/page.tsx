@@ -2,6 +2,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import EnhancedMealPlanner from '@/components/meal-planner/EnhancedMealPlanner';
 import Footer from '@/components/layout/Footer';
 import ErrorBoundary from '@/components/ui/ErrorBoundary';
@@ -37,6 +38,7 @@ function MealPlannerErrorFallback() {
 }
 
 export default function MealPlannerPage() {
+  const router = useRouter();
   const { toasts, removeToast, success, error } = useToast();
 
   // Dynamic SEO setup for client component
@@ -48,13 +50,8 @@ export default function MealPlannerPage() {
     const metaDescription = document.querySelector('meta[name="description"]');
     if (metaDescription) {
       metaDescription.setAttribute('content', 'Create personalized weekly meal plans using AI based on Dr. William Li\'s 5x5x5 system. Balance nutrition across five defense systems for optimal health.');
-    } else {
-      const meta = document.createElement('meta');
-      meta.name = 'description';
-      meta.content = 'Create personalized weekly meal plans using AI based on Dr. William Li\'s 5x5x5 system. Balance nutrition across five defense systems for optimal health.';
-      document.head.appendChild(meta);
     }
-
+    
     // Update meta keywords
     const metaKeywords = document.querySelector('meta[name="keywords"]');
     if (metaKeywords) {
@@ -70,6 +67,13 @@ export default function MealPlannerPage() {
   // Handle meal plan save
   const handlePlanSave = (plan: any) => {
     success('Meal Plan Saved', 'Your meal plan has been saved successfully!');
+    
+    // Redirect to the individual meal plan page after creation
+    if (plan?.id) {
+      setTimeout(() => {
+        router.push(`/meal-planner/${plan.id}`);
+      }, 1500); // Small delay to allow user to see the success message
+    }
   };
 
   // Handle meal plan share

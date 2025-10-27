@@ -253,7 +253,10 @@ export async function POST(request: NextRequest) {
               dailyMenuId: dailyMenu.id,
               mealType: meal.mealType,
               mealName: meal.mealName,
-              defenseSystems: meal.defenseSystems || [],
+              // Inherit meal plan's focus systems if meal doesn't have specific systems
+              defenseSystems: meal.defenseSystems && meal.defenseSystems.length > 0 
+                ? meal.defenseSystems 
+                : focusSystems || [],
               prepTime: meal.prepTime ? String(meal.prepTime) : null,
               cookTime: meal.cookTime ? String(meal.cookTime) : null,
               calories: meal.calories,
@@ -464,7 +467,7 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-// DELETE - Delete meal plan
+// DELETE - Delete meal plan(s) - supports both single and bulk deletion
 export async function DELETE(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -474,59 +477,170 @@ export async function DELETE(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
+    const idsParam = searchParams.get('ids'); // For bulk deletion
+    const force = searchParams.get('force') === 'true';
 
-    if (!id) {
+    // Determine if single or bulk deletion
+    let mealPlanIds: string[] = [];
+    
+    if (id) {
+      // Single deletion
+      mealPlanIds = [id];
+    } else if (idsParam) {
+      // Bulk deletion
+      try {
+        mealPlanIds = idsParam.split(',').filter(id => id.trim().length > 0);
+      } catch (error) {
+        return NextResponse.json(
+          { error: 'Invalid IDs format for bulk deletion' },
+          { status: 400 }
+        );
+      }
+    } else {
       return NextResponse.json(
-        { error: 'Meal plan ID is required' },
+        { error: 'Meal plan ID(s) required. Use ?id=single or ?ids=id1,id2,id3' },
         { status: 400 }
       );
     }
 
-    // Verify ownership
-    const existingPlan = await prisma.mealPlan.findUnique({
-      where: { id },
+    if (mealPlanIds.length === 0) {
+      return NextResponse.json(
+        { error: 'No valid meal plan IDs provided' },
+        { status: 400 }
+      );
+    }
+
+    // For bulk deletion, limit the number of plans that can be deleted at once
+    if (mealPlanIds.length > 50) {
+      return NextResponse.json(
+        { error: 'Cannot delete more than 50 meal plans at once' },
+        { status: 400 }
+      );
+    }
+
+    // Verify ownership for all meal plans
+    const existingPlans = await prisma.mealPlan.findMany({
+      where: { 
+        id: { in: mealPlanIds },
+      },
       select: { 
+        id: true,
         userId: true,
         title: true,
+        _count: {
+          select: {
+            likedBy: true,
+            savedBy: true,
+            comments: true,
+          },
+        },
       },
     });
 
-    if (!existingPlan) {
+    // Check if all plans exist
+    if (existingPlans.length !== mealPlanIds.length) {
+      const foundIds = existingPlans.map(p => p.id);
+      const missingIds = mealPlanIds.filter(id => !foundIds.includes(id));
       return NextResponse.json(
-        { error: 'Meal plan not found' },
+        { 
+          error: 'Some meal plans not found',
+          missingIds,
+        },
         { status: 404 }
       );
     }
 
-    if (existingPlan.userId !== session.user.id) {
+    // Check ownership for all plans
+    const unauthorizedPlans = existingPlans.filter(plan => plan.userId !== session.user.id);
+    if (unauthorizedPlans.length > 0) {
       return NextResponse.json(
-        { error: 'Unauthorized to delete this meal plan' },
+        { 
+          error: 'Unauthorized to delete some meal plans',
+          unauthorizedIds: unauthorizedPlans.map(p => p.id),
+        },
         { status: 403 }
       );
     }
 
-    // Delete the meal plan (cascade will handle related data)
-    await prisma.mealPlan.delete({
-      where: { id },
+    // Check for plans with interactions (likes, saves, comments)
+    const plansWithInteractions = existingPlans.filter(plan => 
+      plan._count.likedBy > 0 || plan._count.savedBy > 0 || plan._count.comments > 0
+    );
+
+    if (plansWithInteractions.length > 0 && !force) {
+      return NextResponse.json(
+        {
+          error: 'Some meal plans have user interactions (likes, saves, comments)',
+          warning: true,
+          message: 'Add ?force=true to delete anyway',
+          plansWithInteractions: plansWithInteractions.map(p => ({
+            id: p.id,
+            title: p.title,
+            interactions: p._count,
+          })),
+        },
+        { status: 409 }
+      );
+    }
+
+    // Perform the deletion
+    let deletedCount = 0;
+    const deletedTitles: string[] = [];
+    const errors: Array<{id: string, title: string, error: string}> = [];
+
+    // Use transaction for bulk deletion
+    await prisma.$transaction(async (tx) => {
+      for (const plan of existingPlans) {
+        try {
+          await tx.mealPlan.delete({
+            where: { id: plan.id },
+          });
+          deletedCount++;
+          deletedTitles.push(plan.title);
+        } catch (error) {
+          console.error(`Error deleting meal plan ${plan.id}:`, error);
+          errors.push({
+            id: plan.id,
+            title: plan.title,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          });
+        }
+      }
     });
 
-    return NextResponse.json({
-      message: `Meal plan "${existingPlan.title}" deleted successfully`,
-    });
+    // Prepare response
+    const response: any = {
+      message: `${deletedCount} meal plan(s) deleted successfully`,
+      deletedCount,
+      totalRequested: mealPlanIds.length,
+    };
+
+    if (deletedTitles.length > 0) {
+      response.deletedPlans = deletedTitles;
+    }
+
+    if (errors.length > 0) {
+      response.errors = errors;
+      response.partialSuccess = true;
+    }
+
+    const statusCode = errors.length > 0 ? 207 : 200; // 207 Multi-Status for partial success
+
+    return NextResponse.json(response, { status: statusCode });
 
   } catch (error) {
-    console.error('Error deleting meal plan:', error);
+    console.error('Error deleting meal plan(s):', error);
     
     // Handle foreign key constraint errors
     if (error instanceof Error && error.message.includes('foreign key constraint')) {
       return NextResponse.json(
-        { error: 'Cannot delete meal plan with existing dependencies' },
+        { error: 'Cannot delete meal plan(s) with existing dependencies' },
         { status: 409 }
       );
     }
 
     return NextResponse.json(
-      { error: 'Failed to delete meal plan' },
+      { error: 'Failed to delete meal plan(s)' },
       { status: 500 }
     );
   }
