@@ -130,6 +130,7 @@ export interface ProgressLogEntry {
 
 // Defense system info
 export interface DefenseSystemInfo {
+  id: string;
   name: DefenseSystem;
   displayName: string;
   icon: string;
@@ -185,4 +186,39 @@ export interface PaginatedResponse<T> {
   pageSize: number;
   total: number;
   totalPages: number;
+}
+
+// Meal planner types
+export interface Meal {
+  id: string;
+  mealType: string;
+  mealName: string;
+  day: string;
+  slot: string;
+  defenseSystems: DefenseSystem[];
+  prepTime?: number;
+  cookTime?: number;
+  servings?: number;
+  recipeGenerated?: boolean;
+  recipeId?: string;
+  customInstructions?: string;
+  ingredients?: string[];
+  instructions?: string[];
+}
+
+export interface Recipe {
+  id: string;
+  title: string;
+  description?: string;
+  ingredients: string[];
+  instructions: string[];
+  prepTime?: number;
+  cookTime?: number;
+  servings?: number;
+  defenseSystems: DefenseSystem[];
+  nutrients?: Record<string, any>;
+  imageUrl?: string;
+  userId: string;
+  createdAt: Date;
+  updatedAt: Date;
 }

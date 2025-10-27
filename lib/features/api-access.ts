@@ -57,13 +57,23 @@ export async function getApiFeatureAccess() {
   });
 
   return {
-    ...featureAccess,
     userId: user.id,
     usage: {
       mealPlans: user.mealPlansThisMonth,
       aiQuestions: user.aiQuestionsThisMonth,
       lastReset: user.lastResetDate,
     },
+    // Include all FeatureAccess methods
+    hasFeature: featureAccess.hasFeature.bind(featureAccess),
+    getLimit: featureAccess.getLimit.bind(featureAccess),
+    canUse: featureAccess.canUse.bind(featureAccess),
+    getUpgradeMessage: featureAccess.getUpgradeMessage.bind(featureAccess),
+    getRequiredTier: featureAccess.getRequiredTier.bind(featureAccess),
+    getRemainingUsage: featureAccess.getRemainingUsage.bind(featureAccess),
+    getUsagePercentage: featureAccess.getUsagePercentage.bind(featureAccess),
+    isApproachingLimit: featureAccess.isApproachingLimit.bind(featureAccess),
+    tier: featureAccess.getTier,
+    isTrialing: featureAccess.getIsTrialing,
   };
 }
 

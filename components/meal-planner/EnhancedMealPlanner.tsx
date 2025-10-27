@@ -1,0 +1,893 @@
+'use client';
+
+import React, { useState, useEffect, useCallback } from 'react';
+import { useSession } from 'next-auth/react';
+import { DefenseSystem, Meal } from '@/types';
+import SystemSelector from './SystemSelector';
+import MealCard from './MealCard';
+import ShareMenu from './ShareMenu';
+import MealPlanHeader from './MealPlanHeader';
+import PlanConfiguration from './PlanConfiguration';
+import MealPlanView from './MealPlanView';
+import {
+  GeneratingOverlay,
+  OptimisticUpdate,
+  ErrorState,
+  EmptyState,
+  WeekViewSkeleton,
+} from './LoadingStates';
+import { useResponsive, cn } from './ResponsiveUtils';
+
+interface ConfigurationData {
+  title: string;
+  description: string;
+  servings: number;
+  dietaryRestrictions: string[];
+  focusSystems: DefenseSystem[];
+  customInstructions: string;
+  visibility: 'PRIVATE' | 'PUBLIC' | 'FRIENDS';
+  tags: string[];
+}
+
+interface MealPlan {
+  id?: string;
+  title: string;
+  description: string;
+  visibility: 'PRIVATE' | 'PUBLIC' | 'FRIENDS';
+  meals: Meal[];
+  tags: string[];
+  createdAt?: Date;
+  updatedAt?: Date;
+  userId?: string;
+}
+
+interface EnhancedMealPlannerProps {
+  className?: string;
+  onPlanSave?: (plan: MealPlan) => void;
+  onPlanShare?: (plan: MealPlan) => void;
+  initialPlan?: MealPlan;
+}
+
+export default function EnhancedMealPlanner({
+  className = '',
+  onPlanSave,
+  onPlanShare,
+  initialPlan,
+}: EnhancedMealPlannerProps) {
+  const { data: session } = useSession();
+  const { isMobile, isTablet } = useResponsive();
+
+  // Main state
+  const [currentStep, setCurrentStep] = useState<'configure' | 'view' | 'edit'>('configure');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [optimisticAction, setOptimisticAction] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  // Configuration state
+  const [configuration, setConfiguration] = useState<ConfigurationData>({
+    title: initialPlan?.title || '',
+    description: initialPlan?.description || '',
+    servings: 4,
+    dietaryRestrictions: [],
+    focusSystems: [],
+    customInstructions: '',
+    visibility: initialPlan?.visibility || 'PRIVATE',
+    tags: initialPlan?.tags || [],
+  });
+
+  // Meal plan state
+  const [mealPlan, setMealPlan] = useState<MealPlan>({
+    id: initialPlan?.id,
+    title: configuration.title,
+    description: configuration.description,
+    visibility: configuration.visibility,
+    meals: initialPlan?.meals || [],
+    tags: configuration.tags,
+    createdAt: initialPlan?.createdAt,
+    updatedAt: initialPlan?.updatedAt,
+    userId: session?.user?.id,
+  });
+
+  // Progress tracking
+  const [generationProgress, setGenerationProgress] = useState(0);
+
+  // Initialize with existing plan if provided
+  useEffect(() => {
+    if (initialPlan) {
+      setCurrentStep('view');
+      setMealPlan(initialPlan);
+      setConfiguration({
+        title: initialPlan.title,
+        description: initialPlan.description,
+        servings: 4, // Default since not stored in plan
+        dietaryRestrictions: [], // Could be derived from meals
+        focusSystems: [], // Could be derived from meals
+        customInstructions: '',
+        visibility: initialPlan.visibility,
+        tags: initialPlan.tags,
+      });
+    }
+  }, [initialPlan]);
+
+  // Generate meal plan
+  const handleGeneratePlan = useCallback(async () => {
+    if (!session?.user) {
+      setError('Please sign in to generate meal plans');
+      return;
+    }
+
+    setIsGenerating(true);
+    setError(null);
+    setGenerationProgress(0);
+
+    try {
+      // Simulate progress updates
+      const progressInterval = setInterval(() => {
+        setGenerationProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + Math.random() * 20;
+        });
+      }, 500);
+
+      // Make API call to generate meal plan
+      const response = await fetch('/api/meal-planner/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          dietaryRestrictions: configuration.dietaryRestrictions,
+          focusSystems: configuration.focusSystems,
+          preferences: {
+            title: configuration.title,
+            description: configuration.description,
+            servings: configuration.servings,
+            customInstructions: configuration.customInstructions,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate meal plan');
+      }
+
+      const { data: mealPlanData } = await response.json();
+      
+      clearInterval(progressInterval);
+      setGenerationProgress(100);
+
+      // Transform the meal plan data into the expected structure
+      const meals: Meal[] = [];
+      const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+      const mealTypes = ['breakfast', 'lunch', 'dinner'];
+
+      days.forEach((day, dayIndex) => {
+        const dayData = mealPlanData[day];
+        if (dayData) {
+          mealTypes.forEach((mealType, mealIndex) => {
+            const mealData = dayData[mealType];
+            if (mealData) {
+              // Parse prep time from string like "15 min" to number
+              const prepTimeMatch = mealData.prepTime?.match(/(\d+)/);
+              const prepTime = prepTimeMatch ? parseInt(prepTimeMatch[1]) : 30;
+
+              meals.push({
+                id: `${day}-${mealType}`,
+                mealName: mealData.name,
+                mealType,
+                day: day,
+                slot: mealType,
+                defenseSystems: mealData.systems || [],
+                prepTime: prepTime,
+                cookTime: 0, // Default
+                servings: configuration.servings,
+                recipeGenerated: false,
+                customInstructions: configuration.customInstructions,
+              });
+            }
+          });
+        }
+      });
+
+      // Update meal plan with generated data
+      const newPlan: MealPlan = {
+        id: undefined, // Let server generate new ID
+        title: configuration.title,
+        description: configuration.description,
+        visibility: configuration.visibility,
+        meals: meals,
+        tags: configuration.tags,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        userId: session.user.id,
+      };
+
+      // Transform meal plan data to API format
+      const weekStart = new Date();
+      weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1); // Start from Monday
+      
+      // Group meals by day
+      const dailyMenus: any[] = [];
+      const dayNames = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+      
+      dayNames.forEach((dayName, index) => {
+        const dayMeals = meals.filter(meal => meal.day === dayName);
+        if (dayMeals.length > 0) {
+          const dayDate = new Date(weekStart);
+          dayDate.setDate(weekStart.getDate() + index);
+          
+          dailyMenus.push({
+            date: dayDate.toISOString(),
+            meals: dayMeals.map(meal => ({
+              mealType: meal.mealType,
+              mealName: meal.mealName,
+              defenseSystems: meal.defenseSystems,
+              prepTime: meal.prepTime ? String(meal.prepTime) : null,
+              cookTime: meal.cookTime ? String(meal.cookTime) : null,
+              customInstructions: meal.customInstructions,
+            }))
+          });
+        }
+      });
+
+      const apiMealPlan = {
+        title: configuration.title,
+        description: configuration.description,
+        weekStart: weekStart.toISOString(),
+        defaultServings: configuration.servings,
+        visibility: configuration.visibility,
+        customInstructions: configuration.customInstructions,
+        dietaryRestrictions: configuration.dietaryRestrictions,
+        focusSystems: configuration.focusSystems,
+        tags: configuration.tags,
+        dailyMenus: dailyMenus,
+      };
+
+      // Save the generated meal plan to database
+      console.log('🔄 Attempting to save meal plan to database...', apiMealPlan);
+      
+      const saveResponse = await fetch('/api/meal-planner', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(apiMealPlan),
+      });
+
+      console.log('📡 Save response status:', saveResponse.status);
+
+      if (!saveResponse.ok) {
+        const errorData = await saveResponse.text();
+        console.error('❌ Failed to save meal plan:', errorData);
+        throw new Error(`Failed to save meal plan to database: ${saveResponse.status}`);
+      }
+
+      const saveData = await saveResponse.json();
+      console.log('✅ Meal plan saved successfully:', saveData);
+      
+      // Transform the nested structure to flat structure expected by frontend
+      const savedPlan = saveData.data || saveData;
+      const flattenedMeals: Meal[] = [];
+      
+      if (savedPlan.dailyMenus) {
+        // Sort daily menus by date to ensure correct day mapping
+        const sortedDailyMenus = savedPlan.dailyMenus.sort((a: any, b: any) => 
+          new Date(a.date).getTime() - new Date(b.date).getTime()
+        );
+        
+        sortedDailyMenus.forEach((dailyMenu: any, dayIndex: number) => {
+          if (dailyMenu.meals && Array.isArray(dailyMenu.meals)) {
+            const dayNames = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+            const dayName = dayNames[dayIndex % 7] || 'monday';
+            
+            dailyMenu.meals.forEach((meal: any) => {
+              flattenedMeals.push({
+                id: meal.id || `${dayName}-${meal.mealType}`,
+                mealName: meal.mealName || 'Unnamed Meal',
+                mealType: meal.mealType || 'breakfast',
+                day: dayName,
+                slot: meal.mealType || 'breakfast',
+                defenseSystems: meal.defenseSystems || [],
+                prepTime: meal.prepTime ? (typeof meal.prepTime === 'string' ? parseInt(meal.prepTime) : meal.prepTime) : 30,
+                cookTime: meal.cookTime ? (typeof meal.cookTime === 'string' ? parseInt(meal.cookTime) : meal.cookTime) : 0,
+                servings: meal.servings || savedPlan.defaultServings || 2,
+                recipeGenerated: !!meal.generatedRecipe,
+                recipeId: meal.generatedRecipe?.id,
+                customInstructions: meal.customInstructions,
+              });
+            });
+          }
+        });
+      }
+
+      const transformedPlan: MealPlan = {
+        ...savedPlan,
+        meals: flattenedMeals,
+      };
+      
+      setMealPlan(transformedPlan);
+      setCurrentStep('view');
+
+      // Call callback if provided
+      if (onPlanSave) {
+        console.log('🎉 Calling onPlanSave callback');
+        onPlanSave(savedPlan);
+      }
+
+    } catch (error) {
+      console.error('Error generating meal plan:', error);
+      setError(error instanceof Error ? error.message : 'Failed to generate meal plan');
+    } finally {
+      setIsGenerating(false);
+      setGenerationProgress(0);
+    }
+  }, [configuration, session, onPlanSave]);
+
+  // Update meal
+  const handleMealUpdate = useCallback(async (mealId: string, updates: Partial<Meal>) => {
+    setOptimisticAction('Updating meal');
+    
+    // Optimistic update
+    setMealPlan(prev => ({
+      ...prev,
+      meals: prev.meals.map(meal => 
+        meal.id === mealId ? { ...meal, ...updates } : meal
+      ),
+    }));
+
+    try {
+      const response = await fetch(`/api/meals/${mealId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updates),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update meal');
+      }
+
+      const updatedMeal = await response.json();
+      
+      // Update with actual server response
+      setMealPlan(prev => ({
+        ...prev,
+        meals: prev.meals.map(meal => 
+          meal.id === mealId ? updatedMeal : meal
+        ),
+      }));
+
+    } catch (error) {
+      console.error('Error updating meal:', error);
+      
+      // Revert optimistic update
+      setMealPlan(prev => ({
+        ...prev,
+        meals: prev.meals.map(meal => 
+          meal.id === mealId ? meal : meal
+        ),
+      }));
+      
+      setError('Failed to update meal');
+    } finally {
+      setOptimisticAction(null);
+    }
+  }, []);
+
+  // Delete meal
+  const handleMealDelete = useCallback(async (mealId: string) => {
+    setOptimisticAction('Deleting meal');
+    
+    // Store for potential rollback
+    const mealToDelete = mealPlan.meals.find(meal => meal.id === mealId);
+    
+    // Optimistic update
+    setMealPlan(prev => ({
+      ...prev,
+      meals: prev.meals.filter(meal => meal.id !== mealId),
+    }));
+
+    try {
+      const response = await fetch(`/api/meals/${mealId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete meal');
+      }
+
+    } catch (error) {
+      console.error('Error deleting meal:', error);
+      
+      // Revert optimistic update
+      if (mealToDelete) {
+        setMealPlan(prev => ({
+          ...prev,
+          meals: [...prev.meals, mealToDelete],
+        }));
+      }
+      
+      setError('Failed to delete meal');
+    } finally {
+      setOptimisticAction(null);
+    }
+  }, [mealPlan.meals]);
+
+  // Copy meal
+  const handleMealCopy = useCallback(async (meal: Meal) => {
+    setOptimisticAction('Copying meal');
+    
+    const copiedMeal: Meal = {
+      ...meal,
+      id: `temp-${Date.now()}`, // Temporary ID
+      mealName: `${meal.mealName} (Copy)`,
+    };
+
+    // Optimistic update
+    setMealPlan(prev => ({
+      ...prev,
+      meals: [...prev.meals, copiedMeal],
+    }));
+
+    try {
+      const response = await fetch('/api/meals', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...meal,
+          mealName: `${meal.mealName} (Copy)`,
+          id: undefined, // Let server generate new ID
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to copy meal');
+      }
+
+      const newMeal = await response.json();
+      
+      // Replace temporary meal with actual server response
+      setMealPlan(prev => ({
+        ...prev,
+        meals: prev.meals.map(m => 
+          m.id === copiedMeal.id ? newMeal : m
+        ),
+      }));
+
+    } catch (error) {
+      console.error('Error copying meal:', error);
+      
+      // Remove optimistic update
+      setMealPlan(prev => ({
+        ...prev,
+        meals: prev.meals.filter(m => m.id !== copiedMeal.id),
+      }));
+      
+      setError('Failed to copy meal');
+    } finally {
+      setOptimisticAction(null);
+    }
+  }, []);
+
+  // Add new meal
+  const handleAddMeal = useCallback(async (day: string, slot: string) => {
+    setOptimisticAction('Adding meal');
+    
+    const newMeal: Meal = {
+      id: `temp-${Date.now()}`,
+      mealType: slot,
+      mealName: `New ${slot.charAt(0).toUpperCase() + slot.slice(1)}`,
+      day,
+      slot,
+      defenseSystems: [],
+      servings: configuration.servings,
+    };
+
+    // Optimistic update
+    setMealPlan(prev => ({
+      ...prev,
+      meals: [...prev.meals, newMeal],
+    }));
+
+    try {
+      const response = await fetch('/api/meals', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...newMeal,
+          id: undefined,
+          planId: mealPlan.id,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to add meal');
+      }
+
+      const createdMeal = await response.json();
+      
+      // Replace temporary meal with actual server response
+      setMealPlan(prev => ({
+        ...prev,
+        meals: prev.meals.map(m => 
+          m.id === newMeal.id ? createdMeal : m
+        ),
+      }));
+
+    } catch (error) {
+      console.error('Error adding meal:', error);
+      
+      // Remove optimistic update
+      setMealPlan(prev => ({
+        ...prev,
+        meals: prev.meals.filter(m => m.id !== newMeal.id),
+      }));
+      
+      setError('Failed to add meal');
+    } finally {
+      setOptimisticAction(null);
+    }
+  }, [configuration.servings, mealPlan.id]);
+
+  // Regenerate meal
+  const handleRegenerateMeal = useCallback(async (mealId: string) => {
+    setOptimisticAction('Regenerating meal');
+    
+    try {
+      const response = await fetch(`/api/ai/generate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: 'regenerate-meal',
+          mealId,
+          configuration,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to regenerate meal');
+      }
+
+      const updatedMeal = await response.json();
+      
+      setMealPlan(prev => ({
+        ...prev,
+        meals: prev.meals.map(meal => 
+          meal.id === mealId ? updatedMeal : meal
+        ),
+      }));
+
+    } catch (error) {
+      console.error('Error regenerating meal:', error);
+      setError('Failed to regenerate meal');
+    } finally {
+      setOptimisticAction(null);
+    }
+  }, [configuration]);
+
+  // Bulk regenerate day
+  const handleBulkRegenerate = useCallback(async (day: string) => {
+    setOptimisticAction(`Regenerating ${day}'s meals`);
+    
+    try {
+      const response = await fetch('/api/ai/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: 'regenerate-day',
+          day,
+          planId: mealPlan.id,
+          configuration,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to regenerate day');
+      }
+
+      const updatedMeals = await response.json();
+      
+      setMealPlan(prev => ({
+        ...prev,
+        meals: prev.meals.map(meal => 
+          meal.day === day 
+            ? updatedMeals.find((updated: Meal) => updated.id === meal.id) || meal
+            : meal
+        ),
+      }));
+
+    } catch (error) {
+      console.error('Error regenerating day:', error);
+      setError('Failed to regenerate day');
+    } finally {
+      setOptimisticAction(null);
+    }
+  }, [mealPlan.id, configuration]);
+
+  // Generate shopping list
+  const handleGenerateShoppingList = useCallback(async () => {
+    setOptimisticAction('Generating shopping list');
+    
+    try {
+      const response = await fetch('/api/shopping-list', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          planId: mealPlan.id,
+          meals: mealPlan.meals,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate shopping list');
+      }
+
+      const shoppingList = await response.json();
+      
+      // Handle shopping list (could open modal, download PDF, etc.)
+      console.log('Shopping list generated:', shoppingList);
+
+    } catch (error) {
+      console.error('Error generating shopping list:', error);
+      setError('Failed to generate shopping list');
+    } finally {
+      setOptimisticAction(null);
+    }
+  }, [mealPlan]);
+
+  // Save plan
+  const handleSavePlan = useCallback(async (updates: Partial<MealPlan>) => {
+    setOptimisticAction('Saving plan');
+    
+    const updatedPlan = { ...mealPlan, ...updates };
+    
+    // Optimistic update
+    setMealPlan(updatedPlan);
+
+    try {
+      let response;
+      
+      if (mealPlan.id) {
+        // Update existing meal plan
+        response = await fetch(`/api/meal-planner/${mealPlan.id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(updates),
+        });
+      } else {
+        // Create new meal plan
+        response = await fetch('/api/meal-planner', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(updatedPlan),
+        });
+      }
+
+      if (!response.ok) {
+        throw new Error('Failed to save plan');
+      }
+
+      const saveData = await response.json();
+      
+      // Transform the nested structure to flat structure expected by frontend
+      const rawPlan = saveData.data || saveData;
+      const flattenedMeals: Meal[] = [];
+      
+      if (rawPlan.dailyMenus) {
+        // Sort daily menus by date to ensure correct day mapping
+        const sortedDailyMenus = rawPlan.dailyMenus.sort((a: any, b: any) => 
+          new Date(a.date).getTime() - new Date(b.date).getTime()
+        );
+        
+        sortedDailyMenus.forEach((dailyMenu: any, dayIndex: number) => {
+          if (dailyMenu.meals && Array.isArray(dailyMenu.meals)) {
+            const dayNames = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+            const dayName = dayNames[dayIndex % 7] || 'monday';
+            
+            dailyMenu.meals.forEach((meal: any) => {
+              flattenedMeals.push({
+                id: meal.id || `${dayName}-${meal.mealType}`,
+                mealName: meal.mealName || 'Unnamed Meal',
+                mealType: meal.mealType || 'breakfast',
+                day: dayName,
+                slot: meal.mealType || 'breakfast',
+                defenseSystems: meal.defenseSystems || [],
+                prepTime: meal.prepTime ? (typeof meal.prepTime === 'string' ? parseInt(meal.prepTime) : meal.prepTime) : 30,
+                cookTime: meal.cookTime ? (typeof meal.cookTime === 'string' ? parseInt(meal.cookTime) : meal.cookTime) : 0,
+                servings: meal.servings || rawPlan.defaultServings || 2,
+                recipeGenerated: !!meal.generatedRecipe,
+                recipeId: meal.generatedRecipe?.id,
+                customInstructions: meal.customInstructions,
+              });
+            });
+          }
+        });
+      }
+
+      const transformedSavedPlan: MealPlan = {
+        ...rawPlan,
+        meals: flattenedMeals,
+      };
+      
+      setMealPlan(transformedSavedPlan);
+
+      if (onPlanSave) {
+        onPlanSave(transformedSavedPlan);
+      }
+
+    } catch (error) {
+      console.error('Error saving plan:', error);
+      setError('Failed to save plan');
+      
+      // Revert optimistic update
+      setMealPlan(mealPlan);
+    } finally {
+      setOptimisticAction(null);
+    }
+  }, [mealPlan, onPlanSave]);
+
+  // Share plan
+  const handleSharePlan = useCallback(() => {
+    if (onPlanShare) {
+      onPlanShare(mealPlan);
+    }
+  }, [mealPlan, onPlanShare]);
+
+  // Configuration step
+  if (currentStep === 'configure') {
+    return (
+      <div className={cn('min-h-screen bg-gray-50', className)}>
+        <PlanConfiguration
+          configuration={configuration}
+          onConfigurationChange={(updates) => 
+            setConfiguration(prev => ({ ...prev, ...updates }))
+          }
+          onGenerate={handleGeneratePlan}
+          isGenerating={isGenerating}
+          className="py-8"
+        />
+        
+        <GeneratingOverlay
+          isVisible={isGenerating}
+          message="Creating your personalized meal plan with AI-generated recipes..."
+          progress={generationProgress}
+        />
+      </div>
+    );
+  }
+
+  // Error state
+  if (error && (!mealPlan.meals || !mealPlan.meals.length)) {
+    return (
+      <div className={cn('min-h-screen bg-gray-50 flex items-center justify-center', className)}>
+        <ErrorState
+          message={error}
+          onRetry={() => {
+            setError(null);
+            handleGeneratePlan();
+          }}
+        />
+      </div>
+    );
+  }
+
+  // Empty state
+  if ((!mealPlan.meals || !mealPlan.meals.length) && !isGenerating) {
+    return (
+      <div className={cn('min-h-screen bg-gray-50 flex items-center justify-center', className)}>
+        <EmptyState
+          title="No meals planned yet"
+          description="Start by configuring your meal plan preferences and generating your first weekly plan."
+          action={{
+            label: 'Create Meal Plan',
+            onClick: () => setCurrentStep('configure'),
+          }}
+        />
+      </div>
+    );
+  }
+
+  // Main view
+  return (
+    <div className={cn('min-h-screen bg-gray-50', className)}>
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div className={cn(
+          'mx-auto px-4 sm:px-6 lg:px-8',
+          isMobile ? 'max-w-full' : isTablet ? 'max-w-4xl' : 'max-w-7xl'
+        )}>
+          <MealPlanHeader
+            mealPlan={{
+              ...mealPlan,
+              weekStart: new Date(),
+              weekEnd: new Date(),
+              defaultServings: 4,
+            }}
+            isEditing={currentStep === 'edit'}
+            isSaving={optimisticAction === 'saving'}
+            isGeneratingShoppingList={optimisticAction === 'shopping-list'}
+            onSave={() => handleSavePlan({})}
+            onUpdate={(updates) => handleSavePlan(updates)}
+            onGenerateShoppingList={handleGenerateShoppingList}
+            onNewPlan={() => window.location.reload()}
+            onShare={handleSharePlan}
+            onExportPDF={() => {}} // TODO: Implement PDF export
+          />
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className={cn(
+        'mx-auto py-6',
+        isMobile ? 'px-4 max-w-full' : isTablet ? 'px-6 max-w-4xl' : 'px-8 max-w-7xl'
+      )}>
+        {isGenerating ? (
+          <WeekViewSkeleton />
+        ) : (
+          <MealPlanView
+            meals={mealPlan.meals}
+            onMealUpdate={handleMealUpdate}
+            onMealDelete={handleMealDelete}
+            onMealCopy={handleMealCopy}
+            onAddMeal={handleAddMeal}
+            onRegenerateMeal={handleRegenerateMeal}
+            onGenerateShoppingList={handleGenerateShoppingList}
+            onBulkRegenerate={handleBulkRegenerate}
+            isGenerating={isGenerating}
+          />
+        )}
+      </div>
+
+      {/* Overlays */}
+      <OptimisticUpdate
+        isVisible={!!optimisticAction}
+        action={optimisticAction || ''}
+      />
+
+      {/* Error display */}
+      {error && (
+        <div className="fixed bottom-4 left-4 right-4 md:left-auto md:w-96">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-center gap-3">
+              <div className="text-red-500">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                        d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
+              <button
+                onClick={() => setError(null)}
+                className="text-red-400 hover:text-red-600"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

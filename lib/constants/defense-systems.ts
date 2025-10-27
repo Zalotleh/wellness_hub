@@ -2,6 +2,7 @@ import { DefenseSystem, DefenseSystemInfo } from '@/types';
 
 export const DEFENSE_SYSTEMS: Record<DefenseSystem, DefenseSystemInfo> = {
   [DefenseSystem.ANGIOGENESIS]: {
+    id: 'angiogenesis',
     name: DefenseSystem.ANGIOGENESIS,
     displayName: 'Angiogenesis',
     icon: '🩸',
@@ -29,6 +30,7 @@ export const DEFENSE_SYSTEMS: Record<DefenseSystem, DefenseSystemInfo> = {
     textColor: 'text-angiogenesis-dark',
   },
   [DefenseSystem.REGENERATION]: {
+    id: 'regeneration',
     name: DefenseSystem.REGENERATION,
     displayName: 'Regeneration',
     icon: '🔄',
@@ -56,6 +58,7 @@ export const DEFENSE_SYSTEMS: Record<DefenseSystem, DefenseSystemInfo> = {
     textColor: 'text-regeneration-dark',
   },
   [DefenseSystem.MICROBIOME]: {
+    id: 'microbiome',
     name: DefenseSystem.MICROBIOME,
     displayName: 'Microbiome',
     icon: '🦠',
@@ -83,6 +86,7 @@ export const DEFENSE_SYSTEMS: Record<DefenseSystem, DefenseSystemInfo> = {
     textColor: 'text-microbiome-dark',
   },
   [DefenseSystem.DNA_PROTECTION]: {
+    id: 'dna-protection',
     name: DefenseSystem.DNA_PROTECTION,
     displayName: 'DNA Protection',
     icon: '🧬',
@@ -110,6 +114,7 @@ export const DEFENSE_SYSTEMS: Record<DefenseSystem, DefenseSystemInfo> = {
     textColor: 'text-dna-dark',
   },
   [DefenseSystem.IMMUNITY]: {
+    id: 'immunity',
     name: DefenseSystem.IMMUNITY,
     displayName: 'Immunity',
     icon: '🛡️',

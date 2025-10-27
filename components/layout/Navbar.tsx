@@ -5,6 +5,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
+import { useFeatureAccess, useLimit } from '@/hooks/useFeatureAccess';
+import { TierBadge } from '@/components/features/FeatureGate';
 import {
   Heart,
   ChefHat,
@@ -19,17 +21,31 @@ import {
   X,
   MessageCircle,
   Calendar,
+  ShoppingCart,
+  Bookmark,
+  Crown,
+  AlertCircle,
 } from 'lucide-react';
 
 export default function Navbar() {
   const pathname = usePathname();
   const { data: session, status } = useSession();
+  const { tier, isTrialing, canUse } = useFeatureAccess();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+
+  // Mock usage data - in real app, fetch from API
+  const userMealPlans = ((session?.user as any)?.mealPlansThisMonth) || 0;
+  const userAIQuestions = ((session?.user as any)?.aiQuestionsThisMonth) || 0;
+
+  const mealPlanLimit = useLimit('meal_plans_per_month', userMealPlans);
+  const aiLimit = useLimit('ai_questions_per_month', userAIQuestions);
 
   const navLinks = [
     { href: '/recipes', label: 'Recipes', icon: ChefHat },
     { href: '/meal-planner', label: 'Meal Planner', icon: Calendar },
+    { href: '/saved-plans', label: 'Saved Plans', icon: Bookmark },
+    { href: '/shopping-lists', label: 'Shopping Lists', icon: ShoppingCart },
     { href: '/progress', label: 'Progress', icon: TrendingUp },
     { href: '/advisor', label: 'AI Advisor', icon: MessageCircle },
     { href: '/learn', label: 'Learn 5x5x5', icon: BookOpen },
@@ -80,6 +96,44 @@ export default function Navbar() {
 
           {/* Right Side Actions */}
           <div className="flex items-center space-x-3">
+            {/* Tier Badge and Upgrade Button */}
+            {status === 'authenticated' && session?.user && (
+              <div className="hidden xl:flex items-center space-x-3">
+                <TierBadge />
+                {tier === 'FREE' && !isTrialing && (
+                  <Link
+                    href="/upgrade"
+                    className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all font-medium text-sm"
+                  >
+                    <Crown className="w-4 h-4" />
+                    <span>Upgrade to Premium</span>
+                  </Link>
+                )}
+              </div>
+            )}
+
+            {/* Usage Limits Badge */}
+            {status === 'authenticated' && session?.user && tier === 'FREE' && (
+              <div className="hidden lg:flex items-center space-x-2 px-3 py-2 bg-gray-100 rounded-lg">
+                <div className="flex items-center space-x-1 text-xs">
+                  <Calendar className="w-3 h-3 text-gray-600" />
+                  <span className="text-gray-700">
+                    {mealPlanLimit.remaining}/{mealPlanLimit.maxLimit}
+                  </span>
+                </div>
+                <div className="w-px h-4 bg-gray-300" />
+                <div className="flex items-center space-x-1 text-xs">
+                  <MessageCircle className="w-3 h-3 text-gray-600" />
+                  <span className="text-gray-700">
+                    {aiLimit.remaining}/{aiLimit.maxLimit}
+                  </span>
+                </div>
+                {(mealPlanLimit.isApproachingLimit || aiLimit.isApproachingLimit) && (
+                  <AlertCircle className="w-3 h-3 text-amber-500" />
+                )}
+              </div>
+            )}
+
             {/* AI Generate Button */}
             <Link
               href="/recipes/ai-generate"
@@ -111,13 +165,75 @@ export default function Navbar() {
                       className="fixed inset-0 z-10"
                       onClick={() => setShowUserMenu(false)}
                     />
-                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-1 z-20">
+                    <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-200 py-1 z-20">
                       <div className="px-4 py-3 border-b border-gray-200">
-                        <p className="text-sm font-medium text-gray-900">
-                          {session.user.name}
-                        </p>
-                        <p className="text-xs text-gray-500">{session.user.email}</p>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">
+                              {session.user.name}
+                            </p>
+                            <p className="text-xs text-gray-500">{session.user.email}</p>
+                          </div>
+                          <TierBadge className="ml-2" />
+                        </div>
                       </div>
+
+                      {/* Usage Stats for Free Users */}
+                      {tier === 'FREE' && (
+                        <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+                          <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
+                            Monthly Usage
+                          </h4>
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                              <div className="flex items-center space-x-2">
+                                <Calendar className="w-4 h-4 text-gray-500" />
+                                <span className="text-gray-700">Meal Plans</span>
+                              </div>
+                              <span className="font-medium">
+                                {mealPlanLimit.remaining}/{mealPlanLimit.maxLimit}
+                              </span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div 
+                                className={`h-2 rounded-full ${
+                                  mealPlanLimit.isApproachingLimit ? 'bg-amber-500' : 'bg-green-500'
+                                }`}
+                                style={{ width: `${100 - mealPlanLimit.percentage}%` }}
+                              />
+                            </div>
+                            
+                            <div className="flex items-center justify-between text-sm">
+                              <div className="flex items-center space-x-2">
+                                <MessageCircle className="w-4 h-4 text-gray-500" />
+                                <span className="text-gray-700">AI Questions</span>
+                              </div>
+                              <span className="font-medium">
+                                {aiLimit.remaining}/{aiLimit.maxLimit}
+                              </span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div 
+                                className={`h-2 rounded-full ${
+                                  aiLimit.isApproachingLimit ? 'bg-amber-500' : 'bg-green-500'
+                                }`}
+                                style={{ width: `${100 - aiLimit.percentage}%` }}
+                              />
+                            </div>
+                          </div>
+
+                          {!isTrialing && (
+                            <Link
+                              href="/upgrade"
+                              className="flex items-center justify-center space-x-2 w-full mt-3 px-3 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all font-medium text-sm"
+                              onClick={() => setShowUserMenu(false)}
+                            >
+                              <Crown className="w-4 h-4" />
+                              <span>Upgrade to Premium</span>
+                            </Link>
+                          )}
+                        </div>
+                      )}
 
                       <Link
                         href="/profile"
@@ -176,6 +292,64 @@ export default function Navbar() {
         {/* Mobile Menu */}
         {showMobileMenu && (
           <div className="lg:hidden py-4 border-t border-gray-200">
+            {/* Mobile Usage Stats for Free Users */}
+            {status === 'authenticated' && session?.user && tier === 'FREE' && (
+              <div className="px-4 py-3 mb-3 bg-gray-50 rounded-lg mx-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                    Monthly Usage
+                  </h4>
+                  <TierBadge />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="text-center">
+                    <div className="flex items-center justify-center space-x-1 text-xs mb-1">
+                      <Calendar className="w-3 h-3 text-gray-600" />
+                      <span className="text-gray-700">Meal Plans</span>
+                    </div>
+                    <div className="text-sm font-medium">
+                      {mealPlanLimit.remaining}/{mealPlanLimit.maxLimit}
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-1 mt-1">
+                      <div 
+                        className={`h-1 rounded-full ${
+                          mealPlanLimit.isApproachingLimit ? 'bg-amber-500' : 'bg-green-500'
+                        }`}
+                        style={{ width: `${100 - mealPlanLimit.percentage}%` }}
+                      />
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="flex items-center justify-center space-x-1 text-xs mb-1">
+                      <MessageCircle className="w-3 h-3 text-gray-600" />
+                      <span className="text-gray-700">AI Questions</span>
+                    </div>
+                    <div className="text-sm font-medium">
+                      {aiLimit.remaining}/{aiLimit.maxLimit}
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-1 mt-1">
+                      <div 
+                        className={`h-1 rounded-full ${
+                          aiLimit.isApproachingLimit ? 'bg-amber-500' : 'bg-green-500'
+                        }`}
+                        style={{ width: `${100 - aiLimit.percentage}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+                {!isTrialing && (
+                  <Link
+                    href="/upgrade"
+                    onClick={() => setShowMobileMenu(false)}
+                    className="flex items-center justify-center space-x-2 w-full mt-3 px-3 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all font-medium text-sm"
+                  >
+                    <Crown className="w-4 h-4" />
+                    <span>Upgrade to Premium</span>
+                  </Link>
+                )}
+              </div>
+            )}
+
             <div className="space-y-1">
               {navLinks.map((link) => {
                 const Icon = link.icon;

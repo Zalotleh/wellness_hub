@@ -25,6 +25,7 @@ export enum Feature {
   ADVANCED_ANALYTICS = 'advanced_analytics',
   DATA_EXPORT = 'data_export',
   HEALTH_APP_SYNC = 'health_app_sync',
+  NUTRITION_ANALYSIS = 'nutrition_analysis',
   
   // AI Advisor
   UNLIMITED_AI_QUESTIONS = 'unlimited_ai_questions',
@@ -106,6 +107,7 @@ export const TIER_FEATURES: Record<SubscriptionTier, Feature[]> = {
     Feature.ALL_TIME_HISTORY,
     Feature.ADVANCED_ANALYTICS,
     Feature.DATA_EXPORT,
+    Feature.NUTRITION_ANALYSIS,
     Feature.UNLIMITED_AI_QUESTIONS,
     Feature.CONVERSATION_HISTORY,
     Feature.SAVE_RESPONSES,
@@ -252,6 +254,20 @@ export class FeatureAccess {
    */
   isApproachingLimit(limitKey: string, currentUsage: number): boolean {
     return this.getUsagePercentage(limitKey, currentUsage) > 80;
+  }
+
+  /**
+   * Get the user's subscription tier
+   */
+  get getTier(): SubscriptionTier {
+    return this.tier;
+  }
+
+  /**
+   * Check if user is in trial period
+   */
+  get getIsTrialing(): boolean {
+    return this.isTrialing;
   }
 }
 
