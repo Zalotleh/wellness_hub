@@ -92,6 +92,7 @@ export default function EnhancedMealPlanner({
 
   // Progress tracking
   const [generationProgress, setGenerationProgress] = useState(0);
+  const [shoppingListGenerated, setShoppingListGenerated] = useState(0); // Counter to trigger refresh
 
   // Initialize with existing plan if provided
   useEffect(() => {
@@ -701,6 +702,9 @@ export default function EnhancedMealPlanner({
       
       // TODO: Display shopping list in modal or redirect to shopping list page
       alert(`Shopping list generated with ${shoppingListData.data?.items?.length || 0} items!`);
+      
+      // Trigger header refresh for shopping list status
+      setShoppingListGenerated(prev => prev + 1);
 
     } catch (error) {
       console.error('Error generating shopping list:', error);
@@ -709,6 +713,34 @@ export default function EnhancedMealPlanner({
       setOptimisticAction(null);
     }
   }, [mealPlan.id]);
+
+  // View existing shopping list
+  const handleViewShoppingList = useCallback(async () => {
+    if (!mealPlan.id) {
+      setError('Meal plan must be saved before viewing shopping list');
+      return;
+    }
+
+    try {
+      // Check if shopping list exists
+      const response = await fetch(`/api/meal-planner/${mealPlan.id}/shopping-list`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.data?.id) {
+          // Navigate to the shopping list page
+          router.push(`/shopping-lists/${data.data.id}`);
+        } else {
+          setError('No shopping list found for this meal plan');
+        }
+      } else {
+        setError('Shopping list not found');
+      }
+    } catch (error) {
+      console.error('Error viewing shopping list:', error);
+      setError('Failed to view shopping list');
+    }
+  }, [mealPlan.id, router]);
 
   // Save plan
   const handleSavePlan = useCallback(async (updates: Partial<MealPlan>) => {
@@ -888,6 +920,8 @@ export default function EnhancedMealPlanner({
             onSave={() => handleSavePlan({})}
             onUpdate={(updates) => handleSavePlan(updates)}
             onGenerateShoppingList={handleGenerateShoppingList}
+            onViewShoppingList={handleViewShoppingList}
+            onShoppingListGenerated={shoppingListGenerated}
             onNewPlan={() => window.location.reload()}
             onShare={handleSharePlan}
             onExportPDF={() => {}} // TODO: Implement PDF export

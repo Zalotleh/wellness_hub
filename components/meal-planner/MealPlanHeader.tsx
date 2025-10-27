@@ -25,6 +25,8 @@ interface MealPlanHeaderProps {
   onSave: () => void;
   onUpdate: (updates: Partial<MealPlanData>) => void;
   onGenerateShoppingList: () => void;
+  onViewShoppingList?: () => void; // New prop for viewing shopping list
+  onShoppingListGenerated?: number; // Counter to trigger refresh
   onNewPlan: () => void;
   onShare: (method: 'link' | 'whatsapp' | 'email' | 'facebook' | 'twitter' | 'linkedin') => void;
   onExportPDF: () => void;
@@ -39,6 +41,8 @@ export default function MealPlanHeader({
   onSave,
   onUpdate,
   onGenerateShoppingList,
+  onViewShoppingList,
+  onShoppingListGenerated,
   onNewPlan,
   onShare,
   onExportPDF,
@@ -48,6 +52,8 @@ export default function MealPlanHeader({
   const [editingDescription, setEditingDescription] = useState(false);
   const [tempTitle, setTempTitle] = useState(mealPlan.title);
   const [tempDescription, setTempDescription] = useState(mealPlan.description || '');
+  const [hasExistingShoppingList, setHasExistingShoppingList] = useState(false);
+  const [checkingShoppingList, setCheckingShoppingList] = useState(false);
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [showVisibilityMenu, setShowVisibilityMenu] = useState(false);
   
@@ -82,6 +88,47 @@ export default function MealPlanHeader({
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
   }, [showVisibilityMenu]);
+
+  // Check for existing shopping list when meal plan ID is available
+  const checkExistingShoppingList = async () => {
+    if (!mealPlan.id) {
+      setHasExistingShoppingList(false);
+      return;
+    }
+
+    try {
+      setCheckingShoppingList(true);
+      const response = await fetch(`/api/meal-planner/${mealPlan.id}/shopping-list`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        setHasExistingShoppingList(!!data.data);
+      } else {
+        setHasExistingShoppingList(false);
+      }
+    } catch (error) {
+      console.error('Error checking shopping list:', error);
+      setHasExistingShoppingList(false);
+    } finally {
+      setCheckingShoppingList(false);
+    }
+  };
+
+  useEffect(() => {
+    checkExistingShoppingList();
+  }, [mealPlan.id]);
+
+  // Refresh shopping list status when notified
+  useEffect(() => {
+    if (onShoppingListGenerated && onShoppingListGenerated > 0) {
+      // Re-check after a small delay to ensure the API has updated
+      const timeoutId = setTimeout(() => {
+        checkExistingShoppingList();
+      }, 500);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [onShoppingListGenerated]);
 
   const handleTitleEdit = () => {
     if (editingTitle) {
@@ -277,19 +324,53 @@ export default function MealPlanHeader({
             />
           </div>
 
-          {/* Shopping List Button */}
-          <button
-            onClick={onGenerateShoppingList}
-            disabled={isGeneratingShoppingList}
-            className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-          >
-            {isGeneratingShoppingList ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <ShoppingCart className="w-4 h-4" />
-            )}
-            <span className="hidden lg:inline">Shopping List</span>
-          </button>
+          {/* Shopping List Buttons */}
+          {hasExistingShoppingList ? (
+            <>
+              {/* Update Shopping List Button */}
+              <button
+                onClick={onGenerateShoppingList}
+                disabled={isGeneratingShoppingList || checkingShoppingList}
+                className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              >
+                {isGeneratingShoppingList || checkingShoppingList ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <ShoppingCart className="w-4 h-4" />
+                )}
+                <span className="hidden lg:inline">
+                  {checkingShoppingList ? 'Checking...' : 'Update List'}
+                </span>
+              </button>
+              
+              {/* View Shopping List Button */}
+              {onViewShoppingList && (
+                <button
+                  onClick={onViewShoppingList}
+                  className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  <Eye className="w-4 h-4" />
+                  <span className="hidden lg:inline">View List</span>
+                </button>
+              )}
+            </>
+          ) : (
+            /* Create Shopping List Button */
+            <button
+              onClick={onGenerateShoppingList}
+              disabled={isGeneratingShoppingList || checkingShoppingList}
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+            >
+              {isGeneratingShoppingList || checkingShoppingList ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <ShoppingCart className="w-4 h-4" />
+              )}
+              <span className="hidden lg:inline">
+                {checkingShoppingList ? 'Checking...' : 'Create Shopping List'}
+              </span>
+            </button>
+          )}
 
           {/* New Plan Button */}
           <button

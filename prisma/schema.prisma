@@ -364,9 +364,9 @@ model GeneratedRecipe {
 
 // Shopping List model
 model ShoppingList {
-  id         String @id @default(cuid())
+  id         String  @id @default(cuid())
   userId     String
-  mealPlanId String
+  mealPlanId String?
 
   title String @default("Shopping List")
   items Json // Array of {ingredient: string, quantity: number, unit: string, category: string, checked: boolean, estimatedCost?: number}
@@ -387,8 +387,8 @@ model ShoppingList {
   updatedAt DateTime @updatedAt
 
   // Relations
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  mealPlan MealPlan @relation(fields: [mealPlanId], references: [id], onDelete: Cascade)
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mealPlan MealPlan? @relation(fields: [mealPlanId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([mealPlanId])

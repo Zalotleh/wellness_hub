@@ -1,6 +1,13 @@
 import { PrismaClient } from '@prisma/client';
-import { DefenseSystem } from '@/types';
 import bcrypt from 'bcryptjs';
+
+enum DefenseSystem {
+  ANGIOGENESIS = 'ANGIOGENESIS',
+  REGENERATION = 'REGENERATION', 
+  MICROBIOME = 'MICROBIOME',
+  DNA_PROTECTION = 'DNA_PROTECTION',
+  IMMUNITY = 'IMMUNITY'
+}
 
 const prisma = new PrismaClient();
 

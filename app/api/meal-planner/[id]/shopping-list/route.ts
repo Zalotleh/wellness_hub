@@ -168,6 +168,10 @@ function getBestUnitForQuantity(quantity: number, unitType: string): { unit: str
 }
 
 function categorizeIngredient(ingredient: string): string {
+  if (!ingredient || typeof ingredient !== 'string') {
+    return 'Other';
+  }
+  
   const lower = ingredient.toLowerCase();
   
   for (const [category, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
@@ -183,9 +187,15 @@ function consolidateIngredients(items: Array<{item: string, quantity: string, un
   const consolidated = new Map<string, ShoppingListItem>();
   
   for (const item of items) {
+    // Safety check for undefined item names
+    if (!item.item || typeof item.item !== 'string') {
+      console.warn('Skipping ingredient with invalid name:', item);
+      continue;
+    }
+    
     const key = item.item.toLowerCase().trim();
     const quantity = parseFloat(item.quantity) || 0;
-    const unit = item.unit.toLowerCase().trim();
+    const unit = (item.unit || 'piece').toLowerCase().trim();
     const unitType = getUnitType(unit);
     
     if (consolidated.has(key)) {
@@ -321,10 +331,15 @@ export async function POST(
           if (recipe.ingredients) {
             const ingredients = recipe.ingredients as any[];
             ingredients.forEach(ing => {
+              // Handle both old and new ingredient formats
+              const ingredientName = ing.name || ing.item || 'Unknown ingredient';
+              const ingredientAmount = ing.amount || ing.quantity || '1';
+              const ingredientUnit = ing.unit || 'piece';
+              
               allIngredients.push({
-                item: ing.item,
-                quantity: ing.quantity,
-                unit: ing.unit,
+                item: ingredientName,
+                quantity: ingredientAmount,
+                unit: ingredientUnit,
                 nutrition: includeNutrition ? {
                   calories: recipe.calories,
                   protein: recipe.protein,
