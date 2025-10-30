@@ -32,8 +32,9 @@ async function main() {
       password: hashedPassword,
       bio: 'Health enthusiast and recipe creator. Passionate about the 5x5x5 system!',
       subscriptionTier: 'FREE',
-      subscriptionStatus: 'trial',
-      trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days from now
+      subscriptionStatus: 'active',
+      mealPlansThisMonth: 1, // She's used 1 out of 1 meal plan
+      aiQuestionsThisMonth: 0, // She hasn't used any AI questions yet
     },
   });
 

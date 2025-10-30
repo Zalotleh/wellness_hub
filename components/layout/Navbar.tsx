@@ -134,24 +134,95 @@ export default function Navbar() {
               </div>
             )}
 
-            {/* Usage Limits Badge */}
+            {/* Usage Limits Badge - Enhanced */}
             {status === 'authenticated' && session?.user && tier === 'FREE' && (
-              <div className="hidden lg:flex items-center space-x-2 px-3 py-2 bg-gray-100 rounded-lg">
-                <div className="flex items-center space-x-1 text-xs">
-                  <Calendar className="w-3 h-3 text-gray-600" />
-                  <span className="text-gray-700">
-                    {mealPlanLimit.maxLimit === Infinity ? 'Unlimited' : `${mealPlanLimit.remaining}/${mealPlanLimit.maxLimit}`}
-                  </span>
+              <div className="hidden lg:flex items-center space-x-3 px-4 py-2 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200">
+                {/* Meal Plans Usage */}
+                <div className="flex flex-col items-center space-y-1 group relative">
+                  <div className="flex items-center space-x-1">
+                    <Calendar className={`w-3 h-3 ${
+                      typeof mealPlanLimit.maxLimit === 'number' && mealPlanLimit.currentUsage >= mealPlanLimit.maxLimit 
+                        ? 'text-red-500' : 'text-blue-600'
+                    }`} />
+                    <span className={`text-xs font-medium ${
+                      typeof mealPlanLimit.maxLimit === 'number' && mealPlanLimit.currentUsage >= mealPlanLimit.maxLimit 
+                        ? 'text-red-700' : 'text-gray-700'
+                    }`}>
+                      {mealPlanLimit.maxLimit === Infinity ? 'Unlimited' : `${mealPlanLimit.currentUsage}/${mealPlanLimit.maxLimit}`}
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-gray-500 font-medium">Meal Plans</div>
+                  {/* Progress bar */}
+                  {typeof mealPlanLimit.maxLimit === 'number' && mealPlanLimit.maxLimit !== Infinity && (
+                    <div className="w-16 h-1 bg-gray-200 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full transition-all duration-300 ${
+                          mealPlanLimit.currentUsage >= mealPlanLimit.maxLimit 
+                            ? 'bg-red-500' 
+                            : mealPlanLimit.isApproachingLimit 
+                              ? 'bg-amber-500' 
+                              : 'bg-blue-500'
+                        }`}
+                        style={{ width: `${Math.min(100, (mealPlanLimit.currentUsage / mealPlanLimit.maxLimit) * 100)}%` }}
+                      />
+                    </div>
+                  )}
+                  {/* Tooltip */}
+                  <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block z-50">
+                    <div className="bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap">
+                      Meal Plans Used This Month
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-b-gray-900"></div>
+                    </div>
+                  </div>
                 </div>
-                <div className="w-px h-4 bg-gray-300" />
-                <div className="flex items-center space-x-1 text-xs">
-                  <MessageCircle className="w-3 h-3 text-gray-600" />
-                  <span className="text-gray-700">
-                    {aiLimit.maxLimit === Infinity ? 'Unlimited' : `${aiLimit.remaining}/${aiLimit.maxLimit}`}
-                  </span>
+
+                <div className="w-px h-8 bg-blue-200" />
+
+                {/* AI Questions Usage */}
+                <div className="flex flex-col items-center space-y-1 group relative">
+                  <div className="flex items-center space-x-1">
+                    <MessageCircle className={`w-3 h-3 ${
+                      typeof aiLimit.maxLimit === 'number' && aiLimit.currentUsage >= aiLimit.maxLimit 
+                        ? 'text-red-500' : 'text-purple-600'
+                    }`} />
+                    <span className={`text-xs font-medium ${
+                      typeof aiLimit.maxLimit === 'number' && aiLimit.currentUsage >= aiLimit.maxLimit 
+                        ? 'text-red-700' : 'text-gray-700'
+                    }`}>
+                      {aiLimit.maxLimit === Infinity ? 'Unlimited' : `${aiLimit.currentUsage}/${aiLimit.maxLimit}`}
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-gray-500 font-medium">AI Questions</div>
+                  {/* Progress bar */}
+                  {typeof aiLimit.maxLimit === 'number' && aiLimit.maxLimit !== Infinity && (
+                    <div className="w-16 h-1 bg-gray-200 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full transition-all duration-300 ${
+                          aiLimit.currentUsage >= aiLimit.maxLimit 
+                            ? 'bg-red-500' 
+                            : aiLimit.isApproachingLimit 
+                              ? 'bg-amber-500' 
+                              : 'bg-purple-500'
+                        }`}
+                        style={{ width: `${Math.min(100, (aiLimit.currentUsage / aiLimit.maxLimit) * 100)}%` }}
+                      />
+                    </div>
+                  )}
+                  {/* Tooltip */}
+                  <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block z-50">
+                    <div className="bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap">
+                      AI Questions Asked This Month
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-b-gray-900"></div>
+                    </div>
+                  </div>
                 </div>
-                {(mealPlanLimit.isApproachingLimit || aiLimit.isApproachingLimit) && (
-                  <AlertCircle className="w-3 h-3 text-amber-500" />
+
+                {/* Warning indicator */}
+                {((typeof mealPlanLimit.maxLimit === 'number' && mealPlanLimit.currentUsage >= mealPlanLimit.maxLimit) || 
+                  (typeof aiLimit.maxLimit === 'number' && aiLimit.currentUsage >= aiLimit.maxLimit)) && (
+                  <div className="flex items-center">
+                    <AlertCircle className="w-4 h-4 text-red-500 animate-pulse" />
+                  </div>
                 )}
               </div>
             )}
@@ -213,7 +284,7 @@ export default function Navbar() {
                                 <span className="text-gray-700">Meal Plans</span>
                               </div>
                               <span className="font-medium">
-                                {mealPlanLimit.maxLimit === Infinity ? 'Unlimited' : `${mealPlanLimit.remaining}/${mealPlanLimit.maxLimit}`}
+                                {mealPlanLimit.maxLimit === Infinity ? 'Unlimited' : `${mealPlanLimit.currentUsage}/${mealPlanLimit.maxLimit}`}
                               </span>
                             </div>
                             <div className="w-full bg-gray-200 rounded-full h-2">
@@ -231,7 +302,7 @@ export default function Navbar() {
                                 <span className="text-gray-700">AI Questions</span>
                               </div>
                               <span className="font-medium">
-                                {aiLimit.maxLimit === Infinity ? 'Unlimited' : `${aiLimit.remaining}/${aiLimit.maxLimit}`}
+                                {aiLimit.maxLimit === Infinity ? 'Unlimited' : `${aiLimit.currentUsage}/${aiLimit.maxLimit}`}
                               </span>
                             </div>
                             <div className="w-full bg-gray-200 rounded-full h-2">
@@ -328,49 +399,81 @@ export default function Navbar() {
         {/* Mobile Menu */}
         {showMobileMenu && (
           <div className="lg:hidden py-4 border-t border-gray-200">
-            {/* Mobile Usage Stats for Free Users */}
+            {/* Mobile Usage Stats for Free Users - Enhanced */}
             {status === 'authenticated' && session?.user && tier === 'FREE' && (
-              <div className="px-4 py-3 mb-3 bg-gray-50 rounded-lg mx-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
-                    Monthly Usage
+              <div className="px-4 py-4 mb-3 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg mx-4 shadow-sm">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                    🏃‍♂️ Monthly Usage Limits
                   </h4>
                   <TierBadge />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="text-center">
-                    <div className="flex items-center justify-center space-x-1 text-xs mb-1">
-                      <Calendar className="w-3 h-3 text-gray-600" />
-                      <span className="text-gray-700">Meal Plans</span>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="text-center p-3 bg-white rounded-lg border border-blue-100">
+                    <div className="flex items-center justify-center space-x-1 text-xs mb-2">
+                      <Calendar className={`w-4 h-4 ${
+                        typeof mealPlanLimit.maxLimit === 'number' && mealPlanLimit.currentUsage >= mealPlanLimit.maxLimit 
+                          ? 'text-red-500' : 'text-blue-600'
+                      }`} />
+                      <span className="text-gray-700 font-medium">Meal Plans</span>
                     </div>
-                    <div className="text-sm font-medium">
-                      {mealPlanLimit.maxLimit === Infinity ? 'Unlimited' : `${mealPlanLimit.remaining}/${mealPlanLimit.maxLimit}`}
+                    <div className={`text-lg font-bold mb-2 ${
+                      typeof mealPlanLimit.maxLimit === 'number' && mealPlanLimit.currentUsage >= mealPlanLimit.maxLimit 
+                        ? 'text-red-600' : 'text-gray-800'
+                    }`}>
+                      {mealPlanLimit.maxLimit === Infinity ? 'Unlimited' : `${mealPlanLimit.currentUsage}/${mealPlanLimit.maxLimit}`}
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-1 mt-1">
-                      <div 
-                        className={`h-1 rounded-full ${
-                          mealPlanLimit.isApproachingLimit ? 'bg-amber-500' : 'bg-green-500'
-                        }`}
-                        style={{ width: `${100 - mealPlanLimit.percentage}%` }}
-                      />
-                    </div>
+                    {/* Enhanced Progress bar */}
+                    {typeof mealPlanLimit.maxLimit === 'number' && mealPlanLimit.maxLimit !== Infinity && (
+                      <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                        <div 
+                          className={`h-2 rounded-full transition-all duration-300 ${
+                            mealPlanLimit.currentUsage >= mealPlanLimit.maxLimit 
+                              ? 'bg-red-500' 
+                              : mealPlanLimit.isApproachingLimit 
+                                ? 'bg-amber-500' 
+                                : 'bg-blue-500'
+                          }`}
+                          style={{ width: `${Math.min(100, (mealPlanLimit.currentUsage / mealPlanLimit.maxLimit) * 100)}%` }}
+                        />
+                      </div>
+                    )}
+                    {typeof mealPlanLimit.maxLimit === 'number' && mealPlanLimit.currentUsage >= mealPlanLimit.maxLimit && (
+                      <div className="text-xs text-red-600 mt-1 font-medium">Limit Reached!</div>
+                    )}
                   </div>
-                  <div className="text-center">
-                    <div className="flex items-center justify-center space-x-1 text-xs mb-1">
-                      <MessageCircle className="w-3 h-3 text-gray-600" />
-                      <span className="text-gray-700">AI Questions</span>
+                  <div className="text-center p-3 bg-white rounded-lg border border-purple-100">
+                    <div className="flex items-center justify-center space-x-1 text-xs mb-2">
+                      <MessageCircle className={`w-4 h-4 ${
+                        typeof aiLimit.maxLimit === 'number' && aiLimit.currentUsage >= aiLimit.maxLimit 
+                          ? 'text-red-500' : 'text-purple-600'
+                      }`} />
+                      <span className="text-gray-700 font-medium">AI Questions</span>
                     </div>
-                    <div className="text-sm font-medium">
-                      {aiLimit.maxLimit === Infinity ? 'Unlimited' : `${aiLimit.remaining}/${aiLimit.maxLimit}`}
+                    <div className={`text-lg font-bold mb-2 ${
+                      typeof aiLimit.maxLimit === 'number' && aiLimit.currentUsage >= aiLimit.maxLimit 
+                        ? 'text-red-600' : 'text-gray-800'
+                    }`}>
+                      {aiLimit.maxLimit === Infinity ? 'Unlimited' : `${aiLimit.currentUsage}/${aiLimit.maxLimit}`}
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-1 mt-1">
-                      <div 
-                        className={`h-1 rounded-full ${
-                          aiLimit.isApproachingLimit ? 'bg-amber-500' : 'bg-green-500'
-                        }`}
-                        style={{ width: `${100 - aiLimit.percentage}%` }}
-                      />
-                    </div>
+                    {/* Enhanced Progress bar */}
+                    {typeof aiLimit.maxLimit === 'number' && aiLimit.maxLimit !== Infinity && (
+                      <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                        <div 
+                          className={`h-2 rounded-full transition-all duration-300 ${
+                            aiLimit.currentUsage >= aiLimit.maxLimit 
+                              ? 'bg-red-500' 
+                              : aiLimit.isApproachingLimit 
+                                ? 'bg-amber-500' 
+                                : 'bg-purple-500'
+                          }`}
+                          style={{ width: `${Math.min(100, (aiLimit.currentUsage / aiLimit.maxLimit) * 100)}%` }}
+                        />
+                      </div>
+                    )}
+                    {typeof aiLimit.maxLimit === 'number' && aiLimit.currentUsage >= aiLimit.maxLimit && (
+                      <div className="text-xs text-red-600 mt-1 font-medium">Limit Reached!</div>
+                    )}
                   </div>
                 </div>
                 {!isTrialing && tier === 'FREE' && (
