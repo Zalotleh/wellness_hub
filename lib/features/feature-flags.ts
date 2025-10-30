@@ -182,11 +182,8 @@ export class FeatureAccess {
     const limit = FEATURE_LIMITS[limitKey];
     if (!limit) return false;
 
-    // During trial, give premium limits
-    if (this.isTrialing) {
-      return limit.premium;
-    }
-
+    // For FREE tier users, always return FREE limits (trial doesn't change limits)
+    // For PREMIUM/FAMILY users during trial, give them their tier limits
     return limit[this.tier.toLowerCase() as keyof FeatureLimit];
   }
 
