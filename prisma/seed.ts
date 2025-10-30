@@ -31,6 +31,9 @@ async function main() {
       email: 'sarah@example.com',
       password: hashedPassword,
       bio: 'Health enthusiast and recipe creator. Passionate about the 5x5x5 system!',
+      subscriptionTier: 'FREE',
+      subscriptionStatus: 'trial',
+      trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days from now
     },
   });
 
@@ -40,6 +43,9 @@ async function main() {
       email: 'john@example.com',
       password: hashedPassword,
       bio: 'Nutrition coach helping people eat to beat disease.',
+      subscriptionTier: 'PREMIUM',
+      subscriptionStatus: 'active',
+      subscriptionEndsAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year from now
     },
   });
 
@@ -49,6 +55,9 @@ async function main() {
       email: 'emma@example.com',
       password: hashedPassword,
       bio: 'Home cook exploring the power of food as medicine.',
+      subscriptionTier: 'FAMILY',
+      subscriptionStatus: 'active',
+      subscriptionEndsAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year from now
     },
   });
 

@@ -101,10 +101,9 @@ export default function Navbar() {
 
           {/* Right Side Actions */}
           <div className="flex items-center space-x-3">
-            {/* Tier Badge and Upgrade Button */}
+            {/* Upgrade Buttons Only */}
             {status === 'authenticated' && session?.user && (
               <div className="hidden xl:flex items-center space-x-3">
-                <TierBadge />
                 {tier === 'FREE' && !isTrialing && (
                   <Link
                     href="/pricing"
@@ -141,14 +140,14 @@ export default function Navbar() {
                 <div className="flex items-center space-x-1 text-xs">
                   <Calendar className="w-3 h-3 text-gray-600" />
                   <span className="text-gray-700">
-                    {mealPlanLimit.remaining}/{mealPlanLimit.maxLimit}
+                    {mealPlanLimit.maxLimit === Infinity ? 'Unlimited' : `${mealPlanLimit.remaining}/${mealPlanLimit.maxLimit}`}
                   </span>
                 </div>
                 <div className="w-px h-4 bg-gray-300" />
                 <div className="flex items-center space-x-1 text-xs">
                   <MessageCircle className="w-3 h-3 text-gray-600" />
                   <span className="text-gray-700">
-                    {aiLimit.remaining}/{aiLimit.maxLimit}
+                    {aiLimit.maxLimit === Infinity ? 'Unlimited' : `${aiLimit.remaining}/${aiLimit.maxLimit}`}
                   </span>
                 </div>
                 {(mealPlanLimit.isApproachingLimit || aiLimit.isApproachingLimit) && (
@@ -214,7 +213,7 @@ export default function Navbar() {
                                 <span className="text-gray-700">Meal Plans</span>
                               </div>
                               <span className="font-medium">
-                                {mealPlanLimit.remaining}/{mealPlanLimit.maxLimit}
+                                {mealPlanLimit.maxLimit === Infinity ? 'Unlimited' : `${mealPlanLimit.remaining}/${mealPlanLimit.maxLimit}`}
                               </span>
                             </div>
                             <div className="w-full bg-gray-200 rounded-full h-2">
@@ -232,7 +231,7 @@ export default function Navbar() {
                                 <span className="text-gray-700">AI Questions</span>
                               </div>
                               <span className="font-medium">
-                                {aiLimit.remaining}/{aiLimit.maxLimit}
+                                {aiLimit.maxLimit === Infinity ? 'Unlimited' : `${aiLimit.remaining}/${aiLimit.maxLimit}`}
                               </span>
                             </div>
                             <div className="w-full bg-gray-200 rounded-full h-2">
@@ -345,7 +344,7 @@ export default function Navbar() {
                       <span className="text-gray-700">Meal Plans</span>
                     </div>
                     <div className="text-sm font-medium">
-                      {mealPlanLimit.remaining}/{mealPlanLimit.maxLimit}
+                      {mealPlanLimit.maxLimit === Infinity ? 'Unlimited' : `${mealPlanLimit.remaining}/${mealPlanLimit.maxLimit}`}
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-1 mt-1">
                       <div 
@@ -362,7 +361,7 @@ export default function Navbar() {
                       <span className="text-gray-700">AI Questions</span>
                     </div>
                     <div className="text-sm font-medium">
-                      {aiLimit.remaining}/{aiLimit.maxLimit}
+                      {aiLimit.maxLimit === Infinity ? 'Unlimited' : `${aiLimit.remaining}/${aiLimit.maxLimit}`}
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-1 mt-1">
                       <div 
