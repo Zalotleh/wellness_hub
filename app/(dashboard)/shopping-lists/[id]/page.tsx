@@ -31,6 +31,10 @@ interface ShoppingListItem {
   category: string;
   checked: boolean;
   estimatedCost?: number;
+  // E-commerce fields
+  retailQuantity?: number;
+  retailUnit?: string;
+  retailDescription?: string;
 }
 
 interface ShoppingList {
@@ -653,14 +657,26 @@ export default function ShoppingListDetailPage() {
                       <div className={`font-semibold text-lg ${item.checked ? 'line-through text-gray-500' : 'text-gray-800'}`}>
                         {item.ingredient}
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
-                        <span className="font-medium">{item.quantity} {item.unit}</span>
-                        {item.estimatedCost && (
-                          <>
-                            <span className="text-gray-400">•</span>
-                            <span className="text-green-600">${item.estimatedCost.toFixed(2)}</span>
-                          </>
+                      <div className="space-y-1 mt-1">
+                        {/* Retail/Shopping quantity (prominent) */}
+                        {item.retailDescription && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-medium">
+                              🛒 Buy: {item.retailDescription}
+                            </span>
+                          </div>
                         )}
+                        
+                        {/* Original recipe quantity (secondary) */}
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <span className="font-medium">Recipe: {item.quantity} {item.unit}</span>
+                          {item.estimatedCost && (
+                            <>
+                              <span className="text-gray-400">•</span>
+                              <span className="text-green-600">${item.estimatedCost.toFixed(2)}</span>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
                     

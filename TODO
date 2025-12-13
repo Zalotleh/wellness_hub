@@ -14,10 +14,11 @@ thing to happen is to take me back to the meal plan page, where i was initially 
 
 -inside the AI recipe generator, provide a better way of showing if the defense system is selected. change color. also while the recipe is beng generated, i can still click on button inside the page, can we grey out the page in the background and provide a loading visual? is there a better way of hanlding this? open o suggestions. X
 
-- inside the meal, at the bottom of the page for each day, there is + to add a new meal, snack, but it doesnt work to add a new snack meal. X X
+- inside the meal, at the bottom of the page for each day, there is + to add a new meal, snack, but it doesnt work to add a new snack meal. X
 
--for the Ai generating recipe, the recipe title needs to be more specific, right now it reflects the defense system selected, if i select immunity system then the generated recipe title is immunity recipe, modify the prompt to fix this issue.
--in the Shopping Lists page, i dont see my saved plans, it shows empty meal plans even though i have 2 meal plans.
+-for the Ai generating recipe, the recipe title needs to be more specific, right now it reflects the defense system selected, if i select immunity system then the generated recipe title is immunity recipe, modify the prompt to fix this issue. X
+
+
 - i created a shopping list from a meal plan, click create then i was redirected to page where it says:
 Shopping List Not Found
 Shopping list not found
@@ -40,11 +41,22 @@ Deselect All
 
 Mark All Complete
 
-Mark All Incomplete
+Mark All Incomplete X
+
+- inside shopping list, add item button doesnt work X
+- user can check the item but clicking on a circle to mark the item as complete, and beside that circle there a square to select the item to delete or mark as complete(when clicking on the sauqre a new UI section shows to select if you want to mark as complete or delete), this is confusing, i want to have simpler than this, better UI, and also user should know what complete means, the whole thing should be handled in much better way. X
+
+- inside shopping list page, export list button doesnt work X
+- ability to share the list on whatsapp, or other messaging application? X
+
+- inside shopping lists page, the shopping list card that shows on the card itself doesnt reflect the shopping list data, as an exmple: i selected the items as complete but outside on the card it still shows 0 completed. X
+
+- shopping list takes the exact gram, quanity of each items, as i am planning to connect these shopping list to shopping api like amazon fresh, we need to find a better way of handling the quanitity, for exaple 2 cups of milk, user can make an order of 2 cups of milk, any suggestion?
 
 - in the progress page, weekly analytics, i have 0 activity, but in the Best System i can see a placeholder: Angiogenesis, remove that placeholder.
 - in the AI Advisor, the page view moves to the bottom of the page after generating, make the view stable and focused on the chat view, and another issue, when the chat is generated, i can see at the top of the chat there is a notification bar with x, i clicked on the x and it cleared teh chat, it is ok, but i want this to be more user intuitive, i didnt know it is going to clear the chat though.
-in the right side bar, the section of 5 Defense Systems
+
+- in the right side bar, the section of 5 Defense Systems
 
 🩸
 Angiogenesis

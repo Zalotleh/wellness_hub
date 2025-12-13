@@ -37,16 +37,34 @@ export async function GET() {
 
     // Transform the data to include computed stats
     const transformedLists = shoppingLists.map((list: any) => {
-      const items = Array.isArray(list.items) ? list.items : [];
+      // Parse items properly (handle Prisma Json type)
+      let items = [];
+      if (Array.isArray(list.items)) {
+        items = list.items;
+      } else if (typeof list.items === 'string') {
+        try {
+          items = JSON.parse(list.items);
+        } catch (e) {
+          console.error('Failed to parse items as JSON:', e);
+          items = [];
+        }
+      } else if (list.items && typeof list.items === 'object') {
+        items = Object.values(list.items);
+      }
+
+      console.log(`List "${list.title}": Parsed ${items.length} items, typeof items:`, typeof list.items);
+      
       const checkedItems = items.filter((item: any) => item.checked === true);
       const pendingItems = items.filter((item: any) => item.checked !== true);
+
+      console.log(`  → ${checkedItems.length} checked, ${pendingItems.length} pending`);
 
       return {
         id: list.id,
         title: list.title,
         mealPlanId: list.mealPlanId,
         mealPlan: list.mealPlan,
-        totalItems: list.totalItems,
+        totalItems: items.length, // Use actual items count instead of stored value
         checkedItems: checkedItems.length,
         pendingItems: pendingItems.length,
         totalCost: list.totalCost,
@@ -59,15 +77,17 @@ export async function GET() {
       };
     });
 
-    // Calculate summary statistics
+    // Calculate summary statistics using transformed data
     const stats = {
-      totalLists: shoppingLists.length,
-      totalItems: shoppingLists.reduce((sum: number, list: any) => sum + list.totalItems, 0),
+      totalLists: transformedLists.length,
+      totalItems: transformedLists.reduce((sum: number, list: any) => sum + list.totalItems, 0),
       completedItems: transformedLists.reduce((sum: number, list: any) => sum + list.checkedItems, 0),
       thisWeekLists: shoppingLists.filter(
         (list: any) => new Date(list.createdAt) >= new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
       ).length,
     };
+
+    console.log('📊 Shopping Lists Stats:', stats);
 
     return NextResponse.json({
       success: true,

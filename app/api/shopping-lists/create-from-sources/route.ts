@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { getUserFeatureAccess, Feature } from '@/lib/features/feature-flags';
+import { normalizeQuantity, formatRetailQuantity } from '@/lib/shopping/quantity-normalizer';
+import { MeasurementSystem } from '@/lib/shopping/measurement-system';
 
 interface ShoppingListItem {
   ingredient: string;
@@ -11,6 +13,10 @@ interface ShoppingListItem {
   category: string;
   checked: boolean;
   estimatedCost?: number;
+  // E-commerce fields
+  retailQuantity?: number;
+  retailUnit?: string;
+  retailDescription?: string;
 }
 
 // POST - Create shopping list from multiple sources (meal plans or recipes)
@@ -30,7 +36,8 @@ export async function POST(request: NextRequest) {
       type, // 'meal-plans' or 'recipes'
       sourceIds, // Array of meal plan or recipe IDs
       title, // Optional custom title
-      filterPantry = false // Optional pantry filtering
+      filterPantry = false, // Optional pantry filtering
+      measurementSystem = 'imperial' as MeasurementSystem // User's preferred measurement system
     } = body;
 
     if (!type || !sourceIds || !Array.isArray(sourceIds) || sourceIds.length === 0) {
@@ -126,7 +133,7 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      consolidatedIngredients = consolidateIngredients(allIngredients);
+      consolidatedIngredients = consolidateIngredients(allIngredients, measurementSystem);
       
       if (!generatedTitle) {
         generatedTitle = mealPlans.length === 1 
@@ -176,7 +183,7 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      consolidatedIngredients = consolidateIngredients(allIngredients);
+      consolidatedIngredients = consolidateIngredients(allIngredients, measurementSystem);
       
       if (!generatedTitle) {
         generatedTitle = recipes.length === 1 
@@ -262,7 +269,10 @@ export async function POST(request: NextRequest) {
 }
 
 // Helper function to consolidate ingredients
-function consolidateIngredients(items: Array<{item: string, quantity: string, unit: string}>): ShoppingListItem[] {
+function consolidateIngredients(
+  items: Array<{item: string, quantity: string, unit: string}>,
+  measurementSystem: MeasurementSystem = 'imperial'
+): ShoppingListItem[] {
   const consolidated = new Map<string, ShoppingListItem>();
 
   items.forEach((item) => {
@@ -283,13 +293,24 @@ function consolidateIngredients(items: Array<{item: string, quantity: string, un
         existing.quantity = `${existing.quantity}, ${item.quantity}` as any;
       }
     } else {
+      const qty = parseFloat(item.quantity) || item.quantity as any;
+      const unit = item.unit.trim();
+      const ingredient = item.item.trim();
+      
+      // Normalize quantity for e-commerce with user's preferred system
+      const normalized = normalizeQuantity(ingredient, qty, unit, measurementSystem);
+      
       consolidated.set(key, {
-        ingredient: item.item.trim(),
-        quantity: parseFloat(item.quantity) || item.quantity as any,
-        unit: item.unit.trim(),
-        category: categorizeIngredient(item.item),
+        ingredient: ingredient,
+        quantity: qty,
+        unit: unit,
+        category: categorizeIngredient(ingredient),
         checked: false,
         estimatedCost: 0,
+        // Add e-commerce fields
+        retailQuantity: normalized.retailQuantity,
+        retailUnit: normalized.retailUnit,
+        retailDescription: normalized.retailDescription,
       });
     }
   });

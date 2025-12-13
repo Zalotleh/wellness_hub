@@ -380,6 +380,19 @@ export default function ShoppingListsPage() {
                     </Link>
                   </div>
                 )}
+                
+                {!list.mealPlan && list.title.toLowerCase().includes('recipe') && (
+                  <div className="mt-3 pt-3 border-t border-gray-100">
+                    <Link
+                      href="/recipes"
+                      className="inline-flex items-center space-x-1 text-sm text-green-600 hover:text-green-800 transition-colors"
+                    >
+                      <Book className="w-4 h-4" />
+                      <span>View Recipes</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </Link>
+                  </div>
+                )}
               </div>
             ))}
           </div>
