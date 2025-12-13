@@ -244,6 +244,7 @@ Make the recipe practical, delicious, and easy to follow!
 
 // Parse AI response into structured format
 function parseAIRecipe(recipeText: string, defenseSystem: DefenseSystem): any {
+  console.log('🔍 Parsing recipe text...');
   const lines = recipeText.split('\n').filter((line) => line.trim());
 
   const recipe: any = {
@@ -261,6 +262,7 @@ function parseAIRecipe(recipeText: string, defenseSystem: DefenseSystem): any {
     // Ensure title is not too long and is meaningful
     if (title && title !== '[Creative recipe name]' && title.length >= 3) {
       recipe.title = title.length > 100 ? title.substring(0, 97) + '...' : title;
+      console.log('✅ Title found:', recipe.title);
     }
   }
 
@@ -269,6 +271,7 @@ function parseAIRecipe(recipeText: string, defenseSystem: DefenseSystem): any {
 
     if (trimmedLine.startsWith('DESCRIPTION:')) {
       recipe.description = trimmedLine.replace('DESCRIPTION:', '').trim();
+      console.log('✅ Description found');
     } else if (trimmedLine.startsWith('PREP_TIME:')) {
       recipe.prepTime = trimmedLine.replace('PREP_TIME:', '').trim();
     } else if (trimmedLine.startsWith('COOK_TIME:')) {
@@ -277,11 +280,14 @@ function parseAIRecipe(recipeText: string, defenseSystem: DefenseSystem): any {
       recipe.servings = parseInt(trimmedLine.replace('SERVINGS:', '').trim());
     } else if (trimmedLine === 'INGREDIENTS:') {
       currentSection = 'ingredients';
+      console.log('📝 Entering ingredients section');
     } else if (trimmedLine === 'INSTRUCTIONS:') {
       currentSection = 'instructions';
       recipe.instructions = '';
+      console.log('📝 Entering instructions section');
     } else if (trimmedLine === 'NUTRIENTS:') {
       currentSection = 'nutrients';
+      console.log('📝 Entering nutrients section');
     } else if (currentSection === 'ingredients' && trimmedLine.startsWith('-')) {
       const ingredientText = trimmedLine.substring(1).trim();
       const parts = ingredientText.split(' ');
@@ -298,6 +304,32 @@ function parseAIRecipe(recipeText: string, defenseSystem: DefenseSystem): any {
       }
     }
   }
+
+  // Add fallback title if not found
+  if (!recipe.title) {
+    recipe.title = `${DEFENSE_SYSTEMS[defenseSystem].displayName} Recipe`;
+    console.log('⚠️ No title found, using fallback:', recipe.title);
+  }
+
+  // Add fallback description if not found
+  if (!recipe.description) {
+    recipe.description = `A healthy recipe designed to support ${DEFENSE_SYSTEMS[defenseSystem].displayName}.`;
+    console.log('⚠️ No description found, using fallback');
+  }
+
+  // Ensure instructions is a string
+  if (!recipe.instructions || recipe.instructions.trim() === '') {
+    recipe.instructions = 'Instructions not available in the generated content.';
+    console.log('⚠️ No instructions found, using fallback');
+  }
+
+  console.log('✅ Parsing complete. Recipe has:', {
+    title: !!recipe.title,
+    description: !!recipe.description,
+    ingredients: recipe.ingredients.length,
+    instructions: !!recipe.instructions,
+    nutrients: Object.keys(recipe.nutrients).length,
+  });
 
   return recipe;
 }

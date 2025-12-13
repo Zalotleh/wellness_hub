@@ -81,12 +81,34 @@ export default function AIRecipeGenerator({
       }
 
       const { data: recipe } = await response.json();
-      setGeneratedRecipe(recipe);
+      console.log('✅ Received recipe from API:', recipe);
+      console.log('Recipe structure check:', {
+        hasTitle: !!recipe.title,
+        hasDescription: !!recipe.description,
+        hasIngredients: !!recipe.ingredients,
+        ingredientsCount: recipe.ingredients?.length,
+        hasInstructions: !!recipe.instructions,
+        hasDefenseSystem: !!recipe.defenseSystem,
+      });
+      
+      // Ensure the recipe has required fields with fallbacks
+      const validatedRecipe = {
+        ...recipe,
+        title: recipe.title || `${DEFENSE_SYSTEMS[defenseSystem].displayName} Recipe`,
+        description: recipe.description || 'A delicious and healthy recipe.',
+        ingredients: Array.isArray(recipe.ingredients) ? recipe.ingredients : [],
+        instructions: recipe.instructions || 'Instructions not available.',
+        defenseSystem: recipe.defenseSystem || defenseSystem,
+      };
+      
+      console.log('✅ Validated recipe:', validatedRecipe);
+      setGeneratedRecipe(validatedRecipe);
 
       if (onRecipeGenerated) {
-        onRecipeGenerated(recipe);
+        onRecipeGenerated(validatedRecipe);
       }
     } catch (err: any) {
+      console.error('❌ Error in handleGenerate:', err);
       setError(err.message || 'Failed to generate recipe');
     } finally {
       setIsGenerating(false);
@@ -181,7 +203,67 @@ export default function AIRecipeGenerator({
   const systemInfo = DEFENSE_SYSTEMS[defenseSystem];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
+      {/* Loading Overlay - Covers entire component during generation */}
+      {isGenerating && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-4 text-center">
+            <div className="relative">
+              {/* Animated gradient circle */}
+              <div className="w-24 h-24 mx-auto mb-6 relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 rounded-full animate-spin"></div>
+                <div className="absolute inset-2 bg-white rounded-full flex items-center justify-center">
+                  <Sparkles className="w-10 h-10 text-purple-500 animate-pulse" />
+                </div>
+              </div>
+              
+              <h3 className="text-2xl font-bold text-gray-800 mb-2">
+                Generating Your Recipe
+              </h3>
+              <p className="text-gray-600 mb-4">
+                AI is crafting a personalized {DEFENSE_SYSTEMS[defenseSystem].displayName} recipe...
+              </p>
+              
+              {/* Progress indicators */}
+              <div className="space-y-2 text-left">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
+                  <span className="text-sm text-gray-600">Analyzing defense system requirements</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-pink-500 rounded-full animate-pulse delay-100"></div>
+                  <span className="text-sm text-gray-600">Selecting optimal ingredients</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse delay-200"></div>
+                  <span className="text-sm text-gray-600">Creating cooking instructions</span>
+                </div>
+              </div>
+              
+              <p className="text-xs text-gray-400 mt-6">This usually takes 10-20 seconds</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Saving Overlay */}
+      {isSaving && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-4 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 relative">
+              <div className="absolute inset-0 border-4 border-purple-200 rounded-full"></div>
+              <div className="absolute inset-0 border-4 border-purple-500 rounded-full border-t-transparent animate-spin"></div>
+            </div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">
+              Saving Recipe...
+            </h3>
+            <p className="text-gray-600">
+              Adding to your collection
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg p-6 text-white">
         <div className="flex items-center space-x-3 mb-2">
@@ -211,17 +293,36 @@ export default function AIRecipeGenerator({
                     key={system}
                     type="button"
                     onClick={() => setDefenseSystem(system)}
-                    className={`p-4 border-2 rounded-lg text-left transition-all ${
+                    disabled={isGenerating || isSaving}
+                    className={`relative p-4 border-2 rounded-lg text-left transition-all transform hover:scale-102 ${
                       isSelected
-                        ? `${info.borderColor} ${info.bgColor} scale-105`
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
+                        ? `${info.borderColor} ${info.bgColor} scale-105 shadow-lg ring-2 ring-offset-2`
+                        : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
+                    } ${isGenerating || isSaving ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                   >
+                    {/* Selected Indicator */}
+                    {isSelected && (
+                      <div className="absolute top-2 right-2">
+                        <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      </div>
+                    )}
+                    
                     <div className="flex items-center space-x-2 mb-2">
                       <span className="text-2xl">{info.icon}</span>
-                      <span className="font-bold text-sm">{info.displayName}</span>
+                      <span className={`font-bold text-sm ${isSelected ? info.textColor : 'text-gray-800'}`}>
+                        {info.displayName}
+                      </span>
                     </div>
-                    <p className="text-xs text-gray-600">{info.description}</p>
+                    <p className="text-xs text-gray-600 line-clamp-2">{info.description}</p>
+                    
+                    {/* Active Glow Effect */}
+                    {isSelected && (
+                      <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-purple-500/10 to-pink-500/10 animate-pulse"></div>
+                    )}
                   </button>
                 );
               })}
@@ -252,14 +353,16 @@ export default function AIRecipeGenerator({
                     type="text"
                     value={ingredient}
                     onChange={(e) => handleIngredientChange(index, e.target.value)}
-                    className="flex-1 px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
+                    disabled={isGenerating || isSaving}
+                    className="flex-1 px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100"
                     placeholder="e.g., Salmon, Broccoli, Tomatoes"
                   />
                   {ingredients.length > 1 && (
                     <button
                       type="button"
                       onClick={() => handleRemoveIngredient(index)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                      disabled={isGenerating || isSaving}
+                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <X className="w-5 h-5" />
                     </button>
@@ -271,7 +374,8 @@ export default function AIRecipeGenerator({
               <button
                 type="button"
                 onClick={handleAddIngredient}
-                className="w-full p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all group mt-3"
+                disabled={isGenerating || isSaving}
+                className="w-full p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all group mt-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-300 disabled:hover:bg-transparent"
               >
                 <div className="flex flex-col items-center space-y-2">
                   <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center group-hover:bg-purple-500 transition-colors">
@@ -297,7 +401,8 @@ export default function AIRecipeGenerator({
                   key={type}
                   type="button"
                   onClick={() => setMealType(type)}
-                  className={`px-4 py-2 rounded-lg font-medium capitalize transition-colors ${
+                  disabled={isGenerating || isSaving}
+                  className={`px-4 py-2 rounded-lg font-medium capitalize transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                     mealType === type
                       ? 'bg-purple-500 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -320,7 +425,8 @@ export default function AIRecipeGenerator({
                   key={restriction}
                   type="button"
                   onClick={() => toggleRestriction(restriction)}
-                  className={`px-4 py-2 rounded-lg font-medium capitalize transition-colors ${
+                  disabled={isGenerating || isSaving}
+                  className={`px-4 py-2 rounded-lg font-medium capitalize transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                     dietaryRestrictions.includes(restriction)
                       ? 'bg-purple-500 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
