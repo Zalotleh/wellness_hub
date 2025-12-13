@@ -30,9 +30,12 @@ model User {
   trialEndsAt          DateTime?
 
   // Usage tracking
-  mealPlansThisMonth   Int      @default(0)
-  aiQuestionsThisMonth Int      @default(0)
-  lastResetDate        DateTime @default(now())
+  mealPlansThisMonth          Int      @default(0)
+  aiQuestionsThisMonth        Int      @default(0)
+  recipeGenerationsThisMonth  Int      @default(0)
+  pdfExportsThisMonth         Int      @default(0)
+  imageGenerationsThisMonth   Int      @default(0)
+  lastResetDate               DateTime @default(now())
 
   // Relations - Existing
   recipes   Recipe[]

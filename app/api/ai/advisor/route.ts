@@ -2,8 +2,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
 import { DefenseSystem } from '@/types';
+import { FeatureAccess, type SubscriptionTier } from '@/lib/features/feature-flags';
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,6 +16,68 @@ export async function POST(request: NextRequest) {
         { error: 'Unauthorized. Please log in.' },
         { status: 401 }
       );
+    }
+
+    // Get user with subscription info and usage counters
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        id: true,
+        subscriptionTier: true,
+        subscriptionStatus: true,
+        aiQuestionsThisMonth: true,
+        lastResetDate: true,
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    const subscriptionTier = (user.subscriptionTier || 'FREE') as SubscriptionTier;
+    const featureAccess = new FeatureAccess(subscriptionTier);
+
+    // Check if we need to reset monthly counters
+    const now = new Date();
+    const lastReset = new Date(user.lastResetDate);
+    const needsReset = 
+      now.getMonth() !== lastReset.getMonth() || 
+      now.getFullYear() !== lastReset.getFullYear();
+
+    let currentAiQuestionsCount = user.aiQuestionsThisMonth;
+    
+    if (needsReset) {
+      // Reset counters for new month
+      await prisma.user.update({
+        where: { id: session.user.id },
+        data: {
+          mealPlansThisMonth: 0,
+          aiQuestionsThisMonth: 0,
+          recipeGenerationsThisMonth: 0,
+          pdfExportsThisMonth: 0,
+          imageGenerationsThisMonth: 0,
+          lastResetDate: now,
+        },
+      });
+      currentAiQuestionsCount = 0;
+    }
+
+    // Check AI questions limit for FREE tier users
+    const aiQuestionsLimit = featureAccess.getLimit('ai_questions_per_month');
+    
+    if (typeof aiQuestionsLimit === 'number' && aiQuestionsLimit !== Infinity) {
+      if (currentAiQuestionsCount >= aiQuestionsLimit) {
+        return NextResponse.json(
+          { 
+            error: 'AI questions limit reached',
+            message: `You've reached your limit of ${aiQuestionsLimit} AI questions per month. Upgrade to Premium for unlimited AI advisor access.`,
+            limit: aiQuestionsLimit,
+            current: currentAiQuestionsCount,
+            upgradeRequired: true,
+          },
+          { status: 403 }
+        );
+      }
     }
 
     const body = await request.json();
@@ -123,6 +187,16 @@ Remember: You're here to educate, support, and inspire healthy eating habits!`;
     const responseText = anthropicData.content[0].text;
 
     console.log('✅ AI Advisor response generated');
+
+    // Increment the user's AI questions counter (prevents gaming via deletion)
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: {
+        aiQuestionsThisMonth: {
+          increment: 1,
+        },
+      },
+    });
 
     // Generate smart suggestions based on the conversation
     const suggestions = generateSmartSuggestions(message, responseText);

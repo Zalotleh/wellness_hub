@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 import { DefenseSystem } from '@/types';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
+import { FeatureAccess, type SubscriptionTier } from '@/lib/features/feature-flags';
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,6 +15,68 @@ export async function POST(request: NextRequest) {
         { error: 'Unauthorized. Please log in.' },
         { status: 401 }
       );
+    }
+
+    // Get user with subscription info and usage counters
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        id: true,
+        subscriptionTier: true,
+        subscriptionStatus: true,
+        recipeGenerationsThisMonth: true,
+        lastResetDate: true,
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    const subscriptionTier = (user.subscriptionTier || 'FREE') as SubscriptionTier;
+    const featureAccess = new FeatureAccess(subscriptionTier);
+
+    // Check if we need to reset monthly counters
+    const now = new Date();
+    const lastReset = new Date(user.lastResetDate);
+    const needsReset = 
+      now.getMonth() !== lastReset.getMonth() || 
+      now.getFullYear() !== lastReset.getFullYear();
+
+    let currentRecipeGenerationsCount = user.recipeGenerationsThisMonth;
+    
+    if (needsReset) {
+      // Reset counters for new month
+      await prisma.user.update({
+        where: { id: session.user.id },
+        data: {
+          mealPlansThisMonth: 0,
+          aiQuestionsThisMonth: 0,
+          recipeGenerationsThisMonth: 0,
+          pdfExportsThisMonth: 0,
+          imageGenerationsThisMonth: 0,
+          lastResetDate: now,
+        },
+      });
+      currentRecipeGenerationsCount = 0;
+    }
+
+    // Check recipe generation limit for FREE tier users
+    const recipeGenerationsLimit = featureAccess.getLimit('recipe_generations_per_month');
+    
+    if (typeof recipeGenerationsLimit === 'number' && recipeGenerationsLimit !== Infinity) {
+      if (currentRecipeGenerationsCount >= recipeGenerationsLimit) {
+        return NextResponse.json(
+          { 
+            error: 'Recipe generation limit reached',
+            message: `You've reached your limit of ${recipeGenerationsLimit} recipe generations per month. Upgrade to Premium for unlimited recipe generation.`,
+            limit: recipeGenerationsLimit,
+            current: currentRecipeGenerationsCount,
+            upgradeRequired: true,
+          },
+          { status: 403 }
+        );
+      }
     }
 
     const body = await request.json();
@@ -90,6 +154,16 @@ export async function POST(request: NextRequest) {
     // Parse the AI response into structured data
     const parsedRecipe = parseAIRecipe(recipeText, defenseSystem);
     console.log('🍳 Parsed recipe:', JSON.stringify(parsedRecipe, null, 2));
+
+    // Increment the user's recipe generation counter (prevents gaming via deletion)
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: {
+        recipeGenerationsThisMonth: {
+          increment: 1,
+        },
+      },
+    });
 
     return NextResponse.json({
       data: parsedRecipe,
