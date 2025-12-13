@@ -155,7 +155,25 @@ export async function POST(request: NextRequest) {
     const parsedRecipe = parseAIRecipe(recipeText, defenseSystem);
     console.log('🍳 Parsed recipe:', JSON.stringify(parsedRecipe, null, 2));
 
-    // Increment the user's recipe generation counter (prevents gaming via deletion)
+    // Validate recipe quality before counting it as a successful generation
+    const isValidRecipe = validateRecipeQuality(parsedRecipe);
+    
+    if (!isValidRecipe.valid) {
+      console.error('⚠️ Recipe failed quality validation:', isValidRecipe.reasons);
+      // Don't increment counter - this generation failed
+      return NextResponse.json(
+        { 
+          error: 'Recipe generation failed quality check',
+          details: isValidRecipe.reasons,
+          message: 'The AI generated an incomplete recipe. Please try again. This attempt was not counted against your limit.',
+          countedAgainstLimit: false,
+        },
+        { status: 500 }
+      );
+    }
+
+    // Only increment counter if recipe passed quality validation
+    console.log('✅ Recipe passed quality validation, incrementing counter');
     await prisma.user.update({
       where: { id: session.user.id },
       data: {
@@ -168,6 +186,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       data: parsedRecipe,
       message: 'Recipe generated successfully by Claude',
+      countedAgainstLimit: true,
     });
   } catch (error: any) {
     console.error('💥 Error generating recipe:', error);
@@ -240,6 +259,61 @@ NUTRIENTS:
 
 Make the recipe practical, delicious, and easy to follow!
 `;
+}
+
+// Validate recipe quality to ensure it has minimum required data
+function validateRecipeQuality(recipe: any): { valid: boolean; reasons: string[] } {
+  const reasons: string[] = [];
+
+  // Check for title (should exist and not be a fallback)
+  if (!recipe.title || recipe.title.trim() === '') {
+    reasons.push('Missing recipe title');
+  }
+  
+  // Check if title is just the fallback (means original parse failed)
+  if (recipe.title && recipe.title.includes('Recipe') && recipe.title.split(' ').length <= 3) {
+    // This might be a fallback title like "Angiogenesis Recipe"
+    console.warn('⚠️ Title appears to be a fallback, but allowing it');
+  }
+
+  // Check for ingredients (minimum 3 ingredients for a real recipe)
+  if (!Array.isArray(recipe.ingredients) || recipe.ingredients.length < 3) {
+    reasons.push(`Insufficient ingredients (has ${recipe.ingredients?.length || 0}, needs at least 3)`);
+  }
+
+  // Check for instructions (should have meaningful content, at least 100 chars)
+  if (!recipe.instructions || recipe.instructions.trim().length < 100) {
+    reasons.push(`Missing or too short cooking instructions (has ${recipe.instructions?.length || 0} chars, needs at least 100)`);
+  }
+
+  // Check if instructions is just the fallback
+  if (recipe.instructions && recipe.instructions.includes('Instructions not available')) {
+    reasons.push('Instructions are placeholder text, not real cooking steps');
+  }
+
+  // Check if ingredients have proper structure (name should be meaningful)
+  if (recipe.ingredients && recipe.ingredients.length > 0) {
+    const validIngredients = recipe.ingredients.filter((ing: any) => 
+      ing.name && 
+      ing.name.trim() !== '' && 
+      ing.name.length > 2 &&
+      !ing.name.toLowerCase().includes('ingredient') // avoid placeholder text
+    );
+    
+    if (validIngredients.length < 3) {
+      reasons.push(`Only ${validIngredients.length} ingredients with valid names (needs at least 3)`);
+    }
+  }
+
+  const valid = reasons.length === 0;
+  
+  if (!valid) {
+    console.log('❌ Recipe validation failed:', reasons);
+  } else {
+    console.log('✅ Recipe validation passed');
+  }
+
+  return { valid, reasons };
 }
 
 // Parse AI response into structured format

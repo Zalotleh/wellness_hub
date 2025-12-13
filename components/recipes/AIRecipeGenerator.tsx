@@ -77,11 +77,29 @@ export default function AIRecipeGenerator({
 
       if (!response.ok) {
         const errorData = await response.json();
+        
+        // Check if this was a quality validation failure (not counted against limit)
+        if (errorData.countedAgainstLimit === false) {
+          console.log('⚠️ Recipe generation failed quality check, not counted against limit');
+          throw new Error(
+            errorData.message || 
+            'The AI generated an incomplete recipe. Please try again - this attempt was not counted against your limit.'
+          );
+        }
+        
+        // Check if this is a limit reached error
+        if (errorData.upgradeRequired) {
+          throw new Error(errorData.message || 'Recipe generation limit reached');
+        }
+        
         throw new Error(errorData.error || 'Failed to generate recipe');
       }
 
-      const { data: recipe } = await response.json();
+      const responseData = await response.json();
+      const recipe = responseData.data;
+      
       console.log('✅ Received recipe from API:', recipe);
+      console.log('📊 Counted against limit:', responseData.countedAgainstLimit);
       console.log('Recipe structure check:', {
         hasTitle: !!recipe.title,
         hasDescription: !!recipe.description,
@@ -440,8 +458,32 @@ export default function AIRecipeGenerator({
 
           {/* Error Message */}
           {error && (
-            <div className="bg-red-50 border-2 border-red-500 rounded-lg p-4">
-              <p className="text-red-600 font-medium">{error}</p>
+            <div className={`border-2 rounded-lg p-4 ${
+              error.includes('not counted against your limit') 
+                ? 'bg-amber-50 border-amber-500' 
+                : 'bg-red-50 border-red-500'
+            }`}>
+              <div className="flex items-start space-x-3">
+                <div className="flex-1">
+                  <p className={`font-medium ${
+                    error.includes('not counted against your limit')
+                      ? 'text-amber-800'
+                      : 'text-red-600'
+                  }`}>
+                    {error}
+                  </p>
+                  {error.includes('not counted against your limit') && (
+                    <div className="mt-2 flex items-center space-x-2">
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800 border border-green-300">
+                        ✓ Not Counted Against Your Limit
+                      </span>
+                      <span className="text-xs text-amber-700">
+                        You can try again immediately
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
@@ -590,6 +632,15 @@ export default function AIRecipeGenerator({
           <li>• Considers your ingredients and dietary restrictions</li>
           <li>• Generates complete recipes with instructions and nutrition info</li>
         </ul>
+      </div>
+
+      {/* Fairness Guarantee */}
+      <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4">
+        <h4 className="font-bold text-green-900 mb-2">✓ Fair Usage Guarantee</h4>
+        <p className="text-sm text-green-800">
+          If the AI generates an incomplete or invalid recipe, <strong>it won't count against your monthly limit</strong>. 
+          Only successfully generated, quality-validated recipes are counted. You can try again immediately at no cost.
+        </p>
       </div>
     </div>
   );
