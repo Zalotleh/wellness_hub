@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { useFeatureAccess, useLimit } from '@/hooks/useFeatureAccess';
+import { useUsageStats } from '@/hooks/useUsageStats';
 import { TierBadge } from '@/components/features/FeatureGate';
 import {
   Heart,
@@ -32,6 +33,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const { data: session, status } = useSession();
   const { tier, isTrialing, canUse } = useFeatureAccess();
+  const usageStats = useUsageStats();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
@@ -40,12 +42,14 @@ export default function Navbar() {
     console.log('Navbar tier:', tier, 'user:', (session.user as any)?.subscriptionTier);
   }
 
-  // Mock usage data - in real app, fetch from API
-  const userMealPlans = ((session?.user as any)?.mealPlansThisMonth) || 0;
-  const userAIQuestions = ((session?.user as any)?.aiQuestionsThisMonth) || 0;
+  // Use real usage data from API
+  const userMealPlans = usageStats.mealPlansThisMonth;
+  const userAIQuestions = usageStats.aiQuestionsThisMonth;
+  const userRecipeGenerations = usageStats.recipeGenerationsThisMonth;
 
   const mealPlanLimit = useLimit('meal_plans_per_month', userMealPlans);
   const aiLimit = useLimit('ai_questions_per_month', userAIQuestions);
+  const recipeLimit = useLimit('recipe_generations_per_month', userRecipeGenerations);
 
   const navLinks = [
     { href: '/recipes', label: 'Recipes', icon: ChefHat },
@@ -277,51 +281,114 @@ export default function Navbar() {
                         {/* FREE Users - Show Usage Limits */}
                         {tier === 'FREE' && (
                           <>
-                            <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
+                            <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-3">
                               Monthly Usage Limits
                             </h4>
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-between text-sm">
-                                <div className="flex items-center space-x-2">
-                                  <Calendar className="w-4 h-4 text-gray-500" />
-                                  <span className="text-gray-700">Meal Plans</span>
+                            <div className="space-y-3">
+                              {/* Meal Plans */}
+                              <div>
+                                <div className="flex items-center justify-between text-sm mb-1">
+                                  <div className="flex items-center space-x-2">
+                                    <Calendar className="w-4 h-4 text-blue-500" />
+                                    <span className="text-gray-700 font-medium">Meal Plans</span>
+                                  </div>
+                                  <span className={`font-semibold ${
+                                    typeof mealPlanLimit.maxLimit === 'number' && mealPlanLimit.currentUsage >= mealPlanLimit.maxLimit
+                                      ? 'text-red-600'
+                                      : mealPlanLimit.isApproachingLimit
+                                        ? 'text-amber-600'
+                                        : 'text-gray-700'
+                                  }`}>
+                                    {mealPlanLimit.maxLimit === Infinity ? 'Unlimited' : `${mealPlanLimit.currentUsage}/${mealPlanLimit.maxLimit}`}
+                                  </span>
                                 </div>
-                                <span className="font-medium">
-                                  {mealPlanLimit.maxLimit === Infinity ? 'Unlimited' : `${mealPlanLimit.currentUsage}/${mealPlanLimit.maxLimit}`}
-                                </span>
-                              </div>
-                              <div className="w-full bg-gray-200 rounded-full h-2">
-                                <div 
-                                  className={`h-2 rounded-full ${
-                                    mealPlanLimit.isApproachingLimit ? 'bg-amber-500' : 'bg-green-500'
-                                  }`}
-                                  style={{ width: `${100 - mealPlanLimit.percentage}%` }}
-                                />
+                                {typeof mealPlanLimit.maxLimit === 'number' && mealPlanLimit.maxLimit !== Infinity && (
+                                  <div className="w-full bg-gray-200 rounded-full h-2">
+                                    <div 
+                                      className={`h-2 rounded-full transition-all duration-300 ${
+                                        mealPlanLimit.currentUsage >= mealPlanLimit.maxLimit
+                                          ? 'bg-red-500'
+                                          : mealPlanLimit.isApproachingLimit
+                                            ? 'bg-amber-500'
+                                            : 'bg-blue-500'
+                                      }`}
+                                      style={{ width: `${Math.min(100, (mealPlanLimit.currentUsage / mealPlanLimit.maxLimit) * 100)}%` }}
+                                    />
+                                  </div>
+                                )}
                               </div>
                               
-                              <div className="flex items-center justify-between text-sm mt-3">
-                                <div className="flex items-center space-x-2">
-                                  <MessageCircle className="w-4 h-4 text-gray-500" />
-                                  <span className="text-gray-700">AI Questions</span>
+                              {/* AI Questions */}
+                              <div>
+                                <div className="flex items-center justify-between text-sm mb-1">
+                                  <div className="flex items-center space-x-2">
+                                    <MessageCircle className="w-4 h-4 text-purple-500" />
+                                    <span className="text-gray-700 font-medium">AI Questions</span>
+                                  </div>
+                                  <span className={`font-semibold ${
+                                    typeof aiLimit.maxLimit === 'number' && aiLimit.currentUsage >= aiLimit.maxLimit
+                                      ? 'text-red-600'
+                                      : aiLimit.isApproachingLimit
+                                        ? 'text-amber-600'
+                                        : 'text-gray-700'
+                                  }`}>
+                                    {aiLimit.maxLimit === Infinity ? 'Unlimited' : `${aiLimit.currentUsage}/${aiLimit.maxLimit}`}
+                                  </span>
                                 </div>
-                                <span className="font-medium">
-                                  {aiLimit.maxLimit === Infinity ? 'Unlimited' : `${aiLimit.currentUsage}/${aiLimit.maxLimit}`}
-                                </span>
+                                {typeof aiLimit.maxLimit === 'number' && aiLimit.maxLimit !== Infinity && (
+                                  <div className="w-full bg-gray-200 rounded-full h-2">
+                                    <div 
+                                      className={`h-2 rounded-full transition-all duration-300 ${
+                                        aiLimit.currentUsage >= aiLimit.maxLimit
+                                          ? 'bg-red-500'
+                                          : aiLimit.isApproachingLimit
+                                            ? 'bg-amber-500'
+                                            : 'bg-purple-500'
+                                      }`}
+                                      style={{ width: `${Math.min(100, (aiLimit.currentUsage / aiLimit.maxLimit) * 100)}%` }}
+                                    />
+                                  </div>
+                                )}
                               </div>
-                              <div className="w-full bg-gray-200 rounded-full h-2">
-                                <div 
-                                  className={`h-2 rounded-full ${
-                                    aiLimit.isApproachingLimit ? 'bg-amber-500' : 'bg-green-500'
-                                  }`}
-                                  style={{ width: `${100 - aiLimit.percentage}%` }}
-                                />
+
+                              {/* Recipe Generations */}
+                              <div>
+                                <div className="flex items-center justify-between text-sm mb-1">
+                                  <div className="flex items-center space-x-2">
+                                    <ChefHat className="w-4 h-4 text-green-500" />
+                                    <span className="text-gray-700 font-medium">Recipe Generations</span>
+                                  </div>
+                                  <span className={`font-semibold ${
+                                    typeof recipeLimit.maxLimit === 'number' && recipeLimit.currentUsage >= recipeLimit.maxLimit
+                                      ? 'text-red-600'
+                                      : recipeLimit.isApproachingLimit
+                                        ? 'text-amber-600'
+                                        : 'text-gray-700'
+                                  }`}>
+                                    {recipeLimit.maxLimit === Infinity ? 'Unlimited' : `${recipeLimit.currentUsage}/${recipeLimit.maxLimit}`}
+                                  </span>
+                                </div>
+                                {typeof recipeLimit.maxLimit === 'number' && recipeLimit.maxLimit !== Infinity && (
+                                  <div className="w-full bg-gray-200 rounded-full h-2">
+                                    <div 
+                                      className={`h-2 rounded-full transition-all duration-300 ${
+                                        recipeLimit.currentUsage >= recipeLimit.maxLimit
+                                          ? 'bg-red-500'
+                                          : recipeLimit.isApproachingLimit
+                                            ? 'bg-amber-500'
+                                            : 'bg-green-500'
+                                      }`}
+                                      style={{ width: `${Math.min(100, (recipeLimit.currentUsage / recipeLimit.maxLimit) * 100)}%` }}
+                                    />
+                                  </div>
+                                )}
                               </div>
                             </div>
 
                             {!isTrialing && (
                               <Link
                                 href="/pricing"
-                                className="flex items-center justify-center space-x-2 w-full mt-3 px-3 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all font-medium text-sm shadow-sm"
+                                className="flex items-center justify-center space-x-2 w-full mt-4 px-3 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all font-medium text-sm shadow-sm"
                                 onClick={() => setShowUserMenu(false)}
                               >
                                 <Crown className="w-4 h-4" />

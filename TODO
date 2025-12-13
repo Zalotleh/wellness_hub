@@ -1,0 +1,112 @@
+issues:
+- for premium and Family users, they dont have the same user dropdown menu as the free one, limits, upgrade .. etc X
+
+-stats: REcpies, Favourites, Progress, Completion, Recent Activity, inside profile page are not reflecting the real numbers? X
+
+-from the meal plan, if i click to view the recipe, and then go back, it takes me to the recipes page, while the normal 
+thing to happen is to take me back to the meal plan page, where i was initially X
+
+-the plan dates are wrong it shows: Dec 13 - Dec 13, 2025 X
+
+- the user i created has free plan, yet i could create more than one meal plan X
+
+- the stats on the user dropdown menue, usage limits, progress bars are not reflecting the real data.
+-inside the AI recipe generator, provide a better way of showing if the defense system is selected. change color. alos while the recipe is beng generated, i can still click on button isnide the page, can we grey out the page and provide a loading visual?
+- inside the meal, at the bottom of the page for each day, there is + to add a new meal, snack, but it doesnt work to add a new snack meal.
+-for the Ai generating recipe, the recipe title needs to be more specific, right now it reflects the defense system selected, if i select immunity system then the generated recipe title is immunity recipe, modify the prompt to fix this issue.
+-in the Shopping Lists page, i dont see my saved plans, it shows empty meal plans even though i have 2 meal plans.
+- i created a shopping list from a meal plan, click create then i was redirected to page where it says:
+Shopping List Not Found
+Shopping list not found
+
+Go BackView All Lists
+
+i clicked to go back, then i went to the shopping lists page, i can see that there is a shopping list card, the infor on the card says it has 10 items, i clicked view to see the list, but the list is empty, i can see the buttons and info but i cant see the 10 items:
+Shopping Progress
+0 of 0 items completed
+
+0%
+complete
+Created 12/13/2025
+View Meal Plan
+Quick Actions
+
+Add Item
+
+Deselect All
+
+Mark All Complete
+
+Mark All Incomplete
+
+- in the progress page, weekly analytics, i have 0 activity, but in the Best System i can see a placeholder: Angiogenesis, remove that placeholder.
+- in the AI Advisor, the page view moves to the bottom of the page after generating, make the view stable and focused on the chat view, and another issue, when the chat is generated, i can see at the top of the chat there is a notification bar with x, i clicked on the x and it cleared teh chat, it is ok, but i want this to be more user intuitive, i didnt know it is going to clear the chat though.
+in the right side bar, the section of 5 Defense Systems
+
+🩸
+Angiogenesis
+
+🔄
+Regeneration
+
+🦠
+Microbiome
+
+🧬
+DNA Protection
+
+🛡️
+Immunity
+
+provide a clear way of using these key words, like: Click on the defenese system to tell you more and which foods support it, as na example, but you can be creative with it.
+if i leave the ai advisor page, the chat is gone, is there a way of saving the chat, and also we need to have a disclaimer that this advisory is not replacing your doctor or nutrisitnist, user is recommended to verify the ifnormation created, and check with their specialist or doctor befor applying these recommendations.. etc
+
+
+enhancements:
+
+- for recipe and meal plan generation, what is the prompt are we using, are we using all the ingredients mentioned in the william li book?
+-settings page is empty. gives 404 page
+-build a 404 page
+-build terms of service & Privacy Policy pages
+- add create shopping list inside recipe's page, to create a shopping list for one recipe
+also for shopping list, make it inceremental, if users selects 1 plan now, then came back and selected another plan or recipe, so to have a 
+-for the navigation bar, can we get the meal plans items together, recipes items together: recipes, ai generator, manual recipe generator?
+
+-the meal plan is for only 1 week, can we have for 4 weeks option as well?
+-in the meal plan, the default view should be the one, what other user friendly and intuitive view we can have?
+-can we add a feature to select the country for the user so the recipes can as much closer to the common ingredients we can find in that specifc country?
+-when the meal plan is gnereated, provide a visual note that the meal planner will generate recipes ideas, and if users like the title or idea they can click generate to generate that recipe
+
+
+
+
+Plan for nextjs 15 Later:
+
+Next.js 15 Migration Scope
+✅ API routes: Already compatible (using await)
+❌ 20+ page files need refactoring (params/searchParams)
+❌ React 18 → 19 upgrade required
+❌ next-auth React 19 compatibility unclear
+⚠️ Estimated effort: 4-8 hours of work + testing
+The Safe Path
+
+Next.js 15: Plan for Q2 2025
+When you're ready:
+
+Allocate 1-2 days for migration
+Run the codemod: npx @next/codemod@canary upgrade latest
+Manually fix the 20+ files with params/searchParams
+Update React to 19
+Thorough testing across all features
+My advice: Patch to 14.2.35 today (takes 5 minutes), then schedule the Next.js 15 upgrade for when you have proper time to test everything. Security first, features second.
+
+✅ Comprehensive FREE Plan Limit Enforcement Implemented
+All Limits Now Protected:
+Feature	FREE Limit	Counter Field	Status
+Meal Plans	1/month	mealPlansThisMonth	✅ Enforced
+AI Questions	10/month	aiQuestionsThisMonth	✅ Enforced
+Recipe Generations	7/month	recipeGenerationsThisMonth	✅ Enforced
+PDF Exports	0/month	pdfExportsThisMonth	⏳ Ready (when feature added)
+Image Generations	0/month (10 for PREMIUM)	imageGenerationsThisMonth	⏳ Ready (when feature added)
+How It Works:
+1. Schema Enhancement
