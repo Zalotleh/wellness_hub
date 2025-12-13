@@ -10,9 +10,12 @@ thing to happen is to take me back to the meal plan page, where i was initially 
 
 - the user i created has free plan, yet i could create more than one meal plan X
 
-- the stats on the user dropdown menue, usage limits, progress bars are not reflecting the real data.
--inside the AI recipe generator, provide a better way of showing if the defense system is selected. change color. alos while the recipe is beng generated, i can still click on button isnide the page, can we grey out the page and provide a loading visual?
-- inside the meal, at the bottom of the page for each day, there is + to add a new meal, snack, but it doesnt work to add a new snack meal.
+- the stats on the user dropdown menue, usage limits, progress bars are not reflecting the real data. X
+
+-inside the AI recipe generator, provide a better way of showing if the defense system is selected. change color. also while the recipe is beng generated, i can still click on button inside the page, can we grey out the page in the background and provide a loading visual? is there a better way of hanlding this? open o suggestions. X
+
+- inside the meal, at the bottom of the page for each day, there is + to add a new meal, snack, but it doesnt work to add a new snack meal. X
+
 -for the Ai generating recipe, the recipe title needs to be more specific, right now it reflects the defense system selected, if i select immunity system then the generated recipe title is immunity recipe, modify the prompt to fix this issue.
 -in the Shopping Lists page, i dont see my saved plans, it shows empty meal plans even though i have 2 meal plans.
 - i created a shopping list from a meal plan, click create then i was redirected to page where it says:
@@ -107,6 +110,9 @@ Meal Plans	1/month	mealPlansThisMonth	✅ Enforced
 AI Questions	10/month	aiQuestionsThisMonth	✅ Enforced
 Recipe Generations	7/month	recipeGenerationsThisMonth	✅ Enforced
 PDF Exports	0/month	pdfExportsThisMonth	⏳ Ready (when feature added)
-Image Generations	0/month (10 for PREMIUM)	imageGenerationsThisMonth	⏳ Ready (when feature added)
-How It Works:
-1. Schema Enhancement
+Image Generations	0/month (10 for PREMIUM)	imageGenerationsThisMonth
+
+
+for admin dashboard:
+recipe genetaing Success Rate Tracking: Track how often validation passes
+Admin Dashboard: See ai recipe/meal plan, shopping list generating validation failure patterns

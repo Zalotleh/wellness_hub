@@ -148,22 +148,32 @@ export default function MealPlanView({
     setSelectedDay(daysOfWeek[newIndex].key);
   };
 
-  const renderEmptySlot = (day: string, slot: string) => (
-    <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center group hover:border-gray-300 transition-colors">
-      <div className="text-gray-400 mb-3">
-        <Plus className="w-8 h-8 mx-auto" />
+  const renderEmptySlot = (day: string, slot: string) => {
+    const slotInfo = mealSlots.find(s => s.key === slot);
+    const slotLabel = slotInfo?.label || slot;
+    const slotIcon = slotInfo?.icon || '🍽️';
+    
+    return (
+      <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center group hover:border-green-200 hover:bg-green-50/50 transition-all">
+        <div className="text-gray-400 group-hover:text-green-500 mb-3 transition-colors">
+          <div className="w-12 h-12 mx-auto bg-gray-100 group-hover:bg-green-100 rounded-full flex items-center justify-center transition-colors">
+            <Plus className="w-6 h-6" />
+          </div>
+        </div>
+        <p className="text-gray-500 text-sm mb-1">No {slotLabel.toLowerCase()} planned</p>
+        <p className="text-xs text-gray-400 mb-3">Click below to add a meal or snack</p>
+        <button
+          onClick={() => onAddMeal(day, slot)}
+          disabled={isGenerating}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors text-sm font-medium shadow-sm hover:shadow-md"
+        >
+          <span className="text-base">{slotIcon}</span>
+          <Plus className="w-4 h-4" />
+          <span>Add {slotLabel}</span>
+        </button>
       </div>
-      <p className="text-gray-500 text-sm mb-3">No meal planned</p>
-      <button
-        onClick={() => onAddMeal(day, slot)}
-        disabled={isGenerating}
-        className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors text-sm font-medium"
-      >
-        <Plus className="w-4 h-4" />
-        Add Meal
-      </button>
-    </div>
-  );
+    );
+  };
 
   const renderDayColumn = (day: typeof daysOfWeek[0]) => {
     const dayStats = calculateDayStats(day.key);
@@ -272,6 +282,18 @@ export default function MealPlanView({
                         isGeneratingRecipe={isGenerating}
                       />
                     ))}
+                    
+                    {/* Add Another Meal Button (especially useful for snacks) */}
+                    <button
+                      onClick={() => onAddMeal(day.key, slot.key)}
+                      disabled={isGenerating}
+                      className="w-full px-4 py-3 border-2 border-dashed border-gray-200 rounded-lg text-sm text-gray-600 hover:border-green-500 hover:bg-green-50 hover:text-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
+                    >
+                      <div className="w-6 h-6 bg-gray-100 group-hover:bg-green-200 rounded-full flex items-center justify-center transition-colors">
+                        <Plus className="w-4 h-4" />
+                      </div>
+                      <span className="font-medium">Add Another {slot.label}</span>
+                    </button>
                   </div>
                 ) : (
                   renderEmptySlot(day.key, slot.key)
