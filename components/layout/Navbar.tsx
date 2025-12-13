@@ -25,6 +25,7 @@ import {
   Bookmark,
   Crown,
   AlertCircle,
+  CheckCircle2,
 } from 'lucide-react';
 
 export default function Navbar() {
@@ -103,7 +104,7 @@ export default function Navbar() {
           <div className="flex items-center space-x-3">
             {/* Upgrade Buttons Only */}
             {status === 'authenticated' && session?.user && (
-              <div className="hidden xl:flex items-center space-x-3">
+              <div className="hidden items-center space-x-3">
                 {tier === 'FREE' && !isTrialing && (
                   <Link
                     href="/pricing"
@@ -136,7 +137,7 @@ export default function Navbar() {
 
             {/* Usage Limits Badge - Enhanced */}
             {status === 'authenticated' && session?.user && tier === 'FREE' && (
-              <div className="hidden lg:flex items-center space-x-3 px-4 py-2 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200">
+              <div className="hidden items-center space-x-3 px-4 py-2 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200">
                 {/* Meal Plans Usage */}
                 <div className="flex flex-col items-center space-y-1 group relative">
                   <div className="flex items-center space-x-1">
@@ -271,76 +272,133 @@ export default function Navbar() {
                         </div>
                       </div>
 
-                      {/* Usage Stats for Free Users */}
-                      {tier === 'FREE' && (
-                        <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-                          <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
-                            Monthly Usage
-                          </h4>
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between text-sm">
-                              <div className="flex items-center space-x-2">
-                                <Calendar className="w-4 h-4 text-gray-500" />
-                                <span className="text-gray-700">Meal Plans</span>
+                      {/* Subscription & Usage Stats - All Tiers */}
+                      <div className="px-4 py-3 border-b border-gray-200 bg-gradient-to-br from-gray-50 to-blue-50">
+                        {/* FREE Users - Show Usage Limits */}
+                        {tier === 'FREE' && (
+                          <>
+                            <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
+                              Monthly Usage Limits
+                            </h4>
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between text-sm">
+                                <div className="flex items-center space-x-2">
+                                  <Calendar className="w-4 h-4 text-gray-500" />
+                                  <span className="text-gray-700">Meal Plans</span>
+                                </div>
+                                <span className="font-medium">
+                                  {mealPlanLimit.maxLimit === Infinity ? 'Unlimited' : `${mealPlanLimit.currentUsage}/${mealPlanLimit.maxLimit}`}
+                                </span>
                               </div>
-                              <span className="font-medium">
-                                {mealPlanLimit.maxLimit === Infinity ? 'Unlimited' : `${mealPlanLimit.currentUsage}/${mealPlanLimit.maxLimit}`}
-                              </span>
-                            </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2">
-                              <div 
-                                className={`h-2 rounded-full ${
-                                  mealPlanLimit.isApproachingLimit ? 'bg-amber-500' : 'bg-green-500'
-                                }`}
-                                style={{ width: `${100 - mealPlanLimit.percentage}%` }}
-                              />
-                            </div>
-                            
-                            <div className="flex items-center justify-between text-sm">
-                              <div className="flex items-center space-x-2">
-                                <MessageCircle className="w-4 h-4 text-gray-500" />
-                                <span className="text-gray-700">AI Questions</span>
+                              <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div 
+                                  className={`h-2 rounded-full ${
+                                    mealPlanLimit.isApproachingLimit ? 'bg-amber-500' : 'bg-green-500'
+                                  }`}
+                                  style={{ width: `${100 - mealPlanLimit.percentage}%` }}
+                                />
                               </div>
-                              <span className="font-medium">
-                                {aiLimit.maxLimit === Infinity ? 'Unlimited' : `${aiLimit.currentUsage}/${aiLimit.maxLimit}`}
-                              </span>
+                              
+                              <div className="flex items-center justify-between text-sm mt-3">
+                                <div className="flex items-center space-x-2">
+                                  <MessageCircle className="w-4 h-4 text-gray-500" />
+                                  <span className="text-gray-700">AI Questions</span>
+                                </div>
+                                <span className="font-medium">
+                                  {aiLimit.maxLimit === Infinity ? 'Unlimited' : `${aiLimit.currentUsage}/${aiLimit.maxLimit}`}
+                                </span>
+                              </div>
+                              <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div 
+                                  className={`h-2 rounded-full ${
+                                    aiLimit.isApproachingLimit ? 'bg-amber-500' : 'bg-green-500'
+                                  }`}
+                                  style={{ width: `${100 - aiLimit.percentage}%` }}
+                                />
+                              </div>
                             </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2">
-                              <div 
-                                className={`h-2 rounded-full ${
-                                  aiLimit.isApproachingLimit ? 'bg-amber-500' : 'bg-green-500'
-                                }`}
-                                style={{ width: `${100 - aiLimit.percentage}%` }}
-                              />
-                            </div>
-                          </div>
 
-                          {!isTrialing && tier === 'FREE' && (
-                            <Link
-                              href="/pricing"
-                              className="flex items-center justify-center space-x-2 w-full mt-3 px-3 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all font-medium text-sm"
-                              onClick={() => setShowUserMenu(false)}
-                            >
-                              <Crown className="w-4 h-4" />
-                              <span>Upgrade to Premium</span>
-                            </Link>
-                          )}
-                          {(String(tier) === 'PREMIUM' || String(tier) === 'FAMILY') && (
+                            {!isTrialing && (
+                              <Link
+                                href="/pricing"
+                                className="flex items-center justify-center space-x-2 w-full mt-3 px-3 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all font-medium text-sm shadow-sm"
+                                onClick={() => setShowUserMenu(false)}
+                              >
+                                <Crown className="w-4 h-4" />
+                                <span>Upgrade to Premium</span>
+                              </Link>
+                            )}
+                          </>
+                        )}
+
+                        {/* PREMIUM Users - Show Plan Benefits */}
+                        {String(tier) === 'PREMIUM' && (
+                          <>
+                            <h4 className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-2 flex items-center space-x-1">
+                              <Crown className="w-3 h-3" />
+                              <span>Premium Plan</span>
+                            </h4>
+                            <div className="space-y-2 text-sm text-gray-700">
+                              <div className="flex items-center space-x-2">
+                                <CheckCircle2 className="w-4 h-4 text-green-500" />
+                                <span>Unlimited Meal Plans</span>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <CheckCircle2 className="w-4 h-4 text-green-500" />
+                                <span>Unlimited AI Questions</span>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <CheckCircle2 className="w-4 h-4 text-green-500" />
+                                <span>Advanced Analytics</span>
+                              </div>
+                            </div>
                             <Link
                               href="/subscription/manage"
-                              className={`flex items-center justify-center space-x-2 w-full mt-3 px-3 py-2 text-white rounded-lg transition-all font-medium text-sm ${
-                                String(tier) === 'PREMIUM' 
-                                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700'
-                                  : 'bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700'
-                              }`}
+                              className="flex items-center justify-center space-x-2 w-full mt-3 px-3 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all font-medium text-sm shadow-sm"
                               onClick={() => setShowUserMenu(false)}
                             >
-                              <Crown className="w-4 h-4" />
-                              <span>{String(tier) === 'PREMIUM' ? 'Premium Plan' : 'Family Plan'}</span>
+                              <Settings className="w-4 h-4" />
+                              <span>Manage Subscription</span>
                             </Link>
-                          )}
-                        </div>
-                      )}
+                          </>
+                        )}
+
+                        {/* FAMILY Users - Show Plan Benefits */}
+                        {String(tier) === 'FAMILY' && (
+                          <>
+                            <h4 className="text-xs font-semibold text-purple-600 uppercase tracking-wide mb-2 flex items-center space-x-1">
+                              <Crown className="w-3 h-3" />
+                              <span>Family Plan</span>
+                            </h4>
+                            <div className="space-y-2 text-sm text-gray-700">
+                              <div className="flex items-center space-x-2">
+                                <CheckCircle2 className="w-4 h-4 text-green-500" />
+                                <span>Unlimited Meal Plans</span>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <CheckCircle2 className="w-4 h-4 text-green-500" />
+                                <span>Unlimited AI Questions</span>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <CheckCircle2 className="w-4 h-4 text-green-500" />
+                                <span>Up to 6 Family Members</span>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <CheckCircle2 className="w-4 h-4 text-green-500" />
+                                <span>Shared Meal Planning</span>
+                              </div>
+                            </div>
+                            <Link
+                              href="/subscription/manage"
+                              className="flex items-center justify-center space-x-2 w-full mt-3 px-3 py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 transition-all font-medium text-sm shadow-sm"
+                              onClick={() => setShowUserMenu(false)}
+                            >
+                              <Settings className="w-4 h-4" />
+                              <span>Manage Subscription</span>
+                            </Link>
+                          </>
+                        )}
+                      </div>
 
                       <Link
                         href="/profile"
