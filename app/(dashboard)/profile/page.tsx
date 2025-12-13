@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { User, Mail, Calendar, Edit2, Save, X, Loader2, ChefHat, TrendingUp, Heart } from 'lucide-react';
+import { User, Mail, Calendar, Edit2, Save, X, Loader2, ChefHat, TrendingUp, Heart, ShoppingCart, CalendarCheck } from 'lucide-react';
 
 // Helper function to format time ago
 function getTimeAgo(date: Date): string {
@@ -29,14 +29,16 @@ export default function ProfilePage() {
   });
   const [stats, setStats] = useState({
     recipesCreated: 0,
+    mealPlansCreated: 0,
+    shoppingListsCreated: 0,
     recipesFavorited: 0,
     progressDays: 0,
     avgCompletion: 0,
   });
   const [recentActivity, setRecentActivity] = useState<Array<{
-    type: 'recipe_created' | 'progress_logged' | 'recipe_favorited';
+    type: 'recipe_created' | 'meal_plan_created' | 'shopping_list_created' | 'progress_logged' | 'recipe_favorited';
     title: string;
-    recipeId?: string;
+    linkUrl: string;
     timestamp: Date;
   }>>([]);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
@@ -224,7 +226,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center space-x-2 mb-2">
               <ChefHat className="w-5 h-5 text-green-600" />
@@ -236,11 +238,29 @@ export default function ProfilePage() {
 
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center space-x-2 mb-2">
+              <CalendarCheck className="w-5 h-5 text-purple-600" />
+              <span className="text-sm text-gray-600">Meal Plans</span>
+            </div>
+            <p className="text-3xl font-bold text-gray-900">{stats.mealPlansCreated}</p>
+            <p className="text-xs text-gray-500">Created</p>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center space-x-2 mb-2">
+              <ShoppingCart className="w-5 h-5 text-orange-600" />
+              <span className="text-sm text-gray-600">Shopping</span>
+            </div>
+            <p className="text-3xl font-bold text-gray-900">{stats.shoppingListsCreated}</p>
+            <p className="text-xs text-gray-500">Lists</p>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center space-x-2 mb-2">
               <Heart className="w-5 h-5 text-red-600" />
               <span className="text-sm text-gray-600">Favorites</span>
             </div>
             <p className="text-3xl font-bold text-gray-900">{stats.recipesFavorited}</p>
-            <p className="text-xs text-gray-500">Saved recipes</p>
+            <p className="text-xs text-gray-500">Saved</p>
           </div>
 
           <div className="bg-white rounded-lg shadow-md p-6">
@@ -281,11 +301,17 @@ export default function ProfilePage() {
                 const getActivityIcon = () => {
                   switch (activity.type) {
                     case 'recipe_created':
-                      return { icon: ChefHat, bg: 'bg-green-100', color: 'text-green-600', label: 'Created a new recipe' };
+                      return { icon: ChefHat, bg: 'bg-green-100', color: 'text-green-600', label: 'Created a recipe' };
+                    case 'meal_plan_created':
+                      return { icon: CalendarCheck, bg: 'bg-purple-100', color: 'text-purple-600', label: 'Created a meal plan' };
+                    case 'shopping_list_created':
+                      return { icon: ShoppingCart, bg: 'bg-orange-100', color: 'text-orange-600', label: 'Created shopping list' };
                     case 'progress_logged':
                       return { icon: TrendingUp, bg: 'bg-blue-100', color: 'text-blue-600', label: 'Logged progress' };
                     case 'recipe_favorited':
                       return { icon: Heart, bg: 'bg-red-100', color: 'text-red-600', label: 'Favorited a recipe' };
+                    default:
+                      return { icon: ChefHat, bg: 'bg-gray-100', color: 'text-gray-600', label: 'Activity' };
                   }
                 };
 
@@ -304,14 +330,12 @@ export default function ProfilePage() {
                         {activity.title} • {timeAgo}
                       </p>
                     </div>
-                    {activity.recipeId && (
-                      <a
-                        href={`/recipes/${activity.recipeId}`}
-                        className="text-green-600 hover:text-green-700 text-sm font-medium"
-                      >
-                        View →
-                      </a>
-                    )}
+                    <a
+                      href={activity.linkUrl}
+                      className="text-green-600 hover:text-green-700 text-sm font-medium"
+                    >
+                      View →
+                    </a>
                   </div>
                 );
               })}

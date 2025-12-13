@@ -28,14 +28,15 @@ export async function GET() {
             createdAt: true,
           },
         },
-        ratings: {
-          where: { value: { gte: 4 } }, // Count 4+ star ratings as favorites
-          select: { 
+        shoppingLists: {
+          select: {
             id: true,
-            value: true,
-            recipeId: true,
+            title: true,
             createdAt: true,
           },
+        },
+        ratings: {
+          where: { value: { gte: 4 } }, // Count 4+ star ratings as favorites
           include: {
             recipe: {
               select: {
@@ -66,12 +67,15 @@ export async function GET() {
       email: user.email,
       recipesCount: user.recipes.length,
       mealPlansCount: user.mealPlans.length,
+      shoppingListsCount: user.shoppingLists.length,
       ratingsCount: user.ratings.length,
       progressCount: user.progress.length,
     });
 
     // Calculate stats
-    const recipesCreated = user.recipes.length + user.mealPlans.length; // Include meal plans
+    const recipesCreated = user.recipes.length;
+    const mealPlansCreated = user.mealPlans.length;
+    const shoppingListsCreated = user.shoppingLists.length;
     const recipesFavorited = user.ratings.length;
     
     // Get unique days with progress (since Progress model has one entry per defenseSystem per day)
@@ -106,9 +110,10 @@ export async function GET() {
       totalCompletion = Math.round(totalCompletion / progressByDate.size);
     }
 
-    // Get recent activity - combine recipes, meal plans, and progress
+    // Get recent activity - combine recipes, meal plans, shopping lists, and progress
     const recentRecipes = user.recipes.slice(0, 3);
     const recentMealPlans = user.mealPlans.slice(0, 3);
+    const recentShoppingLists = user.shoppingLists.slice(0, 3);
     const recentProgress = user.progress.slice(0, 5);
     const recentRatings = user.ratings.slice(0, 3);
 
@@ -116,25 +121,32 @@ export async function GET() {
     const recentActivity = [
       ...recentRecipes.map((recipe) => ({
         type: 'recipe_created' as const,
-        title: `Recipe: ${recipe.title}`,
-        recipeId: recipe.id,
+        title: recipe.title,
+        linkUrl: `/recipes/${recipe.id}`,
         timestamp: recipe.createdAt,
       })),
       ...recentMealPlans.map((plan) => ({
-        type: 'recipe_created' as const,
-        title: `Meal Plan: ${plan.title}`,
-        recipeId: plan.id,
+        type: 'meal_plan_created' as const,
+        title: plan.title,
+        linkUrl: `/meal-planner/${plan.id}`,
         timestamp: plan.createdAt,
+      })),
+      ...recentShoppingLists.map((list) => ({
+        type: 'shopping_list_created' as const,
+        title: list.title,
+        linkUrl: `/shopping-lists/${list.id}`,
+        timestamp: list.createdAt,
       })),
       ...recentProgress.map((entry) => ({
         type: 'progress_logged' as const,
         title: `Logged ${entry.defenseSystem.toLowerCase().replace('_', ' ')} (${entry.count}/5)`,
+        linkUrl: `/progress`,
         timestamp: entry.createdAt,
       })),
       ...recentRatings.map((rating) => ({
         type: 'recipe_favorited' as const,
         title: rating.recipe.title,
-        recipeId: rating.recipe.id,
+        linkUrl: `/recipes/${rating.recipe.id}`,
         timestamp: rating.createdAt,
       })),
     ]
@@ -144,6 +156,8 @@ export async function GET() {
     return NextResponse.json({
       stats: {
         recipesCreated,
+        mealPlansCreated,
+        shoppingListsCreated,
         recipesFavorited,
         progressDays,
         avgCompletion: totalCompletion,
