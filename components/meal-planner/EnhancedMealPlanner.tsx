@@ -779,7 +779,14 @@ export default function EnhancedMealPlanner({
       }
 
       if (!response.ok) {
-        throw new Error('Failed to save plan');
+        const errorData = await response.json().catch(() => ({}));
+        
+        // Handle meal plan limit error
+        if (response.status === 403 && errorData.upgradeRequired) {
+          throw new Error(errorData.message || 'Meal plan limit reached. Please upgrade to create more plans.');
+        }
+        
+        throw new Error(errorData.error || 'Failed to save plan');
       }
 
       const saveData = await response.json();

@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { startOfWeek, endOfWeek, addDays } from 'date-fns';
+import { startOfWeek, endOfWeek, addDays, startOfMonth, endOfMonth } from 'date-fns';
+import { FeatureAccess, type SubscriptionTier } from '@/lib/features/feature-flags';
 
 // GET - List user's meal plans
 export async function GET(request: NextRequest) {
@@ -112,6 +113,56 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Get user with subscription info
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        id: true,
+        subscriptionTier: true,
+        subscriptionStatus: true,
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    const subscriptionTier = (user.subscriptionTier || 'FREE') as SubscriptionTier;
+    const featureAccess = new FeatureAccess(subscriptionTier);
+
+    // Check meal plan limit for FREE tier users
+    const mealPlanLimit = featureAccess.getLimit('meal_plans_per_month');
+    
+    if (typeof mealPlanLimit === 'number' && mealPlanLimit !== Infinity) {
+      // Count meal plans created this month
+      const now = new Date();
+      const monthStart = startOfMonth(now);
+      const monthEnd = endOfMonth(now);
+      
+      const monthlyMealPlanCount = await prisma.mealPlan.count({
+        where: {
+          userId: session.user.id,
+          createdAt: {
+            gte: monthStart,
+            lte: monthEnd,
+          },
+        },
+      });
+
+      if (monthlyMealPlanCount >= mealPlanLimit) {
+        return NextResponse.json(
+          { 
+            error: 'Meal plan limit reached',
+            message: `You've reached your limit of ${mealPlanLimit} meal plan${mealPlanLimit > 1 ? 's' : ''} per month. Upgrade to Premium for unlimited meal plans.`,
+            limit: mealPlanLimit,
+            current: monthlyMealPlanCount,
+            upgradeRequired: true,
+          },
+          { status: 403 }
+        );
+      }
     }
 
     let body;
