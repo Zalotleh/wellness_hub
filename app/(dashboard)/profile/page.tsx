@@ -59,11 +59,14 @@ export default function ProfilePage() {
       const response = await fetch('/api/user/stats');
       if (response.ok) {
         const data = await response.json();
+        console.log('Fetched stats data:', data);
         setStats(data.stats);
         setRecentActivity(data.recentActivity.map((activity: any) => ({
           ...activity,
           timestamp: new Date(activity.timestamp),
         })));
+      } else {
+        console.error('Failed to fetch stats:', response.status, response.statusText);
       }
     } catch (error) {
       console.error('Error fetching user stats:', error);
@@ -298,6 +301,11 @@ export default function ProfilePage() {
           ) : (
             <div className="space-y-4">
               {recentActivity.map((activity, index) => {
+                // Ensure activity has required properties
+                if (!activity || !activity.type || !activity.title) {
+                  return null;
+                }
+
                 const getActivityIcon = () => {
                   switch (activity.type) {
                     case 'recipe_created':

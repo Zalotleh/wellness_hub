@@ -663,9 +663,10 @@ export default function EnhancedMealPlanner({
 
   // Handle view recipe
   const handleViewRecipe = useCallback((recipeId: string) => {
-    // Navigate to the recipe view page
-    router.push(`/recipes/${recipeId}`);
-  }, [router]);
+    // Navigate to the recipe view page with returnUrl to come back to meal plan
+    const returnUrl = `/meal-planner/${mealPlan.id}`;
+    router.push(`/recipes/${recipeId}?returnUrl=${encodeURIComponent(returnUrl)}`);
+  }, [router, mealPlan.id]);
 
   // Generate shopping list
   const handleGenerateShoppingList = useCallback(async () => {

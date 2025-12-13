@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
@@ -32,7 +32,9 @@ interface RecipeDetail extends RecipeWithRelations {
 export default function RecipeDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session } = useSession();
+  const returnUrl = searchParams.get('returnUrl') || '/recipes';
   const [recipe, setRecipe] = useState<RecipeDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [userRating, setUserRating] = useState(0);
@@ -180,11 +182,11 @@ export default function RecipeDetailPage() {
       <div className="max-w-5xl mx-auto">
         {/* Back Button */}
         <Link
-          href="/recipes"
+          href={returnUrl}
           className="inline-flex items-center space-x-2 text-gray-600 hover:text-gray-800 mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Back to Recipes</span>
+          <span>Back {returnUrl.includes('meal-planner') ? 'to Meal Plan' : 'to Recipes'}</span>
         </Link>
 
         {/* Main Content */}
