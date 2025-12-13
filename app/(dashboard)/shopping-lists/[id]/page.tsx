@@ -9,20 +9,19 @@ import {
   Check, 
   X,
   Plus,
-  Edit2,
   Trash2,
   Calendar,
   Users,
-  Clock,
   ExternalLink,
   Share2,
   Download,
   CheckCircle2,
   Circle,
   Loader2,
-  Square,
-  CheckSquare,
-  Target
+  Mail,
+  MessageCircle,
+  Copy,
+  Smartphone
 } from 'lucide-react';
 
 interface ShoppingListItem {
@@ -61,11 +60,18 @@ export default function ShoppingListDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
-  const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
   const [deleteConfirm, setDeleteConfirm] = useState<{show: boolean, itemIndex: number, itemName: string}>({
     show: false,
     itemIndex: -1,
     itemName: ''
+  });
+  const [showAddItemModal, setShowAddItemModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [newItem, setNewItem] = useState({
+    ingredient: '',
+    quantity: 1,
+    unit: '',
+    category: 'Other'
   });
 
   useEffect(() => {
@@ -188,6 +194,57 @@ export default function ShoppingListDetailPage() {
     }
   };
 
+  const addItem = async () => {
+    if (!shoppingList || updating || !newItem.ingredient.trim()) return;
+
+    try {
+      setUpdating(true);
+      const itemToAdd: ShoppingListItem = {
+        ingredient: newItem.ingredient.trim(),
+        quantity: newItem.quantity || 1,
+        unit: newItem.unit.trim() || 'unit',
+        category: newItem.category || 'Other',
+        checked: false,
+      };
+
+      const updatedItems = [...shoppingList.items, itemToAdd];
+
+      const response = await fetch(`/api/shopping-lists/${params.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          items: updatedItems,
+        }),
+      });
+
+      if (response.ok) {
+        setShoppingList(prev => prev ? {
+          ...prev,
+          items: updatedItems,
+          totalItems: updatedItems.length,
+        } : null);
+        
+        // Reset form and close modal
+        setNewItem({
+          ingredient: '',
+          quantity: 1,
+          unit: '',
+          category: 'Other'
+        });
+        setShowAddItemModal(false);
+      } else {
+        throw new Error('Failed to add item');
+      }
+    } catch (error) {
+      console.error('Error adding item:', error);
+      setError('Failed to add item');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   const markAllComplete = async () => {
     if (!shoppingList || updating) return;
 
@@ -260,97 +317,125 @@ export default function ShoppingListDetailPage() {
     }
   };
 
-  // Bulk selection functions
-  const toggleItemSelection = (itemIndex: number) => {
-    setSelectedItems(prev => {
-      const newSelected = new Set(prev);
-      if (newSelected.has(itemIndex)) {
-        newSelected.delete(itemIndex);
-      } else {
-        newSelected.add(itemIndex);
-      }
-      return newSelected;
-    });
-  };
-
-  const selectAllItems = () => {
+  const exportList = () => {
     if (!shoppingList) return;
-    setSelectedItems(new Set(shoppingList.items.map((_, index) => index)));
-  };
 
-  const clearSelection = () => {
-    setSelectedItems(new Set());
-  };
+    // Group items by category
+    const groupedItems = groupItemsByCategory(shoppingList.items);
+    
+    // Create text content
+    let content = `${shoppingList.title}\n`;
+    content += `${'='.repeat(shoppingList.title.length)}\n\n`;
+    
+    if (shoppingList.mealPlan) {
+      content += `From Meal Plan: ${shoppingList.mealPlan.title}\n`;
+    }
+    content += `Created: ${new Date(shoppingList.createdAt).toLocaleDateString()}\n`;
+    content += `Total Items: ${shoppingList.totalItems}\n`;
+    if (shoppingList.totalCost) {
+      content += `Estimated Cost: $${shoppingList.totalCost.toFixed(2)}\n`;
+    }
+    content += `\n`;
 
-  // Bulk operations
-  const bulkDeleteSelected = async () => {
-    if (!shoppingList || updating || selectedItems.size === 0) return;
-
-    try {
-      setUpdating(true);
-      const updatedItems = shoppingList.items.filter((_, index) => !selectedItems.has(index));
-
-      const response = await fetch(`/api/shopping-lists/${params.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          items: updatedItems,
-        }),
+    // Add items by category
+    Object.entries(groupedItems).forEach(([category, items]) => {
+      content += `\n${category}\n`;
+      content += `${'-'.repeat(category.length)}\n`;
+      items.forEach((item) => {
+        const checkbox = item.checked ? '☑' : '☐';
+        content += `${checkbox} ${item.ingredient} - ${item.quantity} ${item.unit}`;
+        if (item.estimatedCost) {
+          content += ` ($${item.estimatedCost.toFixed(2)})`;
+        }
+        content += '\n';
       });
+    });
 
-      if (response.ok) {
-        setShoppingList(prev => prev ? {
-          ...prev,
-          items: updatedItems,
-          totalItems: updatedItems.length,
-        } : null);
-        clearSelection();
-      } else {
-        throw new Error('Failed to delete selected items');
-      }
-    } catch (error) {
-      console.error('Error deleting selected items:', error);
-      setError('Failed to delete selected items');
-    } finally {
-      setUpdating(false);
+    // Add summary
+    const stats = getCompletionStats();
+    content += `\n\nProgress: ${stats.completed}/${stats.total} items purchased (${stats.percentage}%)\n`;
+
+    // Create and download file
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${shoppingList.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  };
+
+  const generateShareText = () => {
+    if (!shoppingList) return '';
+
+    const groupedItems = groupItemsByCategory(shoppingList.items);
+    const stats = getCompletionStats();
+    
+    let text = `🛒 ${shoppingList.title}\n\n`;
+    
+    if (shoppingList.mealPlan) {
+      text += `📋 From: ${shoppingList.mealPlan.title}\n`;
+    }
+    text += `📅 Created: ${new Date(shoppingList.createdAt).toLocaleDateString()}\n`;
+    text += `📊 Progress: ${stats.completed}/${stats.total} items\n\n`;
+
+    // Add items by category
+    Object.entries(groupedItems).forEach(([category, items]) => {
+      text += `\n${category.toUpperCase()}\n`;
+      items.forEach((item) => {
+        const checkbox = item.checked ? '✅' : '⬜';
+        text += `${checkbox} ${item.ingredient} - ${item.quantity} ${item.unit}\n`;
+      });
+    });
+
+    return text;
+  };
+
+  const shareViaWhatsApp = () => {
+    const text = generateShareText();
+    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+  };
+
+  const shareViaSMS = () => {
+    const text = generateShareText();
+    const url = `sms:?body=${encodeURIComponent(text)}`;
+    window.location.href = url;
+  };
+
+  const shareViaEmail = () => {
+    const text = generateShareText();
+    const subject = `Shopping List: ${shoppingList?.title}`;
+    const url = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`;
+    window.location.href = url;
+  };
+
+  const copyToClipboard = async () => {
+    const text = generateShareText();
+    try {
+      await navigator.clipboard.writeText(text);
+      alert('✅ Shopping list copied to clipboard!');
+    } catch (err) {
+      console.error('Failed to copy:', err);
+      alert('❌ Failed to copy to clipboard');
     }
   };
 
-  const bulkMarkComplete = async () => {
-    if (!shoppingList || updating || selectedItems.size === 0) return;
-
-    try {
-      setUpdating(true);
-      const updatedItems = shoppingList.items.map((item, index) => 
-        selectedItems.has(index) ? { ...item, checked: true } : item
-      );
-
-      const response = await fetch(`/api/shopping-lists/${params.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          items: updatedItems,
-        }),
-      });
-
-      if (response.ok) {
-        setShoppingList(prev => prev ? {
-          ...prev,
-          items: updatedItems,
-        } : null);
-        clearSelection();
-      } else {
-        throw new Error('Failed to mark selected items complete');
+  const shareNative = async () => {
+    // @ts-ignore - navigator.share exists in modern browsers
+    if (typeof window !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({
+          title: shoppingList?.title,
+          text: generateShareText(),
+        });
+      } catch (err) {
+        console.error('Error sharing:', err);
       }
-    } catch (error) {
-      console.error('Error marking selected items complete:', error);
-      setError('Failed to mark selected items complete');
-    } finally {
-      setUpdating(false);
+    } else {
+      alert('Sharing is not supported on this device');
     }
   };
 
@@ -459,11 +544,23 @@ export default function ShoppingListDetailPage() {
             </div>
           </div>
           
-          <div className="flex items-center space-x-2">
-            <button className="p-2 text-gray-600 hover:bg-white/50 rounded-lg transition-colors">
+          <div className="flex items-center space-x-3">
+            {/* Prominent Share Button */}
+            <button 
+              onClick={() => setShowShareModal(true)}
+              className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+              title="Share shopping list"
+            >
               <Share2 className="w-5 h-5" />
+              <span className="font-medium hidden sm:inline">Share</span>
             </button>
-            <button className="p-2 text-gray-600 hover:bg-white/50 rounded-lg transition-colors">
+            
+            {/* Download Button */}
+            <button 
+              onClick={exportList}
+              className="p-2.5 text-gray-600 bg-white hover:bg-gray-50 rounded-lg transition-colors shadow-md hover:shadow-lg border border-gray-200"
+              title="Download shopping list"
+            >
               <Download className="w-5 h-5" />
             </button>
           </div>
@@ -475,12 +572,12 @@ export default function ShoppingListDetailPage() {
             <div>
               <h2 className="text-xl font-bold text-gray-800">Shopping Progress</h2>
               <p className="text-gray-600">
-                {stats.completed} of {stats.total} items completed
+                {stats.completed} of {stats.total} items purchased
               </p>
             </div>
             <div className="text-right">
               <div className="text-3xl font-bold text-green-600">{stats.percentage}%</div>
-              <div className="text-sm text-gray-500">complete</div>
+              <div className="text-sm text-gray-500">purchased</div>
             </div>
           </div>
           
@@ -527,57 +624,62 @@ export default function ShoppingListDetailPage() {
                 {items.map((item) => (
                   <div
                     key={item.originalIndex}
-                    className={`flex items-center space-x-3 p-3 rounded-lg border transition-all ${
+                    className={`group flex items-center space-x-4 p-4 rounded-lg border-2 transition-all ${
                       item.checked
-                        ? 'bg-green-50 border-green-200'
-                        : 'bg-gray-50 border-gray-200 hover:border-gray-300'
+                        ? 'bg-green-50 border-green-300'
+                        : 'bg-white border-gray-200 hover:border-blue-300 hover:shadow-md'
                     }`}
                   >
+                    {/* Checkbox to mark as purchased */}
                     <button
                       onClick={() => toggleItem(item.originalIndex)}
                       disabled={updating}
-                      className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                      className={`flex-shrink-0 w-7 h-7 rounded-md border-2 flex items-center justify-center transition-all ${
                         item.checked
                           ? 'bg-green-500 border-green-500 text-white'
-                          : 'border-gray-300 hover:border-green-400'
+                          : 'border-gray-400 hover:border-green-500 hover:bg-green-50'
                       } ${updating ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                      title={item.checked ? 'Mark as not purchased' : 'Mark as purchased'}
                     >
                       {updating ? (
-                        <Loader2 className="w-3 h-3 animate-spin" />
+                        <Loader2 className="w-4 h-4 animate-spin" />
                       ) : item.checked ? (
-                        <Check className="w-3 h-3" />
+                        <Check className="w-5 h-5 font-bold" />
                       ) : null}
                     </button>
                     
-                    {/* Selection Checkbox */}
-                    <input
-                      type="checkbox"
-                      checked={selectedItems.has(item.originalIndex)}
-                      onChange={() => toggleItemSelection(item.originalIndex)}
-                      disabled={updating}
-                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 disabled:opacity-50"
-                    />
-                    
-                    <div className="flex-1">
-                      <div className={`font-medium ${item.checked ? 'line-through text-gray-500' : 'text-gray-800'}`}>
+                    {/* Item Details */}
+                    <div className="flex-1 min-w-0">
+                      <div className={`font-semibold text-lg ${item.checked ? 'line-through text-gray-500' : 'text-gray-800'}`}>
                         {item.ingredient}
                       </div>
-                      <div className="text-sm text-gray-600">
-                        {item.quantity} {item.unit}
+                      <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
+                        <span className="font-medium">{item.quantity} {item.unit}</span>
                         {item.estimatedCost && (
-                          <span className="ml-2">• ${item.estimatedCost.toFixed(2)}</span>
+                          <>
+                            <span className="text-gray-400">•</span>
+                            <span className="text-green-600">${item.estimatedCost.toFixed(2)}</span>
+                          </>
                         )}
                       </div>
                     </div>
                     
-                    {/* Delete Button */}
+                    {/* Status Badge */}
+                    {item.checked && (
+                      <div className="hidden sm:flex items-center space-x-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
+                        <ShoppingCart className="w-3 h-3" />
+                        <span>Purchased</span>
+                      </div>
+                    )}
+                    
+                    {/* Delete Button - shows on hover */}
                     <button
                       onClick={() => deleteItem(item.originalIndex)}
                       disabled={updating}
-                      className="flex-shrink-0 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                      title="Delete item"
+                      className="flex-shrink-0 p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Remove from list"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-5 h-5" />
                     </button>
                   </div>
                 ))}
@@ -590,101 +692,98 @@ export default function ShoppingListDetailPage() {
         <div className="mt-8 bg-white rounded-lg shadow-md p-6">
           <h3 className="text-lg font-bold text-gray-800 mb-4">Quick Actions</h3>
           
-          {/* Selection Controls */}
-          {selectedItems.size > 0 && (
-            <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <span className="text-sm font-medium text-blue-800">
-                    {selectedItems.size} item{selectedItems.size !== 1 ? 's' : ''} selected
-                  </span>
-                  <button
-                    onClick={clearSelection}
-                    className="text-sm text-blue-600 hover:text-blue-800 underline"
-                  >
-                    Clear selection
-                  </button>
-                </div>
-                
-                <div className="flex space-x-2">
-                  <button
-                    onClick={bulkMarkComplete}
-                    disabled={updating}
-                    className="flex items-center space-x-1 px-3 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600 disabled:bg-gray-400 transition-colors"
-                  >
-                    <CheckCircle2 className="w-3 h-3" />
-                    <span>Complete</span>
-                  </button>
-                  <button
-                    onClick={bulkDeleteSelected}
-                    disabled={updating}
-                    className="flex items-center space-x-1 px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 disabled:bg-gray-400 transition-colors"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                    <span>Delete</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-          
           <div className="flex flex-wrap gap-3">
-            {/* Individual Actions */}
-            <button className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+            {/* Share Button - Most Prominent with Pulse Animation */}
+            <button 
+              onClick={() => setShowShareModal(true)}
+              className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 font-medium animate-pulse hover:animate-none"
+              style={{
+                animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) 3',
+              }}
+            >
+              <Share2 className="w-5 h-5" />
+              <span>Share List</span>
+              <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">New!</span>
+            </button>
+            
+            {/* Add Item */}
+            <button 
+              onClick={() => setShowAddItemModal(true)}
+              className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-md hover:shadow-lg"
+            >
               <Plus className="w-4 h-4" />
               <span>Add Item</span>
             </button>
             
-            {/* Selection Actions */}
-            <button
-              onClick={selectedItems.size === shoppingList.items.length ? clearSelection : selectAllItems}
-              disabled={updating || shoppingList.items.length === 0}
-              className="flex items-center space-x-2 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-            >
-              {selectedItems.size === shoppingList.items.length ? (
-                <>
-                  <Square className="w-4 h-4" />
-                  <span>Deselect All</span>
-                </>
-              ) : (
-                <>
-                  <CheckSquare className="w-4 h-4" />
-                  <span>Select All</span>
-                </>
-              )}
-            </button>
-            
-            {/* List Actions */}
+            {/* Mark All as Purchased */}
             <button 
               onClick={markAllComplete}
-              disabled={updating}
-              className="flex items-center space-x-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              disabled={updating || shoppingList.items.length === 0}
+              className="flex items-center space-x-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shadow-md hover:shadow-lg"
+              title="Mark all items as purchased"
             >
               {updating ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <CheckCircle2 className="w-4 h-4" />
               )}
-              <span>Mark All Complete</span>
+              <span>Mark All Purchased</span>
             </button>
             
+            {/* Unmark All */}
             <button 
               onClick={markAllIncomplete}
-              disabled={updating}
-              className="flex items-center space-x-2 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              disabled={updating || shoppingList.items.length === 0}
+              className="flex items-center space-x-2 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shadow-md hover:shadow-lg"
+              title="Mark all items as not purchased"
             >
               {updating ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <Circle className="w-4 h-4" />
               )}
-              <span>Mark All Incomplete</span>
+              <span>Reset All</span>
             </button>
             
-            <button className="flex items-center space-x-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors">
+            {/* Export List */}
+            <button 
+              onClick={exportList}
+              disabled={shoppingList.items.length === 0}
+              className="flex items-center space-x-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shadow-md hover:shadow-lg"
+              title="Export shopping list as text file"
+            >
               <Download className="w-4 h-4" />
               <span>Export List</span>
             </button>
+          </div>
+          
+          {/* Helper Text - Updated to highlight sharing */}
+          <div className="mt-4 space-y-3">
+            {/* Share Feature Highlight */}
+            <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-lg">
+              <div className="flex items-start space-x-3">
+                <div className="bg-blue-500 p-2 rounded-lg mt-0.5">
+                  <Share2 className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-blue-900 mb-1">
+                    📲 Share Your Shopping List!
+                  </p>
+                  <p className="text-sm text-blue-800">
+                    Click <strong>"Share List"</strong> to send via WhatsApp, text message, email, or copy to clipboard. 
+                    Perfect for coordinating shopping with family members!
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            {/* General Tip */}
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-800">
+                <strong>💡 Tip:</strong> Click the checkbox next to each item to mark it as purchased. 
+                Purchased items will be crossed out and highlighted. Hover over items to see the delete button.
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -732,6 +831,250 @@ export default function ShoppingListDetailPage() {
                   </>
                 )}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Item Modal */}
+      {showAddItemModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center mb-4">
+              <div className="bg-blue-100 p-3 rounded-full mr-4">
+                <Plus className="w-6 h-6 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800">Add New Item</h3>
+                <p className="text-gray-600">Add an item to your shopping list</p>
+              </div>
+            </div>
+            
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Item Name *
+                </label>
+                <input
+                  type="text"
+                  value={newItem.ingredient}
+                  onChange={(e) => setNewItem({...newItem, ingredient: e.target.value})}
+                  placeholder="e.g., Tomatoes"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  autoFocus
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Quantity
+                  </label>
+                  <input
+                    type="number"
+                    value={newItem.quantity}
+                    onChange={(e) => setNewItem({...newItem, quantity: parseFloat(e.target.value) || 1})}
+                    min="0.1"
+                    step="0.1"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Unit
+                  </label>
+                  <input
+                    type="text"
+                    value={newItem.unit}
+                    onChange={(e) => setNewItem({...newItem, unit: e.target.value})}
+                    placeholder="e.g., lbs, cups"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Category
+                </label>
+                <select
+                  value={newItem.category}
+                  onChange={(e) => setNewItem({...newItem, category: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="Produce">Produce</option>
+                  <option value="Protein">Protein</option>
+                  <option value="Dairy">Dairy</option>
+                  <option value="Grains">Grains</option>
+                  <option value="Spices">Spices</option>
+                  <option value="Condiments">Condiments</option>
+                  <option value="Beverages">Beverages</option>
+                  <option value="Snacks">Snacks</option>
+                  <option value="Frozen">Frozen</option>
+                  <option value="Bakery">Bakery</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+            
+            <div className="flex space-x-3 justify-end">
+              <button
+                onClick={() => {
+                  setShowAddItemModal(false);
+                  setNewItem({
+                    ingredient: '',
+                    quantity: 1,
+                    unit: '',
+                    category: 'Other'
+                  });
+                }}
+                disabled={updating}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 disabled:opacity-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={addItem}
+                disabled={updating || !newItem.ingredient.trim()}
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              >
+                {updating ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Adding...</span>
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-4 h-4" />
+                    <span>Add Item</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Share Modal */}
+      {showShareModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center">
+                <div className="bg-blue-100 p-3 rounded-full mr-4">
+                  <Share2 className="w-6 h-6 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800">Share Shopping List</h3>
+                  <p className="text-gray-600 text-sm">Choose how to share</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowShareModal(false)}
+                className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            
+            <div className="space-y-3">
+              {/* WhatsApp */}
+              <button
+                onClick={() => {
+                  shareViaWhatsApp();
+                  setShowShareModal(false);
+                }}
+                className="w-full flex items-center space-x-4 p-4 bg-green-50 hover:bg-green-100 border-2 border-green-200 rounded-lg transition-all group"
+              >
+                <div className="bg-green-500 p-3 rounded-full group-hover:scale-110 transition-transform">
+                  <MessageCircle className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1 text-left">
+                  <div className="font-semibold text-gray-800">WhatsApp</div>
+                  <div className="text-sm text-gray-600">Share via WhatsApp</div>
+                </div>
+                <ExternalLink className="w-4 h-4 text-gray-400" />
+              </button>
+
+              {/* SMS */}
+              <button
+                onClick={() => {
+                  shareViaSMS();
+                  setShowShareModal(false);
+                }}
+                className="w-full flex items-center space-x-4 p-4 bg-blue-50 hover:bg-blue-100 border-2 border-blue-200 rounded-lg transition-all group"
+              >
+                <div className="bg-blue-500 p-3 rounded-full group-hover:scale-110 transition-transform">
+                  <Smartphone className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1 text-left">
+                  <div className="font-semibold text-gray-800">Text Message</div>
+                  <div className="text-sm text-gray-600">Share via SMS</div>
+                </div>
+                <ExternalLink className="w-4 h-4 text-gray-400" />
+              </button>
+
+              {/* Email */}
+              <button
+                onClick={() => {
+                  shareViaEmail();
+                  setShowShareModal(false);
+                }}
+                className="w-full flex items-center space-x-4 p-4 bg-purple-50 hover:bg-purple-100 border-2 border-purple-200 rounded-lg transition-all group"
+              >
+                <div className="bg-purple-500 p-3 rounded-full group-hover:scale-110 transition-transform">
+                  <Mail className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1 text-left">
+                  <div className="font-semibold text-gray-800">Email</div>
+                  <div className="text-sm text-gray-600">Share via email</div>
+                </div>
+                <ExternalLink className="w-4 h-4 text-gray-400" />
+              </button>
+
+              {/* Copy to Clipboard */}
+              <button
+                onClick={async () => {
+                  await copyToClipboard();
+                  setShowShareModal(false);
+                }}
+                className="w-full flex items-center space-x-4 p-4 bg-gray-50 hover:bg-gray-100 border-2 border-gray-200 rounded-lg transition-all group"
+              >
+                <div className="bg-gray-500 p-3 rounded-full group-hover:scale-110 transition-transform">
+                  <Copy className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1 text-left">
+                  <div className="font-semibold text-gray-800">Copy to Clipboard</div>
+                  <div className="text-sm text-gray-600">Copy list as text</div>
+                </div>
+              </button>
+
+              {/* Native Share (Mobile) - Only show if supported */}
+              {typeof window !== 'undefined' && typeof (window.navigator as any).share === 'function' && (
+                <button
+                  onClick={async () => {
+                    await shareNative();
+                    setShowShareModal(false);
+                  }}
+                  className="w-full flex items-center space-x-4 p-4 bg-indigo-50 hover:bg-indigo-100 border-2 border-indigo-200 rounded-lg transition-all group"
+                >
+                  <div className="bg-indigo-500 p-3 rounded-full group-hover:scale-110 transition-transform">
+                    <Share2 className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <div className="font-semibold text-gray-800">More Options</div>
+                    <div className="text-sm text-gray-600">Use device share menu</div>
+                  </div>
+                  <ExternalLink className="w-4 h-4 text-gray-400" />
+                </button>
+              )}
+            </div>
+
+            <div className="mt-6 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-xs text-blue-800">
+                <strong>💡 Tip:</strong> The shopping list will be formatted with emojis and checkboxes for easy reading.
+              </p>
             </div>
           </div>
         </div>

@@ -43,7 +43,30 @@ export async function GET(
     }
 
     // Parse items from JSON
-    const items = Array.isArray(shoppingList.items) ? shoppingList.items : [];
+    // Prisma Json type can be: Array, Object, or need parsing
+    let items = [];
+    if (Array.isArray(shoppingList.items)) {
+      items = shoppingList.items;
+    } else if (typeof shoppingList.items === 'string') {
+      try {
+        items = JSON.parse(shoppingList.items);
+      } catch (e) {
+        console.error('Failed to parse items JSON:', e);
+        items = [];
+      }
+    } else if (shoppingList.items && typeof shoppingList.items === 'object') {
+      // If it's already an object, check if it's array-like or wrap it
+      items = Object.values(shoppingList.items);
+    }
+
+    console.log('📦 Shopping list items:', {
+      id: shoppingList.id,
+      totalItems: shoppingList.totalItems,
+      itemsType: typeof shoppingList.items,
+      itemsIsArray: Array.isArray(shoppingList.items),
+      parsedItemsCount: items.length,
+      firstItem: items[0],
+    });
 
     return NextResponse.json({
       success: true,

@@ -113,10 +113,20 @@ export default function RecipeSelectionModal({
 
       const result = await response.json();
       
+      console.log('✅ Shopping list created:', result);
+      
       // Close modal and navigate to the new shopping list
       onClose();
       if (onSuccess) onSuccess();
-      router.push(`/shopping-lists/${result.id}`);
+      
+      // Use result.data.id since API returns { success, data: { ...shoppingList }, message }
+      const shoppingListId = result.data?.id || result.id;
+      if (shoppingListId) {
+        router.push(`/shopping-lists/${shoppingListId}`);
+      } else {
+        console.error('No shopping list ID in response:', result);
+        setError('Shopping list created but could not navigate to it');
+      }
       
     } catch (error) {
       console.error('Error creating shopping list:', error);
