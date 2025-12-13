@@ -37,6 +37,9 @@ interface MealPlan {
   visibility: 'PRIVATE' | 'PUBLIC' | 'FRIENDS';
   meals: Meal[];
   tags: string[];
+  weekStart?: string | Date;
+  weekEnd?: string | Date;
+  defaultServings?: number;
   createdAt?: Date;
   updatedAt?: Date;
   userId?: string;
@@ -911,9 +914,17 @@ export default function EnhancedMealPlanner({
           <MealPlanHeader
             mealPlan={{
               ...mealPlan,
-              weekStart: new Date(),
-              weekEnd: new Date(),
-              defaultServings: 4,
+              weekStart: mealPlan.weekStart ? new Date(mealPlan.weekStart) : (() => {
+                const start = new Date();
+                start.setDate(start.getDate() - start.getDay() + 1); // Monday of current week
+                return start;
+              })(),
+              weekEnd: mealPlan.weekEnd ? new Date(mealPlan.weekEnd) : (() => {
+                const end = new Date();
+                end.setDate(end.getDate() - end.getDay() + 7); // Sunday of current week
+                return end;
+              })(),
+              defaultServings: mealPlan.defaultServings || 4,
             }}
             isEditing={currentStep === 'edit'}
             isSaving={optimisticAction === 'saving'}
