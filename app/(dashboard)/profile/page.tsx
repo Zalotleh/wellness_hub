@@ -5,6 +5,19 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { User, Mail, Calendar, Edit2, Save, X, Loader2, ChefHat, TrendingUp, Heart } from 'lucide-react';
 
+// Helper function to format time ago
+function getTimeAgo(date: Date): string {
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  
+  if (diffInSeconds < 60) return 'just now';
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
+  if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 604800)} weeks ago`;
+  return `${Math.floor(diffInSeconds / 2592000)} months ago`;
+}
+
 export default function ProfilePage() {
   const { data: session, status, update } = useSession();
   const router = useRouter();
@@ -20,6 +33,13 @@ export default function ProfilePage() {
     progressDays: 0,
     avgCompletion: 0,
   });
+  const [recentActivity, setRecentActivity] = useState<Array<{
+    type: 'recipe_created' | 'progress_logged' | 'recipe_favorited';
+    title: string;
+    recipeId?: string;
+    timestamp: Date;
+  }>>([]);
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
 
   useEffect(() => {
     if (session?.user) {
@@ -32,13 +52,22 @@ export default function ProfilePage() {
   }, [session]);
 
   const fetchUserStats = async () => {
-    // Mock stats - in production, fetch from API
-    setStats({
-      recipesCreated: 12,
-      recipesFavorited: 28,
-      progressDays: 45,
-      avgCompletion: 78,
-    });
+    try {
+      setIsLoadingStats(true);
+      const response = await fetch('/api/user/stats');
+      if (response.ok) {
+        const data = await response.json();
+        setStats(data.stats);
+        setRecentActivity(data.recentActivity.map((activity: any) => ({
+          ...activity,
+          timestamp: new Date(activity.timestamp),
+        })));
+      }
+    } catch (error) {
+      console.error('Error fetching user stats:', error);
+    } finally {
+      setIsLoadingStats(false);
+    }
   };
 
   const handleSave = async () => {
@@ -237,37 +266,57 @@ export default function ProfilePage() {
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Recent Activity</h2>
           
-          <div className="space-y-4">
-            <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                <ChefHat className="w-6 h-6 text-green-600" />
-              </div>
-              <div className="flex-1">
-                <p className="font-medium text-gray-900">Created a new recipe</p>
-                <p className="text-sm text-gray-600">Mediterranean Salmon Bowl • 2 days ago</p>
-              </div>
+          {isLoadingStats ? (
+            <div className="flex justify-center items-center py-8">
+              <Loader2 className="w-8 h-8 animate-spin text-green-600" />
             </div>
+          ) : recentActivity.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <p>No recent activity yet.</p>
+              <p className="text-sm mt-2">Start creating recipes and tracking your progress!</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {recentActivity.map((activity, index) => {
+                const getActivityIcon = () => {
+                  switch (activity.type) {
+                    case 'recipe_created':
+                      return { icon: ChefHat, bg: 'bg-green-100', color: 'text-green-600', label: 'Created a new recipe' };
+                    case 'progress_logged':
+                      return { icon: TrendingUp, bg: 'bg-blue-100', color: 'text-blue-600', label: 'Logged progress' };
+                    case 'recipe_favorited':
+                      return { icon: Heart, bg: 'bg-red-100', color: 'text-red-600', label: 'Favorited a recipe' };
+                  }
+                };
 
-            <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                <TrendingUp className="w-6 h-6 text-blue-600" />
-              </div>
-              <div className="flex-1">
-                <p className="font-medium text-gray-900">Completed 5x5x5 daily goal</p>
-                <p className="text-sm text-gray-600">All systems tracked • 3 days ago</p>
-              </div>
-            </div>
+                const activityInfo = getActivityIcon();
+                const Icon = activityInfo.icon;
+                const timeAgo = getTimeAgo(activity.timestamp);
 
-            <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
-              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                <Heart className="w-6 h-6 text-red-600" />
-              </div>
-              <div className="flex-1">
-                <p className="font-medium text-gray-900">Favorited a recipe</p>
-                <p className="text-sm text-gray-600">Green Tea Smoothie • 5 days ago</p>
-              </div>
+                return (
+                  <div key={index} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <div className={`w-12 h-12 ${activityInfo.bg} rounded-full flex items-center justify-center`}>
+                      <Icon className={`w-6 h-6 ${activityInfo.color}`} />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900">{activityInfo.label}</p>
+                      <p className="text-sm text-gray-600">
+                        {activity.title} • {timeAgo}
+                      </p>
+                    </div>
+                    {activity.recipeId && (
+                      <a
+                        href={`/recipes/${activity.recipeId}`}
+                        className="text-green-600 hover:text-green-700 text-sm font-medium"
+                      >
+                        View →
+                      </a>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
