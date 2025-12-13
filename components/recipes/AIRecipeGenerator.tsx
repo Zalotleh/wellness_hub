@@ -24,6 +24,13 @@ export default function AIRecipeGenerator({
   const [generatedRecipe, setGeneratedRecipe] = useState<RecipeFormData | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastRequest, setLastRequest] = useState<{
+    defenseSystem: DefenseSystem;
+    ingredients: string[];
+    dietaryRestrictions: string[];
+    mealType: string;
+  } | null>(null);
+  const [wasNotCounted, setWasNotCounted] = useState(false);
 
   const mealTypes = ['any', 'breakfast', 'lunch', 'dinner', 'snack', 'dessert'];
   const commonRestrictions = [
@@ -60,19 +67,24 @@ export default function AIRecipeGenerator({
   const handleGenerate = async () => {
     setIsGenerating(true);
     setError(null);
+    setWasNotCounted(false);
 
     try {
       const validIngredients = ingredients.filter((ing) => ing.trim() !== '');
 
+      // Save the current request parameters for potential retry
+      const requestParams = {
+        defenseSystem,
+        ingredients: validIngredients,
+        dietaryRestrictions,
+        mealType,
+      };
+      setLastRequest(requestParams);
+
       const response = await fetch('/api/ai/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          defenseSystem,
-          ingredients: validIngredients,
-          dietaryRestrictions,
-          mealType,
-        }),
+        body: JSON.stringify(requestParams),
       });
 
       if (!response.ok) {
@@ -81,6 +93,7 @@ export default function AIRecipeGenerator({
         // Check if this was a quality validation failure (not counted against limit)
         if (errorData.countedAgainstLimit === false) {
           console.log('⚠️ Recipe generation failed quality check, not counted against limit');
+          setWasNotCounted(true);
           throw new Error(
             errorData.message || 
             'The AI generated an incomplete recipe. Please try again - this attempt was not counted against your limit.'
@@ -127,6 +140,75 @@ export default function AIRecipeGenerator({
       }
     } catch (err: any) {
       console.error('❌ Error in handleGenerate:', err);
+      setError(err.message || 'Failed to generate recipe');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleRetry = async () => {
+    if (!lastRequest) {
+      console.error('No previous request to retry');
+      return;
+    }
+
+    console.log('🔄 Retrying last request:', lastRequest);
+    setIsGenerating(true);
+    setError(null);
+    setWasNotCounted(false);
+
+    try {
+      const response = await fetch('/api/ai/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(lastRequest),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        
+        // Check if this was a quality validation failure (not counted against limit)
+        if (errorData.countedAgainstLimit === false) {
+          console.log('⚠️ Recipe generation failed quality check, not counted against limit');
+          setWasNotCounted(true);
+          throw new Error(
+            errorData.message || 
+            'The AI generated an incomplete recipe. Please try again - this attempt was not counted against your limit.'
+          );
+        }
+        
+        // Check if this is a limit reached error
+        if (errorData.upgradeRequired) {
+          throw new Error(errorData.message || 'Recipe generation limit reached');
+        }
+        
+        throw new Error(errorData.error || 'Failed to generate recipe');
+      }
+
+      const responseData = await response.json();
+      const recipe = responseData.data;
+      
+      console.log('✅ Retry successful! Received recipe from API:', recipe);
+      console.log('📊 Counted against limit:', responseData.countedAgainstLimit);
+      
+      // Ensure the recipe has required fields with fallbacks
+      const validatedRecipe = {
+        ...recipe,
+        title: recipe.title || `${DEFENSE_SYSTEMS[lastRequest.defenseSystem].displayName} Recipe`,
+        description: recipe.description || 'A delicious and healthy recipe.',
+        ingredients: Array.isArray(recipe.ingredients) ? recipe.ingredients : [],
+        instructions: recipe.instructions || 'Instructions not available.',
+        defenseSystem: recipe.defenseSystem || lastRequest.defenseSystem,
+      };
+      
+      console.log('✅ Validated recipe:', validatedRecipe);
+      setGeneratedRecipe(validatedRecipe);
+
+      if (onRecipeGenerated) {
+        onRecipeGenerated(validatedRecipe);
+      }
+    } catch (err: any) {
+      console.error('❌ Error in handleRetry:', err);
       setError(err.message || 'Failed to generate recipe');
     } finally {
       setIsGenerating(false);
@@ -465,21 +547,80 @@ export default function AIRecipeGenerator({
             }`}>
               <div className="flex items-start space-x-3">
                 <div className="flex-1">
-                  <p className={`font-medium ${
+                  <p className={`font-medium mb-2 ${
                     error.includes('not counted against your limit')
                       ? 'text-amber-800'
                       : 'text-red-600'
                   }`}>
                     {error}
                   </p>
-                  {error.includes('not counted against your limit') && (
-                    <div className="mt-2 flex items-center space-x-2">
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800 border border-green-300">
-                        ✓ Not Counted Against Your Limit
-                      </span>
-                      <span className="text-xs text-amber-700">
-                        You can try again immediately
-                      </span>
+                  {wasNotCounted && (
+                    <div className="space-y-3">
+                      <div className="flex items-center space-x-2">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800 border border-green-300">
+                          ✓ Not Counted Against Your Limit
+                        </span>
+                        <span className="text-xs text-amber-700">
+                          You can try again immediately
+                        </span>
+                      </div>
+                      
+                      {/* Retry Button */}
+                      {lastRequest && (
+                        <div className="space-y-2">
+                          {/* Show what will be retried */}
+                          <div className="bg-white rounded-lg p-3 border border-amber-200">
+                            <p className="text-xs font-semibold text-amber-900 mb-2">Retry will use these settings:</p>
+                            <div className="space-y-1 text-xs text-amber-800">
+                              <div className="flex items-center space-x-2">
+                                <span className="font-medium">Defense System:</span>
+                                <span className={`px-2 py-0.5 rounded-full text-xs ${DEFENSE_SYSTEMS[lastRequest.defenseSystem].bgColor} ${DEFENSE_SYSTEMS[lastRequest.defenseSystem].textColor}`}>
+                                  {DEFENSE_SYSTEMS[lastRequest.defenseSystem].displayName}
+                                </span>
+                              </div>
+                              {lastRequest.mealType !== 'any' && (
+                                <div className="flex items-center space-x-2">
+                                  <span className="font-medium">Meal Type:</span>
+                                  <span className="capitalize">{lastRequest.mealType}</span>
+                                </div>
+                              )}
+                              {lastRequest.ingredients.length > 0 && (
+                                <div className="flex items-center space-x-2">
+                                  <span className="font-medium">Ingredients:</span>
+                                  <span>{lastRequest.ingredients.slice(0, 2).join(', ')}{lastRequest.ingredients.length > 2 ? `, +${lastRequest.ingredients.length - 2} more` : ''}</span>
+                                </div>
+                              )}
+                              {lastRequest.dietaryRestrictions.length > 0 && (
+                                <div className="flex items-center space-x-2">
+                                  <span className="font-medium">Restrictions:</span>
+                                  <span className="capitalize">{lastRequest.dietaryRestrictions.join(', ')}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <button
+                            type="button"
+                            onClick={handleRetry}
+                            disabled={isGenerating}
+                            className="w-full px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg font-bold hover:from-amber-600 hover:to-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 shadow-md"
+                          >
+                            {isGenerating ? (
+                              <>
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                                <span>Retrying...</span>
+                              </>
+                            ) : (
+                              <>
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                                <span>Retry with Same Settings</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
