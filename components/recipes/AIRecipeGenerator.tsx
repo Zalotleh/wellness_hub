@@ -122,10 +122,11 @@ export default function AIRecipeGenerator({
         hasDefenseSystem: !!recipe.defenseSystem,
       });
       
-      // Ensure the recipe has required fields with fallbacks
+      // Ensure the recipe has required fields
+      // Note: If validation passed, title should be good. Only add fallback for display safety.
       const validatedRecipe = {
         ...recipe,
-        title: recipe.title || `${DEFENSE_SYSTEMS[defenseSystem].displayName} Recipe`,
+        title: recipe.title || 'Recipe', // Minimal fallback (shouldn't happen after validation)
         description: recipe.description || 'A delicious and healthy recipe.',
         ingredients: Array.isArray(recipe.ingredients) ? recipe.ingredients : [],
         instructions: recipe.instructions || 'Instructions not available.',
@@ -191,10 +192,10 @@ export default function AIRecipeGenerator({
       console.log('✅ Retry successful! Received recipe from API:', recipe);
       console.log('📊 Counted against limit:', responseData.countedAgainstLimit);
       
-      // Ensure the recipe has required fields with fallbacks
+      // Ensure the recipe has required fields
       const validatedRecipe = {
         ...recipe,
-        title: recipe.title || `${DEFENSE_SYSTEMS[lastRequest.defenseSystem].displayName} Recipe`,
+        title: recipe.title || 'Recipe', // Minimal fallback (shouldn't happen after validation)
         description: recipe.description || 'A delicious and healthy recipe.',
         ingredients: Array.isArray(recipe.ingredients) ? recipe.ingredients : [],
         instructions: recipe.instructions || 'Instructions not available.',

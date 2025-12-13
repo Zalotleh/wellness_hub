@@ -14,7 +14,7 @@ thing to happen is to take me back to the meal plan page, where i was initially 
 
 -inside the AI recipe generator, provide a better way of showing if the defense system is selected. change color. also while the recipe is beng generated, i can still click on button inside the page, can we grey out the page in the background and provide a loading visual? is there a better way of hanlding this? open o suggestions. X
 
-- inside the meal, at the bottom of the page for each day, there is + to add a new meal, snack, but it doesnt work to add a new snack meal. X
+- inside the meal, at the bottom of the page for each day, there is + to add a new meal, snack, but it doesnt work to add a new snack meal. X X
 
 -for the Ai generating recipe, the recipe title needs to be more specific, right now it reflects the defense system selected, if i select immunity system then the generated recipe title is immunity recipe, modify the prompt to fix this issue.
 -in the Shopping Lists page, i dont see my saved plans, it shows empty meal plans even though i have 2 meal plans.

@@ -156,7 +156,7 @@ export async function POST(request: NextRequest) {
     console.log('🍳 Parsed recipe:', JSON.stringify(parsedRecipe, null, 2));
 
     // Validate recipe quality before counting it as a successful generation
-    const isValidRecipe = validateRecipeQuality(parsedRecipe);
+    const isValidRecipe = validateRecipeQuality(parsedRecipe, defenseSystem);
     
     if (!isValidRecipe.valid) {
       console.error('⚠️ Recipe failed quality validation:', isValidRecipe.reasons);
@@ -230,11 +230,25 @@ ${ingredientsText}
 ${restrictionsText}
 ${mealTypeText}
 
+IMPORTANT: The recipe title MUST be specific and descriptive. DO NOT use generic titles like "${systemInfo.displayName} Recipe" or "Healthy Recipe". 
+Instead, create a creative, appetizing name based on the main ingredients and cooking method.
+
+GOOD EXAMPLES:
+- "Roasted Salmon with Garlic Herb Butter and Steamed Broccoli"
+- "Spicy Turmeric Chicken Stir-Fry with Brown Rice"
+- "Mediterranean Quinoa Bowl with Grilled Vegetables"
+- "Creamy Tomato Basil Soup with Whole Grain Crackers"
+
+BAD EXAMPLES:
+- "${systemInfo.displayName} Recipe"
+- "Healthy Dinner"
+- "Immunity Boost Meal"
+
 Please provide the recipe in the following EXACT format:
 
-TITLE: [Creative recipe name]
+TITLE: [A specific, creative recipe name that describes the dish - NOT the defense system]
 
-DESCRIPTION: [2-3 sentences about the recipe and its health benefits]
+DESCRIPTION: [2-3 sentences about the recipe and its health benefits for the ${systemInfo.displayName} system]
 
 PREP_TIME: [e.g., "15 min"]
 
@@ -262,7 +276,7 @@ Make the recipe practical, delicious, and easy to follow!
 }
 
 // Validate recipe quality to ensure it has minimum required data
-function validateRecipeQuality(recipe: any): { valid: boolean; reasons: string[] } {
+function validateRecipeQuality(recipe: any, defenseSystem?: string): { valid: boolean; reasons: string[] } {
   const reasons: string[] = [];
 
   // Check for title (should exist and not be a fallback)
@@ -270,10 +284,38 @@ function validateRecipeQuality(recipe: any): { valid: boolean; reasons: string[]
     reasons.push('Missing recipe title');
   }
   
-  // Check if title is just the fallback (means original parse failed)
-  if (recipe.title && recipe.title.includes('Recipe') && recipe.title.split(' ').length <= 3) {
-    // This might be a fallback title like "Angiogenesis Recipe"
-    console.warn('⚠️ Title appears to be a fallback, but allowing it');
+  // Check for generic or lazy titles that just use the defense system name
+  if (recipe.title) {
+    const titleLower = recipe.title.toLowerCase();
+    const genericPatterns = [
+      'recipe',
+      'healthy',
+      'immunity',
+      'angiogenesis',
+      'regeneration',
+      'microbiome',
+      'dna protection',
+      'defense system',
+      'boost',
+      'support',
+    ];
+    
+    // If title is too short and contains generic words, it's probably lazy
+    const words = recipe.title.split(' ');
+    if (words.length <= 3) {
+      const hasGenericWord = genericPatterns.some(pattern => titleLower.includes(pattern));
+      if (hasGenericWord) {
+        reasons.push(`Title is too generic: "${recipe.title}". Needs specific dish name (e.g., "Roasted Salmon with Herbs")`);
+      }
+    }
+    
+    // Check if title is literally just the defense system name + "Recipe"
+    if (defenseSystem) {
+      const systemName = DEFENSE_SYSTEMS[defenseSystem as DefenseSystem]?.displayName || '';
+      if (titleLower.includes(systemName.toLowerCase()) && titleLower.includes('recipe')) {
+        reasons.push(`Title is too generic: "${recipe.title}". Should describe the actual dish, not the defense system`);
+      }
+    }
   }
 
   // Check for ingredients (minimum 3 ingredients for a real recipe)
@@ -379,10 +421,10 @@ function parseAIRecipe(recipeText: string, defenseSystem: DefenseSystem): any {
     }
   }
 
-  // Add fallback title if not found
-  if (!recipe.title) {
-    recipe.title = `${DEFENSE_SYSTEMS[defenseSystem].displayName} Recipe`;
-    console.log('⚠️ No title found, using fallback:', recipe.title);
+  // Title is REQUIRED - no fallback, let validation catch it
+  if (!recipe.title || recipe.title.trim() === '') {
+    console.log('⚠️ No title found - validation will reject this');
+    recipe.title = ''; // Empty title will fail validation
   }
 
   // Add fallback description if not found
