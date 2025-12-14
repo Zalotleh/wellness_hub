@@ -56,7 +56,7 @@ export default function MealPlanView({
   className = '',
 }: MealPlanViewProps) {
   const [selectedDay, setSelectedDay] = useState<string>('monday');
-  const [viewMode, setViewMode] = useState<'week' | 'day'>('week');
+  const [viewMode, setViewMode] = useState<'day' | 'week' | 'list' | 'calendar'>('day');
   const [showStats, setShowStats] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -132,7 +132,11 @@ export default function MealPlanView({
         case 'Tab':
           if (event.shiftKey) {
             event.preventDefault();
-            setViewMode(viewMode === 'week' ? 'day' : 'week');
+            // Cycle through view modes
+            const modes: Array<'day' | 'week' | 'list' | 'calendar'> = ['day', 'week', 'list', 'calendar'];
+            const currentIndex = modes.indexOf(viewMode);
+            const nextIndex = (currentIndex + 1) % modes.length;
+            setViewMode(modes[nextIndex]);
           }
           break;
       }
@@ -356,45 +360,293 @@ export default function MealPlanView({
     </div>
   );
 
+  const renderListView = () => {
+    // Create a chronological list of all meals
+    const allMeals: Array<{ day: string; dayLabel: string; slot: string; slotInfo: any; meal: Meal }> = [];
+    
+    daysOfWeek.forEach((day) => {
+      mealSlots.forEach((slot) => {
+        const slotMeals = mealsByDay[day.key]?.[slot.key] || [];
+        slotMeals.forEach((meal) => {
+          allMeals.push({
+            day: day.key,
+            dayLabel: day.label,
+            slot: slot.key,
+            slotInfo: slot,
+            meal,
+          });
+        });
+      });
+    });
+
+    if (allMeals.length === 0) {
+      return (
+        <div className="text-center py-12">
+          <div className="text-gray-400 mb-4">
+            <Utensils className="w-16 h-16 mx-auto" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">No meals planned yet</h3>
+          <p className="text-gray-600 mb-4">Start by adding meals to your weekly plan</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="max-w-4xl mx-auto space-y-3">
+        {allMeals.map(({ day, dayLabel, slot, slotInfo, meal }, index) => (
+          <div 
+            key={`${day}-${slot}-${meal.id}-${index}`}
+            className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow"
+          >
+            <div className="flex items-start gap-4">
+              {/* Day & Time Info */}
+              <div className="flex-shrink-0 text-center min-w-[80px]">
+                <div className="text-sm font-semibold text-gray-900">{dayLabel}</div>
+                <div className="flex items-center justify-center gap-1 text-xs text-gray-500 mt-1">
+                  <span className="text-base">{slotInfo.icon}</span>
+                  <Clock className="w-3 h-3" />
+                  {slotInfo.time}
+                </div>
+                <div className="text-xs font-medium text-gray-600 mt-1 px-2 py-1 bg-gray-100 rounded">
+                  {slotInfo.label}
+                </div>
+              </div>
+
+              {/* Meal Card */}
+              <div className="flex-1 min-w-0">
+                <MealCard
+                  meal={{
+                    ...meal,
+                    mealType: slot,
+                    prepTime: meal.prepTime?.toString(),
+                    cookTime: meal.cookTime?.toString(),
+                  }}
+                  dayIndex={daysOfWeek.findIndex(d => d.key === day)}
+                  mealIndex={index}
+                  onMealUpdate={(dayIndex: number, mealIndex: number, updates: any) => {
+                    onMealUpdate(meal.id, updates);
+                  }}
+                  onGenerateRecipe={() => onRegenerateMeal(meal.id)}
+                  onViewRecipe={onViewRecipe}
+                  isGeneratingRecipe={isGenerating}
+                />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const renderCalendarView = () => {
+    return (
+      <div className="max-w-7xl mx-auto">
+        {/* Calendar Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {daysOfWeek.map((day) => {
+            const dayStats = calculateDayStats(day.key);
+            const hasAnyMeals = dayStats.totalMeals > 0;
+
+            return (
+              <div 
+                key={day.key}
+                className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
+              >
+                {/* Day Header */}
+                <div className="bg-gradient-to-r from-green-50 to-blue-50 px-4 py-3 border-b border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-bold text-gray-900">{day.label}</h3>
+                      {hasAnyMeals && (
+                        <div className="text-xs text-gray-600 mt-1 flex items-center gap-2">
+                          <span className="flex items-center gap-1">
+                            <Utensils className="w-3 h-3" />
+                            {dayStats.totalMeals}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Timer className="w-3 h-3" />
+                            {dayStats.totalTime}m
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    {hasAnyMeals && (
+                      <button
+                        onClick={() => onBulkRegenerate(day.key)}
+                        disabled={isGenerating}
+                        className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-white rounded-lg transition-all"
+                        title="Regenerate all meals"
+                      >
+                        <Shuffle className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Defense Systems Indicators */}
+                  {dayStats.defenseSystems.length > 0 && (
+                    <div className="flex items-center gap-1 mt-2 flex-wrap">
+                      {dayStats.defenseSystems.slice(0, 5).map((system) => (
+                        <div
+                          key={system.id}
+                          className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs"
+                          style={{ 
+                            backgroundColor: `${system.color}20`,
+                            color: system.color
+                          }}
+                          title={system.name}
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: system.color }} />
+                          <span className="font-medium">{system.name.slice(0, 3)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Meals Compact View */}
+                <div className="p-3 space-y-2 max-h-96 overflow-y-auto">
+                  {mealSlots.map((slot) => {
+                    const slotMeals = mealsByDay[day.key]?.[slot.key] || [];
+                    
+                    if (slotMeals.length === 0) {
+                      return (
+                        <button
+                          key={slot.key}
+                          onClick={() => onAddMeal(day.key, slot.key)}
+                          disabled={isGenerating}
+                          className="w-full px-3 py-2 border border-dashed border-gray-200 rounded-lg text-xs text-gray-500 hover:border-green-400 hover:bg-green-50 hover:text-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        >
+                          <span>{slot.icon}</span>
+                          <Plus className="w-3 h-3" />
+                          <span>Add {slot.label}</span>
+                        </button>
+                      );
+                    }
+
+                    return (
+                      <div key={slot.key} className="space-y-2">
+                        {slotMeals.map((meal, index) => (
+                          <div
+                            key={meal.id}
+                            className="p-2 bg-gray-50 rounded-lg border border-gray-100 hover:border-gray-200 transition-colors group cursor-pointer"
+                            onClick={() => meal.recipeId && onViewRecipe(meal.recipeId)}
+                          >
+                            <div className="flex items-start gap-2">
+                              <span className="text-sm flex-shrink-0">{slot.icon}</span>
+                              <div className="flex-1 min-w-0">
+                                <div className="text-xs font-semibold text-gray-900 truncate group-hover:text-green-600">
+                                  {meal.mealName}
+                                </div>
+                                <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                                  {meal.cookTime && (
+                                    <span className="flex items-center gap-0.5">
+                                      <Clock className="w-2.5 h-2.5" />
+                                      {meal.cookTime}m
+                                    </span>
+                                  )}
+                                  {meal.defenseSystems && meal.defenseSystems.length > 0 && (
+                                    <span className="flex items-center gap-0.5">
+                                      <Target className="w-2.5 h-2.5" />
+                                      {meal.defenseSystems.length}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              {!meal.recipeGenerated && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onRegenerateMeal(meal.id);
+                                  }}
+                                  disabled={isGenerating}
+                                  className="flex-shrink-0 p-1 text-green-600 hover:bg-green-100 rounded transition-colors"
+                                  title="Generate recipe"
+                                >
+                                  <Sparkles className="w-3 h-3" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className={`${className}`}>
       {/* View Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 flex-1">
           {/* View Mode Tabs */}
-          <div className="flex bg-gray-100 rounded-lg p-1">
-            <button
-              onClick={() => setViewMode('week')}
-              className={`
-                px-4 py-2 rounded-md text-sm font-medium transition-colors
-                ${viewMode === 'week'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-                }
-              `}
-            >
-              Week View
-            </button>
+          <div className="flex flex-wrap bg-gray-100 rounded-lg p-1 gap-1">
             <button
               onClick={() => setViewMode('day')}
               className={`
-                px-4 py-2 rounded-md text-sm font-medium transition-colors
+                px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-all whitespace-nowrap
                 ${viewMode === 'day'
-                  ? 'bg-white text-gray-900 shadow-sm'
+                  ? 'bg-gradient-to-r from-green-500 to-blue-500 text-white shadow-md'
                   : 'text-gray-600 hover:text-gray-900'
                 }
               `}
+              title="View one day at a time (Default)"
             >
-              Day View
+              📅 Day
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`
+                px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-all whitespace-nowrap
+                ${viewMode === 'list'
+                  ? 'bg-gradient-to-r from-green-500 to-blue-500 text-white shadow-md'
+                  : 'text-gray-600 hover:text-gray-900'
+                }
+              `}
+              title="View all meals in a simple list"
+            >
+              📋 List
+            </button>
+            <button
+              onClick={() => setViewMode('calendar')}
+              className={`
+                px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-all whitespace-nowrap
+                ${viewMode === 'calendar'
+                  ? 'bg-gradient-to-r from-green-500 to-blue-500 text-white shadow-md'
+                  : 'text-gray-600 hover:text-gray-900'
+                }
+              `}
+              title="View week in calendar grid"
+            >
+              🗓️ Calendar
+            </button>
+            <button
+              onClick={() => setViewMode('week')}
+              className={`
+                px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-all whitespace-nowrap
+                ${viewMode === 'week'
+                  ? 'bg-gradient-to-r from-green-500 to-blue-500 text-white shadow-md'
+                  : 'text-gray-600 hover:text-gray-900'
+                }
+              `}
+              title="View full week in detail"
+            >
+              📊 Week
             </button>
           </div>
 
-          {/* Day Selector for Mobile */}
+          {/* Day Selector for Day View */}
           {viewMode === 'day' && (
             <select
               value={selectedDay}
               onChange={(e) => setSelectedDay(e.target.value)}
-              className="sm:hidden px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm font-medium"
             >
               {daysOfWeek.map((day) => (
                 <option key={day.key} value={day.key}>
@@ -403,6 +655,14 @@ export default function MealPlanView({
               ))}
             </select>
           )}
+
+          {/* View Description */}
+          <div className="text-xs text-gray-500 hidden lg:block">
+            {viewMode === 'day' && '← Navigate through each day'}
+            {viewMode === 'list' && '← All meals in chronological order'}
+            {viewMode === 'calendar' && '← Week overview at a glance'}
+            {viewMode === 'week' && '← Full week with all details'}
+          </div>
         </div>
 
         {/* Action Buttons */}
@@ -447,17 +707,28 @@ export default function MealPlanView({
       )}
 
       {/* Main Content */}
-      <div className="bg-gray-50 rounded-xl p-4 sm:p-6">
-        {viewMode === 'week' ? renderWeekView() : renderDayView()}
+      <div className={`rounded-xl ${viewMode === 'list' ? 'bg-transparent' : 'bg-gray-50 p-4 sm:p-6'}`}>
+        {viewMode === 'day' && renderDayView()}
+        {viewMode === 'week' && renderWeekView()}
+        {viewMode === 'list' && renderListView()}
+        {viewMode === 'calendar' && renderCalendarView()}
       </div>
 
       {/* Keyboard Shortcuts Help */}
-      <div className="mt-4 text-xs text-gray-500 text-center">
-        <span className="hidden sm:inline">
-          Use arrow keys to navigate days • 
-        </span>
-        <span className="hidden sm:inline"> Shift+Tab to switch views • </span>
-        Scroll horizontally in week view on mobile
+      <div className="mt-4 text-xs text-gray-500 text-center space-y-1">
+        <div>
+          <span className="hidden sm:inline">
+            {viewMode === 'day' && '⬅️ ➡️ Navigate days • '}
+            {viewMode === 'week' && 'Scroll horizontally • '}
+            Shift+Tab to cycle views
+          </span>
+        </div>
+        <div className="text-green-600 font-medium">
+          {viewMode === 'day' && '✨ Default view - Focus on one day at a time'}
+          {viewMode === 'list' && '✨ Simple chronological view of all meals'}
+          {viewMode === 'calendar' && '✨ Quick overview of the entire week'}
+          {viewMode === 'week' && '✨ Detailed view of all days'}
+        </div>
       </div>
     </div>
   );
