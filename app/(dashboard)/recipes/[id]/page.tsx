@@ -18,6 +18,7 @@ import {
   ArrowLeft,
   Loader2,
   Send,
+  ShoppingCart,
 } from 'lucide-react';
 import { RecipeWithRelations } from '@/types';
 
@@ -42,6 +43,7 @@ export default function RecipeDetailPage() {
   const [comment, setComment] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [isSubmittingRating, setIsSubmittingRating] = useState(false);
+  const [isCreatingShoppingList, setIsCreatingShoppingList] = useState(false);
 
   useEffect(() => {
     fetchRecipe();
@@ -139,6 +141,37 @@ export default function RecipeDetailPage() {
     } else {
       navigator.clipboard.writeText(window.location.href);
       alert('Link copied to clipboard!');
+    }
+  };
+
+  const handleCreateShoppingList = async () => {
+    if (!session?.user || isCreatingShoppingList) return;
+
+    setIsCreatingShoppingList(true);
+    try {
+      const response = await fetch('/api/shopping-lists/create-from-sources', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'recipes',
+          sourceIds: [params.id],
+          title: `Shopping List - ${recipe?.title}`,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Redirect to the newly created shopping list
+        router.push(`/shopping-lists/${data.id}`);
+      } else {
+        alert(data.error || 'Failed to create shopping list');
+      }
+    } catch (error) {
+      console.error('Error creating shopping list:', error);
+      alert('An error occurred while creating the shopping list');
+    } finally {
+      setIsCreatingShoppingList(false);
     }
   };
 
@@ -356,9 +389,30 @@ export default function RecipeDetailPage() {
 
             {/* Ingredients */}
             <div className="mb-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                Ingredients
-              </h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Ingredients
+                </h2>
+                {session?.user && (
+                  <button
+                    onClick={handleCreateShoppingList}
+                    disabled={isCreatingShoppingList}
+                    className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg hover:from-green-600 hover:to-blue-600 transition-all font-medium shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isCreatingShoppingList ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <span>Creating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingCart className="w-5 h-5" />
+                        <span>Create Shopping List</span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
               <ul className="space-y-3">
                 {ingredients.map((ingredient: any, index: number) => (
                   <li
