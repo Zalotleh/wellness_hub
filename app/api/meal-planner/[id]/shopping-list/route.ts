@@ -530,8 +530,23 @@ export async function GET(
       );
     }
 
+    // Parse items properly (handle Prisma Json type)
+    let items: ShoppingListItem[] = [];
+    if (Array.isArray(shoppingList.items)) {
+      items = shoppingList.items as unknown as ShoppingListItem[];
+    } else if (typeof shoppingList.items === 'string') {
+      try {
+        items = JSON.parse(shoppingList.items as string);
+      } catch (e) {
+        console.error('Failed to parse items as JSON:', e);
+        items = [];
+      }
+    } else if (shoppingList.items && typeof shoppingList.items === 'object') {
+      // If it's an object but not an array, try to convert to array
+      items = Object.values(shoppingList.items) as unknown as ShoppingListItem[];
+    }
+
     // Calculate progress
-    const items = (shoppingList.items as unknown) as ShoppingListItem[];
     const checkedItems = items.filter(item => item.checked).length;
     const progress = items.length > 0 ? Math.round((checkedItems / items.length) * 100) : 0;
 
@@ -585,7 +600,21 @@ export async function PUT(
 
     // Handle single item update for real-time checking
     if (itemId !== undefined && checked !== undefined) {
-      const currentItems = (shoppingList.items as unknown) as ShoppingListItem[];
+      // Parse current items properly
+      let currentItems: ShoppingListItem[] = [];
+      if (Array.isArray(shoppingList.items)) {
+        currentItems = shoppingList.items as unknown as ShoppingListItem[];
+      } else if (typeof shoppingList.items === 'string') {
+        try {
+          currentItems = JSON.parse(shoppingList.items as string);
+        } catch (e) {
+          console.error('Failed to parse items as JSON:', e);
+          currentItems = [];
+        }
+      } else if (shoppingList.items && typeof shoppingList.items === 'object') {
+        currentItems = Object.values(shoppingList.items) as unknown as ShoppingListItem[];
+      }
+      
       updatedItems = currentItems.map(item => 
         item.id === itemId ? { ...item, checked } : item
       );
