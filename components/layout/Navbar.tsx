@@ -27,6 +27,9 @@ import {
   Crown,
   AlertCircle,
   CheckCircle2,
+  ChevronDown,
+  PlusCircle,
+  Wand2,
 } from 'lucide-react';
 
 export default function Navbar() {
@@ -36,6 +39,8 @@ export default function Navbar() {
   const usageStats = useUsageStats();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showRecipesMenu, setShowRecipesMenu] = useState(false);
+  const [showMealPlannerMenu, setShowMealPlannerMenu] = useState(false);
 
   // Debug: Log current tier (remove in production)
   if (process.env.NODE_ENV === 'development' && session?.user) {
@@ -51,15 +56,57 @@ export default function Navbar() {
   const aiLimit = useLimit('ai_questions_per_month', userAIQuestions);
   const recipeLimit = useLimit('recipe_generations_per_month', userRecipeGenerations);
 
-  const navLinks = [
-    { href: '/recipes', label: 'Recipes', icon: ChefHat },
-    { href: '/meal-planner', label: 'Meal Planner', icon: Calendar },
-    { href: '/saved-plans', label: 'Saved Plans', icon: Bookmark },
-    { href: '/shopping-lists', label: 'Shopping Lists', icon: ShoppingCart },
-    { href: '/progress', label: 'Progress', icon: TrendingUp },
-    { href: '/advisor', label: 'AI Advisor', icon: MessageCircle },
-    { href: '/learn', label: 'Learn 5x5x5', icon: BookOpen },
-    { href: '/community', label: 'Community', icon: Users },
+  // Grouped Navigation Structure
+  const navGroups = [
+    {
+      label: 'Recipes',
+      icon: ChefHat,
+      hasDropdown: true,
+      items: [
+        { href: '/recipes', label: 'Browse Recipes', icon: ChefHat },
+        { href: '/recipes/ai-generate', label: 'AI Recipe Generator', icon: Sparkles },
+        { href: '/recipes/create', label: 'Create Recipe', icon: PlusCircle },
+      ],
+    },
+    {
+      label: 'Meal Planning',
+      icon: Calendar,
+      hasDropdown: true,
+      items: [
+        { href: '/meal-planner', label: 'Meal Planner', icon: Calendar },
+        { href: '/saved-plans', label: 'Saved Plans', icon: Bookmark },
+      ],
+    },
+    {
+      label: 'Shopping',
+      icon: ShoppingCart,
+      href: '/shopping-lists',
+      hasDropdown: false,
+    },
+    {
+      label: 'Progress',
+      icon: TrendingUp,
+      href: '/progress',
+      hasDropdown: false,
+    },
+    {
+      label: 'AI Advisor',
+      icon: MessageCircle,
+      href: '/advisor',
+      hasDropdown: false,
+    },
+    {
+      label: 'Learn',
+      icon: BookOpen,
+      href: '/learn',
+      hasDropdown: false,
+    },
+    {
+      label: 'Community',
+      icon: Users,
+      href: '/community',
+      hasDropdown: false,
+    },
   ];
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
@@ -85,20 +132,87 @@ export default function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-1">
-            {navLinks.map((link) => {
-              const Icon = link.icon;
+            {navGroups.map((group) => {
+              const Icon = group.icon;
+              
+              // If group has dropdown
+              if (group.hasDropdown && group.items) {
+                const isGroupActive = group.items.some(item => isActive(item.href));
+                const showMenu = 
+                  (group.label === 'Recipes' && showRecipesMenu) ||
+                  (group.label === 'Meal Planning' && showMealPlannerMenu);
+                
+                return (
+                  <div key={group.label} className="relative">
+                    <button
+                      onMouseEnter={() => {
+                        if (group.label === 'Recipes') setShowRecipesMenu(true);
+                        if (group.label === 'Meal Planning') setShowMealPlannerMenu(true);
+                      }}
+                      onMouseLeave={() => {
+                        if (group.label === 'Recipes') setShowRecipesMenu(false);
+                        if (group.label === 'Meal Planning') setShowMealPlannerMenu(false);
+                      }}
+                      className={`flex items-center space-x-1 px-3 py-2 rounded-lg font-medium transition-colors ${
+                        isGroupActive
+                          ? 'bg-green-100 text-green-700'
+                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                      }`}
+                    >
+                      <Icon className="w-4 h-4" />
+                      <span className="text-sm">{group.label}</span>
+                      <ChevronDown className="w-3 h-3" />
+                    </button>
+                    
+                    {/* Dropdown Menu */}
+                    {showMenu && (
+                      <div
+                        onMouseEnter={() => {
+                          if (group.label === 'Recipes') setShowRecipesMenu(true);
+                          if (group.label === 'Meal Planning') setShowMealPlannerMenu(true);
+                        }}
+                        onMouseLeave={() => {
+                          if (group.label === 'Recipes') setShowRecipesMenu(false);
+                          if (group.label === 'Meal Planning') setShowMealPlannerMenu(false);
+                        }}
+                        className="absolute top-full left-0 mt-1 w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50"
+                      >
+                        {group.items.map((item) => {
+                          const ItemIcon = item.icon;
+                          return (
+                            <Link
+                              key={item.href}
+                              href={item.href}
+                              className={`flex items-center space-x-3 px-4 py-2 transition-colors ${
+                                isActive(item.href)
+                                  ? 'bg-green-50 text-green-700'
+                                  : 'text-gray-700 hover:bg-gray-50'
+                              }`}
+                            >
+                              <ItemIcon className="w-4 h-4" />
+                              <span className="text-sm font-medium">{item.label}</span>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+              
+              // Regular link without dropdown
               return (
                 <Link
-                  key={link.href}
-                  href={link.href}
+                  key={group.label}
+                  href={group.href!}
                   className={`flex items-center space-x-2 px-3 py-2 rounded-lg font-medium transition-colors ${
-                    isActive(link.href)
+                    isActive(group.href!)
                       ? 'bg-green-100 text-green-700'
                       : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
-                  <span className="text-sm">{link.label}</span>
+                  <span className="text-sm">{group.label}</span>
                 </Link>
               );
             })}
@@ -629,33 +743,55 @@ export default function Navbar() {
             )}
 
             <div className="space-y-1">
-              {navLinks.map((link) => {
-                const Icon = link.icon;
+              {navGroups.map((group) => {
+                const Icon = group.icon;
+                
+                // If group has dropdown, show all items
+                if (group.hasDropdown && group.items) {
+                  return (
+                    <div key={group.label} className="mb-2">
+                      <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                        {group.label}
+                      </div>
+                      {group.items.map((item) => {
+                        const ItemIcon = item.icon;
+                        return (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            onClick={() => setShowMobileMenu(false)}
+                            className={`flex items-center space-x-3 px-4 py-3 ml-2 rounded-lg font-medium transition-colors ${
+                              isActive(item.href)
+                                ? 'bg-green-100 text-green-700'
+                                : 'text-gray-600 hover:bg-gray-100'
+                            }`}
+                          >
+                            <ItemIcon className="w-5 h-5" />
+                            <span>{item.label}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  );
+                }
+                
+                // Regular link
                 return (
                   <Link
-                    key={link.href}
-                    href={link.href}
+                    key={group.label}
+                    href={group.href!}
                     onClick={() => setShowMobileMenu(false)}
                     className={`flex items-center space-x-3 px-4 py-3 rounded-lg font-medium transition-colors ${
-                      isActive(link.href)
+                      isActive(group.href!)
                         ? 'bg-green-100 text-green-700'
                         : 'text-gray-600 hover:bg-gray-100'
                     }`}
                   >
                     <Icon className="w-5 h-5" />
-                    <span>{link.label}</span>
+                    <span>{group.label}</span>
                   </Link>
                 );
               })}
-
-              <Link
-                href="/recipes/ai-generate"
-                onClick={() => setShowMobileMenu(false)}
-                className="flex items-center space-x-3 px-4 py-3 rounded-lg font-medium bg-gradient-to-r from-purple-500 to-pink-500 text-white mt-2"
-              >
-                <Sparkles className="w-5 h-5" />
-                <span>AI Generate Recipe</span>
-              </Link>
             </div>
           </div>
         )}
