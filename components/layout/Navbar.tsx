@@ -116,22 +116,23 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-white shadow-md border-b-2 border-green-500 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4">
+    <nav className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-50 backdrop-blur-sm bg-white/95">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/recipes" className="flex items-center space-x-3">
-            <div className="bg-gradient-to-r from-green-500 to-blue-500 p-2 rounded-lg">
+          <Link href="/recipes" className="flex items-center space-x-3 group">
+            <div className="bg-gradient-to-br from-green-500 via-green-600 to-blue-600 p-2.5 rounded-xl shadow-md group-hover:shadow-lg transition-all duration-200 group-hover:scale-105">
               <Heart className="w-6 h-6 text-white" />
             </div>
             <div className="hidden sm:block">
-              <span className="text-xl font-bold text-gray-800">5x5x5 Wellness</span>
-              {/* <span className="block text-xs text-gray-600">Eat to Beat Disease</span> */}
+              <span className="text-xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
+                5x5x5 Wellness
+              </span>
             </div>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center space-x-1">
+          <div className="hidden lg:flex items-center space-x-2">
             {navGroups.map((group) => {
               const Icon = group.icon;
               
@@ -153,15 +154,15 @@ export default function Navbar() {
                         if (group.label === 'Recipes') setShowRecipesMenu(false);
                         if (group.label === 'Meal Planning') setShowMealPlannerMenu(false);
                       }}
-                      className={`flex items-center space-x-1 px-3 py-2 rounded-lg font-medium transition-colors ${
+                      className={`flex items-center space-x-1.5 px-3 py-2 rounded-xl font-medium transition-all duration-200 ${
                         isGroupActive
-                          ? 'bg-green-100 text-green-700'
-                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                          ? 'bg-gradient-to-r from-green-50 to-blue-50 text-green-700 shadow-sm border border-green-200'
+                          : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
                       }`}
                     >
                       <Icon className="w-4 h-4" />
                       <span className="text-sm">{group.label}</span>
-                      <ChevronDown className="w-3 h-3" />
+                      <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${showMenu ? 'rotate-180' : ''}`} />
                     </button>
                     
                     {/* Dropdown Menu */}
@@ -175,7 +176,7 @@ export default function Navbar() {
                           if (group.label === 'Recipes') setShowRecipesMenu(false);
                           if (group.label === 'Meal Planning') setShowMealPlannerMenu(false);
                         }}
-                        className="absolute top-full left-0 mt-1 w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50"
+                        className="absolute top-full left-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 z-50 animate-in fade-in slide-in-from-top-1 duration-200"
                       >
                         {group.items.map((item) => {
                           const ItemIcon = item.icon;
@@ -183,13 +184,13 @@ export default function Navbar() {
                             <Link
                               key={item.href}
                               href={item.href}
-                              className={`flex items-center space-x-3 px-4 py-2 transition-colors ${
+                              className={`flex items-center space-x-3 px-4 py-2.5 mx-2 rounded-lg transition-all duration-150 ${
                                 isActive(item.href)
-                                  ? 'bg-green-50 text-green-700'
+                                  ? 'bg-gradient-to-r from-green-50 to-blue-50 text-green-700 shadow-sm'
                                   : 'text-gray-700 hover:bg-gray-50'
                               }`}
                             >
-                              <ItemIcon className="w-4 h-4" />
+                              <ItemIcon className={`w-5 h-5 ${isActive(item.href) ? 'text-green-600' : 'text-gray-400'}`} />
                               <span className="text-sm font-medium">{item.label}</span>
                             </Link>
                           );
@@ -205,10 +206,10 @@ export default function Navbar() {
                 <Link
                   key={group.label}
                   href={group.href!}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg font-medium transition-colors ${
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-xl font-medium transition-all duration-200 ${
                     isActive(group.href!)
-                      ? 'bg-green-100 text-green-700'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                      ? 'bg-gradient-to-r from-green-50 to-blue-50 text-green-700 shadow-sm border border-green-200'
+                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -346,28 +347,20 @@ export default function Navbar() {
               </div>
             )}
 
-            {/* AI Generate Button */}
-            <Link
-              href="/recipes/ai-generate"
-              className="hidden xl:flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all font-medium text-sm"
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>AI Generate</span>
-            </Link>
-
             {/* User Menu */}
             {status === 'authenticated' && session?.user ? (
               <div className="relative">
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="flex items-center space-x-2 p-2 rounded-xl hover:bg-gray-50 transition-all duration-200 border border-transparent hover:border-gray-200"
                 >
-                  <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+                  <div className="w-9 h-9 bg-gradient-to-br from-green-500 via-green-600 to-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-md">
                     {session.user.name?.[0]?.toUpperCase() || 'U'}
                   </div>
                   <span className="hidden md:block text-sm font-medium text-gray-700">
                     {session.user.name}
                   </span>
+                  <ChevronDown className={`hidden md:block w-4 h-4 text-gray-400 transition-transform duration-200 ${showUserMenu ? 'rotate-180' : ''}`} />
                 </button>
 
                 {/* Dropdown Menu */}
@@ -615,7 +608,7 @@ export default function Navbar() {
             ) : (
               <Link
                 href="/login"
-                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium text-sm"
+                className="px-5 py-2.5 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-200 font-medium text-sm shadow-md hover:shadow-lg transform hover:scale-105"
               >
                 Sign In
               </Link>
@@ -624,7 +617,7 @@ export default function Navbar() {
             {/* Mobile Menu Toggle */}
             <button
               onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="lg:hidden p-2 rounded-lg hover:bg-gray-100"
+              className="lg:hidden p-2.5 rounded-xl hover:bg-gray-50 transition-all duration-200 border border-transparent hover:border-gray-200"
             >
               {showMobileMenu ? (
                 <X className="w-6 h-6 text-gray-700" />
@@ -637,13 +630,13 @@ export default function Navbar() {
 
         {/* Mobile Menu */}
         {showMobileMenu && (
-          <div className="lg:hidden py-4 border-t border-gray-200">
+          <div className="lg:hidden py-4 border-t border-gray-200 bg-gradient-to-b from-gray-50 to-white">
             {/* Mobile Usage Stats for Free Users - Enhanced */}
             {status === 'authenticated' && session?.user && tier === 'FREE' && (
-              <div className="px-4 py-4 mb-3 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg mx-4 shadow-sm">
+              <div className="px-4 py-4 mb-4 bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-200 rounded-xl mx-4 shadow-md">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
-                    🏃‍♂️ Monthly Usage Limits
+                  <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wide">
+                    📊 Monthly Usage
                   </h4>
                   <TierBadge />
                 </div>
@@ -742,16 +735,17 @@ export default function Navbar() {
               </div>
             )}
 
-            <div className="space-y-1">
+            <div className="space-y-2 px-2">
               {navGroups.map((group) => {
                 const Icon = group.icon;
                 
                 // If group has dropdown, show all items
                 if (group.hasDropdown && group.items) {
                   return (
-                    <div key={group.label} className="mb-2">
-                      <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                        {group.label}
+                    <div key={group.label} className="mb-3">
+                      <div className="px-3 py-2 text-xs font-bold text-gray-600 uppercase tracking-wider flex items-center space-x-2">
+                        <Icon className="w-3.5 h-3.5" />
+                        <span>{group.label}</span>
                       </div>
                       {group.items.map((item) => {
                         const ItemIcon = item.icon;
@@ -760,13 +754,13 @@ export default function Navbar() {
                             key={item.href}
                             href={item.href}
                             onClick={() => setShowMobileMenu(false)}
-                            className={`flex items-center space-x-3 px-4 py-3 ml-2 rounded-lg font-medium transition-colors ${
+                            className={`flex items-center space-x-3 px-4 py-3 ml-2 rounded-xl font-medium transition-all duration-200 ${
                               isActive(item.href)
-                                ? 'bg-green-100 text-green-700'
-                                : 'text-gray-600 hover:bg-gray-100'
+                                ? 'bg-gradient-to-r from-green-50 to-blue-50 text-green-700 shadow-sm border border-green-200'
+                                : 'text-gray-700 hover:bg-gray-50'
                             }`}
                           >
-                            <ItemIcon className="w-5 h-5" />
+                            <ItemIcon className={`w-5 h-5 ${isActive(item.href) ? 'text-green-600' : 'text-gray-400'}`} />
                             <span>{item.label}</span>
                           </Link>
                         );
@@ -781,13 +775,13 @@ export default function Navbar() {
                     key={group.label}
                     href={group.href!}
                     onClick={() => setShowMobileMenu(false)}
-                    className={`flex items-center space-x-3 px-4 py-3 rounded-lg font-medium transition-colors ${
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
                       isActive(group.href!)
-                        ? 'bg-green-100 text-green-700'
-                        : 'text-gray-600 hover:bg-gray-100'
+                        ? 'bg-gradient-to-r from-green-50 to-blue-50 text-green-700 shadow-sm border border-green-200'
+                        : 'text-gray-700 hover:bg-gray-50'
                     }`}
                   >
-                    <Icon className="w-5 h-5" />
+                    <Icon className={`w-5 h-5 ${isActive(group.href!) ? 'text-green-600' : 'text-gray-400'}`} />
                     <span>{group.label}</span>
                   </Link>
                 );
