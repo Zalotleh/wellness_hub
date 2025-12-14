@@ -381,9 +381,11 @@ export default function EnhancedMealPlanner({
     } catch (error) {
       console.error('Error generating meal plan:', error);
       setError(error instanceof Error ? error.message : 'Failed to generate meal plan');
+      setGenerationProgress(0);
     } finally {
       setIsGenerating(false);
-      setGenerationProgress(0);
+      // Don't reset progress here - keep it at 100% to show completion
+      // It will be reset when starting a new generation
     }
   }, [configuration, session, onPlanSave]);
 
