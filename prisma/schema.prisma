@@ -31,6 +31,10 @@ model User {
   imageGenerationsThisMonth  Int               @default(0)
   pdfExportsThisMonth        Int               @default(0)
   recipeGenerationsThisMonth Int               @default(0)
+  termsAccepted              Boolean           @default(false)
+  termsAcceptedAt            DateTime?
+  privacyAccepted            Boolean           @default(false)
+  privacyAcceptedAt          DateTime?
   accounts                   Account[]
   comments                   Comment[]
   favorites                  Favorite[]

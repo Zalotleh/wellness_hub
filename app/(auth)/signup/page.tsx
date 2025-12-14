@@ -14,16 +14,19 @@ export default function SignupPage() {
     confirmPassword: '',
     measurementSystem: 'imperial' as 'imperial' | 'metric',
     language: 'en',
+    termsAccepted: false,
   });
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [passwordStrength, setPasswordStrength] = useState(0);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
+    
     setFormData({
       ...formData,
-      [name]: value,
+      [name]: type === 'checkbox' ? checked : value,
     });
 
     // Clear error for this field
@@ -82,6 +85,10 @@ export default function SignupPage() {
       newErrors.confirmPassword = 'Passwords do not match';
     }
 
+    if (!formData.termsAccepted) {
+      newErrors.terms = 'You must accept the Terms of Service and Privacy Policy';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -104,6 +111,9 @@ export default function SignupPage() {
           email: formData.email,
           password: formData.password,
           confirmPassword: formData.confirmPassword,
+          measurementSystem: formData.measurementSystem,
+          language: formData.language,
+          termsAccepted: formData.termsAccepted,
         }),
       });
 
@@ -374,24 +384,32 @@ export default function SignupPage() {
             </div>
 
             {/* Terms Checkbox */}
-            <div className="flex items-start">
-              <input
-                id="terms"
-                name="terms"
-                type="checkbox"
-                required
-                className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded mt-1"
-              />
-              <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
-                I agree to the{' '}
-                <Link href="/terms" className="text-green-600 hover:text-green-500 font-medium">
-                  Terms of Service
-                </Link>{' '}
-                and{' '}
-                <Link href="/privacy" className="text-green-600 hover:text-green-500 font-medium">
-                  Privacy Policy
-                </Link>
-              </label>
+            <div>
+              <div className="flex items-start">
+                <input
+                  id="terms"
+                  name="termsAccepted"
+                  type="checkbox"
+                  checked={formData.termsAccepted}
+                  onChange={handleChange}
+                  className={`h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded mt-1 ${
+                    errors.terms ? 'border-red-500' : ''
+                  }`}
+                />
+                <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
+                  I agree to the{' '}
+                  <Link href="/terms" target="_blank" className="text-green-600 hover:text-green-500 font-medium underline">
+                    Terms of Service
+                  </Link>{' '}
+                  and{' '}
+                  <Link href="/privacy" target="_blank" className="text-green-600 hover:text-green-500 font-medium underline">
+                    Privacy Policy
+                  </Link>
+                </label>
+              </div>
+              {errors.terms && (
+                <p className="mt-1 text-sm text-red-600">{errors.terms}</p>
+              )}
             </div>
 
             {/* Submit Button */}

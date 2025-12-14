@@ -33,6 +33,10 @@ export async function POST(request: NextRequest) {
         password: hashedPassword,
         measurementSystem: validatedData.measurementSystem,
         language: validatedData.language,
+        termsAccepted: validatedData.termsAccepted || false,
+        termsAcceptedAt: validatedData.termsAccepted ? new Date() : null,
+        privacyAccepted: validatedData.termsAccepted || false,
+        privacyAcceptedAt: validatedData.termsAccepted ? new Date() : null,
       },
       select: {
         id: true,
@@ -40,6 +44,8 @@ export async function POST(request: NextRequest) {
         email: true,
         measurementSystem: true,
         language: true,
+        termsAccepted: true,
+        termsAcceptedAt: true,
         createdAt: true,
       },
     });

@@ -63,6 +63,9 @@ export const registerSchema = z.object({
   confirmPassword: z.string(),
   measurementSystem: z.enum(['imperial', 'metric']).default('imperial'),
   language: z.string().default('en'),
+  termsAccepted: z.boolean().refine((val) => val === true, {
+    message: 'You must accept the Terms of Service and Privacy Policy',
+  }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ['confirmPassword'],
