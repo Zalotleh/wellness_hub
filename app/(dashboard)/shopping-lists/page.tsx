@@ -17,10 +17,12 @@ import {
   Users,
   ChevronDown,
   Book,
-  UtensilsCrossed
+  UtensilsCrossed,
+  Trash2
 } from 'lucide-react';
 import MealPlanSelectionModal from '@/components/shopping-lists/MealPlanSelectionModal';
 import RecipeSelectionModal from '@/components/shopping-lists/RecipeSelectionModal';
+import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
 
 interface ShoppingListItem {
   ingredient: string;
@@ -41,6 +43,8 @@ interface ShoppingList {
     description: string;
     createdAt: string;
   };
+  sourceType?: string; // 'meal-plans' or 'recipes'
+  sourceIds?: string[]; // Array of source IDs
   totalItems: number;
   checkedItems: number;
   pendingItems: number;
@@ -74,11 +78,32 @@ export default function ShoppingListsPage() {
   const [showCreateDropdown, setShowCreateDropdown] = useState(false);
   const [showMealPlanModal, setShowMealPlanModal] = useState(false);
   const [showRecipeModal, setShowRecipeModal] = useState(false);
+  const [deleteDialog, setDeleteDialog] = useState<{ isOpen: boolean; listId: string; listTitle: string }>({
+    isOpen: false,
+    listId: '',
+    listTitle: '',
+  });
+  const [isDeleting, setIsDeleting] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchShoppingLists();
   }, []);
+
+  // Debug effect to log shopping list data
+  useEffect(() => {
+    if (shoppingLists.length > 0) {
+      console.log('🛒 Shopping Lists Data:', shoppingLists.map(list => ({
+        id: list.id,
+        title: list.title,
+        hasMealPlan: !!list.mealPlan,
+        sourceType: list.sourceType,
+        sourceIds: list.sourceIds,
+        sourceIdsType: typeof list.sourceIds,
+        sourceIdsIsArray: Array.isArray(list.sourceIds),
+      })));
+    }
+  }, [shoppingLists]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -116,6 +141,51 @@ export default function ShoppingListsPage() {
 
   const handleRefresh = () => {
     fetchShoppingLists();
+  };
+
+  const handleDeleteClick = (listId: string, listTitle: string) => {
+    setDeleteDialog({
+      isOpen: true,
+      listId,
+      listTitle,
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    setIsDeleting(true);
+    
+    try {
+      const response = await fetch(`/api/shopping-lists/${deleteDialog.listId}`, {
+        method: 'DELETE',
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Remove from local state
+        setShoppingLists(prev => prev.filter(list => list.id !== deleteDialog.listId));
+        
+        // Update stats
+        setStats(prev => ({
+          ...prev,
+          totalLists: prev.totalLists - 1,
+        }));
+
+        // Close dialog
+        setDeleteDialog({ isOpen: false, listId: '', listTitle: '' });
+      } else {
+        alert(data.error || 'Failed to delete shopping list');
+      }
+    } catch (err) {
+      console.error('Error deleting shopping list:', err);
+      alert('Failed to delete shopping list');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialog({ isOpen: false, listId: '', listTitle: '' });
   };
 
   const filteredLists = shoppingLists.filter(list =>
@@ -333,13 +403,20 @@ export default function ShoppingListsPage() {
                       <span>{list.checkedItems} completed</span>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end space-y-1">
+                  <div className="flex items-center space-x-2">
                     <div className="text-right">
                       <div className="text-lg font-bold text-green-600">
                         {Math.round((list.checkedItems / list.totalItems) * 100) || 0}%
                       </div>
                       <div className="text-xs text-gray-500">complete</div>
                     </div>
+                    <button
+                      onClick={() => handleDeleteClick(list.id, list.title)}
+                      className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Delete shopping list"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
 
@@ -381,14 +458,14 @@ export default function ShoppingListsPage() {
                   </div>
                 )}
                 
-                {!list.mealPlan && list.title.toLowerCase().includes('recipe') && (
+                {!list.mealPlan && list.sourceType === 'recipes' && list.sourceIds && list.sourceIds.length > 0 && (
                   <div className="mt-3 pt-3 border-t border-gray-100">
                     <Link
-                      href="/recipes"
+                      href={`/recipes/${list.sourceIds[0]}`}
                       className="inline-flex items-center space-x-1 text-sm text-green-600 hover:text-green-800 transition-colors"
                     >
                       <Book className="w-4 h-4" />
-                      <span>View Recipes</span>
+                      <span>View Recipe</span>
                       <ExternalLink className="w-3 h-3" />
                     </Link>
                   </div>
@@ -410,6 +487,26 @@ export default function ShoppingListsPage() {
         isOpen={showRecipeModal}
         onClose={() => setShowRecipeModal(false)}
         onSuccess={handleRefresh}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={deleteDialog.isOpen}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Shopping List"
+        message={`Are you sure you want to delete "${deleteDialog.listTitle}"?`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="danger"
+        isLoading={isDeleting}
+        details={
+          <div className="bg-red-50 p-3 rounded-lg">
+            <p className="text-sm text-red-800">
+              This action cannot be undone. All items in this shopping list will be permanently deleted.
+            </p>
+          </div>
+        }
       />
     </div>
   );

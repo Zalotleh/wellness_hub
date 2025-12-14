@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { DefenseSystem } from '@/types';
+import { isValidUnit } from '@/lib/constants/measurement-units';
 
 // Recipe validation schema
 export const recipeSchema = z.object({
@@ -8,7 +9,10 @@ export const recipeSchema = z.object({
   ingredients: z.array(
     z.object({
       name: z.string().min(1, 'Ingredient name required'),
-      amount: z.string().min(1, 'Amount required'),
+      quantity: z.string().min(1, 'Quantity required'),
+      unit: z.string().min(1, 'Unit required').refine((unit) => isValidUnit(unit), {
+        message: 'Invalid measurement unit',
+      }),
     })
   ).min(1, 'At least one ingredient required'),
   instructions: z.string().min(20, 'Instructions must be at least 20 characters'),

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useSession } from 'next-auth/react';
 import { 
   getMeasurementPreference, 
   setMeasurementPreference,
@@ -18,18 +19,68 @@ export default function MeasurementPreferenceSelector({
   showLabel = true,
   className = ''
 }: MeasurementPreferenceSelectorProps) {
+  const { data: session } = useSession();
   const [preference, setPreference] = React.useState<MeasurementPreference>(() => 
     getMeasurementPreference()
   );
+  const [loading, setLoading] = React.useState(false);
 
-  const handleChange = (system: 'imperial' | 'metric') => {
+  // Fetch user's preference from DB when logged in
+  React.useEffect(() => {
+    if (session?.user) {
+      fetchUserPreference();
+    }
+  }, [session]);
+
+  const fetchUserPreference = async () => {
+    try {
+      const response = await fetch('/api/user/measurement-preference');
+      if (response.ok) {
+        const data = await response.json();
+        const newPref: MeasurementPreference = {
+          system: data.system,
+          temperature: data.temperature
+        };
+        setPreference(newPref);
+        // Also update localStorage as cache
+        setMeasurementPreference(newPref);
+      }
+    } catch (error) {
+      console.error('Failed to fetch measurement preference:', error);
+    }
+  };
+
+  const handleChange = async (system: 'imperial' | 'metric') => {
     const newPref: MeasurementPreference = { 
       system,
       temperature: system === 'imperial' ? 'fahrenheit' : 'celsius'
     };
+    
+    // Update localStorage immediately for responsive UI
     setMeasurementPreference(newPref);
     setPreference(newPref);
     onChange?.(system);
+
+    // If logged in, save to database
+    if (session?.user) {
+      setLoading(true);
+      try {
+        const response = await fetch('/api/user/measurement-preference', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ system }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to save preference');
+        }
+      } catch (error) {
+        console.error('Failed to save measurement preference:', error);
+        // Preference is still saved in localStorage, so it works for this session
+      } finally {
+        setLoading(false);
+      }
+    }
   };
 
   return (

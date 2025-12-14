@@ -59,11 +59,27 @@ export async function GET() {
 
       console.log(`  → ${checkedItems.length} checked, ${pendingItems.length} pending`);
 
+      // Parse sourceIds if it's JSON
+      let sourceIds = [];
+      if (Array.isArray(list.sourceIds)) {
+        sourceIds = list.sourceIds;
+      } else if (typeof list.sourceIds === 'string') {
+        try {
+          sourceIds = JSON.parse(list.sourceIds);
+        } catch (e) {
+          sourceIds = [];
+        }
+      } else if (list.sourceIds && typeof list.sourceIds === 'object') {
+        sourceIds = Object.values(list.sourceIds);
+      }
+
       return {
         id: list.id,
         title: list.title,
         mealPlanId: list.mealPlanId,
         mealPlan: list.mealPlan,
+        sourceType: list.sourceType,
+        sourceIds: sourceIds,
         totalItems: items.length, // Use actual items count instead of stored value
         checkedItems: checkedItems.length,
         pendingItems: pendingItems.length,

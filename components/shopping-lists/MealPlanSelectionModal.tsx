@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { X, Calendar, Users, Search, Check, Loader2, UtensilsCrossed } from 'lucide-react';
+import { getMeasurementPreference } from '@/lib/shopping/measurement-system';
 
 interface MealPlan {
   id: string;
@@ -92,6 +93,9 @@ export default function MealPlanSelectionModal({
     setError(null);
     
     try {
+      // Get user's measurement preference
+      const preference = getMeasurementPreference();
+      
       const response = await fetch('/api/shopping-lists/create-from-sources', {
         method: 'POST',
         headers: {
@@ -101,6 +105,7 @@ export default function MealPlanSelectionModal({
           type: 'meal-plans',
           sourceIds: Array.from(selectedPlans),
           filterPantry,
+          measurementSystem: preference.system,
         }),
       });
 

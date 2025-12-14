@@ -86,7 +86,7 @@ export type RecipeWithRelations = {
 export interface RecipeFormData {
   title: string;
   description?: string;
-  ingredients: { name: string; amount: string }[];
+  ingredients: { name: string; quantity: string; unit: string }[];
   instructions: string;
   prepTime?: string;
   cookTime?: string;

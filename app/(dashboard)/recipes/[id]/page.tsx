@@ -159,10 +159,13 @@ export default function RecipeDetailPage() {
   const ingredients = Array.isArray(recipe.ingredients) 
     ? recipe.ingredients.map((ing: any) => {
         if (typeof ing === 'object' && ing.name) {
-          // New AI-generated format: {name, amount, unit, notes}
+          // New format with separate quantity and unit: {name, quantity, unit}
+          const amount = ing.quantity && ing.unit 
+            ? `${ing.quantity} ${ing.unit}` 
+            : ing.amount || ing.quantity || '';
           return {
             name: ing.name,
-            amount: ing.unit ? `${ing.amount} ${ing.unit}` : ing.amount,
+            amount: amount,
             notes: ing.notes
           };
         } else if (typeof ing === 'object' && ing.amount) {

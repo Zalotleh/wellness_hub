@@ -21,10 +21,32 @@ export default function EditRecipeForm({ recipe }: EditRecipeFormProps) {
     title: recipe.title,
     description: recipe.description || '',
     ingredients: Array.isArray(recipe.ingredients) 
-      ? recipe.ingredients.map((ing: any) => ({
-          name: ing.name || '',
-          amount: ing.amount || ''
-        }))
+      ? recipe.ingredients.map((ing: any) => {
+          // Handle old format with 'amount' field
+          if (ing.amount && !ing.quantity && !ing.unit) {
+            // Try to parse "2 cups" format into quantity and unit
+            const amountMatch = ing.amount.match(/^(\d+\.?\d*)\s+(.+)$/);
+            if (amountMatch) {
+              return {
+                name: ing.name || '',
+                quantity: amountMatch[1],
+                unit: amountMatch[2]
+              };
+            }
+            // If can't parse, default to unit-less
+            return {
+              name: ing.name || '',
+              quantity: ing.amount || '1',
+              unit: 'piece'
+            };
+          }
+          // Handle new format with separate quantity and unit
+          return {
+            name: ing.name || '',
+            quantity: ing.quantity || '1',
+            unit: ing.unit || 'piece'
+          };
+        })
       : [],
     instructions: Array.isArray(recipe.instructions) 
       ? recipe.instructions.join('\n')

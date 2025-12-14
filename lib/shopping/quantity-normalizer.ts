@@ -11,8 +11,8 @@ export interface NormalizedQuantity {
   measurementSystem: MeasurementSystem;
 }
 
-// Conversion maps for common ingredients
-const LIQUID_TO_RETAIL: Record<string, { amount: number; unit: string }> = {
+// Conversion maps for common ingredients - IMPERIAL
+const LIQUID_TO_RETAIL_IMPERIAL: Record<string, { amount: number; unit: string }> = {
   'cup': { amount: 8, unit: 'fl oz' },
   'cups': { amount: 8, unit: 'fl oz' },
   'tablespoon': { amount: 0.5, unit: 'fl oz' },
@@ -27,12 +27,31 @@ const LIQUID_TO_RETAIL: Record<string, { amount: number; unit: string }> = {
   'l': { amount: 33.8, unit: 'fl oz' },
 };
 
-// Common retail package sizes
-const RETAIL_PACKAGES: Record<string, { sizes: number[]; unit: string }> = {
+// Conversion maps for common ingredients - METRIC
+const LIQUID_TO_RETAIL_METRIC: Record<string, { amount: number; unit: string }> = {
+  'cup': { amount: 237, unit: 'ml' },
+  'cups': { amount: 237, unit: 'ml' },
+  'tablespoon': { amount: 15, unit: 'ml' },
+  'tablespoons': { amount: 15, unit: 'ml' },
+  'tbsp': { amount: 15, unit: 'ml' },
+  'teaspoon': { amount: 5, unit: 'ml' },
+  'teaspoons': { amount: 5, unit: 'ml' },
+  'tsp': { amount: 5, unit: 'ml' },
+  'ml': { amount: 1, unit: 'ml' },
+  'liter': { amount: 1000, unit: 'ml' },
+  'liters': { amount: 1000, unit: 'ml' },
+  'l': { amount: 1000, unit: 'ml' },
+  'fl oz': { amount: 29.5735, unit: 'ml' },
+};
+
+// Common retail package sizes - IMPERIAL
+const RETAIL_PACKAGES_IMPERIAL: Record<string, { sizes: number[]; unit: string }> = {
   'milk': { sizes: [8, 16, 32, 64, 128], unit: 'fl oz' }, // Half pint to gallon
   'cream': { sizes: [8, 16, 32], unit: 'fl oz' },
   'juice': { sizes: [12, 32, 64], unit: 'fl oz' },
   'oil': { sizes: [8, 16, 24, 32], unit: 'fl oz' },
+  'soy sauce': { sizes: [5, 10, 15], unit: 'fl oz' },
+  'tamari': { sizes: [5, 10, 15], unit: 'fl oz' },
   'butter': { sizes: [8, 16], unit: 'oz' }, // Sticks/pounds
   'flour': { sizes: [32, 80], unit: 'oz' }, // 2lb, 5lb bags
   'sugar': { sizes: [32, 64, 80], unit: 'oz' },
@@ -40,6 +59,23 @@ const RETAIL_PACKAGES: Record<string, { sizes: number[]; unit: string }> = {
   'pasta': { sizes: [16, 32], unit: 'oz' },
   'cheese': { sizes: [8, 16, 32], unit: 'oz' },
   'yogurt': { sizes: [5.3, 32], unit: 'oz' }, // Individual cups or tubs
+};
+
+// Common retail package sizes - METRIC
+const RETAIL_PACKAGES_METRIC: Record<string, { sizes: number[]; unit: string }> = {
+  'milk': { sizes: [250, 500, 1000, 2000], unit: 'ml' }, // Quarter liter to 2 liters
+  'cream': { sizes: [200, 250, 500], unit: 'ml' },
+  'juice': { sizes: [330, 500, 1000, 2000], unit: 'ml' },
+  'oil': { sizes: [250, 500, 750, 1000], unit: 'ml' },
+  'soy sauce': { sizes: [150, 250, 500], unit: 'ml' },
+  'tamari': { sizes: [150, 250, 500], unit: 'ml' },
+  'butter': { sizes: [250, 500], unit: 'g' },
+  'flour': { sizes: [500, 1000, 2000], unit: 'g' }, // 500g, 1kg, 2kg
+  'sugar': { sizes: [500, 1000, 2000], unit: 'g' },
+  'rice': { sizes: [500, 1000, 2000, 5000], unit: 'g' },
+  'pasta': { sizes: [500, 1000], unit: 'g' },
+  'cheese': { sizes: [200, 500, 1000], unit: 'g' },
+  'yogurt': { sizes: [150, 500], unit: 'g' }, // Individual cups or tubs
 };
 
 /**
@@ -90,15 +126,18 @@ function normalizeLiquid(
   unit: string,
   measurementSystem: MeasurementSystem
 ): NormalizedQuantity {
-  // Convert to fluid ounces first
-  let flOz = quantity;
+  const LIQUID_TO_RETAIL = measurementSystem === 'metric' ? LIQUID_TO_RETAIL_METRIC : LIQUID_TO_RETAIL_IMPERIAL;
+  
+  // Convert to base unit (ml for metric, fl oz for imperial)
+  let baseAmount = quantity;
+  const baseUnit = measurementSystem === 'metric' ? 'ml' : 'fl oz';
   
   if (LIQUID_TO_RETAIL[unit]) {
-    flOz = quantity * LIQUID_TO_RETAIL[unit].amount;
+    baseAmount = quantity * LIQUID_TO_RETAIL[unit].amount;
   }
 
   // Find best retail package size
-  const retailInfo = findBestRetailPackage(ingredient, flOz, 'fl oz');
+  const retailInfo = findBestRetailPackage(ingredient, baseAmount, baseUnit, measurementSystem);
   
   return {
     originalQuantity: quantity,
@@ -117,29 +156,58 @@ function normalizeDryGoods(
   unit: string,
   measurementSystem: MeasurementSystem
 ): NormalizedQuantity {
-  // Convert cups to ounces for common dry goods
-  let ounces = quantity;
+  let baseAmount = quantity;
+  let baseUnit: string;
   
-  if (unit === 'cup' || unit === 'cups') {
-    // Approximate conversions (varies by ingredient)
-    if (ingredient.includes('flour')) {
-      ounces = quantity * 4.5; // 1 cup flour ≈ 4.5 oz
-    } else if (ingredient.includes('sugar')) {
-      ounces = quantity * 7; // 1 cup sugar ≈ 7 oz
-    } else if (ingredient.includes('rice')) {
-      ounces = quantity * 6.5; // 1 cup rice ≈ 6.5 oz
-    } else {
-      ounces = quantity * 5; // Generic approximation
+  if (measurementSystem === 'metric') {
+    // Convert to grams for metric
+    baseUnit = 'g';
+    
+    if (unit === 'cup' || unit === 'cups') {
+      // Approximate conversions (varies by ingredient)
+      if (ingredient.includes('flour')) {
+        baseAmount = quantity * 125; // 1 cup flour ≈ 125g
+      } else if (ingredient.includes('sugar')) {
+        baseAmount = quantity * 200; // 1 cup sugar ≈ 200g
+      } else if (ingredient.includes('rice')) {
+        baseAmount = quantity * 185; // 1 cup rice ≈ 185g
+      } else {
+        baseAmount = quantity * 140; // Generic approximation
+      }
+    } else if (unit === 'oz' || unit === 'ounces') {
+      baseAmount = quantity * 28.35;
+    } else if (unit === 'lb' || unit === 'lbs' || unit === 'pound' || unit === 'pounds') {
+      baseAmount = quantity * 453.592;
+    } else if (unit === 'kg' || unit === 'kilogram' || unit === 'kilograms') {
+      baseAmount = quantity * 1000;
+    } else if (unit === 'g' || unit === 'gram' || unit === 'grams') {
+      baseAmount = quantity;
     }
-  } else if (unit === 'lb' || unit === 'lbs' || unit === 'pound' || unit === 'pounds') {
-    ounces = quantity * 16;
-  } else if (unit === 'oz' || unit === 'ounces') {
-    ounces = quantity;
-  } else if (unit === 'g' || unit === 'gram' || unit === 'grams') {
-    ounces = quantity * 0.035274;
+  } else {
+    // Convert to ounces for imperial
+    baseUnit = 'oz';
+    
+    if (unit === 'cup' || unit === 'cups') {
+      // Approximate conversions (varies by ingredient)
+      if (ingredient.includes('flour')) {
+        baseAmount = quantity * 4.5; // 1 cup flour ≈ 4.5 oz
+      } else if (ingredient.includes('sugar')) {
+        baseAmount = quantity * 7; // 1 cup sugar ≈ 7 oz
+      } else if (ingredient.includes('rice')) {
+        baseAmount = quantity * 6.5; // 1 cup rice ≈ 6.5 oz
+      } else {
+        baseAmount = quantity * 5; // Generic approximation
+      }
+    } else if (unit === 'lb' || unit === 'lbs' || unit === 'pound' || unit === 'pounds') {
+      baseAmount = quantity * 16;
+    } else if (unit === 'oz' || unit === 'ounces') {
+      baseAmount = quantity;
+    } else if (unit === 'g' || unit === 'gram' || unit === 'grams') {
+      baseAmount = quantity * 0.035274;
+    }
   }
 
-  const retailInfo = findBestRetailPackage(ingredient, ounces, 'oz');
+  const retailInfo = findBestRetailPackage(ingredient, baseAmount, baseUnit, measurementSystem);
   
   return {
     originalQuantity: quantity,
@@ -184,8 +252,11 @@ function normalizeCountBased(
 function findBestRetailPackage(
   ingredient: string,
   amount: number,
-  unit: string
+  unit: string,
+  measurementSystem: MeasurementSystem = 'imperial'
 ): { quantity: number; unit: string; description: string; note?: string } {
+  const RETAIL_PACKAGES = measurementSystem === 'metric' ? RETAIL_PACKAGES_METRIC : RETAIL_PACKAGES_IMPERIAL;
+  
   // Look for matching retail package
   for (const [key, packageInfo] of Object.entries(RETAIL_PACKAGES)) {
     if (ingredient.includes(key)) {
@@ -193,24 +264,47 @@ function findBestRetailPackage(
       const packageCount = Math.ceil(amount / bestSize);
       
       let description: string;
-      if (unit === 'fl oz') {
-        // Convert to common liquid measurements
-        if (bestSize === 128) {
-          description = `${packageCount} gallon${packageCount > 1 ? 's' : ''}`;
-        } else if (bestSize === 64) {
-          description = `${packageCount} half gallon${packageCount > 1 ? 's' : ''}`;
-        } else if (bestSize === 32) {
-          description = `${packageCount} quart${packageCount > 1 ? 's' : ''}`;
+      
+      if (measurementSystem === 'metric') {
+        // Metric descriptions
+        if (unit === 'ml') {
+          if (bestSize >= 1000) {
+            const liters = bestSize / 1000;
+            description = `${packageCount} × ${liters}L container${packageCount > 1 ? 's' : ''}`;
+          } else {
+            description = `${packageCount} × ${bestSize}ml container${packageCount > 1 ? 's' : ''}`;
+          }
+        } else if (unit === 'g') {
+          if (bestSize >= 1000) {
+            const kg = bestSize / 1000;
+            description = `${packageCount} × ${kg}kg package${packageCount > 1 ? 's' : ''}`;
+          } else {
+            description = `${packageCount} × ${bestSize}g package${packageCount > 1 ? 's' : ''}`;
+          }
         } else {
-          description = `${packageCount} × ${bestSize} fl oz container${packageCount > 1 ? 's' : ''}`;
+          description = `${packageCount} × ${bestSize} ${unit}`;
         }
       } else {
-        // Weight-based
-        const lbs = bestSize / 16;
-        if (lbs >= 1 && lbs % 1 === 0) {
-          description = `${packageCount} × ${lbs} lb package${packageCount > 1 ? 's' : ''}`;
+        // Imperial descriptions
+        if (unit === 'fl oz') {
+          // Convert to common liquid measurements
+          if (bestSize === 128) {
+            description = `${packageCount} gallon${packageCount > 1 ? 's' : ''}`;
+          } else if (bestSize === 64) {
+            description = `${packageCount} half gallon${packageCount > 1 ? 's' : ''}`;
+          } else if (bestSize === 32) {
+            description = `${packageCount} quart${packageCount > 1 ? 's' : ''}`;
+          } else {
+            description = `${packageCount} × ${bestSize} fl oz container${packageCount > 1 ? 's' : ''}`;
+          }
         } else {
-          description = `${packageCount} × ${bestSize} oz package${packageCount > 1 ? 's' : ''}`;
+          // Weight-based
+          const lbs = bestSize / 16;
+          if (lbs >= 1 && lbs % 1 === 0) {
+            description = `${packageCount} × ${lbs} lb package${packageCount > 1 ? 's' : ''}`;
+          } else {
+            description = `${packageCount} × ${bestSize} oz package${packageCount > 1 ? 's' : ''}`;
+          }
         }
       }
       
@@ -245,7 +339,8 @@ function isLiquidIngredient(ingredient: string): boolean {
   const liquidKeywords = [
     'milk', 'cream', 'juice', 'water', 'broth', 'stock', 
     'oil', 'vinegar', 'sauce', 'wine', 'beer', 'soda',
-    'coffee', 'tea', 'syrup', 'honey'
+    'coffee', 'tea', 'syrup', 'honey', 'soy sauce', 'tamari',
+    'sesame oil', 'olive oil', 'lemon juice', 'lime juice', 'orange juice'
   ];
   return liquidKeywords.some(keyword => ingredient.includes(keyword));
 }

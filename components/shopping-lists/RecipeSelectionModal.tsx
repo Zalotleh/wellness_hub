@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { X, Clock, Users, Search, Check, Loader2, Book, ChefHat } from 'lucide-react';
+import { getMeasurementPreference } from '@/lib/shopping/measurement-system';
 
 interface Recipe {
   id: string;
@@ -94,6 +95,9 @@ export default function RecipeSelectionModal({
     setError(null);
     
     try {
+      // Get user's measurement preference
+      const preference = getMeasurementPreference();
+      
       const response = await fetch('/api/shopping-lists/create-from-sources', {
         method: 'POST',
         headers: {
@@ -103,6 +107,7 @@ export default function RecipeSelectionModal({
           type: 'recipes',
           sourceIds: Array.from(selectedRecipes),
           filterPantry,
+          measurementSystem: preference.system,
         }),
       });
 

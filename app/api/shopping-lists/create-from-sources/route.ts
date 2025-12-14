@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { getUserFeatureAccess, Feature } from '@/lib/features/feature-flags';
 import { normalizeQuantity, formatRetailQuantity } from '@/lib/shopping/quantity-normalizer';
 import { MeasurementSystem } from '@/lib/shopping/measurement-system';
+import { getUserMeasurementSystem } from '@/lib/user-preferences';
 
 interface ShoppingListItem {
   ingredient: string;
@@ -37,8 +38,11 @@ export async function POST(request: NextRequest) {
       sourceIds, // Array of meal plan or recipe IDs
       title, // Optional custom title
       filterPantry = false, // Optional pantry filtering
-      measurementSystem = 'imperial' as MeasurementSystem // User's preferred measurement system
+      measurementSystem // User's preferred measurement system
     } = body;
+
+    // Get user's measurement system from DB if not provided by client
+    const userMeasurementSystem = measurementSystem || await getUserMeasurementSystem(session.user.id);
 
     if (!type || !sourceIds || !Array.isArray(sourceIds) || sourceIds.length === 0) {
       return NextResponse.json(
@@ -123,8 +127,8 @@ export async function POST(request: NextRequest) {
                 if (item) {
                   allIngredients.push({
                     item: item.trim(),
-                    quantity: quantity.toString(),
-                    unit: unit.trim(),
+                    quantity: quantity.toString().trim(),
+                    unit: unit.toString().trim() === '0' ? '' : unit.toString().trim(),
                   });
                 }
               }
@@ -133,7 +137,7 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      consolidatedIngredients = consolidateIngredients(allIngredients, measurementSystem);
+      consolidatedIngredients = consolidateIngredients(allIngredients, userMeasurementSystem);
       
       if (!generatedTitle) {
         generatedTitle = mealPlans.length === 1 
@@ -175,15 +179,15 @@ export async function POST(request: NextRequest) {
             if (item) {
               allIngredients.push({
                 item: item.trim(),
-                quantity: quantity.toString(),
-                unit: unit.trim(),
+                quantity: quantity.toString().trim(),
+                unit: unit.toString().trim() === '0' ? '' : unit.toString().trim(),
               });
             }
           }
         }
       }
 
-      consolidatedIngredients = consolidateIngredients(allIngredients, measurementSystem);
+      consolidatedIngredients = consolidateIngredients(allIngredients, userMeasurementSystem);
       
       if (!generatedTitle) {
         generatedTitle = recipes.length === 1 
@@ -247,7 +251,9 @@ export async function POST(request: NextRequest) {
         items: JSON.stringify(consolidatedIngredients),
         totalItems: consolidatedIngredients.length,
         pantryFiltered: filterPantry,
-      },
+        sourceType: type, // Save the source type
+        sourceIds: JSON.stringify(sourceIds), // Save the source IDs
+      } as any,
     });
 
     return NextResponse.json({
@@ -293,24 +299,38 @@ function consolidateIngredients(
         existing.quantity = `${existing.quantity}, ${item.quantity}` as any;
       }
     } else {
-      const qty = parseFloat(item.quantity) || item.quantity as any;
       const unit = item.unit.trim();
       const ingredient = item.item.trim();
+      const qtyNumber = parseFloat(item.quantity);
       
-      // Normalize quantity for e-commerce with user's preferred system
-      const normalized = normalizeQuantity(ingredient, qty, unit, measurementSystem);
+      // Check if quantity is numeric
+      let retailQuantity: number | undefined;
+      let retailUnit: string | undefined;
+      let retailDescription: string | undefined;
+      
+      if (!isNaN(qtyNumber) && isFinite(qtyNumber)) {
+        // Numeric quantity - normalize for e-commerce
+        const normalized = normalizeQuantity(ingredient, qtyNumber, unit, measurementSystem);
+        retailQuantity = normalized.retailQuantity;
+        retailUnit = normalized.retailUnit;
+        retailDescription = normalized.retailDescription;
+      } else {
+        // Non-numeric quantity (e.g., "Pinch of", "to taste")
+        // Keep as-is for display
+        retailDescription = `${item.quantity} ${unit}`.trim();
+      }
       
       consolidated.set(key, {
         ingredient: ingredient,
-        quantity: qty,
+        quantity: !isNaN(qtyNumber) && isFinite(qtyNumber) ? qtyNumber : (item.quantity as any),
         unit: unit,
         category: categorizeIngredient(ingredient),
         checked: false,
         estimatedCost: 0,
         // Add e-commerce fields
-        retailQuantity: normalized.retailQuantity,
-        retailUnit: normalized.retailUnit,
-        retailDescription: normalized.retailDescription,
+        retailQuantity: retailQuantity,
+        retailUnit: retailUnit,
+        retailDescription: retailDescription,
       });
     }
   });

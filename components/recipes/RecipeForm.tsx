@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DefenseSystem, RecipeFormData } from '@/types';
 import { Plus, X, Clock, Users, ChefHat, Loader2 } from 'lucide-react';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
+import { getUnitsBySystem, getSuggestedUnitsBySystem, getUnitLabel } from '@/lib/constants/measurement-units';
+import { getMeasurementPreference } from '@/lib/shopping/measurement-system';
 
 interface RecipeFormProps {
   onSubmit: (data: RecipeFormData) => Promise<void>;
@@ -23,11 +25,18 @@ export default function RecipeForm({
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [measurementSystem, setMeasurementSystem] = useState<'imperial' | 'metric'>('imperial');
+
+  // Get user's measurement preference on mount
+  useEffect(() => {
+    const preference = getMeasurementPreference();
+    setMeasurementSystem(preference.system);
+  }, []);
 
   const [formData, setFormData] = useState<RecipeFormData>({
     title: initialData?.title || '',
     description: initialData?.description || '',
-    ingredients: initialData?.ingredients || [{ name: '', amount: '' }],
+    ingredients: initialData?.ingredients || [{ name: '', quantity: '', unit: '' }],
     instructions: initialData?.instructions || '',
     prepTime: initialData?.prepTime || '',
     cookTime: initialData?.cookTime || '',
@@ -56,7 +65,7 @@ export default function RecipeForm({
     const newErrors: Record<string, string> = {};
 
     const validIngredients = formData.ingredients.filter(
-      (ing) => ing.name.trim() && ing.amount.trim()
+      (ing) => ing.name.trim() && ing.quantity.trim() && ing.unit.trim()
     );
 
     if (validIngredients.length === 0) {
@@ -101,7 +110,7 @@ export default function RecipeForm({
   const addIngredient = () => {
     setFormData((prev) => ({
       ...prev,
-      ingredients: [...prev.ingredients, { name: '', amount: '' }],
+      ingredients: [...prev.ingredients, { name: '', quantity: '', unit: '' }],
     }));
   };
 
@@ -114,7 +123,7 @@ export default function RecipeForm({
 
   const updateIngredient = (
     index: number,
-    field: 'name' | 'amount',
+    field: 'name' | 'quantity' | 'unit',
     value: string
   ) => {
     setFormData((prev) => ({
@@ -171,7 +180,7 @@ export default function RecipeForm({
       const cleanedData = {
         ...formData,
         ingredients: formData.ingredients.filter(
-          (ing) => ing.name.trim() && ing.amount.trim()
+          (ing) => ing.name.trim() && ing.quantity.trim() && ing.unit.trim()
         ),
       };
 
@@ -433,16 +442,62 @@ export default function RecipeForm({
                       placeholder="Ingredient name (e.g., Salmon)"
                     />
                   </div>
-                  <div className="w-32">
+                  <div className="w-24">
                     <input
                       type="text"
-                      value={ingredient.amount}
+                      value={ingredient.quantity}
                       onChange={(e) =>
-                        updateIngredient(index, 'amount', e.target.value)
+                        updateIngredient(index, 'quantity', e.target.value)
                       }
                       className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none"
-                      placeholder="Amount"
+                      placeholder="Qty"
                     />
+                  </div>
+                  <div className="w-32">
+                    <select
+                      value={ingredient.unit}
+                      onChange={(e) =>
+                        updateIngredient(index, 'unit', e.target.value)
+                      }
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none bg-white"
+                    >
+                      <option value="">Select unit</option>
+                      {(() => {
+                        // Get units filtered by measurement system
+                        const systemUnits = getUnitsBySystem(measurementSystem);
+                        const suggestedUnitValues = getSuggestedUnitsBySystem(ingredient.name, measurementSystem);
+                        const suggested = systemUnits.filter(u => suggestedUnitValues.includes(u.value));
+                        const others = systemUnits.filter(u => !suggestedUnitValues.includes(u.value));
+                        
+                        return (
+                          <>
+                            {suggested.length > 0 && (
+                              <>
+                                <optgroup label="⭐ Suggested">
+                                  {suggested.map((unit) => (
+                                    <option key={unit.value} value={unit.value}>
+                                      {unit.label}
+                                    </option>
+                                  ))}
+                                </optgroup>
+                                <optgroup label="Other Units">
+                                  {others.map((unit) => (
+                                    <option key={unit.value} value={unit.value}>
+                                      {unit.label}
+                                    </option>
+                                  ))}
+                                </optgroup>
+                              </>
+                            )}
+                            {suggested.length === 0 && systemUnits.map((unit) => (
+                              <option key={unit.value} value={unit.value}>
+                                {unit.label}
+                              </option>
+                            ))}
+                          </>
+                        );
+                      })()}
+                    </select>
                   </div>
                   {formData.ingredients.length > 1 && (
                     <button
@@ -570,11 +625,11 @@ export default function RecipeForm({
                 <h4 className="font-bold text-gray-800 mb-3">Ingredients</h4>
                 <ul className="space-y-2">
                   {formData.ingredients
-                    .filter((ing) => ing.name.trim() && ing.amount.trim())
+                    .filter((ing) => ing.name.trim() && ing.quantity.trim() && ing.unit.trim())
                     .map((ingredient, index) => (
                       <li key={index} className="flex items-center space-x-2">
                         <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                        <span className="font-medium">{ingredient.amount}</span>
+                        <span className="font-medium">{ingredient.quantity} {getUnitLabel(ingredient.unit)}</span>
                         <span>{ingredient.name}</span>
                       </li>
                     ))}

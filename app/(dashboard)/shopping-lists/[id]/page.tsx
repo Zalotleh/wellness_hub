@@ -21,7 +21,8 @@ import {
   Mail,
   MessageCircle,
   Copy,
-  Smartphone
+  Smartphone,
+  Info
 } from 'lucide-react';
 
 interface ShoppingListItem {
@@ -64,6 +65,7 @@ export default function ShoppingListDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
+  const [tooltipIndex, setTooltipIndex] = useState<number | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{show: boolean, itemIndex: number, itemName: string}>({
     show: false,
     itemIndex: -1,
@@ -664,19 +666,89 @@ export default function ShoppingListDetailPage() {
                             <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-medium">
                               🛒 Buy: {item.retailDescription}
                             </span>
+                            {/* Info icon with tooltip */}
+                            <div className="relative">
+                              <button
+                                onMouseEnter={() => setTooltipIndex(item.originalIndex)}
+                                onMouseLeave={() => setTooltipIndex(null)}
+                                className="text-gray-400 hover:text-blue-600 transition-colors"
+                                title="Conversion details"
+                              >
+                                <Info className="w-4 h-4" />
+                              </button>
+                              
+                              {/* Tooltip */}
+                              {tooltipIndex === item.originalIndex && (
+                                <div className="absolute left-0 top-6 z-50 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-xl whitespace-nowrap">
+                                  <div className="font-semibold mb-1">Conversion Details:</div>
+                                  <div className="space-y-1">
+                                    {(() => {
+                                      const qty = String(item.quantity || '').trim();
+                                      const unit = String(item.unit || '').trim();
+                                      
+                                      if (qty && qty !== '0' && unit && unit !== '0' && isNaN(Number(unit))) {
+                                        return (
+                                          <>
+                                            <div>📖 Recipe needs: <span className="font-medium">{qty} {unit}</span></div>
+                                            <div>→</div>
+                                            <div>🛒 Buy: <span className="font-medium">{item.retailDescription}</span></div>
+                                          </>
+                                        );
+                                      }
+                                      return <div>No conversion needed</div>;
+                                    })()}
+                                  </div>
+                                  {/* Arrow pointer */}
+                                  <div className="absolute -top-1 left-2 w-2 h-2 bg-gray-900 transform rotate-45"></div>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         )}
                         
                         {/* Original recipe quantity (secondary) */}
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <span className="font-medium">Recipe: {item.quantity} {item.unit}</span>
-                          {item.estimatedCost && (
-                            <>
-                              <span className="text-gray-400">•</span>
-                              <span className="text-green-600">${item.estimatedCost.toFixed(2)}</span>
-                            </>
-                          )}
-                        </div>
+                        {(item.quantity || item.unit) && (
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <span className="font-medium whitespace-nowrap">
+                              Recipe: {
+                                (() => {
+                                  const qty = String(item.quantity || '').trim();
+                                  const unit = String(item.unit || '').trim();
+                                  
+                                  // Skip if unit is '0' or just numbers
+                                  if (unit === '0' || unit === '' || !isNaN(Number(unit))) {
+                                    // Only show quantity if it exists and is not '0'
+                                    if (qty && qty !== '0') {
+                                      return qty;
+                                    }
+                                    return 'as needed';
+                                  }
+                                  
+                                  // Combine quantity and unit properly
+                                  if (qty && qty !== '0' && unit) {
+                                    return `${qty} ${unit}`;
+                                  }
+                                  
+                                  if (unit) {
+                                    return unit;
+                                  }
+                                  
+                                  if (qty && qty !== '0') {
+                                    return qty;
+                                  }
+                                  
+                                  return 'as needed';
+                                })()
+                              }
+                            </span>
+                            {item.estimatedCost && item.estimatedCost > 0 && (
+                              <>
+                                <span className="text-gray-400">•</span>
+                                <span className="text-green-600">${item.estimatedCost.toFixed(2)}</span>
+                              </>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                     

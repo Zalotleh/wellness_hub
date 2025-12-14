@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DefenseSystem, RecipeFormData } from '@/types';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
 import { Sparkles, Loader2, Plus, X, Wand2 } from 'lucide-react';
+import { getMeasurementPreference } from '@/lib/shopping/measurement-system';
 
 interface AIRecipeGeneratorProps {
   onRecipeGenerated?: (recipe: RecipeFormData) => void;
@@ -20,6 +21,7 @@ export default function AIRecipeGenerator({
   const [ingredients, setIngredients] = useState<string[]>(['']);
   const [dietaryRestrictions, setDietaryRestrictions] = useState<string[]>([]);
   const [mealType, setMealType] = useState('any');
+  const [measurementSystem, setMeasurementSystem] = useState<'imperial' | 'metric'>('imperial');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedRecipe, setGeneratedRecipe] = useState<RecipeFormData | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -29,8 +31,15 @@ export default function AIRecipeGenerator({
     ingredients: string[];
     dietaryRestrictions: string[];
     mealType: string;
+    measurementSystem: 'imperial' | 'metric';
   } | null>(null);
   const [wasNotCounted, setWasNotCounted] = useState(false);
+
+  // Get user's measurement preference on mount
+  useEffect(() => {
+    const preference = getMeasurementPreference();
+    setMeasurementSystem(preference.system);
+  }, []);
 
   const mealTypes = ['any', 'breakfast', 'lunch', 'dinner', 'snack', 'dessert'];
   const commonRestrictions = [
@@ -78,6 +87,7 @@ export default function AIRecipeGenerator({
         ingredients: validIngredients,
         dietaryRestrictions,
         mealType,
+        measurementSystem,
       };
       setLastRequest(requestParams);
 
@@ -239,14 +249,28 @@ export default function AIRecipeGenerator({
     const recipeData: RecipeFormData = {
       title: recipeTitle,
       ingredients: Array.isArray(generatedRecipe.ingredients) 
-        ? generatedRecipe.ingredients.map(ing => {
+        ? generatedRecipe.ingredients.map((ing: any) => {
             if (typeof ing === 'string') {
-              return { name: ing, amount: '1' };
+              return { name: ing, quantity: '1', unit: 'piece' };
             }
-            // Ensure both name and amount are strings
+            
+            // Parse amount into quantity and unit
+            const amountStr = String(ing.amount || ing.quantity || '').trim();
+            const match = amountStr.match(/^(\d+\.?\d*)\s+(.+)$/);
+            
+            if (match) {
+              return {
+                name: String(ing.name || '').trim(),
+                quantity: match[1],
+                unit: match[2]
+              };
+            }
+            
+            // If no match, try to use existing quantity/unit or fallback
             return {
               name: String(ing.name || '').trim(),
-              amount: String(ing.amount || '').trim() || '1'
+              quantity: ing.quantity || amountStr || '1',
+              unit: ing.unit || 'piece'
             };
           })
         : [],
@@ -273,12 +297,12 @@ export default function AIRecipeGenerator({
       return;
     }
 
-    // Validate each ingredient has both name and amount
+    // Validate each ingredient has name, quantity, and unit
     const invalidIngredient = recipeData.ingredients.find(
-      ing => !ing.name?.trim() || !ing.amount?.trim()
+      ing => !ing.name?.trim() || !ing.quantity?.trim() || !ing.unit?.trim()
     );
     if (invalidIngredient) {
-      setError('Each ingredient must have both a name and amount');
+      setError('Each ingredient must have a name, quantity, and unit');
       return;
     }
 
@@ -701,7 +725,7 @@ export default function AIRecipeGenerator({
                 {generatedRecipe.ingredients.map((ing, index) => (
                   <li key={index} className="flex items-center space-x-2 text-sm">
                     <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
-                    <span className="font-medium">{ing.amount}</span>
+                    <span className="font-medium">{ing.quantity} {ing.unit}</span>
                     <span>{ing.name}</span>
                   </li>
                 ))}

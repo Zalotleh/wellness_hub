@@ -53,10 +53,20 @@ function parseIngredients(ingredients: any[]): Ingredient[] {
     if (typeof ing === 'string') {
       return { name: ing, amount: '1', unit: 'serving' };
     }
+    
+    // Handle new format with separate quantity and unit
+    let amount = ing.amount;
+    let unit = ing.unit || '';
+    
+    // If quantity and unit are separate fields, combine them for display
+    if (ing.quantity && !amount) {
+      amount = ing.quantity;
+    }
+    
     return {
       name: ing.name || '',
-      amount: ing.amount || '1',
-      unit: ing.unit || '',
+      amount: amount || '1',
+      unit: unit,
       notes: ing.notes || '',
       optional: ing.optional || false,
     };

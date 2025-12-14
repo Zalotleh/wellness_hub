@@ -80,9 +80,9 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { defenseSystem, ingredients, dietaryRestrictions, mealType } = body;
+    const { defenseSystem, ingredients, dietaryRestrictions, mealType, measurementSystem } = body;
 
-    console.log('📝 Request body:', { defenseSystem, ingredients, dietaryRestrictions, mealType });
+    console.log('📝 Request body:', { defenseSystem, ingredients, dietaryRestrictions, mealType, measurementSystem });
 
     // Validate input
     if (!defenseSystem || !Object.values(DefenseSystem).includes(defenseSystem)) {
@@ -101,6 +101,7 @@ export async function POST(request: NextRequest) {
       ingredients: ingredients || [],
       dietaryRestrictions: dietaryRestrictions || [],
       mealType: mealType || 'any',
+      measurementSystem: measurementSystem || 'imperial',
     });
 
     console.log('📤 Sending prompt to Anthropic API...');
@@ -204,6 +205,7 @@ function buildRecipePrompt({
   ingredients,
   dietaryRestrictions,
   mealType,
+  measurementSystem = 'imperial',
 }: any): string {
   const restrictionsText =
     dietaryRestrictions.length > 0
@@ -216,6 +218,16 @@ function buildRecipePrompt({
       : '';
 
   const mealTypeText = mealType !== 'any' ? `This should be a ${mealType} recipe.` : '';
+  
+  // Define units based on measurement system
+  const volumeUnits = measurementSystem === 'metric' 
+    ? 'ml, liter' 
+    : 'tsp, tbsp, cup, fl oz, pint, quart, gallon';
+  const weightUnits = measurementSystem === 'metric'
+    ? 'g, kg'
+    : 'oz, lb';
+  
+  const systemName = measurementSystem === 'metric' ? 'Metric' : 'Imperial';
 
   return `
 Create a detailed, healthy recipe that supports the ${systemInfo.displayName} defense system.
@@ -229,6 +241,8 @@ Important nutrients: ${systemInfo.nutrients.join(', ')}
 ${ingredientsText}
 ${restrictionsText}
 ${mealTypeText}
+
+MEASUREMENT SYSTEM: Use ${systemName} measurements (${measurementSystem === 'metric' ? 'grams, ml, liters' : 'cups, ounces, pounds'})
 
 IMPORTANT: The recipe title MUST be specific and descriptive. DO NOT use generic titles like "${systemInfo.displayName} Recipe" or "Healthy Recipe". 
 Instead, create a creative, appetizing name based on the main ingredients and cooking method.
@@ -260,6 +274,28 @@ INGREDIENTS:
 - [amount] [ingredient name]
 - [amount] [ingredient name]
 [continue for all ingredients]
+
+CRITICAL: For ingredient amounts, you MUST use ONLY these ${systemName} standardized units:
+Volume: ${volumeUnits}
+Weight: ${weightUnits}
+Count: piece, whole, clove, slice, can, package, bunch
+Special: pinch, dash, to taste, as needed
+
+${measurementSystem === 'metric' ? `
+Examples for METRIC:
+- 250 ml milk (NOT "250ml" or "250 milliliters")
+- 200 g flour (NOT "200grams" or "200 gram")
+- 45 ml olive oil (NOT "45 milliliters")
+- 5 g salt (NOT "5 grams")
+- 2 piece chicken breast
+` : `
+Examples for IMPERIAL:
+- 2 cups milk (NOT "2 c milk" or "2 cup of milk")
+- 8 oz flour (NOT "8 ounces")
+- 3 tbsp olive oil (NOT "3 tablespoons" or "3T")
+- 1 tsp salt (NOT "1 teaspoon")
+- 2 piece chicken breast (NOT "2 pieces" or "2 breasts")
+`}
 
 INSTRUCTIONS:
 1. [First step]
@@ -406,10 +442,38 @@ function parseAIRecipe(recipeText: string, defenseSystem: DefenseSystem): any {
       console.log('📝 Entering nutrients section');
     } else if (currentSection === 'ingredients' && trimmedLine.startsWith('-')) {
       const ingredientText = trimmedLine.substring(1).trim();
-      const parts = ingredientText.split(' ');
-      const amount = parts.slice(0, 2).join(' ');
-      const name = parts.slice(2).join(' ');
-      recipe.ingredients.push({ name: name || ingredientText, amount: amount || '1' });
+      
+      // Better parsing: "2 cups flour" -> amount: "2", unit: "cups", name: "flour"
+      const match = ingredientText.match(/^(\d+\.?\d*)\s+([a-zA-Z]+)\s+(.+)$/);
+      
+      if (match) {
+        const [, quantity, unit, name] = match;
+        recipe.ingredients.push({ 
+          name: name.trim(), 
+          amount: quantity.trim(),
+          unit: unit.trim()
+        });
+      } else {
+        // Fallback for items like "pinch of salt" or "to taste"
+        const parts = ingredientText.split(' ');
+        if (parts.length >= 2) {
+          const amount = parts[0];
+          const unit = parts[1];
+          const name = parts.slice(2).join(' ') || parts[1];
+          recipe.ingredients.push({ 
+            name: name, 
+            amount: amount,
+            unit: unit === name ? '' : unit
+          });
+        } else {
+          // Single word ingredient
+          recipe.ingredients.push({ 
+            name: ingredientText, 
+            amount: '1',
+            unit: 'piece'
+          });
+        }
+      }
     } else if (currentSection === 'instructions') {
       recipe.instructions += trimmedLine + '\n';
     } else if (currentSection === 'nutrients' && trimmedLine.startsWith('-')) {
