@@ -130,12 +130,13 @@ export default function EnhancedMealPlanner({
     setError(null);
     setGenerationProgress(0);
 
+    let progressInterval: NodeJS.Timeout | null = null;
+
     try {
       // Simulate progress updates
-      const progressInterval = setInterval(() => {
+      progressInterval = setInterval(() => {
         setGenerationProgress(prev => {
           if (prev >= 90) {
-            clearInterval(progressInterval);
             return 90;
           }
           return prev + Math.random() * 20;
@@ -162,12 +163,16 @@ export default function EnhancedMealPlanner({
       });
 
       if (!response.ok) {
-        throw new Error('Failed to generate meal plan');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || errorData.message || 'Failed to generate meal plan');
       }
 
       const { data: mealPlanData } = await response.json();
       
-      clearInterval(progressInterval);
+      if (progressInterval) {
+        clearInterval(progressInterval);
+        progressInterval = null;
+      }
       setGenerationProgress(100);
 
       // Transform the meal plan data into the expected structure
@@ -383,6 +388,10 @@ export default function EnhancedMealPlanner({
 
     } catch (error) {
       console.error('Error generating meal plan:', error);
+      if (progressInterval) {
+        clearInterval(progressInterval);
+        progressInterval = null;
+      }
       setError(error instanceof Error ? error.message : 'Failed to generate meal plan');
       setGenerationProgress(0);
     } finally {
