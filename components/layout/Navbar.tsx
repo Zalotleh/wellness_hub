@@ -144,16 +144,19 @@ export default function Navbar() {
                   (group.label === 'Meal Planning' && showMealPlannerMenu);
                 
                 return (
-                  <div key={group.label} className="relative">
+                  <div 
+                    key={group.label} 
+                    className="relative"
+                    onMouseEnter={() => {
+                      if (group.label === 'Recipes') setShowRecipesMenu(true);
+                      if (group.label === 'Meal Planning') setShowMealPlannerMenu(true);
+                    }}
+                    onMouseLeave={() => {
+                      if (group.label === 'Recipes') setShowRecipesMenu(false);
+                      if (group.label === 'Meal Planning') setShowMealPlannerMenu(false);
+                    }}
+                  >
                     <button
-                      onMouseEnter={() => {
-                        if (group.label === 'Recipes') setShowRecipesMenu(true);
-                        if (group.label === 'Meal Planning') setShowMealPlannerMenu(true);
-                      }}
-                      onMouseLeave={() => {
-                        if (group.label === 'Recipes') setShowRecipesMenu(false);
-                        if (group.label === 'Meal Planning') setShowMealPlannerMenu(false);
-                      }}
                       className={`flex items-center space-x-1.5 px-3 py-2 rounded-xl font-medium transition-all duration-200 ${
                         isGroupActive
                           ? 'bg-gradient-to-r from-green-50 to-blue-50 text-green-700 shadow-sm border border-green-200'
@@ -167,34 +170,26 @@ export default function Navbar() {
                     
                     {/* Dropdown Menu */}
                     {showMenu && (
-                      <div
-                        onMouseEnter={() => {
-                          if (group.label === 'Recipes') setShowRecipesMenu(true);
-                          if (group.label === 'Meal Planning') setShowMealPlannerMenu(true);
-                        }}
-                        onMouseLeave={() => {
-                          if (group.label === 'Recipes') setShowRecipesMenu(false);
-                          if (group.label === 'Meal Planning') setShowMealPlannerMenu(false);
-                        }}
-                        className="absolute top-full left-0 mt-2 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 z-50 animate-in fade-in slide-in-from-top-1 duration-200"
-                      >
-                        {group.items.map((item) => {
-                          const ItemIcon = item.icon;
-                          return (
-                            <Link
-                              key={item.href}
-                              href={item.href}
-                              className={`flex items-center space-x-3 px-4 py-2.5 mx-2 rounded-lg transition-all duration-150 ${
-                                isActive(item.href)
-                                  ? 'bg-gradient-to-r from-green-50 to-blue-50 text-green-700 shadow-sm'
-                                  : 'text-gray-700 hover:bg-gray-50'
-                              }`}
-                            >
-                              <ItemIcon className={`w-5 h-5 ${isActive(item.href) ? 'text-green-600' : 'text-gray-400'}`} />
-                              <span className="text-sm font-medium">{item.label}</span>
-                            </Link>
-                          );
-                        })}
+                      <div className="absolute top-full left-0 pt-1 z-50">
+                        <div className="w-64 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                          {group.items.map((item) => {
+                            const ItemIcon = item.icon;
+                            return (
+                              <Link
+                                key={item.href}
+                                href={item.href}
+                                className={`flex items-center space-x-3 px-4 py-2.5 mx-2 rounded-lg transition-all duration-150 ${
+                                  isActive(item.href)
+                                    ? 'bg-gradient-to-r from-green-50 to-blue-50 text-green-700 shadow-sm'
+                                    : 'text-gray-700 hover:bg-gray-50'
+                                }`}
+                              >
+                                <ItemIcon className={`w-5 h-5 ${isActive(item.href) ? 'text-green-600' : 'text-gray-400'}`} />
+                                <span className="text-sm font-medium">{item.label}</span>
+                              </Link>
+                            );
+                          })}
+                        </div>
                       </div>
                     )}
                   </div>
