@@ -101,7 +101,7 @@ Respond ONLY with valid JSON, no additional text.`;
     if (!anthropicApiKey) {
       console.log('⚠️ No API key found, returning mock meal plan');
       return NextResponse.json({
-        data: generateMockMealPlan(),
+        data: generateMockMealPlan(duration),
         message: 'Mock meal plan generated (API key not configured)',
       });
     }
@@ -153,7 +153,7 @@ Respond ONLY with valid JSON, no additional text.`;
     } catch (parseError) {
       console.error('Failed to parse meal plan JSON:', parseError);
       return NextResponse.json({
-        data: generateMockMealPlan(),
+        data: generateMockMealPlan(duration),
         message: 'Generated fallback meal plan',
       });
     }
@@ -171,8 +171,8 @@ Respond ONLY with valid JSON, no additional text.`;
   }
 }
 
-function generateMockMealPlan() {
-  return {
+function generateMockMealPlan(duration: number = 1) {
+  const singleWeekData = {
     monday: {
       breakfast: {
         name: 'Berry Greek Yogurt Bowl with Walnuts',
@@ -293,4 +293,30 @@ function generateMockMealPlan() {
       },
     },
   };
+
+  // For single week, return legacy format
+  if (duration === 1) {
+    return singleWeekData;
+  }
+
+  // For multi-week, create week structure
+  const multiWeekData: any = {};
+  
+  for (let weekNum = 1; weekNum <= duration; weekNum++) {
+    // Create variations for each week
+    multiWeekData[`week${weekNum}`] = JSON.parse(JSON.stringify(singleWeekData));
+    
+    // Add week number suffix to meal names for variety
+    Object.keys(multiWeekData[`week${weekNum}`]).forEach((day) => {
+      Object.keys(multiWeekData[`week${weekNum}`][day]).forEach((mealType) => {
+        const meal = multiWeekData[`week${weekNum}`][day][mealType];
+        if (weekNum > 1) {
+          // Add variation markers for weeks 2+
+          meal.name = `${meal.name} (Week ${weekNum} Variation)`;
+        }
+      });
+    });
+  }
+
+  return multiWeekData;
 }
