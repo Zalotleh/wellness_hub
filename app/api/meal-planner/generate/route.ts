@@ -17,9 +17,9 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { dietaryRestrictions, focusSystems, preferences } = body;
+    const { dietaryRestrictions, focusSystems, preferences, duration = 1 } = body;
 
-    console.log('📝 Meal planner request:', { dietaryRestrictions, focusSystems, preferences });
+    console.log('📝 Meal planner request:', { dietaryRestrictions, focusSystems, preferences, duration });
 
     // Build context about defense systems with comprehensive food lists
     const systemsContext = (focusSystems || Object.values(DefenseSystem))
@@ -33,10 +33,17 @@ export async function POST(request: NextRequest) {
       })
       .join('\n\n');
 
-    const prompt = `Create a balanced weekly meal plan based on Dr. William Li's 5x5x5 system from "Eat to Beat Disease".
+    const totalDays = duration * 7;
+    const weekText = duration === 1 ? '1 week' : `${duration} weeks`;
+    const weekStructure = duration === 1 
+      ? 'Week 1: Monday through Sunday'
+      : Array.from({ length: duration }, (_, i) => `Week ${i + 1}: Monday through Sunday`).join('\n');
+
+    const prompt = `Create a balanced ${weekText} meal plan (${totalDays} days total) based on Dr. William Li's 5x5x5 system from "Eat to Beat Disease".
 
 Requirements:
-- 7 days (Monday through Sunday)
+- ${duration} week(s) of meals
+- 7 days per week (Monday through Sunday)
 - 3 meals per day (breakfast, lunch, dinner)
 - Each day should incorporate foods from multiple defense systems
 - Meals should be practical, nutritious, and delicious
@@ -47,25 +54,44 @@ ${focusSystems?.length > 0 ? `- Focus on these systems: ${focusSystems.map((s: D
 Defense Systems Foods to Incorporate:
 ${systemsContext}
 
-IMPORTANT: Draw from the diverse food lists above. Don't just use the same 5-10 ingredients. Create variety by incorporating different foods from each system throughout the week.
+IMPORTANT: Draw from the diverse food lists above. Don't just use the same 5-10 ingredients. Create variety by incorporating different foods from each system throughout the ${weekText}.
+
+${duration > 1 ? `
+FOR MULTI-WEEK PLANS:
+- Ensure variety across weeks - don't repeat the same meals
+- Consider seasonal variations
+- Balance cooking complexity across the entire period
+- Think about ingredient efficiency across weeks
+` : ''}
 
 Format your response as a JSON object with this EXACT structure:
-{
-  "monday": {
-    "breakfast": {"name": "Recipe Name", "systems": ["ANGIOGENESIS"], "prepTime": "15 min"},
-    "lunch": {"name": "Recipe Name", "systems": ["MICROBIOME", "IMMUNITY"], "prepTime": "20 min"},
-    "dinner": {"name": "Recipe Name", "systems": ["REGENERATION"], "prepTime": "30 min"}
+${duration === 1 ? `{
+  "week1": {
+    "monday": {
+      "breakfast": {"name": "Recipe Name", "systems": ["ANGIOGENESIS"], "prepTime": "15 min"},
+      "lunch": {"name": "Recipe Name", "systems": ["MICROBIOME", "IMMUNITY"], "prepTime": "20 min"},
+      "dinner": {"name": "Recipe Name", "systems": ["REGENERATION"], "prepTime": "30 min"}
+    },
+    "tuesday": { ... },
+    ... continue for all 7 days
+  }
+}` : `{
+  "week1": {
+    "monday": {...}, "tuesday": {...}, ... all 7 days
   },
-  "tuesday": { ... },
-  ... continue for all 7 days
-}
+  "week2": {
+    "monday": {...}, "tuesday": {...}, ... all 7 days
+  },
+  ${duration > 2 ? `"week3": { ... },` : ''}
+  ${duration > 3 ? `"week4": { ... }` : ''}
+}`}
 
 Guidelines:
-- Variety is key - don't repeat meals
+- Maximum variety - don't repeat meals ${duration > 1 ? 'across all weeks' : 'within the week'}
 - Include prep times (realistic estimates)
 - Each meal should support 1-3 defense systems
 - Make meals practical and appealing
-- Balance complexity across the week
+- Balance complexity across the ${weekText}
 - Consider meal prep efficiency (similar ingredients)
 
 Respond ONLY with valid JSON, no additional text.`;

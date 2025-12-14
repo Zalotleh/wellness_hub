@@ -172,6 +172,7 @@ model MealPlan {
   description         String?
   weekStart           DateTime
   weekEnd             DateTime
+  durationWeeks       Int                @default(1)
   defaultServings     Int                @default(2)
   visibility          MealPlanVisibility @default(PRIVATE)
   status              MealPlanStatus     @default(DRAFT)

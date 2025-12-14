@@ -23,6 +23,7 @@ import MealCard from './MealCard';
 
 interface MealPlanViewProps {
   meals: Meal[];
+  duration?: number; // Number of weeks (1-4)
   onMealUpdate: (mealId: string, updates: Partial<Meal>) => void;
   onMealDelete: (mealId: string) => void;
   onMealCopy: (meal: Meal) => void;
@@ -44,6 +45,7 @@ interface DayStats {
 
 export default function MealPlanView({
   meals,
+  duration = 1,
   onMealUpdate,
   onMealDelete,
   onMealCopy,
@@ -56,9 +58,13 @@ export default function MealPlanView({
   className = '',
 }: MealPlanViewProps) {
   const [selectedDay, setSelectedDay] = useState<string>('monday');
-  const [viewMode, setViewMode] = useState<'day' | 'week' | 'list' | 'calendar'>('day');
+  const [selectedWeek, setSelectedWeek] = useState<number>(1);
+  const [viewMode, setViewMode] = useState<'day' | 'week' | 'list' | 'calendar' | 'month'>('day');
   const [showStats, setShowStats] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Detect if it's a multi-week plan
+  const isMultiWeek = duration > 1;
 
   const daysOfWeek = [
     { key: 'monday', label: 'Monday', short: 'Mon' },
@@ -132,8 +138,10 @@ export default function MealPlanView({
         case 'Tab':
           if (event.shiftKey) {
             event.preventDefault();
-            // Cycle through view modes
-            const modes: Array<'day' | 'week' | 'list' | 'calendar'> = ['day', 'week', 'list', 'calendar'];
+            // Cycle through view modes - include month for multi-week plans
+            const modes: Array<'day' | 'week' | 'list' | 'calendar' | 'month'> = isMultiWeek 
+              ? ['day', 'week', 'list', 'calendar', 'month']
+              : ['day', 'week', 'list', 'calendar'];
             const currentIndex = modes.indexOf(viewMode);
             const nextIndex = (currentIndex + 1) % modes.length;
             setViewMode(modes[nextIndex]);
@@ -580,6 +588,126 @@ export default function MealPlanView({
     );
   };
 
+  const renderMonthView = () => {
+    if (!isMultiWeek) return null;
+    
+    return (
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Week Tabs */}
+        <div className="flex gap-2 flex-wrap">
+          {Array.from({ length: duration }, (_, i) => i + 1).map((weekNum) => (
+            <button
+              key={weekNum}
+              onClick={() => setSelectedWeek(weekNum)}
+              className={`
+                px-6 py-3 rounded-lg font-semibold transition-all
+                ${selectedWeek === weekNum
+                  ? 'bg-gradient-to-r from-green-500 to-blue-500 text-white shadow-lg'
+                  : 'bg-white text-gray-700 border-2 border-gray-200 hover:border-gray-300'
+                }
+              `}
+            >
+              Week {weekNum}
+            </button>
+          ))}
+        </div>
+
+        {/* Week Overview */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4">
+            {daysOfWeek.map((day) => {
+              const dayMeals = meals.filter(m => m.day === day.key && (m.week || 1) === selectedWeek);
+              const dayStats = calculateDayStats(day.key);
+              
+              return (
+                <div
+                  key={day.key}
+                  className="border-2 border-gray-100 rounded-lg p-4 hover:border-green-200 hover:shadow-md transition-all"
+                >
+                  <h4 className="font-bold text-gray-900 mb-2">{day.label}</h4>
+                  
+                  {/* Meal slots */}
+                  <div className="space-y-2">
+                    {mealSlots.map((slot) => {
+                      const slotMeals = dayMeals.filter(m => m.slot === slot.key);
+                      
+                      if (slotMeals.length === 0) {
+                        return (
+                          <button
+                            key={slot.key}
+                            onClick={() => onAddMeal(day.key, slot.key)}
+                            className="w-full text-left px-2 py-1.5 bg-gray-50 rounded text-xs text-gray-500 hover:bg-green-50 hover:text-green-600 transition-colors"
+                          >
+                            <span className="mr-1">{slot.icon}</span>
+                            {slot.label}
+                          </button>
+                        );
+                      }
+                      
+                      return (
+                        <div key={slot.key} className="space-y-1">
+                          {slotMeals.map((meal) => (
+                            <div
+                              key={meal.id}
+                              className="px-2 py-1.5 bg-gradient-to-r from-green-50 to-blue-50 rounded text-xs cursor-pointer hover:shadow-sm transition-shadow"
+                              onClick={() => meal.recipeId && onViewRecipe(meal.recipeId)}
+                            >
+                              <div className="flex items-center gap-1 mb-0.5">
+                                <span>{slot.icon}</span>
+                                <span className="font-medium text-gray-700 truncate">
+                                  {slot.label}
+                                </span>
+                              </div>
+                              <div className="text-gray-900 font-semibold truncate">
+                                {meal.mealName}
+                              </div>
+                              {meal.cookTime && (
+                                <div className="text-gray-500 mt-0.5 flex items-center gap-0.5">
+                                  <Clock className="w-2.5 h-2.5" />
+                                  {meal.cookTime}m
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Week Summary Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 border border-green-200">
+            <div className="text-sm text-green-700 font-medium mb-1">Total Meals</div>
+            <div className="text-3xl font-bold text-green-900">
+              {meals.filter(m => (m.week || 1) === selectedWeek).length}
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
+            <div className="text-sm text-blue-700 font-medium mb-1">Avg Cook Time</div>
+            <div className="text-3xl font-bold text-blue-900">
+              {Math.round(
+                meals.filter(m => (m.week || 1) === selectedWeek && m.cookTime)
+                  .reduce((sum, m) => sum + (m.cookTime || 0), 0) /
+                (meals.filter(m => (m.week || 1) === selectedWeek && m.cookTime).length || 1)
+              )}m
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 border border-purple-200">
+            <div className="text-sm text-purple-700 font-medium mb-1">This Week</div>
+            <div className="text-3xl font-bold text-purple-900">
+              Week {selectedWeek}/{duration}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className={`${className}`}>
       {/* View Controls */}
@@ -639,6 +767,21 @@ export default function MealPlanView({
             >
               📊 Week
             </button>
+            {isMultiWeek && (
+              <button
+                onClick={() => setViewMode('month')}
+                className={`
+                  px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-all whitespace-nowrap
+                  ${viewMode === 'month'
+                    ? 'bg-gradient-to-r from-green-500 to-blue-500 text-white shadow-md'
+                    : 'text-gray-600 hover:text-gray-900'
+                  }
+                `}
+                title="View multi-week plan by month"
+              >
+                📖 Month
+              </button>
+            )}
           </div>
 
           {/* Day Selector for Day View */}
@@ -662,6 +805,7 @@ export default function MealPlanView({
             {viewMode === 'list' && '← All meals in chronological order'}
             {viewMode === 'calendar' && '← Week overview at a glance'}
             {viewMode === 'week' && '← Full week with all details'}
+            {viewMode === 'month' && `← ${duration}-week plan navigator`}
           </div>
         </div>
 
@@ -707,11 +851,12 @@ export default function MealPlanView({
       )}
 
       {/* Main Content */}
-      <div className={`rounded-xl ${viewMode === 'list' ? 'bg-transparent' : 'bg-gray-50 p-4 sm:p-6'}`}>
+      <div className={`rounded-xl ${(viewMode === 'list' || viewMode === 'month') ? 'bg-transparent' : 'bg-gray-50 p-4 sm:p-6'}`}>
         {viewMode === 'day' && renderDayView()}
         {viewMode === 'week' && renderWeekView()}
         {viewMode === 'list' && renderListView()}
         {viewMode === 'calendar' && renderCalendarView()}
+        {viewMode === 'month' && renderMonthView()}
       </div>
 
       {/* Keyboard Shortcuts Help */}
@@ -720,6 +865,7 @@ export default function MealPlanView({
           <span className="hidden sm:inline">
             {viewMode === 'day' && '⬅️ ➡️ Navigate days • '}
             {viewMode === 'week' && 'Scroll horizontally • '}
+            {viewMode === 'month' && `${duration} weeks of planning • `}
             Shift+Tab to cycle views
           </span>
         </div>
@@ -728,6 +874,7 @@ export default function MealPlanView({
           {viewMode === 'list' && '✨ Simple chronological view of all meals'}
           {viewMode === 'calendar' && '✨ Quick overview of the entire week'}
           {viewMode === 'week' && '✨ Detailed view of all days'}
+          {viewMode === 'month' && `✨ ${duration}-week plan with week selector`}
         </div>
       </div>
     </div>

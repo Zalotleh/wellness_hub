@@ -23,6 +23,7 @@ interface ConfigurationData {
   title: string;
   description: string;
   servings: number;
+  duration: 1 | 2 | 3 | 4; // Number of weeks
   dietaryRestrictions: string[];
   focusSystems: DefenseSystem[];
   customInstructions: string;
@@ -40,6 +41,7 @@ interface MealPlan {
   weekStart?: string | Date;
   weekEnd?: string | Date;
   defaultServings?: number;
+  duration?: number; // Number of weeks
   createdAt?: Date;
   updatedAt?: Date;
   userId?: string;
@@ -73,6 +75,7 @@ export default function EnhancedMealPlanner({
     title: initialPlan?.title || '',
     description: initialPlan?.description || '',
     servings: 4,
+    duration: (initialPlan?.duration as 1 | 2 | 3 | 4) || 1,
     dietaryRestrictions: [],
     focusSystems: [],
     customInstructions: '',
@@ -106,6 +109,7 @@ export default function EnhancedMealPlanner({
         title: initialPlan.title,
         description: initialPlan.description,
         servings: 4, // Default since not stored in plan
+        duration: (initialPlan.duration as 1 | 2 | 3 | 4) || 1,
         dietaryRestrictions: [], // Could be derived from meals
         focusSystems: [], // Could be derived from meals
         customInstructions: '',
@@ -147,6 +151,7 @@ export default function EnhancedMealPlanner({
         body: JSON.stringify({
           dietaryRestrictions: configuration.dietaryRestrictions,
           focusSystems: configuration.focusSystems,
+          duration: configuration.duration,
           preferences: {
             title: configuration.title,
             description: configuration.description,
@@ -170,42 +175,84 @@ export default function EnhancedMealPlanner({
       const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
       const mealTypes = ['breakfast', 'lunch', 'dinner'];
 
-      days.forEach((day, dayIndex) => {
-        const dayData = mealPlanData[day];
-        if (dayData) {
-          mealTypes.forEach((mealType, mealIndex) => {
-            const mealData = dayData[mealType];
-            if (mealData) {
-              // Parse prep time from string like "15 min" to number
-              const prepTimeMatch = mealData.prepTime?.match(/(\d+)/);
-              const prepTime = prepTimeMatch ? parseInt(prepTimeMatch[1]) : 30;
+      // Handle both single-week (legacy) and multi-week format
+      const isMultiWeek = mealPlanData.week1 !== undefined;
+      const duration = configuration.duration || 1;
+      
+      if (isMultiWeek) {
+        // Multi-week format: { week1: {...}, week2: {...}, ... }
+        for (let weekNum = 1; weekNum <= duration; weekNum++) {
+          const weekData = mealPlanData[`week${weekNum}`];
+          if (!weekData) continue;
+          
+          days.forEach((day, dayIndex) => {
+            const dayData = weekData[day];
+            if (dayData) {
+              mealTypes.forEach((mealType) => {
+                const mealData = dayData[mealType];
+                if (mealData) {
+                  const prepTimeMatch = mealData.prepTime?.match(/(\d+)/);
+                  const prepTime = prepTimeMatch ? parseInt(prepTimeMatch[1]) : 30;
 
-              meals.push({
-                id: `${day}-${mealType}`,
-                mealName: mealData.name,
-                mealType,
-                day: day,
-                slot: mealType,
-                defenseSystems: mealData.systems || [],
-                prepTime: prepTime,
-                cookTime: 0, // Default
-                servings: configuration.servings,
-                recipeGenerated: false,
-                customInstructions: configuration.customInstructions,
+                  meals.push({
+                    id: `week${weekNum}-${day}-${mealType}`,
+                    mealName: mealData.name,
+                    mealType,
+                    day: day,
+                    week: weekNum,
+                    slot: mealType,
+                    defenseSystems: mealData.systems || [],
+                    prepTime: prepTime,
+                    cookTime: 0,
+                    servings: configuration.servings,
+                    recipeGenerated: false,
+                    customInstructions: configuration.customInstructions,
+                  });
+                }
               });
             }
           });
         }
-      });
+      } else {
+        // Legacy single-week format: { monday: {...}, tuesday: {...}, ... }
+        days.forEach((day, dayIndex) => {
+          const dayData = mealPlanData[day];
+          if (dayData) {
+            mealTypes.forEach((mealType, mealIndex) => {
+              const mealData = dayData[mealType];
+              if (mealData) {
+                const prepTimeMatch = mealData.prepTime?.match(/(\d+)/);
+                const prepTime = prepTimeMatch ? parseInt(prepTimeMatch[1]) : 30;
+
+                meals.push({
+                  id: `${day}-${mealType}`,
+                  mealName: mealData.name,
+                  mealType,
+                  day: day,
+                  week: 1,
+                  slot: mealType,
+                  defenseSystems: mealData.systems || [],
+                  prepTime: prepTime,
+                  cookTime: 0,
+                  servings: configuration.servings,
+                  recipeGenerated: false,
+                  customInstructions: configuration.customInstructions,
+                });
+              }
+            });
+          }
+        });
+      }
 
       // Update meal plan with generated data
       const newPlan: MealPlan = {
-        id: undefined, // Let server generate new ID
+        id: undefined,
         title: configuration.title,
         description: configuration.description,
         visibility: configuration.visibility,
         meals: meals,
         tags: configuration.tags,
+        duration: duration,
         createdAt: new Date(),
         updatedAt: new Date(),
         userId: session.user.id,
@@ -215,34 +262,42 @@ export default function EnhancedMealPlanner({
       const weekStart = new Date();
       weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1); // Start from Monday
       
-      // Group meals by day
+      // Calculate week end based on duration
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + (duration * 7) - 1);
+      
+      // Group meals by day across all weeks
       const dailyMenus: any[] = [];
       const dayNames = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
       
-      dayNames.forEach((dayName, index) => {
-        const dayMeals = meals.filter(meal => meal.day === dayName);
-        if (dayMeals.length > 0) {
-          const dayDate = new Date(weekStart);
-          dayDate.setDate(weekStart.getDate() + index);
-          
-          dailyMenus.push({
-            date: dayDate.toISOString(),
-            meals: dayMeals.map(meal => ({
-              mealType: meal.mealType,
-              mealName: meal.mealName,
-              defenseSystems: meal.defenseSystems,
-              prepTime: meal.prepTime ? String(meal.prepTime) : null,
-              cookTime: meal.cookTime ? String(meal.cookTime) : null,
-              customInstructions: meal.customInstructions,
-            }))
-          });
-        }
-      });
+      for (let weekNum = 1; weekNum <= duration; weekNum++) {
+        dayNames.forEach((dayName, dayIndex) => {
+          const dayMeals = meals.filter(meal => meal.day === dayName && meal.week === weekNum);
+          if (dayMeals.length > 0) {
+            const dayDate = new Date(weekStart);
+            dayDate.setDate(weekStart.getDate() + ((weekNum - 1) * 7) + dayIndex);
+            
+            dailyMenus.push({
+              date: dayDate.toISOString(),
+              meals: dayMeals.map(meal => ({
+                mealType: meal.mealType,
+                mealName: meal.mealName,
+                defenseSystems: meal.defenseSystems,
+                prepTime: meal.prepTime ? String(meal.prepTime) : null,
+                cookTime: meal.cookTime ? String(meal.cookTime) : null,
+                customInstructions: meal.customInstructions,
+              }))
+            });
+          }
+        });
+      }
 
       const apiMealPlan = {
         title: configuration.title,
         description: configuration.description,
         weekStart: weekStart.toISOString(),
+        weekEnd: weekEnd.toISOString(),
+        durationWeeks: duration,
         defaultServings: configuration.servings,
         visibility: configuration.visibility,
         customInstructions: configuration.customInstructions,
@@ -958,6 +1013,7 @@ export default function EnhancedMealPlanner({
         ) : (
           <MealPlanView
             meals={mealPlan.meals}
+            duration={mealPlan.duration || configuration.duration || 1}
             onMealUpdate={handleMealUpdate}
             onMealDelete={handleMealDelete}
             onMealCopy={handleMealCopy}

@@ -9,6 +9,7 @@ interface ConfigurationData {
   title: string;
   description: string;
   servings: number;
+  duration: 1 | 2 | 3 | 4; // Number of weeks
   dietaryRestrictions: string[];
   focusSystems: DefenseSystem[];
   customInstructions: string;
@@ -54,6 +55,13 @@ export default function PlanConfiguration({
     { value: 6, label: '6 people', icon: Users },
     { value: 7, label: '7 people', icon: Users },
     { value: 8, label: '8 people', icon: Users },
+  ];
+
+  const durationOptions = [
+    { value: 1 as const, label: '1 Week', description: '7 days of meals', icon: '📅' },
+    { value: 2 as const, label: '2 Weeks', description: '14 days of meals', icon: '📆' },
+    { value: 3 as const, label: '3 Weeks', description: '21 days of meals', icon: '🗓️' },
+    { value: 4 as const, label: '4 Weeks', description: 'Full month plan', icon: '📊' },
   ];
 
   const visibilityOptions = [
@@ -239,6 +247,56 @@ export default function PlanConfiguration({
                     </button>
                   );
                 })}
+              </div>
+            </div>
+
+            {/* Plan Duration */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Plan Duration
+                <span className="ml-2 text-xs text-gray-500 font-normal">
+                  (Choose how many weeks to plan)
+                </span>
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {durationOptions.map((option) => {
+                  const isSelected = configuration.duration === option.value;
+                  
+                  return (
+                    <button
+                      key={option.value}
+                      onClick={() => onConfigurationChange({ duration: option.value })}
+                      className={`
+                        p-4 rounded-lg border-2 transition-all text-left
+                        ${isSelected
+                          ? 'border-blue-500 bg-blue-50 shadow-md'
+                          : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
+                        }
+                      `}
+                    >
+                      <div className="flex items-start gap-3">
+                        <span className="text-2xl">{option.icon}</span>
+                        <div className="flex-1">
+                          <div className={`font-semibold mb-1 ${isSelected ? 'text-blue-700' : 'text-gray-900'}`}>
+                            {option.label}
+                          </div>
+                          <div className={`text-xs ${isSelected ? 'text-blue-600' : 'text-gray-500'}`}>
+                            {option.description}
+                          </div>
+                          {isSelected && (
+                            <div className="mt-2 flex items-center gap-1 text-xs text-blue-700">
+                              <Sparkles className="w-3 h-3" />
+                              <span>Selected</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="mt-2 text-xs text-gray-600 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <strong>Note:</strong> Multi-week plans (2-4 weeks) will include a special monthly view for easier navigation.
               </div>
             </div>
           </div>

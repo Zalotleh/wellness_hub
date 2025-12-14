@@ -194,6 +194,7 @@ export interface Meal {
   mealType: string;
   mealName: string;
   day: string;
+  week?: number; // Week number for multi-week plans (1-4)
   slot: string;
   defenseSystems: DefenseSystem[];
   prepTime?: number;

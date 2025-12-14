@@ -188,6 +188,8 @@ export async function POST(request: NextRequest) {
       title,
       description,
       weekStart,
+      weekEnd,
+      durationWeeks = 1,
       defaultServings = 2,
       visibility = 'PRIVATE',
       customInstructions,
@@ -222,28 +224,39 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate daily menus structure
-    if (dailyMenus.length === 0 || dailyMenus.length > 7) {
+    const maxDays = durationWeeks * 7;
+    if (dailyMenus.length === 0 || dailyMenus.length > maxDays) {
       return NextResponse.json(
-        { error: 'Daily menus must contain 1-7 days' },
+        { error: `Daily menus must contain 1-${maxDays} days for a ${durationWeeks}-week plan` },
         { status: 400 }
       );
     }
 
     // Calculate week dates
     let weekStartDate;
+    let weekEndDate;
     try {
       weekStartDate = new Date(weekStart);
       if (isNaN(weekStartDate.getTime())) {
-        throw new Error('Invalid date');
+        throw new Error('Invalid weekStart date');
+      }
+      
+      // If weekEnd is provided, use it; otherwise calculate from duration
+      if (weekEnd) {
+        weekEndDate = new Date(weekEnd);
+        if (isNaN(weekEndDate.getTime())) {
+          throw new Error('Invalid weekEnd date');
+        }
+      } else {
+        weekEndDate = new Date(weekStartDate);
+        weekEndDate.setDate(weekStartDate.getDate() + (durationWeeks * 7) - 1);
       }
     } catch (dateError) {
       return NextResponse.json(
-        { error: 'Invalid weekStart date format' },
+        { error: 'Invalid date format' },
         { status: 400 }
       );
     }
-
-    const weekEndDate = endOfWeek(weekStartDate, { weekStartsOn: 1 }); // Monday as first day
 
     // Check for existing meal plan in the same week
     const existingPlan = await prisma.mealPlan.findFirst({
@@ -272,6 +285,7 @@ export async function POST(request: NextRequest) {
           description,
           weekStart: weekStartDate,
           weekEnd: weekEndDate,
+          durationWeeks: Math.min(Math.max(durationWeeks, 1), 4), // Limit between 1-4 weeks
           defaultServings: Math.min(Math.max(defaultServings, 1), 20), // Limit between 1-20
           visibility,
           customInstructions,
