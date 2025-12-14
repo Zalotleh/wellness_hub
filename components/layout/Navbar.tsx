@@ -344,7 +344,10 @@ export default function Navbar() {
 
             {/* User Menu */}
             {status === 'authenticated' && session?.user ? (
-              <div className="relative">
+              <div 
+                className="relative"
+                onMouseLeave={() => setShowUserMenu(false)}
+              >
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center space-x-2 p-2 rounded-xl hover:bg-gray-50 transition-all duration-200 border border-transparent hover:border-gray-200"
