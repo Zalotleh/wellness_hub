@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { User, Mail, Calendar, Edit2, Save, X, Loader2, ChefHat, TrendingUp, Heart, ShoppingCart, CalendarCheck } from 'lucide-react';
-import MeasurementPreferenceSelector from '@/components/settings/MeasurementPreferenceSelector';
 
 // Helper function to format time ago
 function getTimeAgo(date: Date): string {
@@ -46,13 +45,25 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (session?.user) {
-      setFormData({
-        name: session.user.name || '',
-        bio: '', // Would come from user profile in DB
-      });
+      fetchProfile();
       fetchUserStats();
     }
   }, [session]);
+
+  const fetchProfile = async () => {
+    try {
+      const response = await fetch('/api/user/profile');
+      if (response.ok) {
+        const data = await response.json();
+        setFormData({
+          name: data.name || '',
+          bio: data.bio || '',
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  };
 
   const fetchUserStats = async () => {
     try {
@@ -225,15 +236,6 @@ export default function ProfilePage() {
               <span className="text-sm">
                 Member since {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
               </span>
-            </div>
-
-            {/* Preferences Section */}
-            <div className="mt-6 pt-6 border-t border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Preferences</h3>
-              <MeasurementPreferenceSelector />
-              <p className="mt-2 text-xs text-gray-500">
-                Your measurement preference will be applied to recipes, shopping lists, and meal plans.
-              </p>
             </div>
           </div>
         </div>

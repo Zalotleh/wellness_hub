@@ -139,14 +139,20 @@ export default function ProgressCharts({ weeklyData }: ProgressChartsProps) {
           <div className="text-sm text-yellow-600 font-medium mb-1">
             Best System
           </div>
-          <div className="text-lg font-bold text-yellow-900">
-            {DEFENSE_SYSTEMS[weeklyData.weeklyStats.bestSystem as DefenseSystem]
-              ?.icon || ''}{' '}
-            {
-              DEFENSE_SYSTEMS[weeklyData.weeklyStats.bestSystem as DefenseSystem]
-                ?.displayName
-            }
-          </div>
+          {weeklyData.weeklyStats.totalFoodsLogged > 0 && weeklyData.weeklyStats.bestSystem ? (
+            <div className="text-lg font-bold text-yellow-900">
+              {DEFENSE_SYSTEMS[weeklyData.weeklyStats.bestSystem as DefenseSystem]
+                ?.icon || ''}{' '}
+              {
+                DEFENSE_SYSTEMS[weeklyData.weeklyStats.bestSystem as DefenseSystem]
+                  ?.displayName
+              }
+            </div>
+          ) : (
+            <div className="text-sm text-yellow-700 italic">
+              Not enough activity yet
+            </div>
+          )}
         </div>
       </div>
 

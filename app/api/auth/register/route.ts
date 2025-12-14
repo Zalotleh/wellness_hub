@@ -31,11 +31,15 @@ export async function POST(request: NextRequest) {
         name: validatedData.name,
         email: validatedData.email,
         password: hashedPassword,
+        measurementSystem: validatedData.measurementSystem,
+        language: validatedData.language,
       },
       select: {
         id: true,
         name: true,
         email: true,
+        measurementSystem: true,
+        language: true,
         createdAt: true,
       },
     });

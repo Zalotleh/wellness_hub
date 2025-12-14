@@ -18,6 +18,7 @@ model User {
   createdAt                  DateTime          @default(now())
   updatedAt                  DateTime          @updatedAt
   measurementSystem          String            @default("imperial") // 'imperial' or 'metric'
+  language                   String            @default("en") // 'en', 'es', 'fr', 'de'
   subscriptionTier           SubscriptionTier  @default(FREE)
   subscriptionStatus         String?
   stripeCustomerId           String?           @unique

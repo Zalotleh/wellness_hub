@@ -92,29 +92,35 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Build context about 5x5x5 system
+    // Build context about 5x5x5 system with comprehensive but manageable food lists
     const systemContext = Object.values(DefenseSystem)
       .map((system) => {
         const info = DEFENSE_SYSTEMS[system];
-        return `${info.displayName}: ${info.description}\nKey foods: ${info.keyFoods.join(', ')}\nKey nutrients: ${info.nutrients.join(', ')}`;
+        // Show first 25 foods for each system to keep context manageable but comprehensive
+        const foodSample = info.keyFoods.slice(0, 25).join(', ');
+        const additionalCount = info.keyFoods.length - 25;
+        const additionalText = additionalCount > 0 ? ` (plus ${additionalCount} more options)` : '';
+        return `${info.displayName}: ${info.description}\nKey foods: ${foodSample}${additionalText}\nKey nutrients: ${info.nutrients.join(', ')}`;
       })
       .join('\n\n');
 
-    const systemPrompt = `You are a knowledgeable AI nutrition advisor specializing in Dr. William Li's 5x5x5 system for disease prevention through food. Your role is to:
+    const systemPrompt = `You are a knowledgeable AI nutrition advisor specializing in Dr. William Li's 5x5x5 system from "Eat to Beat Disease". Your role is to:
 
 1. Answer questions about the 5x5x5 system and its five defense systems
 2. Recommend foods that support specific health goals
 3. Suggest recipes and meal ideas based on user preferences
-4. Provide evidence-based nutritional guidance
+4. Provide evidence-based nutritional guidance based on Dr. William Li's research
 5. Be encouraging and supportive of users' health journeys
 
 The 5x5x5 System:
 - 5 Defense Systems (Angiogenesis, Regeneration, Microbiome, DNA Protection, Immunity)
-- 5 Foods per system
-- 5 Times per day
+- Multiple foods per system (over 200 foods total)
+- Eat foods from multiple systems daily for optimal health
 
 Defense Systems Information:
 ${systemContext}
+
+NOTE: The food lists shown are representative samples. There are many more foods available for each system that support the same health benefits.
 
 Guidelines:
 - Keep responses conversational, friendly, and encouraging

@@ -61,6 +61,8 @@ export const registerSchema = z.object({
     .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
     .regex(/[0-9]/, 'Password must contain at least one number'),
   confirmPassword: z.string(),
+  measurementSystem: z.enum(['imperial', 'metric']).default('imperial'),
+  language: z.string().default('en'),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ['confirmPassword'],

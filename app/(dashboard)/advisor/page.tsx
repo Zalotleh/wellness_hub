@@ -96,10 +96,13 @@ export default function AdvisorPage() {
 
             {/* Defense Systems Reference */}
             <div className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="font-bold text-gray-900 mb-4 flex items-center space-x-2">
+              <h3 className="font-bold text-gray-900 mb-2 flex items-center space-x-2">
                 <BookOpen className="w-5 h-5 text-blue-500" />
                 <span>5 Defense Systems</span>
               </h3>
+              <p className="text-xs text-gray-600 mb-4 bg-blue-50 p-2 rounded border border-blue-200">
+                💡 <span className="font-medium">Click any defense system below</span> to learn about it and discover which foods support your health.
+              </p>
               <div className="space-y-2">
                 {Object.values(DefenseSystem).map((system) => {
                   const info = DEFENSE_SYSTEMS[system];
@@ -109,12 +112,17 @@ export default function AdvisorPage() {
                       onClick={() =>
                         setQuickQuestion(`Tell me about ${info.displayName} and which foods support it`)
                       }
-                      className={`w-full text-left p-3 rounded-lg ${info.bgColor} hover:shadow transition-all`}
+                      className={`w-full text-left p-3 rounded-lg ${info.bgColor} hover:shadow-md hover:scale-[1.02] transition-all group`}
                     >
-                      <div className="flex items-center space-x-2">
-                        <span className="text-lg">{info.icon}</span>
-                        <span className="text-sm font-medium text-gray-900">
-                          {info.displayName}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-lg">{info.icon}</span>
+                          <span className="text-sm font-medium text-gray-900">
+                            {info.displayName}
+                          </span>
+                        </div>
+                        <span className="text-xs text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                          Learn more →
                         </span>
                       </div>
                     </button>

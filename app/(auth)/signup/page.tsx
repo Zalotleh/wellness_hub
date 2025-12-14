@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Heart, Mail, Lock, User, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Heart, Mail, Lock, User, Loader2, AlertCircle, CheckCircle2, Ruler, Globe } from 'lucide-react';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -12,12 +12,14 @@ export default function SignupPage() {
     email: '',
     password: '',
     confirmPassword: '',
+    measurementSystem: 'imperial' as 'imperial' | 'metric',
+    language: 'en',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [passwordStrength, setPasswordStrength] = useState(0);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
@@ -303,6 +305,72 @@ export default function SignupPage() {
               {errors.confirmPassword && (
                 <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
               )}
+            </div>
+
+            {/* Measurement System Selection */}
+            <div>
+              <label
+                htmlFor="measurementSystem"
+                className="block text-sm font-semibold text-gray-700 mb-2"
+              >
+                Measurement System
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Ruler className="h-5 w-5 text-gray-400" />
+                </div>
+                <select
+                  id="measurementSystem"
+                  name="measurementSystem"
+                  required
+                  value={formData.measurementSystem}
+                  onChange={handleChange}
+                  className="block w-full pl-10 pr-10 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors appearance-none bg-white"
+                >
+                  <option value="imperial">Imperial (lb, oz, °F)</option>
+                  <option value="metric">Metric (kg, g, °C)</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+              <p className="mt-1 text-xs text-gray-500">Used for recipes, shopping lists, and nutrition tracking</p>
+            </div>
+
+            {/* Language Selection */}
+            <div>
+              <label
+                htmlFor="language"
+                className="block text-sm font-semibold text-gray-700 mb-2"
+              >
+                Language
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Globe className="h-5 w-5 text-gray-400" />
+                </div>
+                <select
+                  id="language"
+                  name="language"
+                  required
+                  value={formData.language}
+                  onChange={handleChange}
+                  className="block w-full pl-10 pr-10 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors appearance-none bg-white"
+                >
+                  <option value="en">🇬🇧 English</option>
+                  <option value="es">🇪🇸 Español (Spanish)</option>
+                  <option value="fr">🇫🇷 Français (French)</option>
+                  <option value="de">🇩🇪 Deutsch (German)</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+              <p className="mt-1 text-xs text-gray-500">Your preferred language for the app interface</p>
             </div>
 
             {/* Terms Checkbox */}

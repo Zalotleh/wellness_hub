@@ -229,20 +229,30 @@ function buildRecipePrompt({
   
   const systemName = measurementSystem === 'metric' ? 'Metric' : 'Imperial';
 
+  // Get a representative sample of foods (first 30) to keep prompt manageable but comprehensive
+  const foodSample = systemInfo.keyFoods.slice(0, 30).join(', ');
+  const additionalFoodsCount = systemInfo.keyFoods.length - 30;
+  const additionalFoodsText = additionalFoodsCount > 0 
+    ? ` (and ${additionalFoodsCount} more options available)` 
+    : '';
+
   return `
-Create a detailed, healthy recipe that supports the ${systemInfo.displayName} defense system.
+Create a detailed, healthy recipe that supports the ${systemInfo.displayName} defense system based on Dr. William Li's "Eat to Beat Disease" research.
 
 ${systemInfo.displayName} System Focus:
 ${systemInfo.description}
 
-Key foods for this system: ${systemInfo.keyFoods.join(', ')}
-Important nutrients: ${systemInfo.nutrients.join(', ')}
+Key foods for this system: ${foodSample}${additionalFoodsText}
+
+Important nutrients to incorporate: ${systemInfo.nutrients.join(', ')}
 
 ${ingredientsText}
 ${restrictionsText}
 ${mealTypeText}
 
 MEASUREMENT SYSTEM: Use ${systemName} measurements (${measurementSystem === 'metric' ? 'grams, ml, liters' : 'cups, ounces, pounds'})
+
+INGREDIENT SELECTION: Choose from the comprehensive list of foods above that support ${systemInfo.displayName}. Aim to include multiple foods from this system in the recipe for maximum health benefits.
 
 IMPORTANT: The recipe title MUST be specific and descriptive. DO NOT use generic titles like "${systemInfo.displayName} Recipe" or "Healthy Recipe". 
 Instead, create a creative, appetizing name based on the main ingredients and cooking method.

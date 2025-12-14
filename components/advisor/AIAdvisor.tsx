@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, Send, Loader2, Sparkles, X, Lightbulb } from 'lucide-react';
+import { MessageCircle, Send, Loader2, Sparkles, X, Lightbulb, AlertTriangle } from 'lucide-react';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -15,7 +15,26 @@ interface AIAdvisorProps {
 }
 
 export default function AIAdvisor({ initialMessage }: AIAdvisorProps) {
-  const [messages, setMessages] = useState<Message[]>([]);
+  // Load messages from localStorage on mount
+  const [messages, setMessages] = useState<Message[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('ai-advisor-chat');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          // Convert timestamp strings back to Date objects
+          return parsed.map((msg: any) => ({
+            ...msg,
+            timestamp: new Date(msg.timestamp),
+          }));
+        } catch (e) {
+          console.error('Error loading saved chat:', e);
+        }
+      }
+    }
+    return [];
+  });
+  
   const [input, setInput] = useState(initialMessage || '');
   const [isLoading, setIsLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([
@@ -24,20 +43,33 @@ export default function AIAdvisor({ initialMessage }: AIAdvisorProps) {
     "Tell me about the 5x5x5 system"
   ]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
+  // Save messages to localStorage whenever they change
   useEffect(() => {
-    scrollToBottom();
+    if (messages.length > 0) {
+      localStorage.setItem('ai-advisor-chat', JSON.stringify(messages));
+    }
   }, [messages]);
+
+  // Only scroll when a new message is added by the assistant or user sends a message
+  // Don't auto-scroll on initial load or when viewing history
+  const scrollToBottom = (smooth = true) => {
+    if (chatContainerRef.current) {
+      const scrollOptions: ScrollIntoViewOptions = {
+        behavior: smooth ? 'smooth' : 'auto',
+        block: 'nearest',
+      };
+      messagesEndRef.current?.scrollIntoView(scrollOptions);
+    }
+  };
 
   useEffect(() => {
     if (initialMessage) {
       handleSendMessage(initialMessage);
     }
   }, [initialMessage]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
 
   const handleSendMessage = async (messageText?: string) => {
     const textToSend = messageText || input;
@@ -69,6 +101,19 @@ export default function AIAdvisor({ initialMessage }: AIAdvisorProps) {
         }),
       });
 
+      // Handle limit reached error (403)
+      if (response.status === 403) {
+        const errorData = await response.json();
+        const errorMessage: Message = {
+          role: 'assistant',
+          content: errorData.message || "You've reached your AI questions limit for this month. Upgrade to Premium for unlimited access.",
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, errorMessage]);
+        setIsLoading(false);
+        return;
+      }
+
       if (!response.ok) {
         throw new Error('Failed to get response from AI advisor');
       }
@@ -82,6 +127,9 @@ export default function AIAdvisor({ initialMessage }: AIAdvisorProps) {
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
+      
+      // Scroll to bottom after assistant responds
+      setTimeout(() => scrollToBottom(), 100);
       
       // Update suggestions
       if (data.suggestions && data.suggestions.length > 0) {
@@ -112,10 +160,49 @@ export default function AIAdvisor({ initialMessage }: AIAdvisorProps) {
       "How can I support my microbiome?",
       "Tell me about the 5x5x5 system"
     ]);
+    setShowClearConfirm(false);
+    // Clear localStorage
+    localStorage.removeItem('ai-advisor-chat');
+  };
+
+  const handleClearClick = () => {
+    if (messages.length > 0) {
+      setShowClearConfirm(true);
+    }
+  };
+
+  const handleCancelClear = () => {
+    setShowClearConfirm(false);
   };
 
   return (
     <div className="flex flex-col h-full bg-white rounded-lg shadow-md">
+      {/* Clear Chat Confirmation Modal */}
+      {showClearConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md mx-4">
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Clear Chat History?</h3>
+            <p className="text-gray-600 mb-6">
+              This will permanently delete all messages in this conversation. This action cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={handleCancelClear}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleClearChat}
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+              >
+                Clear Chat
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-4 rounded-t-lg">
         <div className="flex items-center justify-between">
@@ -130,18 +217,35 @@ export default function AIAdvisor({ initialMessage }: AIAdvisorProps) {
           </div>
           {messages.length > 0 && (
             <button
-              onClick={handleClearChat}
-              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-              title="Clear chat"
+              onClick={handleClearClick}
+              className="flex items-center space-x-2 px-3 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
+              title="Clear chat history"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
+              <span className="text-sm font-medium">Clear Chat</span>
             </button>
           )}
         </div>
       </div>
 
+      {/* Medical Disclaimer Banner */}
+      <div className="bg-amber-50 border-l-4 border-amber-400 p-4">
+        <div className="flex items-start space-x-3">
+          <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-xs text-amber-900 leading-relaxed">
+              <span className="font-semibold">Medical Disclaimer:</span> This AI advisor provides general nutritional information and should not replace professional medical advice. 
+              Always consult with your doctor, nutritionist, or healthcare provider before making significant dietary changes or if you have specific health concerns.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[400px] max-h-[600px]">
+      <div 
+        ref={chatContainerRef}
+        className="flex-1 overflow-y-auto p-4 space-y-4 min-h-[400px] max-h-[600px]"
+      >
         {messages.length === 0 && (
           <div className="text-center py-8">
             <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">

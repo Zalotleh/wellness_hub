@@ -51,10 +51,11 @@ Mark All Incomplete X
 
 - inside shopping lists page, the shopping list card that shows on the card itself doesnt reflect the shopping list data, as an exmple: i selected the items as complete but outside on the card it still shows 0 completed. X
 
-- shopping list takes the exact gram, quanity of each items, as i am planning to connect these shopping list to shopping api like amazon fresh, we need to find a better way of handling the quanitity, for exaple 2 cups of milk, user can make an order of 2 cups of milk, any suggestion?
+- shopping list takes the exact gram, quanity of each items, as i am planning to connect these shopping list to shopping api like amazon fresh, we need to find a better way of handling the quanitity, for exaple 2 cups of milk, user can make an order of 2 cups of milk, any suggestion? X
 
-- in the progress page, weekly analytics, i have 0 activity, but in the Best System i can see a placeholder: Angiogenesis, remove that placeholder.
-- in the AI Advisor, the page view moves to the bottom of the page after generating, make the view stable and focused on the chat view, and another issue, when the chat is generated, i can see at the top of the chat there is a notification bar with x, i clicked on the x and it cleared teh chat, it is ok, but i want this to be more user intuitive, i didnt know it is going to clear the chat though.
+- in the progress page, weekly analytics, i have 0 activity, but in the Best System i can see a placeholder: Angiogenesis, remove that placeholder. X
+
+- in the AI Advisor, the page view moves to the bottom of the page after generating, make the view stable and focused on the chat view, and another issue, when the chat is generated, i can see at the top of the chat there is a notification bar with x, i clicked on the x and it cleared teh chat, it is ok, but i want this to be more user intuitive, i didnt know it is going to clear the chat though. X
 
 - in the right side bar, the section of 5 Defense Systems
 
@@ -74,14 +75,14 @@ DNA Protection
 Immunity
 
 provide a clear way of using these key words, like: Click on the defenese system to tell you more and which foods support it, as na example, but you can be creative with it.
-if i leave the ai advisor page, the chat is gone, is there a way of saving the chat, and also we need to have a disclaimer that this advisory is not replacing your doctor or nutrisitnist, user is recommended to verify the ifnormation created, and check with their specialist or doctor befor applying these recommendations.. etc
+if i leave the ai advisor page, the chat is gone, is there a way of saving the chat, and also we need to have a disclaimer that this advisory is not replacing your doctor or nutrisitnist, user is recommended to verify the ifnormation created, and check with their specialist or doctor befor applying these recommendations.. etc X
 
 
 enhancements:
 
-- for recipe and meal plan generation, what is the prompt are we using, are we using all the ingredients mentioned in the william li book?
--settings page is empty. gives 404 page
--build a 404 page
+- for recipe and meal plan generation, what is the prompt are we using, are we using all the ingredients mentioned in the william li book? X
+-settings page is empty. gives 404 page X
+-build a 404 page X
 -build terms of service & Privacy Policy pages
 - add create shopping list inside recipe's page, to create a shopping list for one recipe
 also for shopping list, make it inceremental, if users selects 1 plan now, then came back and selected another plan or recipe, so to have a 

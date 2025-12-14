@@ -21,26 +21,33 @@ export async function POST(request: NextRequest) {
 
     console.log('📝 Meal planner request:', { dietaryRestrictions, focusSystems, preferences });
 
-    // Build context about defense systems
+    // Build context about defense systems with comprehensive food lists
     const systemsContext = (focusSystems || Object.values(DefenseSystem))
       .map((system: DefenseSystem) => {
         const info = DEFENSE_SYSTEMS[system];
-        return `${info.displayName}: Key foods include ${info.keyFoods.slice(0, 5).join(', ')}`;
+        // Show first 20 foods to give AI good variety without overwhelming the prompt
+        const foodSample = info.keyFoods.slice(0, 20).join(', ');
+        const additionalCount = info.keyFoods.length - 20;
+        const additionalText = additionalCount > 0 ? ` (plus ${additionalCount} more)` : '';
+        return `${info.displayName}: ${foodSample}${additionalText}`;
       })
-      .join('\n');
+      .join('\n\n');
 
-    const prompt = `Create a balanced weekly meal plan based on Dr. William Li's 5x5x5 system.
+    const prompt = `Create a balanced weekly meal plan based on Dr. William Li's 5x5x5 system from "Eat to Beat Disease".
 
 Requirements:
 - 7 days (Monday through Sunday)
 - 3 meals per day (breakfast, lunch, dinner)
 - Each day should incorporate foods from multiple defense systems
 - Meals should be practical, nutritious, and delicious
+- Use the comprehensive food lists below to create varied, interesting meals
 ${dietaryRestrictions?.length > 0 ? `- Dietary restrictions: ${dietaryRestrictions.join(', ')}` : ''}
 ${focusSystems?.length > 0 ? `- Focus on these systems: ${focusSystems.map((s: DefenseSystem) => DEFENSE_SYSTEMS[s].displayName).join(', ')}` : ''}
 
-Defense Systems to incorporate:
+Defense Systems Foods to Incorporate:
 ${systemsContext}
+
+IMPORTANT: Draw from the diverse food lists above. Don't just use the same 5-10 ingredients. Create variety by incorporating different foods from each system throughout the week.
 
 Format your response as a JSON object with this EXACT structure:
 {

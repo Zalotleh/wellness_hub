@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { DefenseSystem } from '@/types';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
-import { Plus, X, Check, Loader2 } from 'lucide-react';
+import { Plus, X, Check, Loader2, Search, ChevronDown, ChevronUp } from 'lucide-react';
 import { format, isToday } from 'date-fns';
 import { Calendar } from '@/components/ui/Calendar';
 
@@ -36,6 +36,8 @@ export default function ProgressTracker({
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [foodSearch, setFoodSearch] = useState('');
+  const [showAllFoods, setShowAllFoods] = useState(false);
 
   // Type guard for DEFENSE_SYSTEMS access
   const getSystemInfo = (system: DefenseSystem | null) => {
@@ -57,6 +59,29 @@ export default function ProgressTracker({
     const newInputs = [...foodInputs];
     newInputs[index] = value;
     setFoodInputs(newInputs);
+  };
+
+  // Filter foods based on search
+  const filteredFoods = useMemo(() => {
+    if (!selectedSystem) return [];
+    const systemInfo = DEFENSE_SYSTEMS[selectedSystem];
+    if (!foodSearch.trim()) return systemInfo.keyFoods;
+    
+    const searchLower = foodSearch.toLowerCase();
+    return systemInfo.keyFoods.filter(food => 
+      food.toLowerCase().includes(searchLower)
+    );
+  }, [selectedSystem, foodSearch]);
+
+  // Add a food from suggestions
+  const handleAddSuggestedFood = (food: string) => {
+    const emptyIndex = foodInputs.findIndex((f) => f === '');
+    if (emptyIndex !== -1) {
+      handleFoodChange(emptyIndex, food);
+    } else if (foodInputs.length < 5) {
+      setFoodInputs([...foodInputs, food]);
+    }
+    setFoodSearch(''); // Clear search after adding
   };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -84,6 +109,8 @@ export default function ProgressTracker({
       setSelectedSystem(null);
       setFoodInputs(['']);
       setNotes('');
+      setFoodSearch('');
+      setShowAllFoods(false);
     } catch (error) {
       console.error('Error logging food:', error);
       alert('Failed to log food. Please try again.');
@@ -228,39 +255,85 @@ export default function ProgressTracker({
               </h3>
               <button
                 type="button"
-                onClick={() => setSelectedSystem(null)}
+                onClick={() => {
+                  setSelectedSystem(null);
+                  setFoodSearch('');
+                  setShowAllFoods(false);
+                }}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <X className="w-5 h-5 text-gray-500" />
               </button>
             </div>
 
-            {/* System Info */}
+            {/* System Info with Food Suggestions */}
             <div
-              className={`mb-4 p-3 rounded-lg ${getSystemInfo(selectedSystem)?.bgColor}`}
+              className={`mb-4 p-4 rounded-lg ${getSystemInfo(selectedSystem)?.bgColor}`}
             >
-              <p className="text-sm font-medium mb-2">
+              <p className="text-sm font-medium mb-3">
                 {getSystemInfo(selectedSystem)?.description}
               </p>
-              <div className="flex flex-wrap gap-1">
-                <span className="text-xs font-semibold">Suggested foods:</span>
-                {getSystemInfo(selectedSystem)?.keyFoods.slice(0, 5).map((food: string) => (
+              
+              {/* Food Search */}
+              <div className="mb-3">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    value={foodSearch}
+                    onChange={(e) => setFoodSearch(e.target.value)}
+                    placeholder="Search foods..."
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:border-green-500 focus:outline-none text-sm"
+                  />
+                </div>
+              </div>
+
+              {/* Food Suggestions */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-gray-700">
+                    {foodSearch ? `Found ${filteredFoods.length} foods:` : 'Suggested foods:'} 
+                    <span className="ml-1 text-gray-500">
+                      (Click to add)
+                    </span>
+                  </span>
                   <button
-                    key={food}
                     type="button"
-                    onClick={() => {
-                      const emptyIndex = foodInputs.findIndex((f) => f === '');
-                      if (emptyIndex !== -1) {
-                        handleFoodChange(emptyIndex, food);
-                      } else if (foodInputs.length < 5) {
-                        setFoodInputs([...foodInputs, food]);
-                      }
-                    }}
-                    className="text-xs bg-white px-2 py-1 rounded hover:bg-gray-50 transition-colors"
+                    onClick={() => setShowAllFoods(!showAllFoods)}
+                    className="flex items-center space-x-1 text-xs text-blue-600 hover:text-blue-700 font-medium"
                   >
-                    {food}
+                    <span>{showAllFoods ? 'Show Less' : `Show All (${getSystemInfo(selectedSystem)?.keyFoods.length})`}</span>
+                    {showAllFoods ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                   </button>
-                ))}
+                </div>
+                
+                <div className={`flex flex-wrap gap-2 ${showAllFoods ? 'max-h-64 overflow-y-auto' : 'max-h-32 overflow-y-auto'}`}>
+                  {(filteredFoods.length > 0 ? filteredFoods : getSystemInfo(selectedSystem)?.keyFoods || [])
+                    .slice(0, showAllFoods ? undefined : 15)
+                    .map((food: string) => (
+                      <button
+                        key={food}
+                        type="button"
+                        onClick={() => handleAddSuggestedFood(food)}
+                        className="text-xs bg-white px-3 py-1.5 rounded-full border border-gray-200 hover:border-green-500 hover:bg-green-50 transition-all shadow-sm hover:shadow"
+                        disabled={foodInputs.length >= 5 && !foodInputs.includes('')}
+                      >
+                        {food}
+                      </button>
+                    ))}
+                </div>
+                
+                {!showAllFoods && filteredFoods.length > 15 && (
+                  <p className="text-xs text-gray-500 text-center mt-2">
+                    + {filteredFoods.length - 15} more foods available
+                  </p>
+                )}
+                
+                {foodSearch && filteredFoods.length === 0 && (
+                  <p className="text-xs text-gray-500 text-center py-2">
+                    No foods found. Try a different search or type your own food below.
+                  </p>
+                )}
               </div>
             </div>
 

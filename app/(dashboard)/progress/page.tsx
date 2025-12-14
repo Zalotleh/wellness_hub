@@ -6,7 +6,7 @@ import { useProgressDays } from '@/hooks/useProgressDays';
 import ProgressTracker from '@/components/progress/ProgressTracker';
 import ProgressCharts from '@/components/progress/ProgressCharts';
 import { addDays, subDays, isToday, format } from 'date-fns';
-import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 import { TrendingUp, Calendar, BarChart3 } from 'lucide-react';
 
 export default function ProgressPage() {
@@ -14,7 +14,7 @@ export default function ProgressPage() {
   const [activeTab, setActiveTab] = useState<'today' | 'weekly'>('today');
 
   const { progress, dailyProgress, loading: progressLoading, logFood } = useProgress(selectedDate);
-  const { stats, loading: statsLoading } = useProgressStats('week');
+  const { stats, loading: statsLoading, refetch: refetchStats } = useProgressStats('week');
   const { daysWithProgress } = useProgressDays();
 
   const handleLogFood = async (system: any, foods: string[], notes?: string) => {
@@ -124,6 +124,18 @@ export default function ProgressPage() {
           </div>
         ) : (
           <div>
+            {/* Refresh Button */}
+            <div className="mb-4 flex justify-end">
+              <button
+                onClick={() => refetchStats()}
+                className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                disabled={statsLoading}
+              >
+                <RefreshCw className={`w-4 h-4 ${statsLoading ? 'animate-spin' : ''}`} />
+                <span>Refresh Data</span>
+              </button>
+            </div>
+
             {statsLoading || !stats ? (
               <div className="flex items-center justify-center py-20">
                 <div className="animate-spin w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full"></div>

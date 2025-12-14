@@ -176,6 +176,7 @@ export function useProgressStats(range: 'week' | 'month' = 'week') {
       setLoading(true);
       setError(null);
 
+      console.log('🔄 Fetching progress stats for range:', range);
       const response = await fetch(`/api/progress/stats?range=${range}`);
 
       if (!response.ok) {
@@ -183,8 +184,17 @@ export function useProgressStats(range: 'week' | 'month' = 'week') {
       }
 
       const { data } = await response.json();
+      console.log('📊 Progress Stats Received:', {
+        totalFoodsLogged: data.weeklyStats.totalFoodsLogged,
+        overallCompletion: data.weeklyStats.overallCompletion,
+        daysActive: data.weeklyStats.daysActive,
+        bestSystem: data.weeklyStats.bestSystem,
+        dailyStatsCount: data.dailyStats.length,
+        dateRange: data.dateRange,
+      });
       setStats(data);
     } catch (err) {
+      console.error('❌ Error fetching stats:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
