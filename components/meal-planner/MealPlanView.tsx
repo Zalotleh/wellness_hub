@@ -59,7 +59,7 @@ export default function MealPlanView({
 }: MealPlanViewProps) {
   const [selectedDay, setSelectedDay] = useState<string>('monday');
   const [selectedWeek, setSelectedWeek] = useState<number>(1);
-  const [viewMode, setViewMode] = useState<'day' | 'week' | 'list' | 'calendar' | 'month'>('day');
+  const [viewMode, setViewMode] = useState<'day' | 'week' | 'list' | 'calendar' | 'month'>('calendar');
   const [showStats, setShowStats] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 

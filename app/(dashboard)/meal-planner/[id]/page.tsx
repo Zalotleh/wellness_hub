@@ -82,6 +82,9 @@ export default function MealPlanViewPage() {
       
       console.log('✅ Transformed meal plan:', transformedPlan);
       setMealPlan(transformedPlan);
+      
+      // Scroll to top to show calendar view at the top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
       console.error('Error fetching meal plan:', error);
       setError('Failed to load meal plan');

@@ -371,6 +371,9 @@ export default function EnhancedMealPlanner({
       
       setMealPlan(transformedPlan);
       setCurrentStep('view');
+      
+      // Scroll to top of page to show calendar view
+      window.scrollTo({ top: 0, behavior: 'smooth' });
 
       // Call callback if provided
       if (onPlanSave) {
