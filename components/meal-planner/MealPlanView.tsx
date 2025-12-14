@@ -83,21 +83,28 @@ export default function MealPlanView({
     { key: 'snack', label: 'Snack', icon: '🍎', time: 'Anytime' },
   ];
 
-  // Group meals by day
-  const mealsByDay = meals.reduce((acc, meal) => {
-    if (!acc[meal.day]) {
-      acc[meal.day] = {};
+  // Group meals by week and day
+  const mealsByWeekAndDay = meals.reduce((acc, meal) => {
+    const week = meal.week || 1;
+    if (!acc[week]) {
+      acc[week] = {};
     }
-    if (!acc[meal.day][meal.slot]) {
-      acc[meal.day][meal.slot] = [];
+    if (!acc[week][meal.day]) {
+      acc[week][meal.day] = {};
     }
-    acc[meal.day][meal.slot].push(meal);
+    if (!acc[week][meal.day][meal.slot]) {
+      acc[week][meal.day][meal.slot] = [];
+    }
+    acc[week][meal.day][meal.slot].push(meal);
     return acc;
-  }, {} as Record<string, Record<string, Meal[]>>);
+  }, {} as Record<number, Record<string, Record<string, Meal[]>>>);
 
-  // Calculate day statistics
-  const calculateDayStats = (day: string): DayStats => {
-    const dayMeals = mealsByDay[day] || {};
+  // Also keep the old structure for backward compatibility (first week only)
+  const mealsByDay = mealsByWeekAndDay[selectedWeek] || {};
+
+  // Calculate day statistics for a specific week
+  const calculateDayStats = (day: string, week: number = selectedWeek): DayStats => {
+    const dayMeals = mealsByWeekAndDay[week]?.[day] || {};
     const allMeals = Object.values(dayMeals).flat();
     
     // Get unique defense systems from all meals
@@ -155,9 +162,20 @@ export default function MealPlanView({
   }, [selectedDay, viewMode]);
 
   const navigateDay = (direction: number) => {
-    const currentIndex = daysOfWeek.findIndex(day => day.key === selectedDay);
-    const newIndex = (currentIndex + direction + daysOfWeek.length) % daysOfWeek.length;
-    setSelectedDay(daysOfWeek[newIndex].key);
+    // Calculate current absolute day index (0-based): week * 7 + day_of_week
+    const currentDayIndex = daysOfWeek.findIndex(day => day.key === selectedDay);
+    const currentAbsoluteDay = (selectedWeek - 1) * 7 + currentDayIndex;
+    
+    // Calculate new absolute day index
+    const totalDays = duration * 7;
+    const newAbsoluteDay = (currentAbsoluteDay + direction + totalDays) % totalDays;
+    
+    // Convert back to week and day
+    const newWeek = Math.floor(newAbsoluteDay / 7) + 1;
+    const newDayIndex = newAbsoluteDay % 7;
+    
+    setSelectedWeek(newWeek);
+    setSelectedDay(daysOfWeek[newDayIndex].key);
   };
 
   const renderEmptySlot = (day: string, slot: string) => {
@@ -187,8 +205,9 @@ export default function MealPlanView({
     );
   };
 
-  const renderDayColumn = (day: typeof daysOfWeek[0]) => {
-    const dayStats = calculateDayStats(day.key);
+  const renderDayColumn = (day: typeof daysOfWeek[0], dayMealsOverride?: Record<string, Meal[]>, weekNum: number = selectedWeek) => {
+    const dayMealsToUse = dayMealsOverride || mealsByDay[day.key] || {};
+    const dayStats = calculateDayStats(day.key, weekNum);
     const hasAnyMeals = dayStats.totalMeals > 0;
 
     return (
@@ -258,7 +277,7 @@ export default function MealPlanView({
         {/* Meal Slots */}
         <div className="space-y-4">
           {mealSlots.map((slot) => {
-            const slotMeals = mealsByDay[day.key]?.[slot.key] || [];
+            const slotMeals = dayMealsToUse[slot.key] || [];
 
             return (
               <div key={slot.key} className="space-y-3">
@@ -322,6 +341,10 @@ export default function MealPlanView({
     const currentDay = daysOfWeek.find(day => day.key === selectedDay);
     if (!currentDay) return null;
 
+    // Calculate day number for multi-week plans
+    const currentDayIndex = daysOfWeek.findIndex(day => day.key === selectedDay);
+    const absoluteDayNumber = (selectedWeek - 1) * 7 + currentDayIndex + 1;
+
     return (
       <div className="max-w-2xl mx-auto">
         {/* Day Navigation */}
@@ -338,7 +361,9 @@ export default function MealPlanView({
 
           <div className="text-center">
             <h3 className="text-xl font-semibold text-gray-900">{currentDay.label}</h3>
-            <p className="text-sm text-gray-500">Use arrow keys to navigate</p>
+            <p className="text-sm text-gray-500">
+              {duration > 1 ? `Week ${selectedWeek} • Day ${absoluteDayNumber}/${duration * 7}` : 'Use arrow keys to navigate'}
+            </p>
           </div>
 
           <button
@@ -352,40 +377,76 @@ export default function MealPlanView({
           </button>
         </div>
 
-        {renderDayColumn(currentDay)}
+        {renderDayColumn(currentDay, mealsByWeekAndDay[selectedWeek]?.[currentDay.key], selectedWeek)}
       </div>
     );
   };
 
   const renderWeekView = () => (
-    <div 
-      ref={scrollRef}
-      className="overflow-x-auto"
-    >
-      <div className="flex gap-4 min-w-max pb-4">
-        {daysOfWeek.map(renderDayColumn)}
-      </div>
+    <div className="space-y-6">
+      {/* Iterate through all weeks */}
+      {Array.from({ length: duration }, (_, weekIndex) => {
+        const weekNum = weekIndex + 1;
+        
+        return (
+          <div key={weekNum}>
+            {/* Week Header (only show for multi-week plans) */}
+            {duration > 1 && (
+              <div className="sticky top-0 z-10 bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg px-4 py-2 mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-green-600" />
+                  Week {weekNum}
+                </h3>
+              </div>
+            )}
+            
+            {/* Week scroll container */}
+            <div 
+              ref={weekNum === 1 ? scrollRef : undefined}
+              className="overflow-x-auto"
+            >
+              <div className="flex gap-4 min-w-max pb-4">
+                {daysOfWeek.map((day) => {
+                  // Temporarily override selectedWeek for rendering this week
+                  const originalWeek = selectedWeek;
+                  const dayMeals = mealsByWeekAndDay[weekNum]?.[day.key] || {};
+                  
+                  return (
+                    <div key={`${weekNum}-${day.key}`}>
+                      {renderDayColumn(day, dayMeals, weekNum)}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 
   const renderListView = () => {
-    // Create a chronological list of all meals
-    const allMeals: Array<{ day: string; dayLabel: string; slot: string; slotInfo: any; meal: Meal }> = [];
+    // Create a chronological list of all meals across all weeks
+    const allMeals: Array<{ week: number; day: string; dayLabel: string; slot: string; slotInfo: any; meal: Meal }> = [];
     
-    daysOfWeek.forEach((day) => {
-      mealSlots.forEach((slot) => {
-        const slotMeals = mealsByDay[day.key]?.[slot.key] || [];
-        slotMeals.forEach((meal) => {
-          allMeals.push({
-            day: day.key,
-            dayLabel: day.label,
-            slot: slot.key,
-            slotInfo: slot,
-            meal,
+    // Iterate through all weeks
+    for (let weekNum = 1; weekNum <= duration; weekNum++) {
+      daysOfWeek.forEach((day) => {
+        mealSlots.forEach((slot) => {
+          const slotMeals = mealsByWeekAndDay[weekNum]?.[day.key]?.[slot.key] || [];
+          slotMeals.forEach((meal) => {
+            allMeals.push({
+              week: weekNum,
+              day: day.key,
+              dayLabel: day.label,
+              slot: slot.key,
+              slotInfo: slot,
+              meal,
+            });
           });
         });
       });
-    });
+    }
 
     if (allMeals.length === 0) {
       return (
@@ -399,191 +460,236 @@ export default function MealPlanView({
       );
     }
 
-    return (
-      <div className="max-w-4xl mx-auto space-y-3">
-        {allMeals.map(({ day, dayLabel, slot, slotInfo, meal }, index) => (
-          <div 
-            key={`${day}-${slot}-${meal.id}-${index}`}
-            className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-start gap-4">
-              {/* Day & Time Info */}
-              <div className="flex-shrink-0 text-center min-w-[80px]">
-                <div className="text-sm font-semibold text-gray-900">{dayLabel}</div>
-                <div className="flex items-center justify-center gap-1 text-xs text-gray-500 mt-1">
-                  <span className="text-base">{slotInfo.icon}</span>
-                  <Clock className="w-3 h-3" />
-                  {slotInfo.time}
-                </div>
-                <div className="text-xs font-medium text-gray-600 mt-1 px-2 py-1 bg-gray-100 rounded">
-                  {slotInfo.label}
-                </div>
-              </div>
+    // Group meals by week for better organization
+    const mealsByWeek = allMeals.reduce((acc, item) => {
+      if (!acc[item.week]) {
+        acc[item.week] = [];
+      }
+      acc[item.week].push(item);
+      return acc;
+    }, {} as Record<number, typeof allMeals>);
 
-              {/* Meal Card */}
-              <div className="flex-1 min-w-0">
-                <MealCard
-                  meal={{
-                    ...meal,
-                    mealType: slot,
-                    prepTime: meal.prepTime?.toString(),
-                    cookTime: meal.cookTime?.toString(),
-                  }}
-                  dayIndex={daysOfWeek.findIndex(d => d.key === day)}
-                  mealIndex={index}
-                  onMealUpdate={(dayIndex: number, mealIndex: number, updates: any) => {
-                    onMealUpdate(meal.id, updates);
-                  }}
-                  onGenerateRecipe={() => onRegenerateMeal(meal.id)}
-                  onViewRecipe={onViewRecipe}
-                  isGeneratingRecipe={isGenerating}
-                />
-              </div>
+    return (
+      <div className="max-w-4xl mx-auto space-y-6">
+        {Object.entries(mealsByWeek).map(([weekNumStr, weekMeals]) => {
+          const weekNum = parseInt(weekNumStr);
+          return (
+            <div key={weekNum} className="space-y-3">
+              {/* Week Header (only show for multi-week plans) */}
+              {duration > 1 && (
+                <div className="sticky top-0 z-10 bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg px-4 py-2 mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-green-600" />
+                    Week {weekNum}
+                  </h3>
+                </div>
+              )}
+
+              {weekMeals.map(({ week, day, dayLabel, slot, slotInfo, meal }, index) => (
+                <div 
+                  key={`${week}-${day}-${slot}-${meal.id}-${index}`}
+                  className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-start gap-4">
+                    {/* Day & Time Info */}
+                    <div className="flex-shrink-0 text-center min-w-[80px]">
+                      <div className="text-sm font-semibold text-gray-900">{dayLabel}</div>
+                      <div className="flex items-center justify-center gap-1 text-xs text-gray-500 mt-1">
+                        <span className="text-base">{slotInfo.icon}</span>
+                        <Clock className="w-3 h-3" />
+                        {slotInfo.time}
+                      </div>
+                      <div className="text-xs font-medium text-gray-600 mt-1 px-2 py-1 bg-gray-100 rounded">
+                        {slotInfo.label}
+                      </div>
+                    </div>
+
+                    {/* Meal Card */}
+                    <div className="flex-1 min-w-0">
+                      <MealCard
+                        meal={{
+                          ...meal,
+                          mealType: slot,
+                          prepTime: meal.prepTime?.toString(),
+                          cookTime: meal.cookTime?.toString(),
+                        }}
+                        dayIndex={daysOfWeek.findIndex(d => d.key === day)}
+                        mealIndex={index}
+                        onMealUpdate={(dayIndex: number, mealIndex: number, updates: any) => {
+                          onMealUpdate(meal.id, updates);
+                        }}
+                        onGenerateRecipe={() => onRegenerateMeal(meal.id)}
+                        onViewRecipe={onViewRecipe}
+                        isGeneratingRecipe={isGenerating}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   };
 
   const renderCalendarView = () => {
     return (
-      <div className="max-w-7xl mx-auto">
-        {/* Calendar Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {daysOfWeek.map((day) => {
-            const dayStats = calculateDayStats(day.key);
-            const hasAnyMeals = dayStats.totalMeals > 0;
-
-            return (
-              <div 
-                key={day.key}
-                className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
-              >
-                {/* Day Header */}
-                <div className="bg-gradient-to-r from-green-50 to-blue-50 px-4 py-3 border-b border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-bold text-gray-900">{day.label}</h3>
-                      {hasAnyMeals && (
-                        <div className="text-xs text-gray-600 mt-1 flex items-center gap-2">
-                          <span className="flex items-center gap-1">
-                            <Utensils className="w-3 h-3" />
-                            {dayStats.totalMeals}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Timer className="w-3 h-3" />
-                            {dayStats.totalTime}m
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    {hasAnyMeals && (
-                      <button
-                        onClick={() => onBulkRegenerate(day.key)}
-                        disabled={isGenerating}
-                        className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-white rounded-lg transition-all"
-                        title="Regenerate all meals"
-                      >
-                        <Shuffle className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Defense Systems Indicators */}
-                  {dayStats.defenseSystems.length > 0 && (
-                    <div className="flex items-center gap-1 mt-2 flex-wrap">
-                      {dayStats.defenseSystems.slice(0, 5).map((system) => (
-                        <div
-                          key={system.id}
-                          className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs"
-                          style={{ 
-                            backgroundColor: `${system.color}20`,
-                            color: system.color
-                          }}
-                          title={system.name}
-                        >
-                          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: system.color }} />
-                          <span className="font-medium">{system.name.slice(0, 3)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Iterate through all weeks */}
+        {Array.from({ length: duration }, (_, weekIndex) => {
+          const weekNum = weekIndex + 1;
+          
+          return (
+            <div key={weekNum}>
+              {/* Week Header (only show for multi-week plans) */}
+              {duration > 1 && (
+                <div className="sticky top-0 z-10 bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg px-4 py-2 mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-green-600" />
+                    Week {weekNum}
+                  </h3>
                 </div>
+              )}
 
-                {/* Meals Compact View */}
-                <div className="p-3 space-y-2 max-h-96 overflow-y-auto">
-                  {mealSlots.map((slot) => {
-                    const slotMeals = mealsByDay[day.key]?.[slot.key] || [];
-                    
-                    if (slotMeals.length === 0) {
-                      return (
-                        <button
-                          key={slot.key}
-                          onClick={() => onAddMeal(day.key, slot.key)}
-                          disabled={isGenerating}
-                          className="w-full px-3 py-2 border border-dashed border-gray-200 rounded-lg text-xs text-gray-500 hover:border-green-400 hover:bg-green-50 hover:text-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                        >
-                          <span>{slot.icon}</span>
-                          <Plus className="w-3 h-3" />
-                          <span>Add {slot.label}</span>
-                        </button>
-                      );
-                    }
+              {/* Calendar Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {daysOfWeek.map((day) => {
+                  const dayStats = calculateDayStats(day.key, weekNum);
+                  const hasAnyMeals = dayStats.totalMeals > 0;
 
-                    return (
-                      <div key={slot.key} className="space-y-2">
-                        {slotMeals.map((meal, index) => (
-                          <div
-                            key={meal.id}
-                            className="p-2 bg-gray-50 rounded-lg border border-gray-100 hover:border-gray-200 transition-colors group cursor-pointer"
-                            onClick={() => meal.recipeId && onViewRecipe(meal.recipeId)}
-                          >
-                            <div className="flex items-start gap-2">
-                              <span className="text-sm flex-shrink-0">{slot.icon}</span>
-                              <div className="flex-1 min-w-0">
-                                <div className="text-xs font-semibold text-gray-900 truncate group-hover:text-green-600">
-                                  {meal.mealName}
-                                </div>
-                                <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
-                                  {meal.cookTime && (
-                                    <span className="flex items-center gap-0.5">
-                                      <Clock className="w-2.5 h-2.5" />
-                                      {meal.cookTime}m
-                                    </span>
-                                  )}
-                                  {meal.defenseSystems && meal.defenseSystems.length > 0 && (
-                                    <span className="flex items-center gap-0.5">
-                                      <Target className="w-2.5 h-2.5" />
-                                      {meal.defenseSystems.length}
-                                    </span>
-                                  )}
-                                </div>
+                  return (
+                    <div 
+                      key={`${weekNum}-${day.key}`}
+                      className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
+                    >
+                      {/* Day Header */}
+                      <div className="bg-gradient-to-r from-green-50 to-blue-50 px-4 py-3 border-b border-gray-200">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="font-bold text-gray-900">{day.label}</h3>
+                            {hasAnyMeals && (
+                              <div className="text-xs text-gray-600 mt-1 flex items-center gap-2">
+                                <span className="flex items-center gap-1">
+                                  <Utensils className="w-3 h-3" />
+                                  {dayStats.totalMeals}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Timer className="w-3 h-3" />
+                                  {dayStats.totalTime}m
+                                </span>
                               </div>
-                              {!meal.recipeGenerated && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onRegenerateMeal(meal.id);
-                                  }}
-                                  disabled={isGenerating}
-                                  className="flex-shrink-0 p-1 text-green-600 hover:bg-green-100 rounded transition-colors"
-                                  title="Generate recipe"
-                                >
-                                  <Sparkles className="w-3 h-3" />
-                                </button>
-                              )}
-                            </div>
+                            )}
                           </div>
-                        ))}
+                          {hasAnyMeals && (
+                            <button
+                              onClick={() => onBulkRegenerate(day.key)}
+                              disabled={isGenerating}
+                              className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-white rounded-lg transition-all"
+                              title="Regenerate all meals"
+                            >
+                              <Shuffle className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Defense Systems Indicators */}
+                        {dayStats.defenseSystems.length > 0 && (
+                          <div className="flex items-center gap-1 mt-2 flex-wrap">
+                            {dayStats.defenseSystems.slice(0, 5).map((system) => (
+                              <div
+                                key={system.id}
+                                className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs"
+                                style={{ 
+                                  backgroundColor: `${system.color}20`,
+                                  color: system.color
+                                }}
+                                title={system.name}
+                              >
+                                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: system.color }} />
+                                <span className="font-medium">{system.name.slice(0, 3)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    );
-                  })}
-                </div>
+
+                      {/* Meals Compact View */}
+                      <div className="p-3 space-y-2 max-h-96 overflow-y-auto">
+                        {mealSlots.map((slot) => {
+                          const slotMeals = mealsByWeekAndDay[weekNum]?.[day.key]?.[slot.key] || [];
+                    
+                          if (slotMeals.length === 0) {
+                            return (
+                              <button
+                                key={slot.key}
+                                onClick={() => onAddMeal(day.key, slot.key)}
+                                disabled={isGenerating}
+                                className="w-full px-3 py-2 border border-dashed border-gray-200 rounded-lg text-xs text-gray-500 hover:border-green-400 hover:bg-green-50 hover:text-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                              >
+                                <span>{slot.icon}</span>
+                                <Plus className="w-3 h-3" />
+                                <span>Add {slot.label}</span>
+                              </button>
+                            );
+                          }
+
+                          return (
+                            <div key={slot.key} className="space-y-2">
+                              {slotMeals.map((meal, index) => (
+                                <div
+                                  key={meal.id}
+                                  className="p-2 bg-gray-50 rounded-lg border border-gray-100 hover:border-gray-200 transition-colors group cursor-pointer"
+                                  onClick={() => meal.recipeId && onViewRecipe(meal.recipeId)}
+                                >
+                                  <div className="flex items-start gap-2">
+                                    <span className="text-sm flex-shrink-0">{slot.icon}</span>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="text-xs font-semibold text-gray-900 truncate group-hover:text-green-600">
+                                        {meal.mealName}
+                                      </div>
+                                      <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                                        {meal.cookTime && (
+                                          <span className="flex items-center gap-0.5">
+                                            <Clock className="w-2.5 h-2.5" />
+                                            {meal.cookTime}m
+                                          </span>
+                                        )}
+                                        {meal.defenseSystems && meal.defenseSystems.length > 0 && (
+                                          <span className="flex items-center gap-0.5">
+                                            <Target className="w-2.5 h-2.5" />
+                                            {meal.defenseSystems.length}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                    {!meal.recipeGenerated && (
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          onRegenerateMeal(meal.id);
+                                        }}
+                                        disabled={isGenerating}
+                                        className="flex-shrink-0 p-1 text-green-600 hover:bg-green-100 rounded transition-colors"
+                                        title="Generate recipe"
+                                      >
+                                        <Sparkles className="w-3 h-3" />
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            );
-          })}
-        </div>
+            </div>
+          );
+        })}
       </div>
     );
   };
@@ -617,7 +723,7 @@ export default function MealPlanView({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4">
             {daysOfWeek.map((day) => {
               const dayMeals = meals.filter(m => m.day === day.key && (m.week || 1) === selectedWeek);
-              const dayStats = calculateDayStats(day.key);
+              const dayStats = calculateDayStats(day.key, selectedWeek);
               
               return (
                 <div
