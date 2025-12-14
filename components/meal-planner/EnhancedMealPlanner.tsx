@@ -998,7 +998,32 @@ export default function EnhancedMealPlanner({
             onGenerateShoppingList={handleGenerateShoppingList}
             onViewShoppingList={handleViewShoppingList}
             onShoppingListGenerated={shoppingListGenerated}
-            onNewPlan={() => window.location.reload()}
+            onNewPlan={() => {
+              // Reset to configuration step to start a new meal plan
+              setCurrentStep('configure');
+              setMealPlan({
+                title: '',
+                description: '',
+                meals: [],
+                weekStart: new Date(),
+                weekEnd: new Date(),
+                defaultServings: 4,
+                visibility: 'PRIVATE',
+                tags: [],
+              });
+              setConfiguration({
+                dietaryRestrictions: [],
+                focusSystems: [],
+                duration: 1,
+                title: '',
+                description: '',
+                servings: 4,
+                customInstructions: '',
+                visibility: 'PRIVATE',
+                tags: [],
+              });
+              setGenerationProgress(0);
+            }}
             onShare={handleSharePlan}
             onExportPDF={() => {}} // TODO: Implement PDF export
           />
