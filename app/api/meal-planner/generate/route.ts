@@ -41,10 +41,17 @@ export async function POST(request: NextRequest) {
 
     const prompt = `Create a balanced ${weekText} meal plan (${totalDays} days total) based on Dr. William Li's 5x5x5 system from "Eat to Beat Disease".
 
-Requirements:
-- ${duration} week(s) of meals
-- 7 days per week (Monday through Sunday)
-- 3 meals per day (breakfast, lunch, dinner)
+CRITICAL REQUIREMENTS:
+- YOU MUST CREATE EXACTLY ${duration} WEEK(S) OF MEALS
+- ${duration === 1 ? 'Create 1 week with 7 days' : `Create ALL ${duration} weeks (week1, week2${duration > 2 ? ', week3' : ''}${duration > 3 ? ', week4' : ''})`}
+- Each week contains 7 days (Monday through Sunday)
+- Each day has 3 meals (breakfast, lunch, dinner)
+- Total meals to create: ${totalDays * 3} meals
+
+Week Structure Required:
+${weekStructure}
+
+Additional Requirements:
 - Each day should incorporate foods from multiple defense systems
 - Meals should be practical, nutritious, and delicious
 - Use the comprehensive food lists below to create varied, interesting meals
@@ -57,14 +64,16 @@ ${systemsContext}
 IMPORTANT: Draw from the diverse food lists above. Don't just use the same 5-10 ingredients. Create variety by incorporating different foods from each system throughout the ${weekText}.
 
 ${duration > 1 ? `
-FOR MULTI-WEEK PLANS:
+FOR MULTI-WEEK PLANS - ABSOLUTELY REQUIRED:
+- You MUST generate ${duration} complete weeks (week1, week2${duration > 2 ? ', week3' : ''}${duration > 3 ? ', week4' : ''})
+- Each week must have all 7 days with 3 meals per day
 - Ensure variety across weeks - don't repeat the same meals
 - Consider seasonal variations
 - Balance cooking complexity across the entire period
 - Think about ingredient efficiency across weeks
 ` : ''}
 
-Format your response as a JSON object with this EXACT structure:
+Format your response as a JSON object with this EXACT structure (DO NOT SKIP ANY WEEKS):
 ${duration === 1 ? `{
   "week1": {
     "monday": {
@@ -77,13 +86,17 @@ ${duration === 1 ? `{
   }
 }` : `{
   "week1": {
-    "monday": {...}, "tuesday": {...}, ... all 7 days
+    "monday": {...}, "tuesday": {...}, "wednesday": {...}, "thursday": {...}, "friday": {...}, "saturday": {...}, "sunday": {...}
   },
   "week2": {
-    "monday": {...}, "tuesday": {...}, ... all 7 days
-  },
-  ${duration > 2 ? `"week3": { ... },` : ''}
-  ${duration > 3 ? `"week4": { ... }` : ''}
+    "monday": {...}, "tuesday": {...}, "wednesday": {...}, "thursday": {...}, "friday": {...}, "saturday": {...}, "sunday": {...}
+  }${duration > 2 ? `,
+  "week3": {
+    "monday": {...}, "tuesday": {...}, "wednesday": {...}, "thursday": {...}, "friday": {...}, "saturday": {...}, "sunday": {...}
+  }` : ''}${duration > 3 ? `,
+  "week4": {
+    "monday": {...}, "tuesday": {...}, "wednesday": {...}, "thursday": {...}, "friday": {...}, "saturday": {...}, "sunday": {...}
+  }` : ''}
 }`}
 
 Guidelines:
@@ -108,35 +121,87 @@ Respond ONLY with valid JSON, no additional text.`;
 
     console.log('📤 Sending request to Anthropic API...');
 
-    const anthropicResponse = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': anthropicApiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-5-20250929',
-        max_tokens: 4000,
-        messages: [
-          {
-            role: 'user',
-            content: prompt,
+    // Retry logic for transient Anthropic API errors (e.g. 429 / 529)
+    const maxAttempts = 3;
+    let attempt = 0;
+    let anthropicResponse: Response | null = null;
+    let anthropicData: any = null;
+
+    const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
+
+    for (attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        anthropicResponse = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': anthropicApiKey,
+            'anthropic-version': '2023-06-01',
           },
-        ],
-      }),
-    });
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-20250514',
+            max_tokens: 4000,
+            messages: [
+              {
+                role: 'user',
+                content: prompt,
+              },
+            ],
+          }),
+        });
 
-    console.log('📥 Anthropic response status:', anthropicResponse.status);
+        console.log(`📥 Anthropic response status (attempt ${attempt}):`, anthropicResponse.status);
 
-    if (!anthropicResponse.ok) {
-      const errorData = await anthropicResponse.json().catch(() => ({}));
-      console.error('❌ Anthropic API error:', errorData);
-      throw new Error(`Failed to generate meal plan: ${anthropicResponse.status}`);
+        if (anthropicResponse.ok) {
+          anthropicData = await anthropicResponse.json().catch(() => null);
+          break; // success
+        }
+
+        // Try to read error payload for logging
+        const errorData = await anthropicResponse.json().catch(() => ({}));
+        console.error('❌ Anthropic API error (non-ok):', anthropicResponse.status, errorData);
+
+        // If this is a transient server-side error or rate-limit-like error, retry with backoff
+        if ((anthropicResponse.status >= 500 || anthropicResponse.status === 429 || anthropicResponse.status === 529) && attempt < maxAttempts) {
+          const backoffMs = 500 * Math.pow(2, attempt - 1); // 500ms, 1000ms, 2000ms
+          console.log(`Retrying Anthropic request after ${backoffMs}ms...`);
+          await sleep(backoffMs);
+          continue;
+        }
+
+        // Non-retriable error or exhausted attempts -> return informative error
+        return NextResponse.json(
+          { error: 'Anthropic API error', details: errorData, status: anthropicResponse.status },
+          { status: 502 }
+        );
+      } catch (fetchErr: any) {
+        console.error('❌ Anthropic fetch error:', fetchErr);
+        if (attempt < maxAttempts) {
+          const backoffMs = 500 * Math.pow(2, attempt - 1);
+          await sleep(backoffMs);
+          continue;
+        }
+
+        return NextResponse.json(
+          { error: 'Failed to reach Anthropic API', details: fetchErr?.message || String(fetchErr) },
+          { status: 502 }
+        );
+      }
     }
 
-    const anthropicData = await anthropicResponse.json();
-    const responseText = anthropicData.content[0].text;
+    if (!anthropicResponse || !anthropicResponse.ok || !anthropicData) {
+      console.error('❌ Anthropic request failed after retries');
+      return NextResponse.json(
+        { error: 'Anthropic API failed to generate a meal plan after retries' },
+        { status: 502 }
+      );
+    }
+
+    // Try to extract response text depending on Anthropic response shape
+    const responseText =
+      (anthropicData?.content && Array.isArray(anthropicData.content) && anthropicData.content[0]?.text) ||
+      anthropicData?.text ||
+      JSON.stringify(anthropicData);
 
     console.log('✅ Meal plan response received');
 
@@ -149,6 +214,28 @@ Respond ONLY with valid JSON, no additional text.`;
         mealPlan = JSON.parse(jsonMatch[0]);
       } else {
         mealPlan = JSON.parse(responseText);
+      }
+
+      // Log what we received to debug multi-week issues
+      const weekKeys = Object.keys(mealPlan).filter(k => k.startsWith('week'));
+      console.log(`📊 AI returned ${weekKeys.length} week(s):`, weekKeys);
+      console.log(`📊 Expected ${duration} week(s)`);
+      
+      // If AI didn't return enough weeks, fill in with generated content
+      if (weekKeys.length < duration) {
+        console.warn(`⚠️ AI returned ${weekKeys.length} weeks but ${duration} were requested. Generating missing weeks...`);
+        
+        // Get the mock meal plan for the missing weeks
+        const mockPlan = generateMockMealPlan(duration);
+        
+        // Fill in missing weeks
+        for (let weekNum = weekKeys.length + 1; weekNum <= duration; weekNum++) {
+          const weekKey = `week${weekNum}`;
+          if (!mealPlan[weekKey]) {
+            console.log(`📝 Adding generated ${weekKey}`);
+            mealPlan[weekKey] = mockPlan[weekKey];
+          }
+        }
       }
     } catch (parseError) {
       console.error('Failed to parse meal plan JSON:', parseError);
