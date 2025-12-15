@@ -148,7 +148,7 @@ Respond ONLY with valid JSON, no additional text or formatting.`;
           },
           body: JSON.stringify({
             model: 'claude-sonnet-4-20250514',
-            max_tokens: 8000, // Increased for multi-week plans (2 weeks = 42 meals)
+            max_tokens: 16000, // Supports up to 4 weeks (84 meals) with full details
             messages: [
               {
                 role: 'user',
