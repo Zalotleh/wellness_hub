@@ -13,29 +13,29 @@ export default function LearnPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 py-8 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-green-500 to-blue-500 rounded-2xl mb-4">
             <BookOpen className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
             Learn the 5x5x5 System
           </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
             Discover Dr. William Li's revolutionary framework for using food to prevent and fight disease
           </p>
         </div>
 
         {/* What is 5x5x5 */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 mb-8">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
             What is the 5x5x5 System?
           </h2>
           
           <div className="space-y-6">
-            <p className="text-lg text-gray-700 leading-relaxed">
+            <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
               The <strong>5x5x5 system</strong> is a simple yet powerful framework developed by Dr. William Li, 
               based on decades of scientific research into how food affects our health at a cellular level.
             </p>
@@ -58,12 +58,12 @@ export default function LearnPage() {
               </div>
             </div>
 
-            <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
-              <h4 className="font-bold text-blue-900 mb-3 flex items-center space-x-2">
+            <div className="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-700 rounded-lg p-6">
+              <h4 className="font-bold text-blue-900 dark:text-blue-300 mb-3 flex items-center space-x-2">
                 <Lightbulb className="w-5 h-5" />
                 <span>How It Works</span>
               </h4>
-              <ol className="space-y-2 text-blue-900">
+              <ol className="space-y-2 text-blue-900 dark:text-blue-200">
                 <li className="flex items-start space-x-2">
                   <span className="font-bold">1.</span>
                   <span>Choose <strong>5 health-supporting foods</strong> you enjoy</span>
@@ -83,7 +83,7 @@ export default function LearnPage() {
 
         {/* Five Defense Systems */}
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-6">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
             The Five Defense Systems
           </h2>
           
@@ -95,45 +95,45 @@ export default function LearnPage() {
               return (
                 <div
                   key={system}
-                  className={`bg-white rounded-xl shadow-lg overflow-hidden transition-all ${
+                  className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden transition-all ${
                     isExpanded ? 'ring-2 ' + info.borderColor : ''
                   }`}
                 >
                   {/* Header - Always Visible */}
                   <button
                     onClick={() => toggleSystem(system)}
-                    className={`w-full p-6 flex items-center justify-between hover:bg-gray-50 transition-colors ${info.bgColor}`}
+                    className={`w-full p-6 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${info.bgColor}`}
                   >
                     <div className="flex items-center space-x-4">
                       <div className="text-4xl">{info.icon}</div>
                       <div className="text-left">
-                        <h3 className="text-2xl font-bold text-gray-900">
+                        <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
                           {info.displayName}
                         </h3>
-                        <p className="text-gray-700">{info.description}</p>
+                        <p className="text-gray-700 dark:text-gray-300">{info.description}</p>
                       </div>
                     </div>
                     {isExpanded ? (
-                      <ChevronUp className="w-6 h-6 text-gray-600" />
+                      <ChevronUp className="w-6 h-6 text-gray-600 dark:text-gray-300" />
                     ) : (
-                      <ChevronDown className="w-6 h-6 text-gray-600" />
+                      <ChevronDown className="w-6 h-6 text-gray-600 dark:text-gray-300" />
                     )}
                   </button>
 
                   {/* Expanded Content */}
                   {isExpanded && (
-                    <div className="p-6 border-t-2 border-gray-200 space-y-6">
+                    <div className="p-6 border-t-2 border-gray-200 dark:border-gray-700 space-y-6">
                       {/* Key Foods */}
                       <div>
-                        <h4 className="font-bold text-gray-900 mb-3 flex items-center space-x-2">
-                          <CheckCircle className="w-5 h-5 text-green-600" />
+                        <h4 className="font-bold text-gray-900 dark:text-white mb-3 flex items-center space-x-2">
+                          <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
                           <span>Top Foods for {info.displayName}</span>
                         </h4>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                           {info.keyFoods.map((food) => (
                             <div
                               key={food}
-                              className="px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg text-center font-medium text-gray-900 hover:border-green-500 transition-colors"
+                              className="px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-center font-medium text-gray-900 dark:text-gray-100 hover:border-green-500 dark:hover:border-green-500 transition-colors"
                             >
                               {food}
                             </div>
@@ -143,14 +143,14 @@ export default function LearnPage() {
 
                       {/* Key Nutrients */}
                       <div>
-                        <h4 className="font-bold text-gray-900 mb-3">
+                        <h4 className="font-bold text-gray-900 dark:text-white mb-3">
                           Important Nutrients
                         </h4>
                         <div className="flex flex-wrap gap-2">
                           {info.nutrients.map((nutrient) => (
                             <span
                               key={nutrient}
-                              className="px-3 py-1 bg-blue-50 text-blue-900 rounded-full text-sm font-medium"
+                              className="px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-900 dark:text-blue-300 rounded-full text-sm font-medium"
                             >
                               {nutrient}
                             </span>
@@ -159,22 +159,22 @@ export default function LearnPage() {
                       </div>
 
                       {/* Why It Matters */}
-                      <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4">
-                        <h4 className="font-bold text-green-900 mb-2">
+                      <div className="bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-700 rounded-lg p-4">
+                        <h4 className="font-bold text-green-900 dark:text-green-300 mb-2">
                           Why This System Matters
                         </h4>
-                        <p className="text-green-800 text-sm">
+                        <p className="text-green-800 dark:text-green-200 text-sm">
                           {getSystemBenefits(system)}
                         </p>
                       </div>
 
                       {/* Quick Tips */}
-                      <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4">
-                        <h4 className="font-bold text-yellow-900 mb-2 flex items-center space-x-2">
+                      <div className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
+                        <h4 className="font-bold text-yellow-900 dark:text-yellow-300 mb-2 flex items-center space-x-2">
                           <Lightbulb className="w-5 h-5" />
                           <span>Quick Tips</span>
                         </h4>
-                        <ul className="text-yellow-900 text-sm space-y-1">
+                        <ul className="text-yellow-900 dark:text-yellow-200 text-sm space-y-1">
                           {getSystemTips(system).map((tip, index) => (
                             <li key={index}>• {tip}</li>
                           ))}
@@ -189,46 +189,46 @@ export default function LearnPage() {
         </div>
 
         {/* Scientific Background */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 mb-8">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
             The Science Behind It
           </h2>
           
           <div className="space-y-6">
-            <p className="text-lg text-gray-700 leading-relaxed">
+            <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
               Dr. William Li's research, detailed in his book <em>"Eat to Beat Disease,"</em> 
               demonstrates that our bodies have powerful defense systems that can be activated 
               and optimized through the foods we eat.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-200 rounded-lg p-6">
-                <h3 className="font-bold text-blue-900 mb-3">Evidence-Based</h3>
-                <p className="text-blue-800 text-sm">
+              <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-2 border-blue-200 dark:border-blue-700 rounded-lg p-6">
+                <h3 className="font-bold text-blue-900 dark:text-blue-300 mb-3">Evidence-Based</h3>
+                <p className="text-blue-800 dark:text-blue-200 text-sm">
                   Over 200 diseases can be prevented or fought through diet. 
                   This system is based on thousands of scientific studies.
                 </p>
               </div>
 
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-6">
-                <h3 className="font-bold text-green-900 mb-3">Holistic Approach</h3>
-                <p className="text-green-800 text-sm">
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-2 border-green-200 dark:border-green-700 rounded-lg p-6">
+                <h3 className="font-bold text-green-900 dark:text-green-300 mb-3">Holistic Approach</h3>
+                <p className="text-green-800 dark:text-green-200 text-sm">
                   Rather than focusing on single nutrients, the 5x5x5 system 
                   looks at whole foods and their combined effects on health.
                 </p>
               </div>
 
-              <div className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200 rounded-lg p-6">
-                <h3 className="font-bold text-purple-900 mb-3">Preventive Medicine</h3>
-                <p className="text-purple-800 text-sm">
+              <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-2 border-purple-200 dark:border-purple-700 rounded-lg p-6">
+                <h3 className="font-bold text-purple-900 dark:text-purple-300 mb-3">Preventive Medicine</h3>
+                <p className="text-purple-800 dark:text-purple-200 text-sm">
                   Food as medicine isn't just about treating disease - it's about 
                   preventing it before it starts.
                 </p>
               </div>
 
-              <div className="bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-200 rounded-lg p-6">
-                <h3 className="font-bold text-orange-900 mb-3">Personalized Health</h3>
-                <p className="text-orange-800 text-sm">
+              <div className="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 border-2 border-orange-200 dark:border-orange-700 rounded-lg p-6">
+                <h3 className="font-bold text-orange-900 dark:text-orange-300 mb-3">Personalized Health</h3>
+                <p className="text-orange-800 dark:text-orange-200 text-sm">
                   You choose foods you enjoy. The system is flexible and 
                   adaptable to your preferences and lifestyle.
                 </p>
@@ -270,7 +270,7 @@ export default function LearnPage() {
           <div className="flex flex-col sm:flex-row gap-4">
             <a
               href="/progress"
-              className="flex-1 px-6 py-3 bg-white text-green-600 rounded-lg hover:bg-gray-100 transition-colors font-bold text-center"
+              className="flex-1 px-6 py-3 bg-white text-green-600 rounded-lg hover:bg-gray-100 dark:bg-gray-800 dark:text-green-400 dark:hover:bg-gray-700 transition-colors font-bold text-center"
             >
               Start Tracking
             </a>
@@ -284,8 +284,8 @@ export default function LearnPage() {
         </div>
 
         {/* Additional Resources */}
-        <div className="mt-8 bg-white rounded-2xl shadow-xl p-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-6">
+        <div className="mt-8 bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
             Learn More
           </h2>
           
@@ -294,12 +294,12 @@ export default function LearnPage() {
               href="https://drwilliamli.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="block p-4 border-2 border-gray-200 rounded-lg hover:border-green-500 transition-colors"
+              className="block p-4 border-2 border-gray-200 dark:border-gray-700 rounded-lg hover:border-green-500 dark:hover:border-green-500 transition-colors"
             >
-              <h3 className="font-bold text-gray-900 mb-1">
+              <h3 className="font-bold text-gray-900 dark:text-white mb-1">
                 Dr. William Li's Website →
               </h3>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Official website with research, articles, and more information
               </p>
             </a>
@@ -308,21 +308,21 @@ export default function LearnPage() {
               href="https://www.eattobeat.org"
               target="_blank"
               rel="noopener noreferrer"
-              className="block p-4 border-2 border-gray-200 rounded-lg hover:border-green-500 transition-colors"
+              className="block p-4 border-2 border-gray-200 dark:border-gray-700 rounded-lg hover:border-green-500 dark:hover:border-green-500 transition-colors"
             >
-              <h3 className="font-bold text-gray-900 mb-1">
+              <h3 className="font-bold text-gray-900 dark:text-white mb-1">
                 Eat to Beat Foundation →
               </h3>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Non-profit organization advancing food as medicine
               </p>
             </a>
 
-            <div className="p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
-              <h3 className="font-bold text-blue-900 mb-1">
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-700 rounded-lg">
+              <h3 className="font-bold text-blue-900 dark:text-blue-300 mb-1">
                 📚 Recommended Reading
               </h3>
-              <p className="text-sm text-blue-800">
+              <p className="text-sm text-blue-800 dark:text-blue-200">
                 <strong>"Eat to Beat Disease"</strong> by Dr. William Li - 
                 The comprehensive guide to the science of healing foods
               </p>

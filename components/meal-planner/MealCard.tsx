@@ -182,7 +182,7 @@ export default function MealCard({
       case 'snack':
         return 'bg-green-100 text-green-700 border-green-200';
       default:
-        return 'bg-gray-100 text-gray-700 border-gray-200';
+        return 'bg-gray-100 dark:bg-gray-700 text-gray-700 border-gray-200';
     }
   };
 
@@ -202,16 +202,16 @@ export default function MealCard({
 
   return (
     <div className={`
-      group relative border border-gray-200 rounded-xl transition-all duration-300
-      hover:shadow-lg hover:border-gray-300 bg-white overflow-hidden
-      ${isEmpty ? 'border-dashed border-gray-300 bg-gray-50' : ''}
+      group relative border border-gray-200 dark:border-gray-700 rounded-xl transition-all duration-300
+      hover:shadow-lg hover:border-gray-300 dark:hover:border-gray-600 bg-white dark:bg-gray-800 overflow-hidden
+      ${isEmpty ? 'border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50' : ''}
       ${isLoading ? 'ring-2 ring-blue-500/20' : ''}
-      ${hasRecipe ? 'ring-1 ring-green-500/30 bg-gradient-to-br from-white to-green-50/30' : ''}
+      ${hasRecipe ? 'ring-1 ring-green-500/30 bg-gradient-to-br from-white to-green-50/30 dark:from-gray-800 dark:to-green-900/10' : ''}
       ${className}
     `}>
       {/* Loading Progress Bar */}
       {isLoading && (
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gray-200">
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gray-200 dark:bg-gray-700">
           <div 
             className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300"
             style={{ width: `${recipeGenerationProgress}%` }}
@@ -225,8 +225,8 @@ export default function MealCard({
           w-3 h-3 rounded-full transition-all duration-300
           ${recipeStatus === 'ready' ? 'bg-green-500 shadow-lg shadow-green-500/50' : ''}
           ${recipeStatus === 'generating' ? 'bg-blue-500 animate-pulse' : ''}
-          ${recipeStatus === 'pending' ? 'bg-gray-300' : ''}
-          ${recipeStatus === 'empty' ? 'bg-gray-200' : ''}
+          ${recipeStatus === 'pending' ? 'bg-gray-300 dark:bg-gray-600' : ''}
+          ${recipeStatus === 'empty' ? 'bg-gray-200 dark:bg-gray-700' : ''}
         `} />
       </div>
 
@@ -253,7 +253,7 @@ export default function MealCard({
                     {meal.mealType}
                   </span>
                   {!showCompact && meal.servings && (
-                    <span className="text-xs text-gray-500 flex items-center gap-1">
+                    <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
                       <Target className="w-3 h-3" />
                       {meal.servings} servings
                     </span>
@@ -274,20 +274,20 @@ export default function MealCard({
                       value={editedName}
                       onChange={(e) => setEditedName(e.target.value)}
                       onKeyDown={handleKeyDown}
-                      className="flex-1 text-lg font-semibold text-gray-900 bg-white border-2 border-blue-500 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                      className="flex-1 text-lg font-semibold text-gray-900 dark:text-white bg-white dark:bg-gray-700 border-2 border-blue-500 dark:border-blue-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
                       placeholder="Enter meal name..."
                     />
                   </div>
                   
                   {/* Prep Time Input */}
                   <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-gray-400" />
+                    <Clock className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                     <input
                       type="text"
                       value={editedPrepTime}
                       onChange={(e) => setEditedPrepTime(e.target.value)}
                       onKeyDown={handleKeyDown}
-                      className="flex-1 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="flex-1 text-sm text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="e.g., 15 min"
                     />
                   </div>
@@ -304,7 +304,7 @@ export default function MealCard({
                     </button>
                     <button
                       onClick={handleCancelEdit}
-                      className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium flex items-center gap-2"
+                      className="px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm font-medium flex items-center gap-2"
                       aria-label="Cancel editing"
                     >
                       <X className="w-4 h-4" />
@@ -315,14 +315,14 @@ export default function MealCard({
               ) : (
                 <div className="group/title">
                   <div className="flex items-start justify-between gap-2 mb-2">
-                    <h4 className="text-lg font-bold text-gray-900 flex-1 min-w-0 break-words leading-tight">
+                    <h4 className="text-lg font-bold text-gray-900 dark:text-white flex-1 min-w-0 break-words leading-tight">
                       {meal.mealName || (
-                        <span className="text-gray-400 italic">No meal planned</span>
+                        <span className="text-gray-400 dark:text-gray-500 italic">No meal planned</span>
                       )}
                     </h4>
                     <button
                       onClick={() => setIsEditing(true)}
-                      className="opacity-0 group-hover/title:opacity-100 p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-all"
+                      className="opacity-0 group-hover/title:opacity-100 p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-all"
                       aria-label="Edit meal"
                     >
                       <Edit2 className="w-4 h-4" />
@@ -331,7 +331,7 @@ export default function MealCard({
                   
                   {/* Prep Time Display */}
                   {meal.prepTime && !showCompact && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                       <Clock className="w-4 h-4" />
                       <span>Prep: {meal.prepTime}</span>
                       {meal.cookTime && (
@@ -356,7 +356,7 @@ export default function MealCard({
                   return (
                     <span 
                       key={system}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gradient-to-br from-green-50 to-emerald-50 text-green-700 border border-green-200 hover:shadow-sm transition-shadow"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800 hover:shadow-sm transition-shadow"
                       title={systemInfo.description}
                     >
                       <span className="text-sm">{systemInfo.icon}</span>
@@ -371,12 +371,12 @@ export default function MealCard({
 
             {/* Custom Instructions */}
             {meal.customInstructions && !showCompact && (
-              <div className="text-sm text-gray-600 bg-amber-50 border border-amber-200 rounded-lg p-3 mb-3">
+              <div className="text-sm text-gray-600 dark:text-gray-300 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 mb-3">
                 <div className="flex items-start gap-2">
-                  <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                  <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
                   <div>
-                    <span className="font-medium text-amber-800">Note: </span>
-                    <span className="text-amber-700">{meal.customInstructions}</span>
+                    <span className="font-medium text-amber-800 dark:text-amber-300">Note: </span>
+                    <span className="text-amber-700 dark:text-amber-400">{meal.customInstructions}</span>
                   </div>
                 </div>
               </div>
@@ -398,7 +398,7 @@ export default function MealCard({
                     : isLoading
                       ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-blue-500/25'
                       : isEmpty
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-300 cursor-not-allowed'
                         : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-blue-500/25 hover:shadow-lg transform hover:scale-105'
                   }
                 `}
@@ -437,7 +437,7 @@ export default function MealCard({
 
               {/* Progress Text */}
               {isLoading && recipeGenerationProgress > 0 && (
-                <div className="text-xs text-center text-gray-600">
+                <div className="text-xs text-center text-gray-600 dark:text-gray-200">
                   {Math.round(recipeGenerationProgress)}% complete
                 </div>
               )}
@@ -446,7 +446,7 @@ export default function MealCard({
               {hasRecipe && onViewRecipe && (
                 <button
                   onClick={() => onViewRecipe(meal.recipeId!)}
-                  className="px-3 py-2 bg-white border border-green-200 text-green-700 rounded-lg text-sm font-medium hover:bg-green-50 hover:border-green-300 transition-all duration-200 flex items-center gap-2 shadow-sm"
+                  className="px-3 py-2 bg-white dark:bg-gray-700 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 rounded-lg text-sm font-medium hover:bg-green-50 dark:hover:bg-green-900/20 hover:border-green-300 dark:hover:border-green-700 transition-all duration-200 flex items-center gap-2 shadow-sm"
                   aria-label="View recipe details"
                 >
                   <Eye className="w-4 h-4" />
@@ -460,7 +460,7 @@ export default function MealCard({
               <div className="relative" ref={menuRef}>
                 <button
                   onClick={() => setShowMenu(!showMenu)}
-                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                  className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
                   aria-label="More options"
                   aria-expanded={showMenu}
                 >
@@ -468,10 +468,10 @@ export default function MealCard({
                 </button>
 
                 {showMenu && (
-                  <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-1 z-20">
+                  <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 py-1 z-20">
                     <button
                       onClick={handleCopyMeal}
-                      className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                      className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
                     >
                       <Copy className="w-4 h-4" />
                       Copy Meal Name
@@ -481,15 +481,15 @@ export default function MealCard({
                         setIsEditing(true);
                         setShowMenu(false);
                       }}
-                      className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                      className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
                     >
                       <Edit2 className="w-4 h-4" />
                       Edit Details
                     </button>
-                    <hr className="my-1" />
+                    <hr className="my-1 border-gray-200 dark:border-gray-700" />
                     <button
                       onClick={handleDeleteMeal}
-                      className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                      className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
                     >
                       <Trash2 className="w-4 h-4" />
                       Remove Meal
@@ -503,15 +503,15 @@ export default function MealCard({
 
         {/* Enhanced Loading Overlay */}
         {isLoading && (
-          <div className="absolute inset-0 bg-white bg-opacity-90 rounded-xl flex items-center justify-center backdrop-blur-sm">
-            <div className="flex flex-col items-center gap-3 text-gray-700">
+          <div className="absolute inset-0 bg-white dark:bg-gray-800 bg-opacity-90 dark:bg-opacity-90 rounded-xl flex items-center justify-center backdrop-blur-sm">
+            <div className="flex flex-col items-center gap-3 text-gray-700 dark:text-gray-200">
               <div className="relative">
-                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-                <div className="absolute inset-0 w-8 h-8 border-2 border-blue-200 rounded-full animate-ping" />
+                <Loader2 className="w-8 h-8 animate-spin text-blue-600 dark:text-blue-400" />
+                <div className="absolute inset-0 w-8 h-8 border-2 border-blue-200 dark:border-blue-800 rounded-full animate-ping" />
               </div>
               <div className="text-center">
                 <div className="text-sm font-semibold">Generating Recipe</div>
-                <div className="text-xs text-gray-500">Using AI to create your personalized meal...</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">Using AI to create your personalized meal...</div>
               </div>
             </div>
           </div>

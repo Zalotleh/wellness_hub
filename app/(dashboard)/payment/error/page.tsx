@@ -101,7 +101,7 @@ export default function PaymentError() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-700 flex items-center justify-center">
       <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8 mx-4">
         <div className="text-center">
           {/* Error Icon */}
@@ -117,7 +117,7 @@ export default function PaymentError() {
           </h1>
           
           {/* Error Message */}
-          <p className="mt-4 text-lg text-gray-600">
+          <p className="mt-4 text-lg text-gray-600 dark:text-gray-200">
             {errorDetails.message}
           </p>
 
@@ -140,7 +140,7 @@ export default function PaymentError() {
             
             <button
               onClick={handleContactSupport}
-              className="w-full inline-flex items-center justify-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+              className="w-full inline-flex items-center justify-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-700 transition-colors"
             >
               Contact Support
             </button>
@@ -149,7 +149,7 @@ export default function PaymentError() {
           {/* Additional Help */}
           <div className="mt-8 pt-6 border-t border-gray-200">
             <h3 className="text-sm font-medium text-gray-900 mb-3">Common Solutions</h3>
-            <ul className="text-left text-sm text-gray-600 space-y-2">
+            <ul className="text-left text-sm text-gray-600 dark:text-gray-200 space-y-2">
               <li className="flex items-start">
                 <span className="text-green-500 mr-2">•</span>
                 Check that your card details are correct
@@ -171,7 +171,7 @@ export default function PaymentError() {
 
           {/* Error Code */}
           <div className="mt-6">
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-gray-400 dark:text-gray-300">
               Error Code: {errorDetails.code}
             </p>
           </div>

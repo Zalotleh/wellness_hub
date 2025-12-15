@@ -251,7 +251,7 @@ export default function ShareMenu({
       id: 'copy',
       label: 'Copy Link',
       icon: Link,
-      color: 'text-gray-600 hover:bg-gray-50',
+      color: 'text-gray-600 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700',
       action: handleCopyLink,
     },
   ];
@@ -274,7 +274,7 @@ export default function ShareMenu({
         className={`
           inline-flex items-center gap-2 transition-all duration-200
           ${variant === 'icon'
-            ? 'p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg'
+            ? 'p-2 text-gray-600 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:bg-gray-700 rounded-lg'
             : 'px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium shadow-sm hover:shadow-md'
           }
         `}
@@ -319,7 +319,7 @@ export default function ShareMenu({
                 )}
                 <span className="text-sm font-medium">{option.label}</span>
                 {isLoading && (
-                  <span className="text-xs text-gray-500 ml-auto">Exporting...</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-300 ml-auto">Exporting...</span>
                 )}
               </button>
             );
@@ -334,7 +334,7 @@ export default function ShareMenu({
 
               {[
                 { type: 'google' as const, label: 'Google Calendar', color: 'text-blue-600 hover:bg-blue-50' },
-                { type: 'ical' as const, label: 'Apple Calendar', color: 'text-gray-600 hover:bg-gray-50' },
+                { type: 'ical' as const, label: 'Apple Calendar', color: 'text-gray-600 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700' },
                 { type: 'outlook' as const, label: 'Outlook Calendar', color: 'text-orange-600 hover:bg-orange-50' },
               ].map((cal) => {
                 const isLoading = isExporting && exportType === `calendar-${cal.type}`;
@@ -357,7 +357,7 @@ export default function ShareMenu({
                     )}
                     <span className="text-sm font-medium">{cal.label}</span>
                     {isLoading && (
-                      <span className="text-xs text-gray-500 ml-auto">Adding...</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-300 ml-auto">Adding...</span>
                     )}
                   </button>
                 );
@@ -369,7 +369,7 @@ export default function ShareMenu({
           <div className="border-t border-gray-100 mt-2 pt-2">
             <button
               onClick={() => setIsOpen(false)}
-              className="w-full flex items-center gap-3 px-4 py-2 text-left text-gray-500 hover:bg-gray-50 transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-2 text-left text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:bg-gray-700 transition-colors"
             >
               <X className="w-4 h-4" />
               <span className="text-sm">Close</span>

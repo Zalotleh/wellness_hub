@@ -127,9 +127,9 @@ export function Calendar({
         onClick={() => handleDayClick(day)}
         className={`
           w-10 h-10 flex items-center justify-center rounded-md text-sm font-normal transition-colors
-          ${isSelected(day) ? 'bg-green-500 text-white hover:bg-green-600' : 'text-gray-900 hover:bg-gray-100'}
-          ${isToday(day) && !isSelected(day) ? 'bg-gray-100 font-semibold' : ''}
-          ${hasProgress(day) ? 'font-semibold border-b-2 border-green-500' : ''}
+          ${isSelected(day) ? 'bg-green-500 text-white hover:bg-green-600' : 'text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700'}
+          ${isToday(day) && !isSelected(day) ? 'bg-gray-100 dark:bg-gray-700 font-semibold' : ''}
+          ${hasProgress(day) ? 'font-semibold border-b-2 border-green-500 dark:border-green-400' : ''}
         `}
       >
         {day}
@@ -138,24 +138,24 @@ export function Calendar({
   }
 
   return (
-    <div className={`p-4 bg-white ${className}`}>
+    <div className={`p-4 bg-white dark:bg-gray-800 ${className}`}>
       <div className="mb-4">
         {/* Header with month/year and navigation */}
         <div className="flex items-center justify-between mb-4">
           <button
             onClick={previousMonth}
-            className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-md transition-colors"
+            className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
           >
-            <ChevronLeftIcon className="w-5 h-5 text-gray-900" />
+            <ChevronLeftIcon className="w-5 h-5 text-gray-900 dark:text-gray-100" />
           </button>
-          <div className="text-sm font-medium text-gray-900">
+          <div className="text-sm font-medium text-gray-900 dark:text-white">
             {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
           </div>
           <button
             onClick={nextMonth}
-            className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-md transition-colors"
+            className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
           >
-            <ChevronRightIcon className="w-5 h-5 text-gray-900" />
+            <ChevronRightIcon className="w-5 h-5 text-gray-900 dark:text-gray-100" />
           </button>
         </div>
 
@@ -164,7 +164,7 @@ export function Calendar({
           {dayNames.map(day => (
             <div
               key={day}
-              className="w-10 h-10 flex items-center justify-center text-sm font-medium text-gray-900"
+              className="w-10 h-10 flex items-center justify-center text-sm font-medium text-gray-900 dark:text-gray-300"
             >
               {day}
             </div>

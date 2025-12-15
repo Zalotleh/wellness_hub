@@ -98,7 +98,7 @@ export default function MeasurementPreferenceSelector({
             px-4 py-2 rounded-md text-sm font-medium transition-all
             ${preference.system === 'imperial'
               ? 'bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm'
-              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+              : 'text-gray-600 dark:text-gray-400 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-200'
             }
           `}
         >
@@ -112,7 +112,7 @@ export default function MeasurementPreferenceSelector({
             px-4 py-2 rounded-md text-sm font-medium transition-all
             ${preference.system === 'metric'
               ? 'bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm'
-              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+              : 'text-gray-600 dark:text-gray-400 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-200'
             }
           `}
         >
@@ -121,7 +121,7 @@ export default function MeasurementPreferenceSelector({
         </button>
       </div>
       
-      <div className="text-xs text-gray-500 dark:text-gray-400">
+      <div className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-300">
         {preference.system === 'imperial' ? (
           <span>cups, oz, lbs, °F</span>
         ) : (

@@ -69,7 +69,7 @@ export default function RecipeGenerationLoading({
             {isBatch ? 'Generating Recipes' : 'Crafting Your Recipe'}
           </h3>
           
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 dark:text-gray-200">
             {isBatch 
               ? 'Our AI chef is creating personalized recipes for your meal plan...'
               : 'Creating a delicious recipe tailored to your preferences...'
@@ -84,7 +84,7 @@ export default function RecipeGenerationLoading({
               <span className="text-sm font-medium text-gray-700">
                 Recipe {progress.current} of {progress.total}
               </span>
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-gray-500 dark:text-gray-300">
                 {progressPercentage}%
               </span>
             </div>
@@ -97,7 +97,7 @@ export default function RecipeGenerationLoading({
             </div>
 
             {progress.currentMeal && (
-              <p className="text-xs text-gray-500 text-center">
+              <p className="text-xs text-gray-500 dark:text-gray-300 text-center">
                 Currently generating: <span className="font-medium">{progress.currentMeal}</span>
               </p>
             )}
@@ -151,7 +151,7 @@ export default function RecipeGenerationLoading({
           <div className="text-center">
             <button
               onClick={onCancel}
-              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              className="px-4 py-2 text-sm text-gray-600 dark:text-gray-200 hover:text-gray-800 dark:hover:text-gray-100 border border-gray-300 rounded-md hover:bg-gray-50 dark:bg-gray-700 transition-colors"
             >
               Cancel Generation
             </button>
@@ -160,7 +160,7 @@ export default function RecipeGenerationLoading({
 
         {/* Time estimate */}
         <div className="mt-4 text-center">
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-gray-500 dark:text-gray-300">
             {isBatch 
               ? `Estimated time: ${Math.ceil((progress?.total || 1) * 0.5)} minutes`
               : 'This usually takes 20-30 seconds'
@@ -182,7 +182,7 @@ function LoadingStep({ text, isActive, isComplete }: LoadingStepProps) {
   return (
     <div className={cn(
       'flex items-center space-x-3 text-sm transition-all duration-300',
-      isActive ? 'text-blue-600' : 'text-gray-400',
+      isActive ? 'text-blue-600' : 'text-gray-400 dark:text-gray-300',
       isComplete && 'text-green-600'
     )}>
       <div className={cn(

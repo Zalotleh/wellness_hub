@@ -67,7 +67,7 @@ export default function UpgradePage() {
             <Crown className="w-10 h-10 text-white" />
           </div>
           <h1 className="text-4xl font-bold text-gray-800 mb-4">Upgrade to Premium</h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="text-xl text-gray-600 dark:text-gray-200 max-w-2xl mx-auto">
             Unlock unlimited meal planning, advanced AI features, and premium tools to transform your nutrition journey.
           </p>
         </div>
@@ -79,7 +79,7 @@ export default function UpgradePage() {
               <Zap className="w-8 h-8 text-green-600" />
             </div>
             <h3 className="font-semibold text-gray-800 mb-2">Unlimited Everything</h3>
-            <p className="text-sm text-gray-600">No limits on meal plans, recipes, or AI questions</p>
+            <p className="text-sm text-gray-600 dark:text-gray-200">No limits on meal plans, recipes, or AI questions</p>
           </div>
           
           <div className="bg-white rounded-lg shadow-md p-6 text-center">
@@ -87,7 +87,7 @@ export default function UpgradePage() {
               <Star className="w-8 h-8 text-blue-600" />
             </div>
             <h3 className="font-semibold text-gray-800 mb-2">Advanced AI</h3>
-            <p className="text-sm text-gray-600">Smart recipe generation and personalized recommendations</p>
+            <p className="text-sm text-gray-600 dark:text-gray-200">Smart recipe generation and personalized recommendations</p>
           </div>
           
           <div className="bg-white rounded-lg shadow-md p-6 text-center">
@@ -95,7 +95,7 @@ export default function UpgradePage() {
               <Users className="w-8 h-8 text-purple-600" />
             </div>
             <h3 className="font-semibold text-gray-800 mb-2">Family Sharing</h3>
-            <p className="text-sm text-gray-600">Share plans and lists with family members</p>
+            <p className="text-sm text-gray-600 dark:text-gray-200">Share plans and lists with family members</p>
           </div>
           
           <div className="bg-white rounded-lg shadow-md p-6 text-center">
@@ -103,7 +103,7 @@ export default function UpgradePage() {
               <Shield className="w-8 h-8 text-amber-600" />
             </div>
             <h3 className="font-semibold text-gray-800 mb-2">Priority Support</h3>
-            <p className="text-sm text-gray-600">Get help when you need it most</p>
+            <p className="text-sm text-gray-600 dark:text-gray-200">Get help when you need it most</p>
           </div>
         </div>
 
@@ -125,14 +125,14 @@ export default function UpgradePage() {
               <div className="p-8">
                 <div className="text-center mb-6">
                   <h3 className="text-2xl font-bold text-gray-800 mb-2">{plan.name}</h3>
-                  <p className="text-gray-600 mb-4">{plan.description}</p>
+                  <p className="text-gray-600 dark:text-gray-200 mb-4">{plan.description}</p>
                   <div className="mb-4">
                     <span className="text-4xl font-bold text-gray-800">{plan.price}</span>
-                    <span className="text-gray-600">/{plan.period}</span>
+                    <span className="text-gray-600 dark:text-gray-200">/{plan.period}</span>
                   </div>
                   
                   {plan.current ? (
-                    <div className="w-full py-3 px-4 bg-gray-100 text-gray-600 rounded-lg font-medium">
+                    <div className="w-full py-3 px-4 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-200 rounded-lg font-medium">
                       Current Plan
                     </div>
                   ) : (
@@ -156,7 +156,7 @@ export default function UpgradePage() {
                       ) : (
                         <X className="w-5 h-5 text-gray-300 flex-shrink-0" />
                       )}
-                      <span className={`text-sm ${feature.included ? 'text-gray-700' : 'text-gray-400'}`}>
+                      <span className={`text-sm ${feature.included ? 'text-gray-700' : 'text-gray-400 dark:text-gray-300'}`}>
                         {feature.name}
                       </span>
                     </div>
@@ -173,22 +173,22 @@ export default function UpgradePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
               <h3 className="font-semibold text-gray-800 mb-2">Can I cancel anytime?</h3>
-              <p className="text-gray-600 text-sm">Yes, you can cancel your subscription at any time. You'll continue to have access until the end of your billing period.</p>
+              <p className="text-gray-600 dark:text-gray-200 text-sm">Yes, you can cancel your subscription at any time. You'll continue to have access until the end of your billing period.</p>
             </div>
             
             <div>
               <h3 className="font-semibold text-gray-800 mb-2">Is there a free trial?</h3>
-              <p className="text-gray-600 text-sm">Yes! Premium plans come with a 14-day free trial. No credit card required to start.</p>
+              <p className="text-gray-600 dark:text-gray-200 text-sm">Yes! Premium plans come with a 14-day free trial. No credit card required to start.</p>
             </div>
             
             <div>
               <h3 className="font-semibold text-gray-800 mb-2">What happens to my data?</h3>
-              <p className="text-gray-600 text-sm">Your meal plans and recipes are always yours. Even if you downgrade, you keep access to everything you've created.</p>
+              <p className="text-gray-600 dark:text-gray-200 text-sm">Your meal plans and recipes are always yours. Even if you downgrade, you keep access to everything you've created.</p>
             </div>
             
             <div>
               <h3 className="font-semibold text-gray-800 mb-2">Need help choosing?</h3>
-              <p className="text-gray-600 text-sm">Contact our support team for personalized recommendations based on your needs.</p>
+              <p className="text-gray-600 dark:text-gray-200 text-sm">Contact our support team for personalized recommendations based on your needs.</p>
             </div>
           </div>
         </div>
@@ -197,7 +197,7 @@ export default function UpgradePage() {
         <div className="text-center mt-8">
           <Link 
             href="/meal-planner"
-            className="text-gray-600 hover:text-gray-800 transition-colors"
+            className="text-gray-600 dark:text-gray-200 hover:text-gray-800 dark:hover:text-gray-100 transition-colors"
           >
             ← Back to Meal Planner
           </Link>

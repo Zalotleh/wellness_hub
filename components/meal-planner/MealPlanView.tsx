@@ -59,8 +59,7 @@ export default function MealPlanView({
 }: MealPlanViewProps) {
   const [selectedDay, setSelectedDay] = useState<string>('monday');
   const [selectedWeek, setSelectedWeek] = useState<number>(1);
-  const [viewMode, setViewMode] = useState<'day' | 'week' | 'list' | 'calendar' | 'month'>('calendar');
-  const [showStats, setShowStats] = useState(false);
+  const [viewMode, setViewMode] = useState<'day' | 'calendar' | 'month'>('calendar');
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Detect if it's a multi-week plan
@@ -152,9 +151,9 @@ export default function MealPlanView({
           if (event.shiftKey) {
             event.preventDefault();
             // Cycle through view modes - include month for multi-week plans
-            const modes: Array<'day' | 'week' | 'list' | 'calendar' | 'month'> = isMultiWeek 
-              ? ['day', 'week', 'list', 'calendar', 'month']
-              : ['day', 'week', 'list', 'calendar'];
+            const modes: Array<'day' | 'calendar' | 'month'> = isMultiWeek 
+              ? ['day', 'calendar', 'month']
+              : ['day', 'calendar'];
             const currentIndex = modes.indexOf(viewMode);
             const nextIndex = (currentIndex + 1) % modes.length;
             setViewMode(modes[nextIndex]);
@@ -191,13 +190,13 @@ export default function MealPlanView({
     
     return (
       <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center group hover:border-green-200 hover:bg-green-50/50 transition-all">
-        <div className="text-gray-400 group-hover:text-green-500 mb-3 transition-colors">
-          <div className="w-12 h-12 mx-auto bg-gray-100 group-hover:bg-green-100 rounded-full flex items-center justify-center transition-colors">
+        <div className="text-gray-400 dark:text-gray-300 group-hover:text-green-500 mb-3 transition-colors">
+          <div className="w-12 h-12 mx-auto bg-gray-100 dark:bg-gray-700 group-hover:bg-green-100 rounded-full flex items-center justify-center transition-colors">
             <Plus className="w-6 h-6" />
           </div>
         </div>
-        <p className="text-gray-500 text-sm mb-1">No {slotLabel.toLowerCase()} planned</p>
-        <p className="text-xs text-gray-400 mb-3">Click below to add a meal or snack</p>
+        <p className="text-gray-500 dark:text-gray-300 text-sm mb-1">No {slotLabel.toLowerCase()} planned</p>
+        <p className="text-xs text-gray-400 dark:text-gray-300 mb-3">Click below to add a meal or snack</p>
         <button
           onClick={() => onAddMeal(day, slot)}
           disabled={isGenerating}
@@ -219,65 +218,22 @@ export default function MealPlanView({
     return (
       <div key={day.key} className="flex-1 min-w-0">
         {/* Day Header */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-4 p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mb-4 p-4">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-gray-900">{day.label}</h3>
+            <h3 className="font-semibold text-gray-900 dark:text-white">{day.label}</h3>
             <div className="flex items-center gap-2">
               {hasAnyMeals && (
                 <button
                   onClick={() => onBulkRegenerate(day.key)}
                   disabled={isGenerating}
-                  className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="p-1 text-gray-400 dark:text-gray-300 hover:text-gray-600 dark:text-gray-200 transition-colors"
                   title="Regenerate all meals for this day"
                 >
                   <Shuffle className="w-4 h-4" />
                 </button>
               )}
-              <button
-                onClick={() => setShowStats(!showStats)}
-                className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-                title="Show day statistics"
-              >
-                <Target className="w-4 h-4" />
-              </button>
             </div>
           </div>
-
-          {/* Day Stats */}
-          {showStats && hasAnyMeals && (
-            <div className="text-xs text-gray-600 space-y-1 pt-2 border-t border-gray-100">
-              <div className="flex items-center gap-2">
-                <Utensils className="w-3 h-3" />
-                <span>{dayStats.totalMeals} meals</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Timer className="w-3 h-3" />
-                <span>{dayStats.totalTime} min total</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Users className="w-3 h-3" />
-                <span>{dayStats.totalServings} servings</span>
-              </div>
-              {dayStats.defenseSystems.length > 0 && (
-                <div className="flex items-center gap-1 flex-wrap">
-                  <Target className="w-3 h-3" />
-                  <div className="flex gap-1 flex-wrap">
-                    {dayStats.defenseSystems.slice(0, 3).map((system) => (
-                      <span
-                        key={system.id}
-                        className="inline-block w-2 h-2 rounded-full"
-                        style={{ backgroundColor: system.color }}
-                        title={system.name}
-                      />
-                    ))}
-                    {dayStats.defenseSystems.length > 3 && (
-                      <span className="text-xs">+{dayStats.defenseSystems.length - 3}</span>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
         {/* Meal Slots */}
@@ -290,8 +246,8 @@ export default function MealPlanView({
                 {/* Slot Header */}
                 <div className="flex items-center gap-2 px-2">
                   <span className="text-lg">{slot.icon}</span>
-                  <h4 className="font-medium text-gray-900">{slot.label}</h4>
-                  <span className="text-xs text-gray-500 flex items-center gap-1">
+                  <h4 className="font-medium text-gray-900 dark:text-white">{slot.label}</h4>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
                     <Clock className="w-3 h-3" />
                     {slot.time}
                   </span>
@@ -324,9 +280,9 @@ export default function MealPlanView({
                     <button
                       onClick={() => onAddMeal(day.key, slot.key)}
                       disabled={isGenerating}
-                      className="w-full px-4 py-3 border-2 border-dashed border-gray-200 rounded-lg text-sm text-gray-600 hover:border-green-500 hover:bg-green-50 hover:text-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
+                      className="w-full px-4 py-3 border-2 border-dashed border-gray-200 rounded-lg text-sm text-gray-600 dark:text-gray-200 hover:border-green-500 hover:bg-green-50 hover:text-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
                     >
-                      <div className="w-6 h-6 bg-gray-100 group-hover:bg-green-200 rounded-full flex items-center justify-center transition-colors">
+                      <div className="w-6 h-6 bg-gray-100 dark:bg-gray-700 group-hover:bg-green-200 rounded-full flex items-center justify-center transition-colors">
                         <Plus className="w-4 h-4" />
                       </div>
                       <span className="font-medium">Add Another {slot.label}</span>
@@ -354,10 +310,10 @@ export default function MealPlanView({
     return (
       <div className="max-w-2xl mx-auto">
         {/* Day Navigation */}
-        <div className="flex items-center justify-between mb-6 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div className="flex items-center justify-between mb-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
           <button
             onClick={() => navigateDay(-1)}
-            className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+            className="p-2 text-gray-400 dark:text-gray-300 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
             aria-label="Previous day"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -366,15 +322,15 @@ export default function MealPlanView({
           </button>
 
           <div className="text-center">
-            <h3 className="text-xl font-semibold text-gray-900">{currentDay.label}</h3>
-            <p className="text-sm text-gray-500">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{currentDay.label}</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               {duration > 1 ? `Week ${selectedWeek} • Day ${absoluteDayNumber}/${duration * 7}` : 'Use arrow keys to navigate'}
             </p>
           </div>
 
           <button
             onClick={() => navigateDay(1)}
-            className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+            className="p-2 text-gray-400 dark:text-gray-300 hover:text-gray-600 dark:text-gray-200 transition-colors"
             aria-label="Next day"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -398,9 +354,9 @@ export default function MealPlanView({
           <div key={weekNum}>
             {/* Week Header (only show for multi-week plans) */}
             {duration > 1 && (
-              <div className="sticky top-0 z-10 bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg px-4 py-2 mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-green-600" />
+              <div className="sticky top-0 z-[1] bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 border border-green-200 dark:border-green-800 rounded-lg px-4 py-2 mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-green-600 dark:text-green-400" />
                   Week {weekNum}
                 </h3>
               </div>
@@ -457,11 +413,11 @@ export default function MealPlanView({
     if (allMeals.length === 0) {
       return (
         <div className="text-center py-12">
-          <div className="text-gray-400 mb-4">
+          <div className="text-gray-400 dark:text-gray-300 mb-4">
             <Utensils className="w-16 h-16 mx-auto" />
           </div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2">No meals planned yet</h3>
-          <p className="text-gray-600 mb-4">Start by adding meals to your weekly plan</p>
+          <p className="text-gray-600 dark:text-gray-200 mb-4">Start by adding meals to your weekly plan</p>
         </div>
       );
     }
@@ -483,9 +439,9 @@ export default function MealPlanView({
             <div key={weekNum} className="space-y-3">
               {/* Week Header (only show for multi-week plans) */}
               {duration > 1 && (
-                <div className="sticky top-0 z-10 bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg px-4 py-2 mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-green-600" />
+                <div className="sticky top-0 z-[1] bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 border border-green-200 dark:border-green-800 rounded-lg px-4 py-2 mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-green-600 dark:text-green-400" />
                     Week {weekNum}
                   </h3>
                 </div>
@@ -494,18 +450,18 @@ export default function MealPlanView({
               {weekMeals.map(({ week, day, dayLabel, slot, slotInfo, meal }, index) => (
                 <div 
                   key={`${week}-${day}-${slot}-${meal.id}-${index}`}
-                  className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow"
+                  className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow"
                 >
                   <div className="flex items-start gap-4">
                     {/* Day & Time Info */}
                     <div className="flex-shrink-0 text-center min-w-[80px]">
-                      <div className="text-sm font-semibold text-gray-900">{dayLabel}</div>
-                      <div className="flex items-center justify-center gap-1 text-xs text-gray-500 mt-1">
+                      <div className="text-sm font-semibold text-gray-900 dark:text-white">{dayLabel}</div>
+                      <div className="flex items-center justify-center gap-1 text-xs text-gray-500 dark:text-gray-400 mt-1">
                         <span className="text-base">{slotInfo.icon}</span>
                         <Clock className="w-3 h-3" />
                         {slotInfo.time}
                       </div>
-                      <div className="text-xs font-medium text-gray-600 mt-1 px-2 py-1 bg-gray-100 rounded">
+                      <div className="text-xs font-medium text-gray-600 dark:text-gray-200 mt-1 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">
                         {slotInfo.label}
                       </div>
                     </div>
@@ -550,9 +506,9 @@ export default function MealPlanView({
             <div key={weekNum}>
               {/* Week Header (only show for multi-week plans) */}
               {duration > 1 && (
-                <div className="sticky top-0 z-10 bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg px-4 py-2 mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-green-600" />
+                <div className="sticky top-0 z-[1] bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 border border-green-200 dark:border-green-800 rounded-lg px-4 py-2 mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-green-600 dark:text-green-400" />
                     Week {weekNum}
                   </h3>
                 </div>
@@ -567,15 +523,15 @@ export default function MealPlanView({
                   return (
                     <div 
                       key={`${weekNum}-${day.key}`}
-                      className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
+                      className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow"
                     >
                       {/* Day Header */}
-                      <div className="bg-gradient-to-r from-green-50 to-blue-50 px-4 py-3 border-b border-gray-200">
+                      <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                         <div className="flex items-center justify-between">
                           <div>
-                            <h3 className="font-bold text-gray-900">{day.label}</h3>
+                            <h3 className="font-bold text-gray-900 dark:text-white">{day.label}</h3>
                             {hasAnyMeals && (
-                              <div className="text-xs text-gray-600 mt-1 flex items-center gap-2">
+                              <div className="text-xs text-gray-600 dark:text-gray-300 mt-1 flex items-center gap-2">
                                 <span className="flex items-center gap-1">
                                   <Utensils className="w-3 h-3" />
                                   {dayStats.totalMeals}
@@ -591,7 +547,7 @@ export default function MealPlanView({
                             <button
                               onClick={() => onBulkRegenerate(day.key)}
                               disabled={isGenerating}
-                              className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-white rounded-lg transition-all"
+                              className="p-1.5 text-gray-400 dark:text-gray-300 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-white dark:hover:bg-gray-700 rounded-lg transition-all"
                               title="Regenerate all meals"
                             >
                               <Shuffle className="w-4 h-4" />
@@ -631,7 +587,7 @@ export default function MealPlanView({
                                 key={slot.key}
                                 onClick={() => onAddMeal(day.key, slot.key)}
                                 disabled={isGenerating}
-                                className="w-full px-3 py-2 border border-dashed border-gray-200 rounded-lg text-xs text-gray-500 hover:border-green-400 hover:bg-green-50 hover:text-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                className="w-full px-3 py-2 border border-dashed border-gray-200 dark:border-gray-600 rounded-lg text-xs text-gray-500 dark:text-gray-400 hover:border-green-400 dark:hover:border-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-700 dark:hover:text-green-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                               >
                                 <span>{slot.icon}</span>
                                 <Plus className="w-3 h-3" />
@@ -645,16 +601,16 @@ export default function MealPlanView({
                               {slotMeals.map((meal, index) => (
                                 <div
                                   key={meal.id}
-                                  className="p-2 bg-gray-50 rounded-lg border border-gray-100 hover:border-gray-200 transition-colors group cursor-pointer"
+                                  className="p-2 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-100 dark:border-gray-600 hover:border-gray-200 dark:hover:border-gray-500 transition-colors group cursor-pointer"
                                   onClick={() => meal.recipeId && onViewRecipe(meal.recipeId)}
                                 >
                                   <div className="flex items-start gap-2">
                                     <span className="text-sm flex-shrink-0">{slot.icon}</span>
                                     <div className="flex-1 min-w-0">
-                                      <div className="text-xs font-semibold text-gray-900 truncate group-hover:text-green-600">
+                                      <div className="text-xs font-semibold text-gray-900 dark:text-white truncate group-hover:text-green-600 dark:group-hover:text-green-400">
                                         {meal.mealName}
                                       </div>
-                                      <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                                      <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mt-1">
                                         {meal.cookTime && (
                                           <span className="flex items-center gap-0.5">
                                             <Clock className="w-2.5 h-2.5" />
@@ -676,7 +632,7 @@ export default function MealPlanView({
                                           onRegenerateMeal(meal.id);
                                         }}
                                         disabled={isGenerating}
-                                        className="flex-shrink-0 p-1 text-green-600 hover:bg-green-100 rounded transition-colors"
+                                        className="flex-shrink-0 p-1 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/20 rounded transition-colors"
                                         title="Generate recipe"
                                       >
                                         <Sparkles className="w-3 h-3" />
@@ -715,7 +671,7 @@ export default function MealPlanView({
                 px-6 py-3 rounded-lg font-semibold transition-all
                 ${selectedWeek === weekNum
                   ? 'bg-gradient-to-r from-green-500 to-blue-500 text-white shadow-lg'
-                  : 'bg-white text-gray-700 border-2 border-gray-200 hover:border-gray-300'
+                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-2 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                 }
               `}
             >
@@ -725,7 +681,7 @@ export default function MealPlanView({
         </div>
 
         {/* Week Overview */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4">
             {daysOfWeek.map((day) => {
               const dayMeals = meals.filter(m => m.day === day.key && (m.week || 1) === selectedWeek);
@@ -734,9 +690,9 @@ export default function MealPlanView({
               return (
                 <div
                   key={day.key}
-                  className="border-2 border-gray-100 rounded-lg p-4 hover:border-green-200 hover:shadow-md transition-all"
+                  className="border-2 border-gray-100 dark:border-gray-700 rounded-lg p-4 hover:border-green-200 dark:hover:border-green-700 hover:shadow-md transition-all bg-white dark:bg-gray-800"
                 >
-                  <h4 className="font-bold text-gray-900 mb-2">{day.label}</h4>
+                  <h4 className="font-bold text-gray-900 dark:text-white mb-2">{day.label}</h4>
                   
                   {/* Meal slots */}
                   <div className="space-y-2">
@@ -748,7 +704,7 @@ export default function MealPlanView({
                           <button
                             key={slot.key}
                             onClick={() => onAddMeal(day.key, slot.key)}
-                            className="w-full text-left px-2 py-1.5 bg-gray-50 rounded text-xs text-gray-500 hover:bg-green-50 hover:text-green-600 transition-colors"
+                            className="w-full text-left px-2 py-1.5 bg-gray-50 dark:bg-gray-700 rounded text-xs text-gray-500 dark:text-gray-300 hover:bg-green-50 hover:text-green-600 transition-colors"
                           >
                             <span className="mr-1">{slot.icon}</span>
                             {slot.label}
@@ -761,20 +717,20 @@ export default function MealPlanView({
                           {slotMeals.map((meal) => (
                             <div
                               key={meal.id}
-                              className="px-2 py-1.5 bg-gradient-to-r from-green-50 to-blue-50 rounded text-xs cursor-pointer hover:shadow-sm transition-shadow"
+                              className="px-2 py-1.5 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded text-xs cursor-pointer hover:shadow-sm transition-shadow border dark:border-gray-700"
                               onClick={() => meal.recipeId && onViewRecipe(meal.recipeId)}
                             >
                               <div className="flex items-center gap-1 mb-0.5">
                                 <span>{slot.icon}</span>
-                                <span className="font-medium text-gray-700 truncate">
+                                <span className="font-medium text-gray-700 dark:text-gray-300 truncate">
                                   {slot.label}
                                 </span>
                               </div>
-                              <div className="text-gray-900 font-semibold truncate">
+                              <div className="text-gray-900 dark:text-white font-semibold truncate">
                                 {meal.mealName}
                               </div>
                               {meal.cookTime && (
-                                <div className="text-gray-500 mt-0.5 flex items-center gap-0.5">
+                                <div className="text-gray-500 dark:text-gray-400 mt-0.5 flex items-center gap-0.5">
                                   <Clock className="w-2.5 h-2.5" />
                                   {meal.cookTime}m
                                 </div>
@@ -793,15 +749,15 @@ export default function MealPlanView({
 
         {/* Week Summary Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 border border-green-200">
-            <div className="text-sm text-green-700 font-medium mb-1">Total Meals</div>
-            <div className="text-3xl font-bold text-green-900">
+          <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg p-4 border border-green-200 dark:border-green-800">
+            <div className="text-sm text-green-700 dark:text-green-300 font-medium mb-1">Total Meals</div>
+            <div className="text-3xl font-bold text-green-900 dark:text-green-100">
               {meals.filter(m => (m.week || 1) === selectedWeek).length}
             </div>
           </div>
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
-            <div className="text-sm text-blue-700 font-medium mb-1">Avg Cook Time</div>
-            <div className="text-3xl font-bold text-blue-900">
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+            <div className="text-sm text-blue-700 dark:text-blue-300 font-medium mb-1">Avg Cook Time</div>
+            <div className="text-3xl font-bold text-blue-900 dark:text-blue-100">
               {Math.round(
                 meals.filter(m => (m.week || 1) === selectedWeek && m.cookTime)
                   .reduce((sum, m) => sum + (m.cookTime || 0), 0) /
@@ -809,9 +765,9 @@ export default function MealPlanView({
               )}m
             </div>
           </div>
-          <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 border border-purple-200">
-            <div className="text-sm text-purple-700 font-medium mb-1">This Week</div>
-            <div className="text-3xl font-bold text-purple-900">
+          <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-lg p-4 border border-purple-200 dark:border-purple-800">
+            <div className="text-sm text-purple-700 dark:text-purple-300 font-medium mb-1">This Week</div>
+            <div className="text-3xl font-bold text-purple-900 dark:text-purple-100">
               Week {selectedWeek}/{duration}
             </div>
           </div>
@@ -826,32 +782,19 @@ export default function MealPlanView({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 flex-1">
           {/* View Mode Tabs */}
-          <div className="flex flex-wrap bg-gray-100 rounded-lg p-1 gap-1">
+          <div className="flex flex-wrap bg-gray-100 dark:bg-gray-700 rounded-lg p-1 gap-1">
             <button
               onClick={() => setViewMode('day')}
               className={`
                 px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-all whitespace-nowrap
                 ${viewMode === 'day'
                   ? 'bg-gradient-to-r from-green-500 to-blue-500 text-white shadow-md'
-                  : 'text-gray-600 hover:text-gray-900'
+                  : 'text-gray-600 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white'
                 }
               `}
-              title="View one day at a time (Default)"
+              title="View one day at a time"
             >
               📅 Day
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`
-                px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-all whitespace-nowrap
-                ${viewMode === 'list'
-                  ? 'bg-gradient-to-r from-green-500 to-blue-500 text-white shadow-md'
-                  : 'text-gray-600 hover:text-gray-900'
-                }
-              `}
-              title="View all meals in a simple list"
-            >
-              📋 List
             </button>
             <button
               onClick={() => setViewMode('calendar')}
@@ -859,25 +802,12 @@ export default function MealPlanView({
                 px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-all whitespace-nowrap
                 ${viewMode === 'calendar'
                   ? 'bg-gradient-to-r from-green-500 to-blue-500 text-white shadow-md'
-                  : 'text-gray-600 hover:text-gray-900'
+                  : 'text-gray-600 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white'
                 }
               `}
               title="View week in calendar grid"
             >
-              🗓️ Calendar
-            </button>
-            <button
-              onClick={() => setViewMode('week')}
-              className={`
-                px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-all whitespace-nowrap
-                ${viewMode === 'week'
-                  ? 'bg-gradient-to-r from-green-500 to-blue-500 text-white shadow-md'
-                  : 'text-gray-600 hover:text-gray-900'
-                }
-              `}
-              title="View full week in detail"
-            >
-              📊 Week
+              🗓️ Week
             </button>
             {isMultiWeek && (
               <button
@@ -886,7 +816,7 @@ export default function MealPlanView({
                   px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-all whitespace-nowrap
                   ${viewMode === 'month'
                     ? 'bg-gradient-to-r from-green-500 to-blue-500 text-white shadow-md'
-                    : 'text-gray-600 hover:text-gray-900'
+                    : 'text-gray-600 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white'
                   }
                 `}
                 title="View multi-week plan by month"
@@ -912,31 +842,15 @@ export default function MealPlanView({
           )}
 
           {/* View Description */}
-          <div className="text-xs text-gray-500 hidden lg:block">
+          <div className="text-xs text-gray-500 dark:text-gray-300 hidden lg:block">
             {viewMode === 'day' && '← Navigate through each day'}
-            {viewMode === 'list' && '← All meals in chronological order'}
             {viewMode === 'calendar' && '← Week overview at a glance'}
-            {viewMode === 'week' && '← Full week with all details'}
-            {viewMode === 'month' && `← ${duration}-week plan navigator`}
+            {viewMode === 'month' && '← Multiple weeks view'}
           </div>
         </div>
 
         {/* Action Buttons */}
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => setShowStats(!showStats)}
-            className={`
-              px-3 py-2 rounded-lg text-sm font-medium transition-colors
-              ${showStats
-                ? 'bg-blue-100 text-blue-700 border border-blue-200'
-                : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
-              }
-            `}
-          >
-            <Target className="w-4 h-4 inline mr-2" />
-            Stats
-          </button>
-
           <button
             onClick={onGenerateShoppingList}
             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium flex items-center gap-2"
@@ -950,12 +864,12 @@ export default function MealPlanView({
       {/* Loading State */}
       {isGenerating && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-sm mx-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-sm mx-4 border dark:border-gray-700 shadow-2xl">
             <div className="flex items-center gap-3 mb-4">
-              <Sparkles className="w-6 h-6 text-green-600 animate-pulse" />
-              <h3 className="font-semibold text-gray-900">Generating Meals</h3>
+              <Sparkles className="w-6 h-6 text-green-600 dark:text-green-400 animate-pulse" />
+              <h3 className="font-semibold text-gray-900 dark:text-white">Generating Meals</h3>
             </div>
-            <p className="text-gray-600 text-sm">
+            <p className="text-gray-600 dark:text-gray-300 text-sm">
               Creating your personalized meal plan...
             </p>
           </div>
@@ -963,30 +877,25 @@ export default function MealPlanView({
       )}
 
       {/* Main Content */}
-      <div className={`rounded-xl ${(viewMode === 'list' || viewMode === 'month') ? 'bg-transparent' : 'bg-gray-50 p-4 sm:p-6'}`}>
+      <div className={`rounded-xl ${viewMode === 'month' ? 'bg-transparent' : 'bg-gray-50 dark:bg-gray-700 p-4 sm:p-6'}`}>
         {viewMode === 'day' && renderDayView()}
-        {viewMode === 'week' && renderWeekView()}
-        {viewMode === 'list' && renderListView()}
         {viewMode === 'calendar' && renderCalendarView()}
         {viewMode === 'month' && renderMonthView()}
       </div>
 
       {/* Keyboard Shortcuts Help */}
-      <div className="mt-4 text-xs text-gray-500 text-center space-y-1">
+      <div className="mt-4 text-xs text-gray-500 dark:text-gray-300 text-center space-y-1">
         <div>
           <span className="hidden sm:inline">
             {viewMode === 'day' && '⬅️ ➡️ Navigate days • '}
-            {viewMode === 'week' && 'Scroll horizontally • '}
-            {viewMode === 'month' && `${duration} weeks of planning • `}
+            {viewMode === 'month' && 'Multi-week planning • '}
             Shift+Tab to cycle views
           </span>
         </div>
-        <div className="text-green-600 font-medium">
-          {viewMode === 'day' && '✨ Default view - Focus on one day at a time'}
-          {viewMode === 'list' && '✨ Simple chronological view of all meals'}
+        <div className="text-green-600 dark:text-green-400 font-medium">
+          {viewMode === 'day' && '✨ Focus on one day at a time'}
           {viewMode === 'calendar' && '✨ Quick overview of the entire week'}
-          {viewMode === 'week' && '✨ Detailed view of all days'}
-          {viewMode === 'month' && `✨ ${duration}-week plan with week selector`}
+          {viewMode === 'month' && '✨ View multiple weeks with week selector'}
         </div>
       </div>
     </div>

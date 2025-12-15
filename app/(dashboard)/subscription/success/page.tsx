@@ -51,10 +51,10 @@ export default function SubscriptionSuccess() {
 
   if (status === 'loading' || isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-700 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Confirming your subscription...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-200">Confirming your subscription...</p>
         </div>
       </div>
     );
@@ -62,7 +62,7 @@ export default function SubscriptionSuccess() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-700 flex items-center justify-center">
         <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
           <div className="text-center">
             <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
@@ -71,7 +71,7 @@ export default function SubscriptionSuccess() {
               </svg>
             </div>
             <h1 className="mt-4 text-xl font-semibold text-gray-900">Something went wrong</h1>
-            <p className="mt-2 text-gray-600">{error}</p>
+            <p className="mt-2 text-gray-600 dark:text-gray-200">{error}</p>
             <div className="mt-6">
               <Link
                 href="/pricing"
@@ -87,7 +87,7 @@ export default function SubscriptionSuccess() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-700 flex items-center justify-center">
       <div className="max-w-2xl w-full bg-white rounded-lg shadow-md p-8 mx-4">
         <div className="text-center">
           {/* Success Icon */}
@@ -102,23 +102,23 @@ export default function SubscriptionSuccess() {
             Welcome to {subscriptionDetails?.plan}! 🎉
           </h1>
           
-          <p className="mt-4 text-lg text-gray-600">
+          <p className="mt-4 text-lg text-gray-600 dark:text-gray-200">
             Your subscription has been successfully activated.
           </p>
 
           {/* Subscription Details */}
           {subscriptionDetails && (
-            <div className="mt-8 bg-gray-50 rounded-lg p-6">
+            <div className="mt-8 bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Subscription Details</h2>
               
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Plan:</span>
+                  <span className="text-gray-600 dark:text-gray-200">Plan:</span>
                   <span className="font-medium text-gray-900">{subscriptionDetails.plan}</span>
                 </div>
                 
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Status:</span>
+                  <span className="text-gray-600 dark:text-gray-200">Status:</span>
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize">
                     {subscriptionDetails.status === 'trialing' ? 'Free Trial' : subscriptionDetails.status}
                   </span>
@@ -126,14 +126,14 @@ export default function SubscriptionSuccess() {
                 
                 {subscriptionDetails.trialEnd && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Trial ends:</span>
+                    <span className="text-gray-600 dark:text-gray-200">Trial ends:</span>
                     <span className="font-medium text-gray-900">{subscriptionDetails.trialEnd}</span>
                   </div>
                 )}
                 
                 {subscriptionDetails.currentPeriodEnd && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Next billing date:</span>
+                    <span className="text-gray-600 dark:text-gray-200">Next billing date:</span>
                     <span className="font-medium text-gray-900">{subscriptionDetails.currentPeriodEnd}</span>
                   </div>
                 )}
@@ -183,7 +183,7 @@ export default function SubscriptionSuccess() {
             
             <Link
               href="/meal-planner"
-              className="inline-flex items-center justify-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+              className="inline-flex items-center justify-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-700 transition-colors"
             >
               Create Meal Plan
             </Link>
@@ -191,14 +191,14 @@ export default function SubscriptionSuccess() {
 
           {/* Support */}
           <div className="mt-8 pt-6 border-t border-gray-200">
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-300">
               Need help getting started?{' '}
               <Link href="/support" className="font-medium text-green-600 hover:text-green-500">
                 Contact our support team
               </Link>
             </p>
             
-            <p className="mt-2 text-xs text-gray-400">
+            <p className="mt-2 text-xs text-gray-400 dark:text-gray-300">
               You can manage your subscription anytime from your account settings.
             </p>
           </div>

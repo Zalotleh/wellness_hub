@@ -470,22 +470,22 @@ export default function ShoppingListDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 p-4">
         <div className="max-w-4xl mx-auto">
           <div className="animate-pulse space-y-6">
             <div className="flex items-center space-x-4">
-              <div className="w-8 h-8 bg-gray-200 rounded"></div>
-              <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+              <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded"></div>
+              <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
             </div>
-            <div className="bg-white rounded-lg shadow-md p-6 space-y-4">
-              <div className="h-6 bg-gray-200 rounded w-1/2"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-              <div className="h-2 bg-gray-200 rounded w-full"></div>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 space-y-4">
+              <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+              <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
             </div>
             <div className="space-y-4">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="bg-white rounded-lg shadow-md p-4">
-                  <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+                <div key={i} className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+                  <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
                 </div>
               ))}
             </div>
@@ -497,26 +497,26 @@ export default function ShoppingListDetailPage() {
 
   if (error || !shoppingList) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 p-4">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-lg shadow-md p-12 text-center">
-            <div className="bg-red-100 p-4 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
-              <X className="w-10 h-10 text-red-600" />
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-12 text-center border border-gray-200 dark:border-gray-700">
+            <div className="bg-red-100 dark:bg-red-900/30 p-4 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+              <X className="w-10 h-10 text-red-600 dark:text-red-400" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
               {error === 'Shopping list not found' ? 'Shopping List Not Found' : 'Error Loading Shopping List'}
             </h2>
-            <p className="text-gray-600 mb-8">{error}</p>
+            <p className="text-gray-600 dark:text-gray-400 mb-8">{error}</p>
             <div className="space-x-4">
               <button
                 onClick={() => router.back()}
-                className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                className="px-6 py-3 bg-gray-500 dark:bg-gray-600 text-white rounded-lg hover:bg-gray-600 dark:hover:bg-gray-700 transition-colors"
               >
                 Go Back
               </button>
               <Link
                 href="/shopping-lists"
-                className="inline-block px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                className="inline-block px-6 py-3 bg-blue-500 dark:bg-blue-600 text-white rounded-lg hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors"
               >
                 View All Lists
               </Link>
@@ -531,21 +531,21 @@ export default function ShoppingListDetailPage() {
   const groupedItems = groupItemsByCategory(shoppingList.items);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 p-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-4">
             <button
               onClick={() => router.back()}
-              className="p-2 hover:bg-white/50 rounded-lg transition-colors"
+              className="p-2 hover:bg-white/50 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
             >
-              <ArrowLeft className="w-5 h-5 text-gray-600" />
+              <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-300" />
             </button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-800">{shoppingList.title}</h1>
+              <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{shoppingList.title}</h1>
               {shoppingList.mealPlan && (
-                <p className="text-gray-600">From: {shoppingList.mealPlan.title}</p>
+                <p className="text-gray-600 dark:text-gray-400">From: {shoppingList.mealPlan.title}</p>
               )}
             </div>
           </div>
@@ -564,7 +564,7 @@ export default function ShoppingListDetailPage() {
             {/* Download Button */}
             <button 
               onClick={exportList}
-              className="p-2.5 text-gray-600 bg-white hover:bg-gray-50 rounded-lg transition-colors shadow-md hover:shadow-lg border border-gray-200"
+              className="p-2.5 text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors shadow-md hover:shadow-lg border border-gray-200 dark:border-gray-700"
               title="Download shopping list"
             >
               <Download className="w-5 h-5" />
@@ -573,29 +573,29 @@ export default function ShoppingListDetailPage() {
         </div>
 
         {/* Progress Summary */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-xl font-bold text-gray-800">Shopping Progress</h2>
-              <p className="text-gray-600">
+              <h2 className="text-xl font-bold text-gray-800 dark:text-white">Shopping Progress</h2>
+              <p className="text-gray-600 dark:text-gray-400">
                 {stats.completed} of {stats.total} items purchased
               </p>
             </div>
             <div className="text-right">
-              <div className="text-3xl font-bold text-green-600">{stats.percentage}%</div>
-              <div className="text-sm text-gray-500">purchased</div>
+              <div className="text-3xl font-bold text-green-600 dark:text-green-400">{stats.percentage}%</div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">purchased</div>
             </div>
           </div>
           
-          <div className="w-full bg-gray-200 rounded-full h-3 mb-4">
+          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 mb-4">
             <div
-              className="bg-gradient-to-r from-green-400 to-green-500 h-3 rounded-full transition-all duration-300"
+              className="bg-gradient-to-r from-green-400 to-green-500 dark:from-green-500 dark:to-green-600 h-3 rounded-full transition-all duration-300"
               style={{ width: `${stats.percentage}%` }}
             ></div>
           </div>
 
           {/* Meta Information */}
-          <div className="flex flex-wrap items-center gap-6 text-sm text-gray-600">
+          <div className="flex flex-wrap items-center gap-6 text-sm text-gray-600 dark:text-gray-400">
             <div className="flex items-center space-x-2">
               <Calendar className="w-4 h-4" />
               <span>Created {new Date(shoppingList.createdAt).toLocaleDateString()}</span>
@@ -608,7 +608,7 @@ export default function ShoppingListDetailPage() {
             {shoppingList.mealPlan && (
               <Link
                 href={`/meal-planner/${shoppingList.mealPlan.id}`}
-                className="flex items-center space-x-2 text-blue-600 hover:text-blue-800 transition-colors"
+                className="flex items-center space-x-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
               >
                 <Users className="w-4 h-4" />
                 <span>View Meal Plan</span>
@@ -621,8 +621,8 @@ export default function ShoppingListDetailPage() {
         {/* Shopping List Items */}
         <div className="space-y-6">
           {Object.entries(groupedItems).map(([category, items]) => (
-            <div key={category} className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="text-lg font-bold text-gray-800 mb-4 pb-2 border-b border-gray-200">
+            <div key={category} className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700">
+              <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">
                 {category}
               </h3>
               
@@ -632,8 +632,8 @@ export default function ShoppingListDetailPage() {
                     key={item.originalIndex}
                     className={`group flex items-center space-x-4 p-4 rounded-lg border-2 transition-all ${
                       item.checked
-                        ? 'bg-green-50 border-green-300'
-                        : 'bg-white border-gray-200 hover:border-blue-300 hover:shadow-md'
+                        ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-800'
+                        : 'bg-white dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-md'
                     }`}
                   >
                     {/* Checkbox to mark as purchased */}
@@ -643,7 +643,7 @@ export default function ShoppingListDetailPage() {
                       className={`flex-shrink-0 w-7 h-7 rounded-md border-2 flex items-center justify-center transition-all ${
                         item.checked
                           ? 'bg-green-500 border-green-500 text-white'
-                          : 'border-gray-400 hover:border-green-500 hover:bg-green-50'
+                          : 'border-gray-400 dark:border-gray-500 hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/30'
                       } ${updating ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                       title={item.checked ? 'Mark as not purchased' : 'Mark as purchased'}
                     >
@@ -656,14 +656,14 @@ export default function ShoppingListDetailPage() {
                     
                     {/* Item Details */}
                     <div className="flex-1 min-w-0">
-                      <div className={`font-semibold text-lg ${item.checked ? 'line-through text-gray-500' : 'text-gray-800'}`}>
+                      <div className={`font-semibold text-lg ${item.checked ? 'line-through text-gray-500 dark:text-gray-400' : 'text-gray-800 dark:text-white'}`}>
                         {item.ingredient}
                       </div>
                       <div className="space-y-1 mt-1">
                         {/* Retail/Shopping quantity (prominent) */}
                         {item.retailDescription && (
                           <div className="flex items-center gap-2 text-sm">
-                            <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-medium">
+                            <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 px-2 py-0.5 rounded font-medium">
                               🛒 Buy: {item.retailDescription}
                             </span>
                             {/* Info icon with tooltip */}
@@ -671,7 +671,7 @@ export default function ShoppingListDetailPage() {
                               <button
                                 onMouseEnter={() => setTooltipIndex(item.originalIndex)}
                                 onMouseLeave={() => setTooltipIndex(null)}
-                                className="text-gray-400 hover:text-blue-600 transition-colors"
+                                className="text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                                 title="Conversion details"
                               >
                                 <Info className="w-4 h-4" />
@@ -679,7 +679,7 @@ export default function ShoppingListDetailPage() {
                               
                               {/* Tooltip */}
                               {tooltipIndex === item.originalIndex && (
-                                <div className="absolute left-0 top-6 z-50 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-xl whitespace-nowrap">
+                                <div className="absolute left-0 top-6 z-50 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-lg p-3 shadow-xl whitespace-nowrap border border-gray-800 dark:border-gray-600">
                                   <div className="font-semibold mb-1">Conversion Details:</div>
                                   <div className="space-y-1">
                                     {(() => {
@@ -699,7 +699,7 @@ export default function ShoppingListDetailPage() {
                                     })()}
                                   </div>
                                   {/* Arrow pointer */}
-                                  <div className="absolute -top-1 left-2 w-2 h-2 bg-gray-900 transform rotate-45"></div>
+                                  <div className="absolute -top-1 left-2 w-2 h-2 bg-gray-900 dark:bg-gray-700 transform rotate-45"></div>
                                 </div>
                               )}
                             </div>
@@ -708,7 +708,7 @@ export default function ShoppingListDetailPage() {
                         
                         {/* Original recipe quantity (secondary) */}
                         {(item.quantity || item.unit) && (
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                             <span className="font-medium whitespace-nowrap">
                               Recipe: {
                                 (() => {
@@ -743,8 +743,8 @@ export default function ShoppingListDetailPage() {
                             </span>
                             {item.estimatedCost && item.estimatedCost > 0 && (
                               <>
-                                <span className="text-gray-400">•</span>
-                                <span className="text-green-600">${item.estimatedCost.toFixed(2)}</span>
+                                <span className="text-gray-400 dark:text-gray-500">•</span>
+                                <span className="text-green-600 dark:text-green-400">${item.estimatedCost.toFixed(2)}</span>
                               </>
                             )}
                           </div>
@@ -754,7 +754,7 @@ export default function ShoppingListDetailPage() {
                     
                     {/* Status Badge */}
                     {item.checked && (
-                      <div className="hidden sm:flex items-center space-x-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
+                      <div className="hidden sm:flex items-center space-x-1 px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-sm font-medium">
                         <ShoppingCart className="w-3 h-3" />
                         <span>Purchased</span>
                       </div>
@@ -764,7 +764,7 @@ export default function ShoppingListDetailPage() {
                     <button
                       onClick={() => deleteItem(item.originalIndex)}
                       disabled={updating}
-                      className="flex-shrink-0 p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex-shrink-0 p-2 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all opacity-0 group-hover:opacity-100 disabled:opacity-50 disabled:cursor-not-allowed"
                       title="Remove from list"
                     >
                       <Trash2 className="w-5 h-5" />
@@ -777,8 +777,8 @@ export default function ShoppingListDetailPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="mt-8 bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-bold text-gray-800 mb-4">Quick Actions</h3>
+        <div className="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700">
+          <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">Quick Actions</h3>
           
           <div className="flex flex-wrap gap-3">
             {/* Share Button - Most Prominent with Pulse Animation */}
@@ -797,7 +797,7 @@ export default function ShoppingListDetailPage() {
             {/* Add Item */}
             <button 
               onClick={() => setShowAddItemModal(true)}
-              className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-md hover:shadow-lg"
+              className="flex items-center space-x-2 px-4 py-2 bg-blue-500 dark:bg-blue-600 text-white rounded-lg hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg"
             >
               <Plus className="w-4 h-4" />
               <span>Add Item</span>
@@ -807,7 +807,7 @@ export default function ShoppingListDetailPage() {
             <button 
               onClick={markAllComplete}
               disabled={updating || shoppingList.items.length === 0}
-              className="flex items-center space-x-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shadow-md hover:shadow-lg"
+              className="flex items-center space-x-2 px-4 py-2 bg-green-500 dark:bg-green-600 text-white rounded-lg hover:bg-green-600 dark:hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shadow-md hover:shadow-lg"
               title="Mark all items as purchased"
             >
               {updating ? (
@@ -822,7 +822,7 @@ export default function ShoppingListDetailPage() {
             <button 
               onClick={markAllIncomplete}
               disabled={updating || shoppingList.items.length === 0}
-              className="flex items-center space-x-2 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shadow-md hover:shadow-lg"
+              className="flex items-center space-x-2 px-4 py-2 bg-gray-500 dark:bg-gray-600 text-white rounded-lg hover:bg-gray-600 dark:hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shadow-md hover:shadow-lg"
               title="Mark all items as not purchased"
             >
               {updating ? (
@@ -837,7 +837,7 @@ export default function ShoppingListDetailPage() {
             <button 
               onClick={exportList}
               disabled={shoppingList.items.length === 0}
-              className="flex items-center space-x-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shadow-md hover:shadow-lg"
+              className="flex items-center space-x-2 px-4 py-2 bg-purple-500 dark:bg-purple-600 text-white rounded-lg hover:bg-purple-600 dark:hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shadow-md hover:shadow-lg"
               title="Export shopping list as text file"
             >
               <Download className="w-4 h-4" />
@@ -886,7 +886,7 @@ export default function ShoppingListDetailPage() {
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-800">Delete Item</h3>
-                <p className="text-gray-600">This action cannot be undone.</p>
+                <p className="text-gray-600 dark:text-gray-200">This action cannot be undone.</p>
               </div>
             </div>
             
@@ -898,7 +898,7 @@ export default function ShoppingListDetailPage() {
               <button
                 onClick={() => setDeleteConfirm({show: false, itemIndex: -1, itemName: ''})}
                 disabled={updating}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800 disabled:opacity-50 transition-colors"
+                className="px-4 py-2 text-gray-600 dark:text-gray-200 hover:text-gray-800 dark:hover:text-gray-100 disabled:opacity-50 transition-colors"
               >
                 Cancel
               </button>
@@ -926,21 +926,21 @@ export default function ShoppingListDetailPage() {
 
       {/* Add Item Modal */}
       {showAddItemModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+        <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6 border border-gray-200 dark:border-gray-700">
             <div className="flex items-center mb-4">
-              <div className="bg-blue-100 p-3 rounded-full mr-4">
-                <Plus className="w-6 h-6 text-blue-600" />
+              <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full mr-4">
+                <Plus className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-800">Add New Item</h3>
-                <p className="text-gray-600">Add an item to your shopping list</p>
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Add New Item</h3>
+                <p className="text-gray-600 dark:text-gray-400">Add an item to your shopping list</p>
               </div>
             </div>
             
             <div className="space-y-4 mb-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Item Name *
                 </label>
                 <input
@@ -948,14 +948,14 @@ export default function ShoppingListDetailPage() {
                   value={newItem.ingredient}
                   onChange={(e) => setNewItem({...newItem, ingredient: e.target.value})}
                   placeholder="e.g., Tomatoes"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   autoFocus
                 />
               </div>
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Quantity
                   </label>
                   <input
@@ -964,12 +964,12 @@ export default function ShoppingListDetailPage() {
                     onChange={(e) => setNewItem({...newItem, quantity: parseFloat(e.target.value) || 1})}
                     min="0.1"
                     step="0.1"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Unit
                   </label>
                   <input
@@ -977,19 +977,19 @@ export default function ShoppingListDetailPage() {
                     value={newItem.unit}
                     onChange={(e) => setNewItem({...newItem, unit: e.target.value})}
                     placeholder="e.g., lbs, cups"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   />
                 </div>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Category
                 </label>
                 <select
                   value={newItem.category}
                   onChange={(e) => setNewItem({...newItem, category: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                 >
                   <option value="Produce">Produce</option>
                   <option value="Protein">Protein</option>
@@ -1018,14 +1018,14 @@ export default function ShoppingListDetailPage() {
                   });
                 }}
                 disabled={updating}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800 disabled:opacity-50 transition-colors"
+                className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 disabled:opacity-50 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={addItem}
                 disabled={updating || !newItem.ingredient.trim()}
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-500 dark:bg-blue-600 text-white rounded-lg hover:bg-blue-600 dark:hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
               >
                 {updating ? (
                   <>
@@ -1046,23 +1046,23 @@ export default function ShoppingListDetailPage() {
 
       {/* Share Modal */}
       {showShareModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+        <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6 border border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center">
-                <div className="bg-blue-100 p-3 rounded-full mr-4">
-                  <Share2 className="w-6 h-6 text-blue-600" />
+                <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full mr-4">
+                  <Share2 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-800">Share Shopping List</h3>
-                  <p className="text-gray-600 text-sm">Choose how to share</p>
+                  <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Share Shopping List</h3>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm">Choose how to share</p>
                 </div>
               </div>
               <button
                 onClick={() => setShowShareModal(false)}
-                className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               >
-                <X className="w-5 h-5 text-gray-500" />
+                <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
               </button>
             </div>
             
@@ -1073,16 +1073,16 @@ export default function ShoppingListDetailPage() {
                   shareViaWhatsApp();
                   setShowShareModal(false);
                 }}
-                className="w-full flex items-center space-x-4 p-4 bg-green-50 hover:bg-green-100 border-2 border-green-200 rounded-lg transition-all group"
+                className="w-full flex items-center space-x-4 p-4 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 border-2 border-green-200 dark:border-green-700 rounded-lg transition-all group"
               >
                 <div className="bg-green-500 p-3 rounded-full group-hover:scale-110 transition-transform">
                   <MessageCircle className="w-5 h-5 text-white" />
                 </div>
                 <div className="flex-1 text-left">
-                  <div className="font-semibold text-gray-800">WhatsApp</div>
-                  <div className="text-sm text-gray-600">Share via WhatsApp</div>
+                  <div className="font-semibold text-gray-800 dark:text-white">WhatsApp</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">Share via WhatsApp</div>
                 </div>
-                <ExternalLink className="w-4 h-4 text-gray-400" />
+                <ExternalLink className="w-4 h-4 text-gray-400 dark:text-gray-500" />
               </button>
 
               {/* SMS */}
@@ -1091,16 +1091,16 @@ export default function ShoppingListDetailPage() {
                   shareViaSMS();
                   setShowShareModal(false);
                 }}
-                className="w-full flex items-center space-x-4 p-4 bg-blue-50 hover:bg-blue-100 border-2 border-blue-200 rounded-lg transition-all group"
+                className="w-full flex items-center space-x-4 p-4 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-700 rounded-lg transition-all group"
               >
                 <div className="bg-blue-500 p-3 rounded-full group-hover:scale-110 transition-transform">
                   <Smartphone className="w-5 h-5 text-white" />
                 </div>
                 <div className="flex-1 text-left">
-                  <div className="font-semibold text-gray-800">Text Message</div>
-                  <div className="text-sm text-gray-600">Share via SMS</div>
+                  <div className="font-semibold text-gray-800 dark:text-white">Text Message</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">Share via SMS</div>
                 </div>
-                <ExternalLink className="w-4 h-4 text-gray-400" />
+                <ExternalLink className="w-4 h-4 text-gray-400 dark:text-gray-500" />
               </button>
 
               {/* Email */}
@@ -1109,16 +1109,16 @@ export default function ShoppingListDetailPage() {
                   shareViaEmail();
                   setShowShareModal(false);
                 }}
-                className="w-full flex items-center space-x-4 p-4 bg-purple-50 hover:bg-purple-100 border-2 border-purple-200 rounded-lg transition-all group"
+                className="w-full flex items-center space-x-4 p-4 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 border-2 border-purple-200 dark:border-purple-700 rounded-lg transition-all group"
               >
                 <div className="bg-purple-500 p-3 rounded-full group-hover:scale-110 transition-transform">
                   <Mail className="w-5 h-5 text-white" />
                 </div>
                 <div className="flex-1 text-left">
-                  <div className="font-semibold text-gray-800">Email</div>
-                  <div className="text-sm text-gray-600">Share via email</div>
+                  <div className="font-semibold text-gray-800 dark:text-white">Email</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">Share via email</div>
                 </div>
-                <ExternalLink className="w-4 h-4 text-gray-400" />
+                <ExternalLink className="w-4 h-4 text-gray-400 dark:text-gray-500" />
               </button>
 
               {/* Copy to Clipboard */}
@@ -1127,14 +1127,14 @@ export default function ShoppingListDetailPage() {
                   await copyToClipboard();
                   setShowShareModal(false);
                 }}
-                className="w-full flex items-center space-x-4 p-4 bg-gray-50 hover:bg-gray-100 border-2 border-gray-200 rounded-lg transition-all group"
+                className="w-full flex items-center space-x-4 p-4 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-lg transition-all group"
               >
-                <div className="bg-gray-500 p-3 rounded-full group-hover:scale-110 transition-transform">
+                <div className="bg-gray-500 dark:bg-gray-600 p-3 rounded-full group-hover:scale-110 transition-transform">
                   <Copy className="w-5 h-5 text-white" />
                 </div>
                 <div className="flex-1 text-left">
-                  <div className="font-semibold text-gray-800">Copy to Clipboard</div>
-                  <div className="text-sm text-gray-600">Copy list as text</div>
+                  <div className="font-semibold text-gray-800 dark:text-white">Copy to Clipboard</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">Copy list as text</div>
                 </div>
               </button>
 
@@ -1145,22 +1145,22 @@ export default function ShoppingListDetailPage() {
                     await shareNative();
                     setShowShareModal(false);
                   }}
-                  className="w-full flex items-center space-x-4 p-4 bg-indigo-50 hover:bg-indigo-100 border-2 border-indigo-200 rounded-lg transition-all group"
+                  className="w-full flex items-center space-x-4 p-4 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 border-2 border-indigo-200 dark:border-indigo-700 rounded-lg transition-all group"
                 >
                   <div className="bg-indigo-500 p-3 rounded-full group-hover:scale-110 transition-transform">
                     <Share2 className="w-5 h-5 text-white" />
                   </div>
                   <div className="flex-1 text-left">
-                    <div className="font-semibold text-gray-800">More Options</div>
-                    <div className="text-sm text-gray-600">Use device share menu</div>
+                    <div className="font-semibold text-gray-800 dark:text-white">More Options</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">Use device share menu</div>
                   </div>
-                  <ExternalLink className="w-4 h-4 text-gray-400" />
+                  <ExternalLink className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                 </button>
               )}
             </div>
 
-            <div className="mt-6 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-xs text-blue-800">
+            <div className="mt-6 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
+              <p className="text-xs text-blue-800 dark:text-blue-400">
                 <strong>💡 Tip:</strong> The shopping list will be formatted with emojis and checkboxes for easy reading.
               </p>
             </div>

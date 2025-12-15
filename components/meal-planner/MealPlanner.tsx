@@ -162,7 +162,7 @@ export default function MealPlanner() {
                   className={`px-4 py-2 rounded-lg font-medium capitalize transition-colors ${
                     dietaryRestrictions.includes(restriction)
                       ? 'bg-green-500 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
                   {restriction}
@@ -178,20 +178,20 @@ export default function MealPlanner() {
                 <label className="block text-sm font-semibold text-gray-700">
                   Focus on Specific Systems (Optional)
                 </label>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 dark:text-gray-300 mt-1">
                   {focusSystems.length} of {Object.values(DefenseSystem).length} systems selected
                 </p>
               </div>
               <div className="flex space-x-2">
                 <button
                   onClick={selectAllSystems}
-                  className="text-xs px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                  className="text-xs px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-50 dark:bg-gray-700 transition-colors"
                 >
                   Select All
                 </button>
                 <button
                   onClick={clearAllSystems}
-                  className="text-xs px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                  className="text-xs px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-50 dark:bg-gray-700 transition-colors"
                 >
                   Clear All
                 </button>
@@ -211,7 +211,7 @@ export default function MealPlanner() {
                       className={`w-full p-3 border-2 rounded-lg text-left transition-all duration-200 relative overflow-hidden ${
                         isSelected
                           ? `${info.borderColor} ${info.bgColor} shadow-[0_0_20px_rgba(0,0,0,0.1)] ring-2 ${info.borderColor.replace('border-', 'ring-')} animate-pulse-once`
-                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 hover:shadow-md'
+                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 dark:bg-gray-700 hover:shadow-md'
                       }`}
                     >
                       {/* Checkbox indicator */}
@@ -235,7 +235,7 @@ export default function MealPlanner() {
                     {isHovered && !isSelected && (
                       <div className="absolute z-10 left-0 right-0 top-full mt-2 p-3 bg-white border border-gray-200 rounded-lg shadow-xl animate-fade-in">
                         <p className="text-xs font-semibold text-gray-700 mb-1">Key Foods:</p>
-                        <p className="text-xs text-gray-600">{info.keyFoods.slice(0, 3).join(', ')}</p>
+                        <p className="text-xs text-gray-600 dark:text-gray-200">{info.keyFoods.slice(0, 3).join(', ')}</p>
                       </div>
                     )}
                   </div>
@@ -275,7 +275,7 @@ export default function MealPlanner() {
               <div className="flex items-center space-x-3">
                 <button
                   onClick={handleDownloadPlan}
-                  className="px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium flex items-center space-x-2"
+                  className="px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 dark:bg-gray-700 transition-colors font-medium flex items-center space-x-2"
                 >
                   <Download className="w-4 h-4" />
                   <span>Download</span>
@@ -320,7 +320,7 @@ export default function MealPlanner() {
                             <div className="flex-1">
                               <div className="flex items-center space-x-2 mb-2">
                                 <ChefHat className="w-4 h-4 text-green-600" />
-                                <span className="text-sm font-semibold text-gray-600 capitalize">
+                                <span className="text-sm font-semibold text-gray-600 dark:text-gray-200 capitalize">
                                   {mealType}
                                 </span>
                               </div>
@@ -350,7 +350,7 @@ export default function MealPlanner() {
                                 <h4 className="font-bold text-gray-900 text-lg">{meal.name}</h4>
                               )}
 
-                              <div className="flex items-center space-x-4 mt-2 text-sm text-gray-600">
+                              <div className="flex items-center space-x-4 mt-2 text-sm text-gray-600 dark:text-gray-200">
                                 <div className="flex items-center space-x-1">
                                   <Clock className="w-4 h-4" />
                                   <span>{meal.prepTime}</span>
@@ -420,11 +420,11 @@ export default function MealPlanner() {
                 return (
                   <div key={system} className="bg-white rounded-lg p-4 text-center">
                     <div className="text-2xl mb-2">{info.icon}</div>
-                    <div className="text-xs font-medium text-gray-600 mb-1">
+                    <div className="text-xs font-medium text-gray-600 dark:text-gray-200 mb-1">
                       {info.displayName}
                     </div>
                     <div className="text-2xl font-bold text-gray-900">{count}</div>
-                    <div className="text-xs text-gray-500">meals</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-300">meals</div>
                   </div>
                 );
               })}

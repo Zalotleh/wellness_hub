@@ -207,7 +207,7 @@ export default function RecipeForm({
                 className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-colors ${
                   currentStep >= step
                     ? 'bg-green-500 text-white'
-                    : 'bg-gray-200 text-gray-500'
+                    : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-200'
                 }`}
               >
                 {step}
@@ -223,30 +223,30 @@ export default function RecipeForm({
           ))}
         </div>
         <div className="flex justify-between mt-2 text-sm">
-          <span className={currentStep >= 1 ? 'text-green-600 font-medium' : 'text-gray-500'}>
+          <span className={currentStep >= 1 ? 'text-green-600 font-medium' : 'text-gray-500 dark:text-gray-300'}>
             Basic Info
           </span>
-          <span className={currentStep >= 2 ? 'text-green-600 font-medium' : 'text-gray-500'}>
+          <span className={currentStep >= 2 ? 'text-green-600 font-medium' : 'text-gray-500 dark:text-gray-300'}>
             Ingredients
           </span>
-          <span className={currentStep >= 3 ? 'text-green-600 font-medium' : 'text-gray-500'}>
+          <span className={currentStep >= 3 ? 'text-green-600 font-medium' : 'text-gray-500 dark:text-gray-300'}>
             Instructions
           </span>
-          <span className={currentStep >= 4 ? 'text-green-600 font-medium' : 'text-gray-500'}>
+          <span className={currentStep >= 4 ? 'text-green-600 font-medium' : 'text-gray-500 dark:text-gray-300'}>
             Review
           </span>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-lg p-8">
+      <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
         {/* Step 1: Basic Information */}
         {currentStep === 1 && (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Basic Information</h2>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">Basic Information</h2>
 
             {/* Title */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                 Recipe Title *
               </label>
               <input
@@ -254,21 +254,21 @@ export default function RecipeForm({
                 name="title"
                 value={formData.title}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none transition-colors ${
+                className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none transition-colors dark:bg-gray-700 dark:text-white ${
                   errors.title
                     ? 'border-red-500 focus:border-red-600'
-                    : 'border-gray-300 focus:border-green-500'
+                    : 'border-gray-300 dark:border-gray-600 focus:border-green-500'
                 }`}
                 placeholder="e.g., Mediterranean Salmon Bowl"
               />
               {errors.title && (
-                <p className="mt-1 text-sm text-red-600">{errors.title}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.title}</p>
               )}
             </div>
 
             {/* Description */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                 Description
               </label>
               <textarea
@@ -276,31 +276,31 @@ export default function RecipeForm({
                 value={formData.description}
                 onChange={handleChange}
                 rows={3}
-                className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none transition-colors ${
+                className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none transition-colors dark:bg-gray-700 dark:text-white ${
                   errors.description
                     ? 'border-red-500 focus:border-red-600'
-                    : 'border-gray-300 focus:border-green-500'
+                    : 'border-gray-300 dark:border-gray-600 focus:border-green-500'
                 }`}
                 placeholder="Briefly describe your recipe and its health benefits..."
               />
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-300">
                 {formData.description?.length || 0}/500 characters
               </p>
               {errors.description && (
-                <p className="mt-1 text-sm text-red-600">{errors.description}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.description}</p>
               )}
             </div>
 
             {/* Defense Systems - Multiple Selection */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">
                 Defense Systems * (Select all that apply)
               </label>
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
                 Choose which defense systems this recipe supports
               </p>
               {errors.defenseSystems && (
-                <p className="mb-3 text-sm text-red-600">{errors.defenseSystems}</p>
+                <p className="mb-3 text-sm text-red-600 dark:text-red-400">{errors.defenseSystems}</p>
               )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {Object.values(DefenseSystem).map((system) => {
@@ -315,12 +315,12 @@ export default function RecipeForm({
                       className={`p-4 border-2 rounded-lg text-left transition-all ${
                         isSelected
                           ? `${info.bgColor} ${info.borderColor} ring-2 ring-offset-2 ring-green-500`
-                          : 'border-gray-300 hover:border-gray-400 bg-white'
+                          : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 bg-white dark:bg-gray-700'
                       }`}
                     >
                       <div className="flex items-center space-x-3">
                         <div className={`w-5 h-5 border-2 rounded flex items-center justify-center ${
-                          isSelected ? 'bg-green-500 border-green-500' : 'border-gray-300'
+                          isSelected ? 'bg-green-500 border-green-500' : 'border-gray-300 dark:border-gray-600'
                         }`}>
                           {isSelected && (
                             <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -330,8 +330,8 @@ export default function RecipeForm({
                         </div>
                         <span className="text-2xl">{info.icon}</span>
                         <div className="flex-1">
-                          <div className="font-semibold text-gray-800">{info.displayName}</div>
-                          <div className="text-xs text-gray-600 mt-0.5">{info.description.slice(0, 50)}...</div>
+                          <div className="font-semibold text-gray-800 dark:text-gray-200">{info.displayName}</div>
+                          <div className="text-xs text-gray-600 dark:text-gray-300 mt-0.5">{info.description.slice(0, 50)}...</div>
                         </div>
                       </div>
                     </button>
@@ -341,8 +341,8 @@ export default function RecipeForm({
               
               {/* Show key foods for selected systems */}
               {formData.defenseSystems.length > 0 && (
-                <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                  <h4 className="text-sm font-semibold text-gray-700 mb-3">Key Foods for Selected Systems:</h4>
+                <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                  <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">Key Foods for Selected Systems:</h4>
                   <div className="space-y-2">
                     {formData.defenseSystems.map((system) => {
                       const info = DEFENSE_SYSTEMS[system];
@@ -350,10 +350,10 @@ export default function RecipeForm({
                         <div key={system} className="flex items-start space-x-2">
                           <span className="text-lg">{info.icon}</span>
                           <div className="flex-1">
-                            <div className="text-sm font-medium text-gray-800">{info.displayName}:</div>
+                            <div className="text-sm font-medium text-gray-800 dark:text-gray-200">{info.displayName}:</div>
                             <div className="flex flex-wrap gap-1 mt-1">
                               {info.keyFoods.slice(0, 5).map((food) => (
-                                <span key={food} className="text-xs bg-white px-2 py-1 rounded-full border border-gray-200">
+                                <span key={food} className="text-xs bg-white dark:bg-gray-800 px-2 py-1 rounded-full border border-gray-200 dark:border-gray-600 dark:text-gray-200">
                                   {food}
                                 </span>
                               ))}
@@ -370,7 +370,7 @@ export default function RecipeForm({
             {/* Time and Servings */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                   <Clock className="w-4 h-4 inline mr-1" />
                   Prep Time
                 </label>
@@ -379,12 +379,12 @@ export default function RecipeForm({
                   name="prepTime"
                   value={formData.prepTime}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none"
+                  className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:border-green-500 focus:outline-none dark:bg-gray-700 dark:text-white"
                   placeholder="e.g., 15 min"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                   <ChefHat className="w-4 h-4 inline mr-1" />
                   Cook Time
                 </label>
@@ -393,12 +393,12 @@ export default function RecipeForm({
                   name="cookTime"
                   value={formData.cookTime}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none"
+                  className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:border-green-500 focus:outline-none dark:bg-gray-700 dark:text-white"
                   placeholder="e.g., 30 min"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                   <Users className="w-4 h-4 inline mr-1" />
                   Servings
                 </label>
@@ -408,7 +408,7 @@ export default function RecipeForm({
                   value={formData.servings || ''}
                   onChange={handleChange}
                   min="1"
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none"
+                  className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:border-green-500 focus:outline-none dark:bg-gray-700 dark:text-white"
                   placeholder="e.g., 4"
                 />
               </div>
@@ -420,12 +420,12 @@ export default function RecipeForm({
         {currentStep === 2 && (
           <div className="space-y-6">
             <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">Ingredients</h2>
-              <p className="text-sm text-gray-600 mt-1">Add all ingredients needed for your recipe</p>
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Ingredients</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">Add all ingredients needed for your recipe</p>
             </div>
 
             {errors.ingredients && (
-              <p className="text-sm text-red-600 mb-4">{errors.ingredients}</p>
+              <p className="text-sm text-red-600 dark:text-red-400 mb-4">{errors.ingredients}</p>
             )}
 
             <div className="space-y-3">
@@ -438,7 +438,7 @@ export default function RecipeForm({
                       onChange={(e) =>
                         updateIngredient(index, 'name', e.target.value)
                       }
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none"
+                      className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:border-green-500 focus:outline-none dark:bg-gray-700 dark:text-white"
                       placeholder="Ingredient name (e.g., Salmon)"
                     />
                   </div>
@@ -449,7 +449,7 @@ export default function RecipeForm({
                       onChange={(e) =>
                         updateIngredient(index, 'quantity', e.target.value)
                       }
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none"
+                      className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:border-green-500 focus:outline-none dark:bg-gray-700 dark:text-white"
                       placeholder="Qty"
                     />
                   </div>
@@ -459,7 +459,7 @@ export default function RecipeForm({
                       onChange={(e) =>
                         updateIngredient(index, 'unit', e.target.value)
                       }
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none bg-white"
+                      className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:border-green-500 focus:outline-none bg-white dark:bg-gray-700 dark:text-white"
                     >
                       <option value="">Select unit</option>
                       {(() => {
@@ -503,7 +503,7 @@ export default function RecipeForm({
                     <button
                       type="button"
                       onClick={() => removeIngredient(index)}
-                      className="p-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      className="p-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                     >
                       <X className="w-5 h-5" />
                     </button>
@@ -516,20 +516,20 @@ export default function RecipeForm({
             <button
               type="button"
               onClick={addIngredient}
-              className="w-full p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-all group"
+              className="w-full p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 transition-all group"
             >
               <div className="flex flex-col items-center space-y-2">
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center group-hover:bg-green-500 transition-colors">
+                <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center group-hover:bg-green-500 transition-colors">
                   <Plus className="w-6 h-6 text-green-600 group-hover:text-white transition-colors" />
                 </div>
-                <span className="text-sm font-medium text-gray-600 group-hover:text-green-600 transition-colors">
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-200 group-hover:text-green-600 transition-colors">
                   Add Another Ingredient
                 </span>
-                <span className="text-xs text-gray-400">Click to add more ingredients to your recipe</span>
+                <span className="text-xs text-gray-400 dark:text-gray-400">Click to add more ingredients to your recipe</span>
               </div>
             </button>
 
-            <p className="text-sm text-gray-600 mt-4">
+            <p className="text-sm text-gray-600 dark:text-gray-300 mt-4">
               💡 Tip: Include ingredients that support your selected defense systems
             </p>
           </div>
@@ -538,12 +538,12 @@ export default function RecipeForm({
         {/* Step 3: Instructions */}
         {currentStep === 3 && (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">
               Cooking Instructions
             </h2>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                 Step-by-Step Instructions *
               </label>
               <textarea
@@ -551,17 +551,17 @@ export default function RecipeForm({
                 value={formData.instructions}
                 onChange={handleChange}
                 rows={12}
-                className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none transition-colors font-mono text-sm ${
+                className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none transition-colors font-mono text-sm dark:bg-gray-700 dark:text-white ${
                   errors.instructions
                     ? 'border-red-500 focus:border-red-600'
-                    : 'border-gray-300 focus:border-green-500'
+                    : 'border-gray-300 dark:border-gray-600 focus:border-green-500'
                 }`}
                 placeholder="1. Preheat oven to 375°F&#10;2. Season the salmon with salt and pepper&#10;3. Place on baking sheet&#10;..."
               />
               {errors.instructions && (
-                <p className="mt-1 text-sm text-red-600">{errors.instructions}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.instructions}</p>
               )}
-              <p className="mt-2 text-sm text-gray-600">
+              <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
                 💡 Tip: Number each step and be specific with temperatures, times, and techniques
               </p>
             </div>
@@ -571,12 +571,12 @@ export default function RecipeForm({
         {/* Step 4: Review */}
         {currentStep === 4 && (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Review Your Recipe</h2>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">Review Your Recipe</h2>
 
             <div className="space-y-6">
               {/* Title & Systems */}
               <div>
-                <h3 className="text-xl font-bold text-gray-800">{formData.title}</h3>
+                <h3 className="text-xl font-bold text-gray-800 dark:text-white">{formData.title}</h3>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {formData.defenseSystems.map((system) => {
                     const info = DEFENSE_SYSTEMS[system];
@@ -595,11 +595,11 @@ export default function RecipeForm({
 
               {/* Description */}
               {formData.description && (
-                <p className="text-gray-600">{formData.description}</p>
+                <p className="text-gray-600 dark:text-gray-300">{formData.description}</p>
               )}
 
               {/* Meta Info */}
-              <div className="flex items-center space-x-6 text-sm text-gray-600">
+              <div className="flex items-center space-x-6 text-sm text-gray-600 dark:text-gray-300">
                 {formData.prepTime && (
                   <div className="flex items-center space-x-1">
                     <Clock className="w-4 h-4" />
@@ -622,12 +622,12 @@ export default function RecipeForm({
 
               {/* Ingredients */}
               <div>
-                <h4 className="font-bold text-gray-800 mb-3">Ingredients</h4>
+                <h4 className="font-bold text-gray-800 dark:text-white mb-3">Ingredients</h4>
                 <ul className="space-y-2">
                   {formData.ingredients
                     .filter((ing) => ing.name.trim() && ing.quantity.trim() && ing.unit.trim())
                     .map((ingredient, index) => (
-                      <li key={index} className="flex items-center space-x-2">
+                      <li key={index} className="flex items-center space-x-2 text-gray-700 dark:text-gray-200">
                         <span className="w-2 h-2 bg-green-500 rounded-full"></span>
                         <span className="font-medium">{ingredient.quantity} {getUnitLabel(ingredient.unit)}</span>
                         <span>{ingredient.name}</span>
@@ -638,29 +638,29 @@ export default function RecipeForm({
 
               {/* Instructions */}
               <div>
-                <h4 className="font-bold text-gray-800 mb-3">Instructions</h4>
-                <div className="bg-gray-50 p-4 rounded-lg whitespace-pre-line text-sm">
+                <h4 className="font-bold text-gray-800 dark:text-white mb-3">Instructions</h4>
+                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg whitespace-pre-line text-sm text-gray-700 dark:text-gray-200">
                   {formData.instructions}
                 </div>
               </div>
             </div>
 
             {errors.submit && (
-              <div className="bg-red-50 border-2 border-red-500 rounded-lg p-4">
-                <p className="text-red-600 font-medium">{errors.submit}</p>
+              <div className="bg-red-50 dark:bg-red-900/20 border-2 border-red-500 dark:border-red-800 rounded-lg p-4">
+                <p className="text-red-600 dark:text-red-400 font-medium">{errors.submit}</p>
               </div>
             )}
           </div>
         )}
 
         {/* Navigation Buttons */}
-        <div className="flex items-center justify-between mt-8 pt-6 border-t">
+        <div className="flex items-center justify-between mt-8 pt-6 border-t dark:border-gray-700">
           <div>
             {currentStep > 1 && (
               <button
                 type="button"
                 onClick={prevStep}
-                className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                className="px-6 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium"
               >
                 Previous
               </button>
@@ -672,7 +672,7 @@ export default function RecipeForm({
               <button
                 type="button"
                 onClick={onCancel}
-                className="px-6 py-3 text-gray-600 hover:text-gray-800 transition-colors font-medium"
+                className="px-6 py-3 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white transition-colors font-medium"
               >
                 Cancel
               </button>

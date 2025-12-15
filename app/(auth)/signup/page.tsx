@@ -146,29 +146,29 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo & Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-green-500 to-blue-500 rounded-2xl mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-green-500 to-blue-500 rounded-2xl mb-4 shadow-lg">
             <Heart className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+          <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-2">
             Join 5x5x5 Wellness Hub
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-200">
             Start your journey to better health today
           </p>
         </div>
 
         {/* Signup Form */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-100 dark:border-gray-700">
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Submit Error */}
             {errors.submit && (
-              <div className="bg-red-50 border-2 border-red-500 rounded-lg p-4 flex items-start space-x-3">
-                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-red-600">{errors.submit}</p>
+              <div className="bg-red-50 dark:bg-red-900/20 border-2 border-red-500 dark:border-red-600 rounded-lg p-4 flex items-start space-x-3">
+                <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-red-600 dark:text-red-400">{errors.submit}</p>
               </div>
             )}
 
@@ -176,13 +176,13 @@ export default function SignupPage() {
             <div>
               <label
                 htmlFor="name"
-                className="block text-sm font-semibold text-gray-700 mb-2"
+                className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
               >
                 Full Name
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User className="h-5 w-5 text-gray-400" />
+                  <User className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                 </div>
                 <input
                   id="name"
@@ -191,14 +191,14 @@ export default function SignupPage() {
                   required
                   value={formData.name}
                   onChange={handleChange}
-                  className={`block w-full pl-10 pr-3 py-3 border-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors ${
-                    errors.name ? 'border-red-500' : 'border-gray-300'
+                  className={`block w-full pl-10 pr-3 py-3 border-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors bg-white dark:bg-gray-700 dark:text-white ${
+                    errors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                   }`}
                   placeholder="John Doe"
                 />
               </div>
               {errors.name && (
-                <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.name}</p>
               )}
             </div>
 
@@ -206,13 +206,13 @@ export default function SignupPage() {
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-semibold text-gray-700 mb-2"
+                className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
               >
                 Email Address
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
+                  <Mail className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                 </div>
                 <input
                   id="email"
@@ -221,14 +221,14 @@ export default function SignupPage() {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  className={`block w-full pl-10 pr-3 py-3 border-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors ${
-                    errors.email ? 'border-red-500' : 'border-gray-300'
+                  className={`block w-full pl-10 pr-3 py-3 border-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors bg-white dark:bg-gray-700 dark:text-white ${
+                    errors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                   }`}
                   placeholder="you@example.com"
                 />
               </div>
               {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email}</p>
               )}
             </div>
 
@@ -236,13 +236,13 @@ export default function SignupPage() {
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-semibold text-gray-700 mb-2"
+                className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
               >
                 Password
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
+                  <Lock className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                 </div>
                 <input
                   id="password"
@@ -251,8 +251,8 @@ export default function SignupPage() {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className={`block w-full pl-10 pr-3 py-3 border-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors ${
-                    errors.password ? 'border-red-500' : 'border-gray-300'
+                  className={`block w-full pl-10 pr-3 py-3 border-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors bg-white dark:bg-gray-700 dark:text-white ${
+                    errors.password ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                   }`}
                   placeholder="Create a strong password"
                 />
@@ -260,16 +260,16 @@ export default function SignupPage() {
               {formData.password && (
                 <div className="mt-2">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs text-gray-600">Password strength:</span>
+                    <span className="text-xs text-gray-600 dark:text-gray-300">Password strength:</span>
                     <span className={`text-xs font-medium ${
-                      passwordStrength <= 2 ? 'text-red-600' : 
-                      passwordStrength <= 3 ? 'text-yellow-600' : 
-                      'text-green-600'
+                      passwordStrength <= 2 ? 'text-red-600 dark:text-red-400' : 
+                      passwordStrength <= 3 ? 'text-yellow-600 dark:text-yellow-400' : 
+                      'text-green-600 dark:text-green-400'
                     }`}>
                       {getPasswordStrengthText()}
                     </span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
                     <div
                       className={`h-2 rounded-full transition-all ${getPasswordStrengthColor()}`}
                       style={{ width: `${(passwordStrength / 5) * 100}%` }}
@@ -278,7 +278,7 @@ export default function SignupPage() {
                 </div>
               )}
               {errors.password && (
-                <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.password}</p>
               )}
             </div>
 
@@ -286,13 +286,13 @@ export default function SignupPage() {
             <div>
               <label
                 htmlFor="confirmPassword"
-                className="block text-sm font-semibold text-gray-700 mb-2"
+                className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
               >
                 Confirm Password
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
+                  <Lock className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                 </div>
                 <input
                   id="confirmPassword"
@@ -301,19 +301,19 @@ export default function SignupPage() {
                   required
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className={`block w-full pl-10 pr-3 py-3 border-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors ${
-                    errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
+                  className={`block w-full pl-10 pr-3 py-3 border-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors bg-white dark:bg-gray-700 dark:text-white ${
+                    errors.confirmPassword ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                   }`}
                   placeholder="Confirm your password"
                 />
                 {formData.confirmPassword && formData.password === formData.confirmPassword && (
                   <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                    <CheckCircle2 className="h-5 w-5 text-green-500" />
+                    <CheckCircle2 className="h-5 w-5 text-green-500 dark:text-green-400" />
                   </div>
                 )}
               </div>
               {errors.confirmPassword && (
-                <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.confirmPassword}</p>
               )}
             </div>
 
@@ -321,13 +321,13 @@ export default function SignupPage() {
             <div>
               <label
                 htmlFor="measurementSystem"
-                className="block text-sm font-semibold text-gray-700 mb-2"
+                className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
               >
                 Measurement System
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Ruler className="h-5 w-5 text-gray-400" />
+                  <Ruler className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                 </div>
                 <select
                   id="measurementSystem"
@@ -335,31 +335,31 @@ export default function SignupPage() {
                   required
                   value={formData.measurementSystem}
                   onChange={handleChange}
-                  className="block w-full pl-10 pr-10 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors appearance-none bg-white"
+                  className="block w-full pl-10 pr-10 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors appearance-none bg-white dark:bg-gray-700 dark:text-white"
                 >
                   <option value="imperial">Imperial (lb, oz, °F)</option>
                   <option value="metric">Metric (kg, g, °C)</option>
                 </select>
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-5 w-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </div>
               </div>
-              <p className="mt-1 text-xs text-gray-500">Used for recipes, shopping lists, and nutrition tracking</p>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-300">Used for recipes, shopping lists, and nutrition tracking</p>
             </div>
 
             {/* Language Selection */}
             <div>
               <label
                 htmlFor="language"
-                className="block text-sm font-semibold text-gray-700 mb-2"
+                className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
               >
                 Language
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Globe className="h-5 w-5 text-gray-400" />
+                  <Globe className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                 </div>
                 <select
                   id="language"
@@ -367,7 +367,7 @@ export default function SignupPage() {
                   required
                   value={formData.language}
                   onChange={handleChange}
-                  className="block w-full pl-10 pr-10 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors appearance-none bg-white"
+                  className="block w-full pl-10 pr-10 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors appearance-none bg-white dark:bg-gray-700 dark:text-white"
                 >
                   <option value="en">🇬🇧 English</option>
                   <option value="es">🇪🇸 Español (Spanish)</option>
@@ -375,12 +375,12 @@ export default function SignupPage() {
                   <option value="de">🇩🇪 Deutsch (German)</option>
                 </select>
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-5 w-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </div>
               </div>
-              <p className="mt-1 text-xs text-gray-500">Your preferred language for the app interface</p>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-300">Your preferred language for the app interface</p>
             </div>
 
             {/* Terms Checkbox */}
@@ -392,23 +392,23 @@ export default function SignupPage() {
                   type="checkbox"
                   checked={formData.termsAccepted}
                   onChange={handleChange}
-                  className={`h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded mt-1 ${
+                  className={`h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 dark:border-gray-600 rounded mt-1 ${
                     errors.terms ? 'border-red-500' : ''
                   }`}
                 />
-                <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
+                <label htmlFor="terms" className="ml-2 block text-sm text-gray-700 dark:text-gray-200">
                   I agree to the{' '}
-                  <Link href="/terms" target="_blank" className="text-green-600 hover:text-green-500 font-medium underline">
+                  <Link href="/terms" target="_blank" className="text-green-600 dark:text-green-400 hover:text-green-500 dark:hover:text-green-300 font-medium underline">
                     Terms of Service
                   </Link>{' '}
                   and{' '}
-                  <Link href="/privacy" target="_blank" className="text-green-600 hover:text-green-500 font-medium underline">
+                  <Link href="/privacy" target="_blank" className="text-green-600 dark:text-green-400 hover:text-green-500 dark:hover:text-green-300 font-medium underline">
                     Privacy Policy
                   </Link>
                 </label>
               </div>
               {errors.terms && (
-                <p className="mt-1 text-sm text-red-600">{errors.terms}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.terms}</p>
               )}
             </div>
 
@@ -431,11 +431,11 @@ export default function SignupPage() {
 
           {/* Sign In Link */}
           <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-300">
               Already have an account?{' '}
               <Link
                 href="/login"
-                className="font-semibold text-green-600 hover:text-green-500"
+                className="font-semibold text-green-600 dark:text-green-400 hover:text-green-500 dark:hover:text-green-300"
               >
                 Sign in
               </Link>
@@ -444,7 +444,7 @@ export default function SignupPage() {
         </div>
 
         {/* Footer */}
-        <p className="mt-8 text-center text-xs text-gray-500">
+        <p className="mt-8 text-center text-xs text-gray-500 dark:text-gray-300">
           Join thousands of people on their journey to better health
         </p>
       </div>

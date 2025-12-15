@@ -218,7 +218,7 @@ export default function MealPlanHeader({
       case 'FRIENDS':
         return 'text-blue-600 bg-blue-50 border-blue-200';
       default:
-        return 'text-gray-600 bg-gray-50 border-gray-200';
+        return 'text-gray-600 dark:text-gray-200 bg-gray-50 dark:bg-gray-700 border-gray-200';
     }
   };
 
@@ -236,7 +236,7 @@ export default function MealPlanHeader({
   };
 
   return (
-    <div className={`bg-white rounded-lg shadow-lg p-4 sm:p-6 ${className}`}>
+    <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 border dark:border-gray-700 ${className}`}>
       {/* Top Row - Title and Actions */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
         {/* Title Section */}
@@ -249,12 +249,12 @@ export default function MealPlanHeader({
                 value={tempTitle}
                 onChange={(e) => setTempTitle(e.target.value)}
                 onKeyDown={handleTitleKeyDown}
-                className="flex-1 text-xl sm:text-2xl font-bold px-2 py-1 border-2 border-blue-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                className="flex-1 text-xl sm:text-2xl font-bold px-2 py-1 border-2 border-blue-500 dark:border-blue-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 dark:bg-gray-700 dark:text-white"
                 placeholder="Enter meal plan title..."
               />
               <button 
                 onClick={handleTitleEdit}
-                className="p-1 text-green-600 hover:text-green-700 hover:bg-green-50 rounded transition-colors"
+                className="p-1 text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 hover:bg-green-50 dark:hover:bg-green-900/20 rounded transition-colors"
                 aria-label="Save title"
               >
                 <Check className="w-5 h-5" />
@@ -264,7 +264,7 @@ export default function MealPlanHeader({
                   setTempTitle(mealPlan.title);
                   setEditingTitle(false);
                 }}
-                className="p-1 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+                className="p-1 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
                 aria-label="Cancel editing"
               >
                 <X className="w-5 h-5" />
@@ -272,12 +272,12 @@ export default function MealPlanHeader({
             </div>
           ) : (
             <div className="group/title flex items-center gap-2">
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex-1 min-w-0 break-words">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white flex-1 min-w-0 break-words">
                 {mealPlan.title}
               </h1>
               <button
                 onClick={handleTitleEdit}
-                className="opacity-0 group-hover/title:opacity-100 p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded transition-all"
+                className="opacity-0 group-hover/title:opacity-100 p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded transition-all"
                 aria-label="Edit title"
               >
                 <Edit2 className="w-4 h-4" />
@@ -386,7 +386,7 @@ export default function MealPlanHeader({
       {/* Second Row - Meta Information */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-sm">
         {/* Left - Date Range and Servings */}
-        <div className="flex flex-wrap items-center gap-4 text-gray-600">
+        <div className="flex flex-wrap items-center gap-4 text-gray-600 dark:text-gray-200">
           <div className="flex items-center gap-2">
             <Calendar className="w-4 h-4" />
             <span>{formatDateRange(mealPlan.weekStart, mealPlan.weekEnd)}</span>
@@ -414,7 +414,7 @@ export default function MealPlanHeader({
             </button>
 
             {showVisibilityMenu && (
-              <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
+              <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-10">
                 {(['PRIVATE', 'FRIENDS', 'PUBLIC'] as const).map((visibility) => {
                   const Icon = getVisibilityIcon(visibility);
                   const isSelected = mealPlan.visibility === visibility;
@@ -424,14 +424,14 @@ export default function MealPlanHeader({
                       key={visibility}
                       onClick={() => handleVisibilityChange(visibility)}
                       className={`
-                        w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-gray-100 transition-colors
-                        ${isSelected ? 'bg-gray-50 font-medium' : ''}
+                        w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors
+                        ${isSelected ? 'bg-gray-50 dark:bg-gray-700 font-medium' : ''}
                       `}
                     >
                       <Icon className="w-4 h-4" />
                       <div>
                         <div className="text-sm">{getVisibilityLabel(visibility)}</div>
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-gray-500 dark:text-gray-300">
                           {visibility === 'PRIVATE' && 'Only you can see this plan'}
                           {visibility === 'FRIENDS' && 'Your friends can see this plan'}
                           {visibility === 'PUBLIC' && 'Anyone with the link can see this plan'}
@@ -479,7 +479,7 @@ export default function MealPlanHeader({
                   <X className="w-3 h-3" />
                   Cancel
                 </button>
-                <span className="text-xs text-gray-500">Press Ctrl+Enter to save</span>
+                <span className="text-xs text-gray-500 dark:text-gray-300">Press Ctrl+Enter to save</span>
               </div>
             </div>
           ) : (
@@ -489,7 +489,7 @@ export default function MealPlanHeader({
               </p>
               <button
                 onClick={() => setEditingDescription(true)}
-                className="opacity-0 group-hover/desc:opacity-100 p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded transition-all"
+                className="opacity-0 group-hover/desc:opacity-100 p-1 text-gray-400 dark:text-gray-300 hover:text-gray-600 dark:text-gray-200 hover:bg-gray-50 dark:bg-gray-700 rounded transition-all"
                 aria-label="Edit description"
               >
                 <Edit2 className="w-3 h-3" />
@@ -504,7 +504,7 @@ export default function MealPlanHeader({
         <div className="mt-4 pt-4 border-t border-gray-200">
           <button
             onClick={() => setEditingDescription(true)}
-            className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="text-sm text-gray-500 dark:text-gray-300 hover:text-gray-700 transition-colors"
           >
             + Add description
           </button>

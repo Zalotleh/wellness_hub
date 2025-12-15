@@ -110,6 +110,92 @@ and another issue that the recipes for each dy are repeated, for example monday'
 
 there is a delete button inside the Create your Meal Plan page, i noticed when i select new mea plan fro a meal plan page, in the url i am still in the meal plan page itself, user should go to: /meal-planner page right? X
 
+
+- recipe ai generator has an issue, i tried to create recipe many time but i always got the error: The AI generated an incomplete recipe. Please try again. This attempt was not counted against your limit.
+
+✓ Not Counted Against Your Limit
+You can try again immediately
+-- the terminal output:
+prisma:query SELECT "public"."User"."id", "public"."User"."subscriptionTier"::text, "public"."User"."subscriptionStatus", "public"."User"."recipeGenerationsThisMonth", "public"."User"."lastResetDate" FROM "public"."User" WHERE ("public"."User"."id" = $1 AND 1=1) LIMIT $2 OFFSET $3
+📝 Request body: {
+  defenseSystem: 'MICROBIOME',
+  ingredients: [ 'Greek Yogurt', 'Tempeh', 'Oats', 'Asparagus' ],
+  dietaryRestrictions: [ 'vegetarian' ],
+  mealType: 'lunch',
+  measurementSystem: 'metric'
+}
+📤 Sending prompt to Anthropic API...
+📥 Anthropic response status: 200
+✅ Anthropic response received
+📄 Response structure: {
+  "model": "claude-sonnet-4-5-20250929",
+  "id": "msg_019h9gk8o3JsHJ9XQAxuDZVE",
+  "type": "message",
+  "role": "assistant",
+  "content": [
+    {
+      "type": "text",
+      "text": "# TITLE: Crispy Tempeh Buddha Bowl with Miso-Tahini Dressing and Roasted Asparagus\n\n## DESCRIPTION: \nThis vibrant Buddha bowl combines probiotic-rich tempeh and miso with prebiotic oats, asparagus, and garlic to create a synergistic feast for your gut microbiome. The combination of fermented foods, fiber-rich whole grains, and colorful vegetables delivers diverse beneficial bacteria while feeding them with the prebiotics they need to thrive. Topped with a creamy Greek yogurt-based dressing, this lunch provides a complete spectrum of microbiome-supporting nutrients in one satisfying bowl.\n\n## PREP_TIME: 20 min\n\n## COOK_TIME: 30 min\n\n## SERVINGS: 2\n\n## INGREDIENTS:\n- 200 g tempeh\n- 100 g steel-cut oats\n- 400 ml vegetable broth\n- 300 g asparagus spears\n- 30 ml olive oil\n- 2 clove garlic, minced\n- 1 piece medium onion, thinly sliced\n- 150 g sauerkraut\n- 80 g Greek yogurt\n- 15 ml miso paste\n- 15 ml tahini\n- 15 ml apple cider vinegar\n- 1 piece medium apple, sliced\n- 30 g flaxseeds, ground\n- 10 ml tamari or soy sauce\n- 5 g fresh ginger, grated\n- 2 g turmeric powder\n- 1 pinch black pepper\n- 1 piece lemon, juiced\n- 2 g sesame seeds\n- Fresh parsley, as needed\n\n## INSTRUCTIONS:\n\n1. Preheat oven to 200°C. Cut tempeh into 1.5 cm cubes and place in a bowl. Mix tamari, 5 ml olive oil, grated ginger, and turmeric. Toss tempeh in marinade and let sit for 10 minutes.\n\n2. Meanwhile, bring vegetable broth to a boil in a medium saucepan. Add steel-cut oats, reduce heat to low, cover, and simmer for 20-25 minutes until creamy and tender, stirring occasionally.\n\n3. Trim woody ends from asparagus and place on a baking sheet. Drizzle with 10 ml olive oil, add sliced onion, minced garlic, and season with black pepper. Roast for 15-18 minutes until tender and lightly caramelized.\n\n4. Heat 15 ml olive oil in a non-stick pan over medium-high heat. Add marinated tempeh cubes and cook for 8-10 minutes, turning occasionally, until golden and crispy on all sides.\n\n5. Prepare the miso-tahini dressing by whisking together Greek yogurt, miso paste, tahini, apple cider vinegar, lemon juice, and 15-30 ml water to reach desired consistency.\n\n6. Once oats are cooked, stir in ground flaxseeds and let rest for 2 minutes to thicken slightly.\n\n7. Assemble bowls by dividing the savory oats between two serving bowls. Top each with crispy tempeh, roasted asparagus and onions, fresh sauerkraut, and sliced apple.\n\n8. Drizzle generously with miso-tahini dressing, sprinkle with sesame seeds, and garnish with fresh parsley. Serve immediately while tempeh is still crispy.\n\n## NUTRIENTS:\n- Probiotics (Lactobacillus, Bifidobacterium): 15+ billion CFU from tempeh, sauerkraut, miso, and Greek yogurt\n- Prebiotics (Inulin, FOS): 8 g from asparagus, onion, garlic, and apple\n- Dietary Fiber: 18 g from oats, tempeh, vegetables, and flaxseeds\n- Omega-3 Fatty Acids: 3.5 g from flaxseeds\n- Polyphenols: 450 mg from apple, onion, asparagus, and olive oil\n- Vitamin K2: 12 mcg from fermented tempeh and sauerkraut\n- Protein: 28 g\n- Short-Chain Fatty Acid precursors: Abundant from fermented foods and soluble fiber"
+    }
+  ],
+  "stop_reason": "end_turn",
+  "stop_sequence": null,
+  "usage": {
+    "input_tokens": 966,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 0
+    },
+    "output_tokens": 1042,
+    "service_tier": "standard"
+  }
+}
+📖 Recipe text length: 3100
+📖 First 200 chars: # TITLE: Crispy Tempeh Buddha Bowl with Miso-Tahini Dressing and Roasted Asparagus
+
+## DESCRIPTION: 
+This vibrant Buddha bowl combines probiotic-rich tempeh and miso with prebiotic oats, asparagus, an
+🔍 Parsing recipe text...
+⚠️ No title found - validation will reject this
+⚠️ No description found, using fallback
+⚠️ No instructions found, using fallback
+✅ Parsing complete. Recipe has: {
+  title: false,
+  description: true,
+  ingredients: 0,
+  instructions: true,
+  nutrients: 0
+}
+🍳 Parsed recipe: {
+  "defenseSystem": "MICROBIOME",
+  "ingredients": [],
+  "nutrients": {},
+  "title": "",
+  "description": "A healthy recipe designed to support Microbiome.",
+  "instructions": "Instructions not available in the generated content."
+}
+❌ Recipe validation failed: [
+  'Missing recipe title',
+  'Insufficient ingredients (has 0, needs at least 3)',
+  'Missing or too short cooking instructions (has 52 chars, needs at least 100)',
+  'Instructions are placeholder text, not real cooking steps'
+]
+⚠️ Recipe failed quality validation: [
+  'Missing recipe title',
+  'Insufficient ingredients (has 0, needs at least 3)',
+  'Missing or too short cooking instructions (has 52 chars, needs at least 100)',
+  'Instructions are placeholder text, not real cooking steps'
+]
+ POST /api/ai/generate 500 in 19237ms
+
+
+- in recipe page, the share button needs enhancement and better dialouge message than the toast notification for sharing anf for deleting the recipe.
+- Create Shopping List inside the Recipe detail page, doest work, an error says: No valid recipes found.
+- adding recipes to the facourites list doesnt work.
+- instruction on recipe ai generator, like select minimum 3 ingredients, gives error if user doesnt slect required info, add the ability to click on ingredient and add them automatically
+
 Plan for nextjs 15 Later:
 
 Next.js 15 Migration Scope

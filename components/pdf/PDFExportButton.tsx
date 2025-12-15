@@ -131,7 +131,7 @@ export default function PDFExportButton({
         <button
           onClick={() => setShowOptions(!showOptions)}
           disabled={isExporting}
-          className="px-2 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
+          className="px-2 py-2 text-gray-600 dark:text-gray-200 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:bg-gray-700 rounded-md transition-colors"
           title="Export options"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -144,8 +144,8 @@ export default function PDFExportButton({
       {isExporting && (
         <div className="mt-3">
           <div className="flex justify-between items-center mb-1">
-            <span className="text-sm text-gray-600">Generating PDF...</span>
-            <span className="text-sm text-gray-600">{progress}%</span>
+            <span className="text-sm text-gray-600 dark:text-gray-200">Generating PDF...</span>
+            <span className="text-sm text-gray-600 dark:text-gray-200">{progress}%</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div
@@ -153,7 +153,7 @@ export default function PDFExportButton({
               style={{ width: `${progress}%` }}
             />
           </div>
-          <div className="mt-1 text-xs text-gray-500">
+          <div className="mt-1 text-xs text-gray-500 dark:text-gray-300">
             {progress < 25 && 'Preparing data...'}
             {progress >= 25 && progress < 50 && 'Building document structure...'}
             {progress >= 50 && progress < 75 && 'Generating PDF content...'}
@@ -179,7 +179,7 @@ export default function PDFExportButton({
                 />
                 <div>
                   <span className="text-sm font-medium text-gray-900">Include Recipes</span>
-                  <p className="text-xs text-gray-500">Full recipe details with ingredients and instructions</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-300">Full recipe details with ingredients and instructions</p>
                 </div>
               </label>
 
@@ -192,7 +192,7 @@ export default function PDFExportButton({
                 />
                 <div>
                   <span className="text-sm font-medium text-gray-900">Include Shopping List</span>
-                  <p className="text-xs text-gray-500">Organized grocery list with categories</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-300">Organized grocery list with categories</p>
                 </div>
               </label>
 
@@ -205,7 +205,7 @@ export default function PDFExportButton({
                 />
                 <div>
                   <span className="text-sm font-medium text-gray-900">Include Nutrition Info</span>
-                  <p className="text-xs text-gray-500">Calories, macros, and defense systems</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-300">Calories, macros, and defense systems</p>
                   <span className="inline-block mt-1 px-2 py-0.5 text-xs bg-blue-100 text-blue-800 rounded-full">
                     Premium
                   </span>
@@ -226,7 +226,7 @@ export default function PDFExportButton({
                     />
                     <div>
                       <span className="text-sm text-gray-900">React PDF</span>
-                      <p className="text-xs text-gray-500">High-quality formatting (recommended)</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-300">High-quality formatting (recommended)</p>
                     </div>
                   </label>
                   
@@ -240,7 +240,7 @@ export default function PDFExportButton({
                     />
                     <div>
                       <span className="text-sm text-gray-900">jsPDF</span>
-                      <p className="text-xs text-gray-500">Fast generation, basic formatting</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-300">Fast generation, basic formatting</p>
                     </div>
                   </label>
                 </div>
@@ -257,7 +257,7 @@ export default function PDFExportButton({
               </button>
               <button
                 onClick={() => setShowOptions(false)}
-                className="px-3 py-2 text-gray-700 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                className="px-3 py-2 text-gray-700 text-sm border border-gray-300 rounded-md hover:bg-gray-50 dark:bg-gray-700 transition-colors"
               >
                 Cancel
               </button>
@@ -389,7 +389,7 @@ export function PDFProgress({ progress, isVisible }: PDFProgressProps) {
             Generating PDF Export
           </h3>
           
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-sm text-gray-600 dark:text-gray-200 mb-4">
             {getProgressMessage(progress)}
           </p>
         </div>
@@ -397,7 +397,7 @@ export function PDFProgress({ progress, isVisible }: PDFProgressProps) {
         <div className="mb-4">
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm font-medium text-gray-700">Progress</span>
-            <span className="text-sm text-gray-500">{Math.round(progress)}%</span>
+            <span className="text-sm text-gray-500 dark:text-gray-300">{Math.round(progress)}%</span>
           </div>
           
           <div className="w-full bg-gray-200 rounded-full h-3">
@@ -409,7 +409,7 @@ export function PDFProgress({ progress, isVisible }: PDFProgressProps) {
         </div>
 
         <div className="text-center">
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-gray-500 dark:text-gray-300">
             This may take a few moments depending on the content size
           </p>
         </div>

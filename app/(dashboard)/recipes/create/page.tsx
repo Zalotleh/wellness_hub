@@ -40,32 +40,32 @@ export default function CreateRecipePage() {
 
   if (showSuccess) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-xl p-8 max-w-md text-center">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 max-w-md text-center">
           <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
             <ChefHat className="w-8 h-8 text-white" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
             Recipe Created Successfully!
           </h2>
-          <p className="text-gray-600 mb-4">
+          <p className="text-gray-600 dark:text-gray-200 mb-4">
             Your recipe has been saved and is now visible to the community.
           </p>
           <div className="animate-spin w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full mx-auto"></div>
-          <p className="text-sm text-gray-500 mt-4">Redirecting...</p>
+          <p className="text-sm text-gray-500 dark:text-gray-300 mt-4">Redirecting...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 py-8 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <Link
             href="/recipes"
-            className="inline-flex items-center space-x-2 text-gray-600 hover:text-gray-800 mb-4"
+            className="inline-flex items-center space-x-2 text-gray-600 dark:text-gray-200 hover:text-gray-800 dark:hover:text-white mb-4"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Back to Recipes</span>
@@ -76,10 +76,10 @@ export default function CreateRecipePage() {
               <ChefHat className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-800">
+              <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
                 Create New Recipe
               </h1>
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-gray-200">
                 Share your health-boosting recipe with the 5x5x5 community
               </p>
             </div>
@@ -90,9 +90,9 @@ export default function CreateRecipePage() {
         <RecipeForm onSubmit={handleSubmit} onCancel={handleCancel} />
 
         {/* Tips Section */}
-        <div className="mt-8 bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
-          <h3 className="font-bold text-blue-900 mb-3">💡 Tips for Great Recipes</h3>
-          <ul className="space-y-2 text-sm text-blue-800">
+        <div className="mt-8 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-lg p-6">
+          <h3 className="font-bold text-blue-900 dark:text-blue-300 mb-3">💡 Tips for Great Recipes</h3>
+          <ul className="space-y-2 text-sm text-blue-800 dark:text-blue-300">
             <li className="flex items-start space-x-2">
               <span>•</span>
               <span>

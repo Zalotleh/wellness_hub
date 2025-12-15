@@ -117,7 +117,7 @@ export default function ProfilePage() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
         <Loader2 className="w-12 h-12 text-green-500 animate-spin" />
       </div>
     );
@@ -129,10 +129,10 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 py-8 px-4">
       <div className="max-w-4xl mx-auto">
         {/* Profile Header */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden mb-6">
           {/* Cover Image */}
           <div className="h-32 bg-gradient-to-r from-green-500 to-blue-500"></div>
 
@@ -141,7 +141,7 @@ export default function ProfilePage() {
             <div className="flex items-end justify-between -mt-16 mb-6">
               <div className="flex items-end space-x-4">
                 {/* Avatar */}
-                <div className="w-32 h-32 bg-white rounded-full border-4 border-white shadow-lg flex items-center justify-center">
+                <div className="w-32 h-32 bg-white dark:bg-gray-700 rounded-full border-4 border-white shadow-lg flex items-center justify-center">
                   <div className="w-28 h-28 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-4xl">
                     {session.user.name?.[0]?.toUpperCase() || 'U'}
                   </div>
@@ -151,10 +151,10 @@ export default function ProfilePage() {
                 <div className="pb-2">
                   {!isEditing ? (
                     <>
-                      <h1 className="text-3xl font-bold text-gray-900">
+                      <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
                         {session.user.name}
                       </h1>
-                      <p className="text-gray-600 flex items-center space-x-2">
+                      <p className="text-gray-600 dark:text-gray-200 flex items-center space-x-2">
                         <Mail className="w-4 h-4" />
                         <span>{session.user.email}</span>
                       </p>
@@ -164,7 +164,7 @@ export default function ProfilePage() {
                       type="text"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="text-3xl font-bold text-gray-900 border-2 border-gray-300 rounded-lg px-3 py-1 focus:border-green-500 focus:outline-none"
+                      className="text-3xl font-bold text-gray-900 dark:text-white border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-lg px-3 py-1 focus:border-green-500 focus:outline-none"
                       placeholder="Your name"
                     />
                   )}
@@ -175,7 +175,7 @@ export default function ProfilePage() {
               {!isEditing ? (
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium flex items-center space-x-2"
+                  className="px-4 py-2 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors font-medium flex items-center space-x-2"
                 >
                   <Edit2 className="w-4 h-4" />
                   <span>Edit Profile</span>
@@ -185,7 +185,7 @@ export default function ProfilePage() {
                   <button
                     onClick={handleSave}
                     disabled={isSaving}
-                    className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium flex items-center space-x-2 disabled:opacity-50"
+                    className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 dark:hover:bg-green-500 transition-colors font-medium flex items-center space-x-2 disabled:opacity-50"
                   >
                     {isSaving ? (
                       <>
@@ -201,7 +201,7 @@ export default function ProfilePage() {
                   </button>
                   <button
                     onClick={handleCancel}
-                    className="px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium flex items-center space-x-2"
+                    className="px-4 py-2 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors font-medium flex items-center space-x-2"
                   >
                     <X className="w-4 h-4" />
                     <span>Cancel</span>
@@ -212,11 +212,11 @@ export default function ProfilePage() {
 
             {/* Bio */}
             <div className="mt-4">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                 Bio
               </label>
               {!isEditing ? (
-                <p className="text-gray-700">
+                <p className="text-gray-700 dark:text-gray-300">
                   {formData.bio || 'No bio yet. Click Edit Profile to add one!'}
                 </p>
               ) : (
@@ -224,14 +224,14 @@ export default function ProfilePage() {
                   value={formData.bio}
                   onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                   rows={3}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none"
+                  className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg focus:border-green-500 focus:outline-none"
                   placeholder="Tell us about your health journey..."
                 />
               )}
             </div>
 
             {/* Member Since */}
-            <div className="mt-4 flex items-center space-x-2 text-gray-600">
+            <div className="mt-4 flex items-center space-x-2 text-gray-600 dark:text-gray-200">
               <Calendar className="w-4 h-4" />
               <span className="text-sm">
                 Member since {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
@@ -242,71 +242,71 @@ export default function ProfilePage() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
             <div className="flex items-center space-x-2 mb-2">
               <ChefHat className="w-5 h-5 text-green-600" />
-              <span className="text-sm text-gray-600">Recipes</span>
+              <span className="text-sm text-gray-600 dark:text-gray-200">Recipes</span>
             </div>
-            <p className="text-3xl font-bold text-gray-900">{stats.recipesCreated}</p>
-            <p className="text-xs text-gray-500">Created</p>
+            <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.recipesCreated}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-300">Created</p>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
             <div className="flex items-center space-x-2 mb-2">
               <CalendarCheck className="w-5 h-5 text-purple-600" />
-              <span className="text-sm text-gray-600">Meal Plans</span>
+              <span className="text-sm text-gray-600 dark:text-gray-200">Meal Plans</span>
             </div>
-            <p className="text-3xl font-bold text-gray-900">{stats.mealPlansCreated}</p>
-            <p className="text-xs text-gray-500">Created</p>
+            <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.mealPlansCreated}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-300">Created</p>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
             <div className="flex items-center space-x-2 mb-2">
               <ShoppingCart className="w-5 h-5 text-orange-600" />
-              <span className="text-sm text-gray-600">Shopping</span>
+              <span className="text-sm text-gray-600 dark:text-gray-200">Shopping</span>
             </div>
-            <p className="text-3xl font-bold text-gray-900">{stats.shoppingListsCreated}</p>
-            <p className="text-xs text-gray-500">Lists</p>
+            <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.shoppingListsCreated}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-300">Lists</p>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
             <div className="flex items-center space-x-2 mb-2">
               <Heart className="w-5 h-5 text-red-600" />
-              <span className="text-sm text-gray-600">Favorites</span>
+              <span className="text-sm text-gray-600 dark:text-gray-200">Favorites</span>
             </div>
-            <p className="text-3xl font-bold text-gray-900">{stats.recipesFavorited}</p>
-            <p className="text-xs text-gray-500">Saved</p>
+            <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.recipesFavorited}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-300">Saved</p>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
             <div className="flex items-center space-x-2 mb-2">
               <TrendingUp className="w-5 h-5 text-blue-600" />
-              <span className="text-sm text-gray-600">Progress</span>
+              <span className="text-sm text-gray-600 dark:text-gray-200">Progress</span>
             </div>
-            <p className="text-3xl font-bold text-gray-900">{stats.progressDays}</p>
-            <p className="text-xs text-gray-500">Days tracked</p>
+            <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.progressDays}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-300">Days tracked</p>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
             <div className="flex items-center space-x-2 mb-2">
               <span className="text-lg">🎯</span>
-              <span className="text-sm text-gray-600">Completion</span>
+              <span className="text-sm text-gray-600 dark:text-gray-200">Completion</span>
             </div>
-            <p className="text-3xl font-bold text-gray-900">{stats.avgCompletion}%</p>
-            <p className="text-xs text-gray-500">Average</p>
+            <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.avgCompletion}%</p>
+            <p className="text-xs text-gray-500 dark:text-gray-300">Average</p>
           </div>
         </div>
 
         {/* Recent Activity */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Recent Activity</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Recent Activity</h2>
           
           {isLoadingStats ? (
             <div className="flex justify-center items-center py-8">
               <Loader2 className="w-8 h-8 animate-spin text-green-600" />
             </div>
           ) : recentActivity.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-gray-500 dark:text-gray-300">
               <p>No recent activity yet.</p>
               <p className="text-sm mt-2">Start creating recipes and tracking your progress!</p>
             </div>
@@ -331,7 +331,7 @@ export default function ProfilePage() {
                     case 'recipe_favorited':
                       return { icon: Heart, bg: 'bg-red-100', color: 'text-red-600', label: 'Favorited a recipe' };
                     default:
-                      return { icon: ChefHat, bg: 'bg-gray-100', color: 'text-gray-600', label: 'Activity' };
+                      return { icon: ChefHat, bg: 'bg-gray-100', color: 'text-gray-600 dark:text-gray-200', label: 'Activity' };
                   }
                 };
 
@@ -340,22 +340,22 @@ export default function ProfilePage() {
                 const timeAgo = getTimeAgo(activity.timestamp);
 
                 return (
-                  <div key={index} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                    <div className={`w-12 h-12 ${activityInfo.bg} rounded-full flex items-center justify-center`}>
-                      <Icon className={`w-6 h-6 ${activityInfo.color}`} />
-                    </div>
+                  <div key={index} className="flex items-center space-x-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:bg-gray-700 transition-colors">
+                      <div className={`w-12 h-12 ${activityInfo.bg} rounded-full flex items-center justify-center`}> 
+                        <Icon className={`w-6 h-6 ${activityInfo.color}`} />
+                      </div>
                     <div className="flex-1">
-                      <p className="font-medium text-gray-900">{activityInfo.label}</p>
-                      <p className="text-sm text-gray-600">
+                        <p className="font-medium text-gray-900 dark:text-white">{activityInfo.label}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-200">
                         {activity.title} • {timeAgo}
                       </p>
                     </div>
-                    <a
-                      href={activity.linkUrl}
-                      className="text-green-600 hover:text-green-700 text-sm font-medium"
-                    >
-                      View →
-                    </a>
+                      <a
+                        href={activity.linkUrl}
+                        className="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 text-sm font-medium"
+                      >
+                        View →
+                      </a>
                   </div>
                 );
               })}

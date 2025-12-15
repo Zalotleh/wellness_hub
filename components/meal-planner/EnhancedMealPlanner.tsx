@@ -937,7 +937,7 @@ export default function EnhancedMealPlanner({
   // Configuration step
   if (currentStep === 'configure') {
     return (
-      <div className={cn('min-h-screen bg-gray-50', className)}>
+      <div className={cn('min-h-screen bg-gray-50 dark:bg-gray-900', className)}>
         <PlanConfiguration
           configuration={configuration}
           onConfigurationChange={(updates) => 
@@ -960,7 +960,7 @@ export default function EnhancedMealPlanner({
   // Error state
   if (error && (!mealPlan.meals || !mealPlan.meals.length)) {
     return (
-      <div className={cn('min-h-screen bg-gray-50 flex items-center justify-center', className)}>
+      <div className={cn('min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center', className)}>
         <ErrorState
           message={error}
           onRetry={() => {
@@ -975,7 +975,7 @@ export default function EnhancedMealPlanner({
   // Empty state
   if ((!mealPlan.meals || !mealPlan.meals.length) && !isGenerating) {
     return (
-      <div className={cn('min-h-screen bg-gray-50 flex items-center justify-center', className)}>
+      <div className={cn('min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center', className)}>
         <EmptyState
           title="No meals planned yet"
           description="Start by configuring your meal plan preferences and generating your first weekly plan."
@@ -990,9 +990,9 @@ export default function EnhancedMealPlanner({
 
   // Main view
   return (
-    <div className={cn('min-h-screen bg-gray-50', className)}>
+    <div className={cn('min-h-screen bg-gray-50 dark:bg-gray-900', className)}>
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
         <div className={cn(
           'mx-auto px-4 sm:px-6 lg:px-8',
           isMobile ? 'max-w-full' : isTablet ? 'max-w-4xl' : 'max-w-7xl'
@@ -1063,20 +1063,20 @@ export default function EnhancedMealPlanner({
       {/* Error display */}
       {error && (
         <div className="fixed bottom-4 left-4 right-4 md:left-auto md:w-96">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
             <div className="flex items-center gap-3">
-              <div className="text-red-500">
+              <div className="text-red-500 dark:text-red-400">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                         d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
                 </svg>
               </div>
               <div className="flex-1">
-                <p className="text-sm text-red-700">{error}</p>
+                <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
               </div>
               <button
                 onClick={() => setError(null)}
-                className="text-red-400 hover:text-red-600"
+                className="text-red-400 hover:text-red-600 dark:hover:text-red-300"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

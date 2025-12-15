@@ -87,7 +87,7 @@ export function ToastComponent({ toast, onRemove }: ToastProps) {
           
           <button
             onClick={() => onRemove(toast.id)}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-gray-400 dark:text-gray-300 hover:text-gray-600 dark:text-gray-200 transition-colors"
           >
             <X className="w-4 h-4" />
           </button>

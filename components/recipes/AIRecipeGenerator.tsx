@@ -332,20 +332,20 @@ export default function AIRecipeGenerator({
       {/* Loading Overlay - Covers entire component during generation */}
       {isGenerating && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-4 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl dark:border dark:border-gray-700 p-8 max-w-md mx-4 text-center">
             <div className="relative">
               {/* Animated gradient circle */}
               <div className="w-24 h-24 mx-auto mb-6 relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 rounded-full animate-spin"></div>
-                <div className="absolute inset-2 bg-white rounded-full flex items-center justify-center">
+                <div className="absolute inset-2 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center">
                   <Sparkles className="w-10 h-10 text-purple-500 animate-pulse" />
                 </div>
               </div>
               
-              <h3 className="text-2xl font-bold text-gray-800 mb-2">
+              <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
                 Generating Your Recipe
               </h3>
-              <p className="text-gray-600 mb-4">
+              <p className="text-gray-600 dark:text-gray-200 mb-4">
                 AI is crafting a personalized {DEFENSE_SYSTEMS[defenseSystem].displayName} recipe...
               </p>
               
@@ -353,15 +353,15 @@ export default function AIRecipeGenerator({
               <div className="space-y-2 text-left">
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm text-gray-600">Analyzing defense system requirements</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-200">Analyzing defense system requirements</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-pink-500 rounded-full animate-pulse delay-100"></div>
-                  <span className="text-sm text-gray-600">Selecting optimal ingredients</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-200">Selecting optimal ingredients</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse delay-200"></div>
-                  <span className="text-sm text-gray-600">Creating cooking instructions</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-200">Creating cooking instructions</span>
                 </div>
               </div>
               
@@ -374,15 +374,15 @@ export default function AIRecipeGenerator({
       {/* Saving Overlay */}
       {isSaving && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-4 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl dark:border dark:border-gray-700 p-8 max-w-md mx-4 text-center">
             <div className="w-16 h-16 mx-auto mb-4 relative">
-              <div className="absolute inset-0 border-4 border-purple-200 rounded-full"></div>
+              <div className="absolute inset-0 border-4 border-purple-200 dark:border-purple-900 rounded-full"></div>
               <div className="absolute inset-0 border-4 border-purple-500 rounded-full border-t-transparent animate-spin"></div>
             </div>
-            <h3 className="text-xl font-bold text-gray-800 mb-2">
+            <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">
               Saving Recipe...
             </h3>
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-gray-200">
               Adding to your collection
             </p>
           </div>
@@ -402,10 +402,10 @@ export default function AIRecipeGenerator({
 
       {!generatedRecipe ? (
         /* Configuration Form */
-        <div className="bg-white rounded-lg shadow-md p-6 space-y-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:border dark:border-gray-700 p-6 space-y-6">
           {/* Defense System Selection */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-3">
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">
               Which defense system would you like to support?
             </label>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -422,7 +422,7 @@ export default function AIRecipeGenerator({
                     className={`relative p-4 border-2 rounded-lg text-left transition-all transform hover:scale-102 ${
                       isSelected
                         ? `${info.borderColor} ${info.bgColor} scale-105 shadow-lg ring-2 ring-offset-2`
-                        : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
+                        : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 hover:shadow-md'
                     } ${isGenerating || isSaving ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     {/* Selected Indicator */}
@@ -438,11 +438,11 @@ export default function AIRecipeGenerator({
                     
                     <div className="flex items-center space-x-2 mb-2">
                       <span className="text-2xl">{info.icon}</span>
-                      <span className={`font-bold text-sm ${isSelected ? info.textColor : 'text-gray-800'}`}>
+                      <span className={`font-bold text-sm ${isSelected ? info.textColor : 'text-gray-800 dark:text-gray-200'}`}>
                         {info.displayName}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-600 line-clamp-2">{info.description}</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">{info.description}</p>
                     
                     {/* Active Glow Effect */}
                     {isSelected && (
@@ -455,11 +455,11 @@ export default function AIRecipeGenerator({
           </div>
 
           {/* System Info */}
-          <div className={`p-4 rounded-lg ${systemInfo.bgColor}`}>
-            <h4 className="font-bold text-sm mb-2">Key Foods for {systemInfo.displayName}:</h4>
+          <div className={`p-4 rounded-lg ${systemInfo.bgColor} dark:opacity-90`}>
+            <h4 className="font-bold text-sm mb-2 text-gray-900 dark:text-white">Key Foods for {systemInfo.displayName}:</h4>
             <div className="flex flex-wrap gap-2">
               {systemInfo.keyFoods.map((food) => (
-                <span key={food} className="text-xs bg-white px-2 py-1 rounded">
+                <span key={food} className="text-xs bg-white dark:bg-white/90 dark:text-gray-900 px-2 py-1 rounded">
                   {food}
                 </span>
               ))}
@@ -468,7 +468,7 @@ export default function AIRecipeGenerator({
 
           {/* Ingredients Input */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-3">
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">
               Ingredients you'd like to use (optional)
             </label>
             <div className="space-y-2">
@@ -479,7 +479,7 @@ export default function AIRecipeGenerator({
                     value={ingredient}
                     onChange={(e) => handleIngredientChange(index, e.target.value)}
                     disabled={isGenerating || isSaving}
-                    className="flex-1 px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100"
+                    className="flex-1 px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:border-purple-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100 dark:disabled:bg-gray-800 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-500"
                     placeholder="e.g., Salmon, Broccoli, Tomatoes"
                   />
                   {ingredients.length > 1 && (
@@ -487,7 +487,7 @@ export default function AIRecipeGenerator({
                       type="button"
                       onClick={() => handleRemoveIngredient(index)}
                       disabled={isGenerating || isSaving}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <X className="w-5 h-5" />
                     </button>
@@ -500,16 +500,16 @@ export default function AIRecipeGenerator({
                 type="button"
                 onClick={handleAddIngredient}
                 disabled={isGenerating || isSaving}
-                className="w-full p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all group mt-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-300 disabled:hover:bg-transparent"
+                className="w-full p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all group mt-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-300 dark:disabled:hover:border-gray-600 disabled:hover:bg-transparent"
               >
                 <div className="flex flex-col items-center space-y-2">
-                  <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center group-hover:bg-purple-500 transition-colors">
-                    <Plus className="w-6 h-6 text-purple-600 group-hover:text-white transition-colors" />
+                  <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center group-hover:bg-purple-500 transition-colors">
+                    <Plus className="w-6 h-6 text-purple-600 dark:text-purple-400 group-hover:text-white transition-colors" />
                   </div>
-                  <span className="text-sm font-medium text-gray-600 group-hover:text-purple-600 transition-colors">
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-200 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
                     Add Another Ingredient
                   </span>
-                  <span className="text-xs text-gray-400">Optional: Specify more ingredients you want to use</span>
+                  <span className="text-xs text-gray-400 dark:text-gray-500">Optional: Specify more ingredients you want to use</span>
                 </div>
               </button>
             </div>
@@ -517,7 +517,7 @@ export default function AIRecipeGenerator({
 
           {/* Meal Type */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-3">
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">
               Meal Type
             </label>
             <div className="flex flex-wrap gap-2">
@@ -530,7 +530,7 @@ export default function AIRecipeGenerator({
                   className={`px-4 py-2 rounded-lg font-medium capitalize transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                     mealType === type
                       ? 'bg-purple-500 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
                   }`}
                 >
                   {type}
@@ -541,7 +541,7 @@ export default function AIRecipeGenerator({
 
           {/* Dietary Restrictions */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-3">
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">
               Dietary Restrictions (optional)
             </label>
             <div className="flex flex-wrap gap-2">
@@ -554,7 +554,7 @@ export default function AIRecipeGenerator({
                   className={`px-4 py-2 rounded-lg font-medium capitalize transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                     dietaryRestrictions.includes(restriction)
                       ? 'bg-purple-500 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
                   }`}
                 >
                   {restriction}
@@ -567,15 +567,15 @@ export default function AIRecipeGenerator({
           {error && (
             <div className={`border-2 rounded-lg p-4 ${
               error.includes('not counted against your limit') 
-                ? 'bg-amber-50 border-amber-500' 
-                : 'bg-red-50 border-red-500'
+                ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-500 dark:border-amber-800' 
+                : 'bg-red-50 dark:bg-red-900/20 border-red-500 dark:border-red-800'
             }`}>
               <div className="flex items-start space-x-3">
                 <div className="flex-1">
                   <p className={`font-medium mb-2 ${
                     error.includes('not counted against your limit')
-                      ? 'text-amber-800'
-                      : 'text-red-600'
+                      ? 'text-amber-800 dark:text-amber-300'
+                      : 'text-red-600 dark:text-red-400'
                   }`}>
                     {error}
                   </p>
@@ -591,12 +591,12 @@ export default function AIRecipeGenerator({
                       </div>
                       
                       {/* Retry Button */}
-                      {lastRequest && (
+                          {lastRequest && (
                         <div className="space-y-2">
                           {/* Show what will be retried */}
-                          <div className="bg-white rounded-lg p-3 border border-amber-200">
-                            <p className="text-xs font-semibold text-amber-900 mb-2">Retry will use these settings:</p>
-                            <div className="space-y-1 text-xs text-amber-800">
+                          <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-amber-200 dark:border-amber-800">
+                            <p className="text-xs font-semibold text-amber-900 dark:text-amber-300 mb-2">Retry will use these settings:</p>
+                            <div className="space-y-1 text-xs text-amber-800 dark:text-amber-300">
                               <div className="flex items-center space-x-2">
                                 <span className="font-medium">Defense System:</span>
                                 <span className={`px-2 py-0.5 rounded-full text-xs ${DEFENSE_SYSTEMS[lastRequest.defenseSystem].bgColor} ${DEFENSE_SYSTEMS[lastRequest.defenseSystem].textColor}`}>
@@ -683,9 +683,9 @@ export default function AIRecipeGenerator({
             <button
               type="button"
               onClick={() => setGeneratedRecipe(null)}
-              className="p-2 hover:bg-gray-100 rounded-lg"
+              className="p-2 hover:bg-gray-100 dark:bg-gray-700 rounded-lg"
             >
-              <X className="w-5 h-5 text-gray-500" />
+              <X className="w-5 h-5 text-gray-500 dark:text-gray-300" />
             </button>
           </div>
 
@@ -704,10 +704,10 @@ export default function AIRecipeGenerator({
             </div>
 
             {generatedRecipe.description && (
-              <p className="text-gray-600">{generatedRecipe.description}</p>
+              <p className="text-gray-600 dark:text-gray-200">{generatedRecipe.description}</p>
             )}
 
-            <div className="flex items-center space-x-6 text-sm text-gray-600">
+            <div className="flex items-center space-x-6 text-sm text-gray-600 dark:text-gray-200">
               {generatedRecipe.prepTime && (
                 <span>⏱️ Prep: {generatedRecipe.prepTime}</span>
               )}
@@ -720,10 +720,10 @@ export default function AIRecipeGenerator({
             </div>
 
             <div>
-              <h5 className="font-bold text-gray-800 mb-2">Ingredients</h5>
+              <h5 className="font-bold text-gray-800 dark:text-white mb-2">Ingredients</h5>
               <ul className="space-y-1">
                 {generatedRecipe.ingredients.map((ing, index) => (
-                  <li key={index} className="flex items-center space-x-2 text-sm">
+                  <li key={index} className="flex items-center space-x-2 text-sm text-gray-700 dark:text-gray-200">
                     <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
                     <span className="font-medium">{ing.quantity} {ing.unit}</span>
                     <span>{ing.name}</span>
@@ -733,20 +733,20 @@ export default function AIRecipeGenerator({
             </div>
 
             <div>
-              <h5 className="font-bold text-gray-800 mb-2">Instructions</h5>
-              <div className="bg-gray-50 p-4 rounded-lg whitespace-pre-line text-sm">
+              <h5 className="font-bold text-gray-800 dark:text-white mb-2">Instructions</h5>
+              <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg whitespace-pre-line text-sm text-gray-700 dark:text-gray-200">
                 {generatedRecipe.instructions}
               </div>
             </div>
 
             {generatedRecipe.nutrients && Object.keys(generatedRecipe.nutrients).length > 0 && (
               <div>
-                <h5 className="font-bold text-gray-800 mb-2">Key Nutrients</h5>
+                <h5 className="font-bold text-gray-800 dark:text-white mb-2">Key Nutrients</h5>
                 <div className="flex flex-wrap gap-2">
                   {Object.entries(generatedRecipe.nutrients).map(([nutrient, value]) => (
                     <span
                       key={nutrient}
-                      className="bg-purple-50 text-purple-800 px-3 py-1 rounded-full text-sm font-medium"
+                      className="bg-purple-50 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 px-3 py-1 rounded-full text-sm font-medium"
                     >
                       {nutrient}: {value}
                     </span>
@@ -757,11 +757,11 @@ export default function AIRecipeGenerator({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center space-x-3 pt-4 border-t">
+          <div className="flex items-center space-x-3 pt-4 border-t dark:border-gray-700">
             <button
               type="button"
               onClick={() => setGeneratedRecipe(null)}
-              className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+              className="flex-1 px-6 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium"
             >
               Generate Another
             </button>
@@ -790,9 +790,9 @@ export default function AIRecipeGenerator({
       )}
 
       {/* Info Box */}
-      <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
-        <h4 className="font-bold text-blue-900 mb-2">💡 How it works</h4>
-        <ul className="space-y-1 text-sm text-blue-800">
+      <div className="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-lg p-4">
+        <h4 className="font-bold text-blue-900 dark:text-blue-300 mb-2">💡 How it works</h4>
+        <ul className="space-y-1 text-sm text-blue-800 dark:text-blue-300">
           <li>• AI analyzes the defense system and its key nutrients</li>
           <li>• Creates recipes using foods that support your health goals</li>
           <li>• Considers your ingredients and dietary restrictions</li>
@@ -801,9 +801,9 @@ export default function AIRecipeGenerator({
       </div>
 
       {/* Fairness Guarantee */}
-      <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4">
-        <h4 className="font-bold text-green-900 mb-2">✓ Fair Usage Guarantee</h4>
-        <p className="text-sm text-green-800">
+      <div className="bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-800 rounded-lg p-4">
+        <h4 className="font-bold text-green-900 dark:text-green-300 mb-2">✓ Fair Usage Guarantee</h4>
+        <p className="text-sm text-green-800 dark:text-green-300">
           If the AI generates an incomplete or invalid recipe, <strong>it won't count against your monthly limit</strong>. 
           Only successfully generated, quality-validated recipes are counted. You can try again immediately at no cost.
         </p>

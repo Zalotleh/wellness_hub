@@ -177,10 +177,10 @@ export default function RecipeDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-12 h-12 text-green-500 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading recipe...</p>
+          <p className="text-gray-600 dark:text-gray-200">Loading recipe...</p>
         </div>
       </div>
     );
@@ -214,19 +214,19 @@ export default function RecipeDetailPage() {
   const isOwner = session?.user?.id === recipe.user.id;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 py-8 px-4">
       <div className="max-w-5xl mx-auto">
         {/* Back Button */}
         <Link
           href={returnUrl}
-          className="inline-flex items-center space-x-2 text-gray-600 hover:text-gray-800 mb-6"
+          className="inline-flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back {returnUrl.includes('meal-planner') ? 'to Meal Plan' : 'to Recipes'}</span>
         </Link>
 
         {/* Main Content */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl dark:border dark:border-gray-700 overflow-hidden">
           {/* Header Image/Placeholder */}
           <div className="relative h-80 bg-gradient-to-br from-green-400 to-blue-400 flex items-center justify-center">
             {recipe.imageUrl ? (
@@ -243,23 +243,23 @@ export default function RecipeDetailPage() {
             <div className="absolute top-4 right-4 flex space-x-2">
               <button
                 onClick={handleShare}
-                className="p-3 bg-white rounded-full shadow-lg hover:bg-gray-50 transition-colors"
+                className="p-3 bg-white dark:bg-gray-700 rounded-full shadow-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
               >
-                <Share2 className="w-5 h-5 text-gray-700" />
+                <Share2 className="w-5 h-5 text-gray-700 dark:text-gray-200" />
               </button>
               {isOwner && (
                 <>
                   <Link
                     href={`/recipes/${params.id}/edit`}
-                    className="p-3 bg-white rounded-full shadow-lg hover:bg-gray-50 transition-colors"
+                    className="p-3 bg-white dark:bg-gray-700 rounded-full shadow-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
                   >
-                    <Edit className="w-5 h-5 text-gray-700" />
+                    <Edit className="w-5 h-5 text-gray-700 dark:text-gray-200" />
                   </Link>
                   <button
                     onClick={handleDelete}
-                    className="p-3 bg-white rounded-full shadow-lg hover:bg-red-50 transition-colors"
+                    className="p-3 bg-white dark:bg-gray-700 rounded-full shadow-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
                   >
-                    <Trash2 className="w-5 h-5 text-red-600" />
+                    <Trash2 className="w-5 h-5 text-red-600 dark:text-red-400" />
                   </button>
                 </>
               )}
@@ -284,31 +284,31 @@ export default function RecipeDetailPage() {
                   );
                 })}
                 {recipe.generatedBy && (
-                  <div className="inline-flex items-center space-x-1 px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">
+                  <div className="inline-flex items-center space-x-1 px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full text-xs font-medium">
                     <ChefHat className="w-3 h-3" />
                     <span>AI-Enhanced Recipe</span>
                   </div>
                 )}
               </div>
 
-              <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
                 {recipe.title}
               </h1>
 
               {recipe.description && (
-                <p className="text-lg text-gray-600 mb-4">{recipe.description}</p>
+                <p className="text-lg text-gray-600 dark:text-gray-200 mb-4">{recipe.description}</p>
               )}
 
               {recipe.mealContext && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                  <p className="text-sm text-blue-700">
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mb-4">
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
                     <span className="font-medium">From meal plan:</span> {recipe.mealContext}
                   </p>
                 </div>
               )}
 
               {/* Meta Info */}
-              <div className="flex flex-wrap items-center gap-6 text-gray-600">
+              <div className="flex flex-wrap items-center gap-6 text-gray-600 dark:text-gray-200">
                 {recipe.prepTime && (
                   <div className="flex items-center space-x-2">
                     <Clock className="w-5 h-5" />
@@ -331,23 +331,23 @@ export default function RecipeDetailPage() {
             </div>
 
             {/* Rating Section */}
-            <div className="mb-8 p-6 bg-gray-50 rounded-lg">
+            <div className="mb-8 p-6 bg-gray-50 dark:bg-gray-700 rounded-lg">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-1">
                     <Star className="w-6 h-6 text-yellow-500 fill-current" />
-                    <span className="text-2xl font-bold text-gray-900">
+                    <span className="text-2xl font-bold text-gray-900 dark:text-white">
                       {recipe.averageRating?.toFixed(1) || '0.0'}
                     </span>
                   </div>
-                  <span className="text-sm text-gray-600">
+                  <span className="text-sm text-gray-600 dark:text-gray-300">
                     ({recipe.totalRatings || 0} ratings)
                   </span>
                 </div>
 
                 <div className="flex items-center space-x-2">
-                  <Heart className={`w-6 h-6 ${recipe.isFavorited ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
-                  <span className="text-sm text-gray-600">
+                  <Heart className={`w-6 h-6 ${recipe.isFavorited ? 'fill-red-500 text-red-500' : 'text-gray-400 dark:text-gray-300'}`} />
+                  <span className="text-sm text-gray-600 dark:text-gray-300">
                     {recipe._count.favorites} favorites
                   </span>
                 </div>
@@ -355,7 +355,7 @@ export default function RecipeDetailPage() {
 
               {session?.user && (
                 <div>
-                  <p className="text-sm font-semibold text-gray-700 mb-2">
+                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                     Rate this recipe:
                   </p>
                   <div className="flex items-center space-x-1">
@@ -372,13 +372,13 @@ export default function RecipeDetailPage() {
                           className={`w-8 h-8 ${
                             star <= (hoverRating || userRating)
                               ? 'text-yellow-500 fill-current'
-                              : 'text-gray-300'
+                              : 'text-gray-300 dark:text-gray-600'
                           }`}
                         />
                       </button>
                     ))}
                     {userRating > 0 && (
-                      <span className="ml-2 text-sm text-gray-600">
+                      <span className="ml-2 text-sm text-gray-600 dark:text-gray-300">
                         Your rating: {userRating} stars
                       </span>
                     )}
@@ -390,7 +390,7 @@ export default function RecipeDetailPage() {
             {/* Ingredients */}
             <div className="mb-8">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold text-gray-900">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                   Ingredients
                 </h2>
                 {session?.user && (
@@ -417,20 +417,20 @@ export default function RecipeDetailPage() {
                 {ingredients.map((ingredient: any, index: number) => (
                   <li
                     key={index}
-                    className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg"
+                    className="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
                   >
                     <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0 mt-2" />
                     <div className="flex-1">
                       <div className="flex items-center space-x-2">
                         {ingredient.amount && (
-                          <span className="font-semibold text-gray-900">
+                          <span className="font-semibold text-gray-900 dark:text-white">
                             {ingredient.amount}
                           </span>
                         )}
-                        <span className="text-gray-700 font-medium">{ingredient.name}</span>
+                        <span className="text-gray-700 dark:text-gray-200 font-medium">{ingredient.name}</span>
                       </div>
                       {ingredient.notes && (
-                        <p className="text-sm text-gray-600 mt-1 italic">
+                        <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 italic">
                           {ingredient.notes}
                         </p>
                       )}
@@ -442,10 +442,10 @@ export default function RecipeDetailPage() {
 
             {/* Instructions */}
             <div className="mb-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
                 Instructions
               </h2>
-              <div className="bg-gray-50 rounded-lg p-6">
+              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
                 {Array.isArray(recipe.instructions) ? (
                   <ol className="space-y-4">
                     {recipe.instructions.map((instruction: any, index: number) => (
@@ -454,18 +454,18 @@ export default function RecipeDetailPage() {
                           {typeof instruction === 'object' ? instruction.step || (index + 1) : (index + 1)}
                         </span>
                         <div className="flex-1">
-                          <p className="text-gray-700 leading-relaxed">
+                          <p className="text-gray-700 dark:text-gray-200 leading-relaxed">
                             {typeof instruction === 'object' ? instruction.instruction : instruction}
                           </p>
                           {typeof instruction === 'object' && instruction.time && (
-                            <p className="text-sm text-gray-500 mt-1">⏱️ {instruction.time}</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">⏱️ {instruction.time}</p>
                           )}
                         </div>
                       </li>
                     ))}
                   </ol>
                 ) : (
-                  <pre className="whitespace-pre-wrap font-sans text-gray-700 leading-relaxed">
+                  <pre className="whitespace-pre-wrap font-sans text-gray-700 dark:text-gray-200 leading-relaxed">
                     {recipe.instructions}
                   </pre>
                 )}
@@ -475,7 +475,7 @@ export default function RecipeDetailPage() {
             {/* Nutrients */}
             {recipe.nutrients && Object.keys(recipe.nutrients).length > 0 && (
               <div className="mb-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
                   Key Nutrients
                 </h2>
                 <div className="flex flex-wrap gap-3">
@@ -483,12 +483,12 @@ export default function RecipeDetailPage() {
                     ([nutrient, value]) => (
                       <div
                         key={nutrient}
-                        className="px-4 py-2 bg-green-50 border-2 border-green-200 rounded-lg"
+                        className="px-4 py-2 bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-800 rounded-lg"
                       >
-                        <span className="font-semibold text-green-900">
+                        <span className="font-semibold text-green-900 dark:text-green-300">
                           {nutrient}:
                         </span>{' '}
-                        <span className="text-green-700">{value}</span>
+                        <span className="text-green-700 dark:text-green-400">{value}</span>
                       </div>
                     )
                   )}
@@ -497,21 +497,21 @@ export default function RecipeDetailPage() {
             )}
 
             {/* Author Info */}
-            <div className="mb-8 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
+            <div className="mb-8 p-4 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-lg">
               <div className="flex items-center space-x-3">
                 <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-xl">
                   {recipe.user.name?.[0]?.toUpperCase()}
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Recipe by</p>
-                  <p className="font-bold text-gray-900">{recipe.user.name}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Recipe by</p>
+                  <p className="font-bold text-gray-900 dark:text-white">{recipe.user.name}</p>
                 </div>
               </div>
             </div>
 
             {/* Comments Section */}
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center space-x-2">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center space-x-2">
                 <MessageCircle className="w-6 h-6" />
                 <span>Comments ({recipe.comments?.length || 0})</span>
               </h2>
@@ -522,7 +522,7 @@ export default function RecipeDetailPage() {
                   <textarea
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none"
+                    className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:border-green-500 focus:outline-none placeholder:text-gray-400 dark:placeholder:text-gray-500"
                     rows={3}
                     placeholder="Share your thoughts about this recipe..."
                   />
@@ -545,8 +545,8 @@ export default function RecipeDetailPage() {
                   </button>
                 </form>
               ) : (
-                <p className="mb-6 text-gray-600">
-                  <Link href="/login" className="text-green-600 hover:text-green-700 font-medium">
+                <p className="mb-6 text-gray-600 dark:text-gray-300">
+                  <Link href="/login" className="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 font-medium">
                     Sign in
                   </Link>{' '}
                   to leave a comment
@@ -559,7 +559,7 @@ export default function RecipeDetailPage() {
                   recipe.comments.map((comment) => (
                     <div
                       key={comment.id}
-                      className="p-4 bg-gray-50 rounded-lg"
+                      className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg"
                     >
                       <div className="flex items-start space-x-3">
                         <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
@@ -567,20 +567,20 @@ export default function RecipeDetailPage() {
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center space-x-2 mb-1">
-                            <span className="font-semibold text-gray-900">
+                            <span className="font-semibold text-gray-900 dark:text-white">
                               {comment.user.name}
                             </span>
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
                               {new Date(comment.createdAt).toLocaleDateString()}
                             </span>
                           </div>
-                          <p className="text-gray-700">{comment.content}</p>
+                          <p className="text-gray-700 dark:text-gray-200">{comment.content}</p>
                         </div>
                       </div>
                     </div>
                   ))
                 ) : (
-                  <p className="text-gray-600 text-center py-8">
+                  <p className="text-gray-600 dark:text-gray-300 text-center py-8">
                     No comments yet. Be the first to share your thoughts!
                   </p>
                 )}

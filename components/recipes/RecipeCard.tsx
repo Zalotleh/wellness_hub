@@ -16,7 +16,7 @@ export default function RecipeCard({ recipe, onFavorite, onFilterByCreator }: Re
   const ingredients = recipe.ingredients as Array<{ name: string; amount: string }>;
 
   return (
-    <div className="bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 overflow-hidden group border dark:border-gray-700">
       {/* Image Placeholder */}
       <div className="relative h-48 bg-gradient-to-br from-green-400 to-blue-400 flex items-center justify-center overflow-hidden">
         {recipe.imageUrl ? (
@@ -36,13 +36,13 @@ export default function RecipeCard({ recipe, onFavorite, onFilterByCreator }: Re
               e.preventDefault();
               onFavorite(recipe.id);
             }}
-            className="absolute top-3 right-3 p-2 bg-white rounded-full shadow-lg hover:bg-red-50 transition-colors"
+            className="absolute top-3 right-3 p-2 bg-white dark:bg-gray-800 rounded-full shadow-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors border dark:border-gray-600"
           >
             <Heart
               className={`w-5 h-5 ${
                 recipe.isFavorited
                   ? 'fill-red-500 text-red-500'
-                  : 'text-gray-400'
+                  : 'text-gray-400 dark:text-gray-300'
               }`}
             />
           </button>
@@ -68,20 +68,20 @@ export default function RecipeCard({ recipe, onFavorite, onFilterByCreator }: Re
       <div className="p-5">
         {/* Title */}
         <Link href={`/recipes/${recipe.id}`}>
-          <h3 className="text-xl font-bold text-gray-800 mb-2 hover:text-green-600 transition-colors line-clamp-2">
+          <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2 hover:text-green-600 dark:hover:text-green-400 transition-colors line-clamp-2">
             {recipe.title}
           </h3>
         </Link>
 
         {/* Description */}
         {recipe.description && (
-          <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+          <p className="text-sm text-gray-600 dark:text-gray-200 mb-3 line-clamp-2">
             {recipe.description}
           </p>
         )}
 
         {/* Meta Info */}
-        <div className="flex items-center justify-between text-sm text-gray-500 mb-3">
+        <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-300 mb-3">
           <div className="flex items-center space-x-3">
             {recipe.prepTime && (
               <div className="flex items-center space-x-1">
@@ -104,7 +104,7 @@ export default function RecipeCard({ recipe, onFavorite, onFilterByCreator }: Re
                   onFilterByCreator(recipe.user.id, recipe.user.name || 'Unknown');
                 }
               }}
-              className="flex items-center space-x-1 text-gray-600 hover:text-blue-600 transition-all cursor-pointer group-hover/creator:underline group-hover/creator:decoration-2 group-hover/creator:decoration-blue-600"
+              className="flex items-center space-x-1 text-gray-600 dark:text-gray-200 hover:text-blue-600 transition-all cursor-pointer group-hover/creator:underline group-hover/creator:decoration-2 group-hover/creator:decoration-blue-600"
             >
               <User className="w-4 h-4 flex-shrink-0" />
               <span className="text-xs font-medium">{recipe.user.name}</span>
@@ -138,20 +138,20 @@ export default function RecipeCard({ recipe, onFavorite, onFilterByCreator }: Re
           {ingredients.slice(0, 3).map((ing, idx) => (
             <span
               key={idx}
-              className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded"
+              className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-2 py-1 rounded"
             >
               {ing.name}
             </span>
           ))}
           {ingredients.length > 3 && (
-            <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+            <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-2 py-1 rounded">
               +{ingredients.length - 3} more
             </span>
           )}
         </div>
 
         {/* Engagement Stats */}
-        <div className="flex items-center space-x-4 text-xs text-gray-500 pt-3 border-t">
+        <div className="flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-400 pt-3 border-t dark:border-gray-700">
           <div className="flex items-center space-x-1">
             <Heart className="w-3 h-3" />
             <span>{recipe._count.favorites}</span>

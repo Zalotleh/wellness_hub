@@ -140,10 +140,10 @@ export default function PricingPage() {
 
   if (!pricingData) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-700 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading pricing information...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-200">Loading pricing information...</p>
         </div>
       </div>
     );
@@ -188,14 +188,14 @@ export default function PricingPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-700 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
             Choose Your Wellness Plan
           </h1>
-          <p className="text-xl text-gray-600 mb-8">
+          <p className="text-xl text-gray-600 dark:text-gray-200 mb-8">
             Start your health journey with our meal planning tools
           </p>
 
@@ -203,7 +203,7 @@ export default function PricingPage() {
           <div className="flex items-center justify-center mb-12">
             <span className={cn(
               "text-sm font-medium",
-              billingInterval === 'monthly' ? 'text-gray-900' : 'text-gray-500'
+              billingInterval === 'monthly' ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-300'
             )}>
               Monthly
             </span>
@@ -220,7 +220,7 @@ export default function PricingPage() {
             </button>
             <span className={cn(
               "text-sm font-medium",
-              billingInterval === 'annual' ? 'text-gray-900' : 'text-gray-500'
+              billingInterval === 'annual' ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-300'
             )}>
               Annual
             </span>
@@ -235,15 +235,15 @@ export default function PricingPage() {
         {/* Error Message */}
         {error && (
           <div className="mb-8 max-w-md mx-auto">
-            <div className="bg-red-50 border border-red-200 rounded-md p-4">
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-md p-4">
               <div className="flex">
                 <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <svg className="h-5 w-5 text-red-400 dark:text-red-300" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                   </svg>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm text-red-800">{error}</p>
+                  <p className="text-sm text-red-800 dark:text-red-300">{error}</p>
                 </div>
               </div>
             </div>
@@ -256,11 +256,11 @@ export default function PricingPage() {
             <div
               key={tier.name}
               className={cn(
-                "relative rounded-2xl border bg-white p-8 shadow-sm",
-                tier.popular 
-                  ? "border-green-500 ring-2 ring-green-500" 
-                  : "border-gray-200"
-              )}
+                  "relative rounded-2xl border bg-white dark:bg-gray-800 p-8 shadow-sm",
+                  tier.popular 
+                    ? "border-green-500 ring-2 ring-green-500 dark:ring-green-700" 
+                    : "border-gray-200 dark:border-gray-700"
+                )}
             >
               {tier.popular && (
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
@@ -271,20 +271,20 @@ export default function PricingPage() {
               )}
 
               <div className="text-center">
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
                   {tier.name}
                 </h3>
                 <div className="mb-4">
-                  <span className="text-4xl font-bold text-gray-900">
+                  <span className="text-4xl font-bold text-gray-900 dark:text-white">
                     {tier.price}
                   </span>
                   {tier.interval && (
-                    <span className="text-lg text-gray-600">
+                    <span className="text-lg text-gray-600 dark:text-gray-200">
                       {tier.interval}
                     </span>
                   )}
                   {billingInterval === 'annual' && tier.name !== 'Free' && pricingData && (
-                    <div className="text-sm text-gray-500 mt-1">
+                    <div className="text-sm text-gray-500 dark:text-gray-300 mt-1">
                       {tier.name === 'Premium' 
                         ? `${pricingData.plans.premium.annual.monthlyEquivalent}/month when billed annually`
                         : `${pricingData.plans.family.annual.monthlyEquivalent}/month when billed annually`
@@ -292,7 +292,7 @@ export default function PricingPage() {
                     </div>
                   )}
                 </div>
-                <p className="text-gray-600 mb-6">
+                <p className="text-gray-600 dark:text-gray-200 mb-6">
                   {tier.description}
                 </p>
               </div>
@@ -311,7 +311,7 @@ export default function PricingPage() {
                         clipRule="evenodd"
                       />
                     </svg>
-                    <span className="ml-3 text-gray-700">
+                    <span className="ml-3 text-gray-700 dark:text-gray-300">
                       {feature}
                     </span>
                   </li>
@@ -325,7 +325,7 @@ export default function PricingPage() {
                   "w-full py-3 px-4 rounded-lg font-medium transition-colors",
                   tier.popular
                     ? "bg-green-600 text-white hover:bg-green-700 disabled:bg-green-400"
-                    : "bg-gray-100 text-gray-900 hover:bg-gray-200 disabled:bg-gray-50 disabled:text-gray-400",
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-900 hover:bg-gray-200 disabled:bg-gray-50 dark:bg-gray-700 disabled:text-gray-400 dark:text-gray-300",
                   tier.disabled && "cursor-not-allowed"
                 )}
               >
@@ -340,7 +340,7 @@ export default function PricingPage() {
               </button>
 
               {tier.name !== 'Free' && (
-                <p className="text-xs text-gray-500 text-center mt-4">
+                <p className="text-xs text-gray-500 dark:text-gray-300 text-center mt-4">
                   {pricingData.trialDays} days free, then {tier.price}{tier.interval}
                 </p>
               )}
@@ -350,31 +350,31 @@ export default function PricingPage() {
 
         {/* FAQ Section */}
         <div className="max-w-3xl mx-auto mt-16">
-          <h2 className="text-2xl font-bold text-gray-900 text-center mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white text-center mb-8">
             Frequently Asked Questions
           </h2>
           <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                 Can I cancel anytime?
               </h3>
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-gray-200">
                 Yes, you can cancel your subscription at any time. Your access will continue until the end of your current billing period.
               </p>
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                 What happens after the free trial?
               </h3>
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-gray-200">
                 After your {pricingData.trialDays}-day free trial, you'll be charged for your selected plan. You can cancel before the trial ends to avoid any charges.
               </p>
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                 Can I switch plans later?
               </h3>
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-gray-200">
                 Absolutely! You can upgrade or downgrade your plan at any time from your account settings.
               </p>
             </div>

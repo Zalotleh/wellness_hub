@@ -211,7 +211,7 @@ export default function ShoppingListExample({
   return (
     <div className={`space-y-6 ${className}`}>
       {/* Demo Controls */}
-      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+      <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200">
         <h3 className="text-lg font-semibold mb-4 text-gray-900">Demo Controls</h3>
         
         <div className="flex flex-wrap gap-3 mb-4">
@@ -368,7 +368,7 @@ export default function ShoppingListExample({
 // Provider component for integration with larger app
 export function ShoppingListProvider({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-700">
       <div className="container mx-auto px-4 py-8">
         {children}
       </div>

@@ -176,25 +176,25 @@ export default function AIAdvisor({ initialMessage }: AIAdvisorProps) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-lg shadow-md">
+    <div className="flex flex-col h-full bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
       {/* Clear Chat Confirmation Modal */}
       {showClearConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md mx-4">
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Clear Chat History?</h3>
-            <p className="text-gray-600 mb-6">
+        <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-md mx-4 border border-gray-200 dark:border-gray-700">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Clear Chat History?</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
               This will permanently delete all messages in this conversation. This action cannot be undone.
             </p>
             <div className="flex justify-end space-x-3">
               <button
                 onClick={handleCancelClear}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleClearChat}
-                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                className="px-4 py-2 bg-red-500 dark:bg-red-600 text-white rounded-lg hover:bg-red-600 dark:hover:bg-red-700 transition-colors"
               >
                 Clear Chat
               </button>
@@ -229,11 +229,11 @@ export default function AIAdvisor({ initialMessage }: AIAdvisorProps) {
       </div>
 
       {/* Medical Disclaimer Banner */}
-      <div className="bg-amber-50 border-l-4 border-amber-400 p-4">
+      <div className="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-400 dark:border-amber-600 p-4">
         <div className="flex items-start space-x-3">
-          <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+          <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-500 flex-shrink-0 mt-0.5" />
           <div className="flex-1">
-            <p className="text-xs text-amber-900 leading-relaxed">
+            <p className="text-xs text-amber-900 dark:text-amber-300 leading-relaxed">
               <span className="font-semibold">Medical Disclaimer:</span> This AI advisor provides general nutritional information and should not replace professional medical advice. 
               Always consult with your doctor, nutritionist, or healthcare provider before making significant dietary changes or if you have specific health concerns.
             </p>
@@ -248,16 +248,16 @@ export default function AIAdvisor({ initialMessage }: AIAdvisorProps) {
       >
         {messages.length === 0 && (
           <div className="text-center py-8">
-            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <MessageCircle className="w-8 h-8 text-purple-500" />
+            <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <MessageCircle className="w-8 h-8 text-purple-500 dark:text-purple-400" />
             </div>
-            <h4 className="text-lg font-bold text-gray-800 mb-2">
+            <h4 className="text-lg font-bold text-gray-800 dark:text-white mb-2">
               Welcome to AI Nutrient Advisor!
             </h4>
-            <p className="text-gray-600 mb-4">
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
               Ask me anything about the 5x5x5 system, nutrition, or health goals.
             </p>
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-gray-500 dark:text-gray-400">
               Try one of the suggestions below to get started
             </div>
           </div>
@@ -272,13 +272,13 @@ export default function AIAdvisor({ initialMessage }: AIAdvisorProps) {
               className={`max-w-[80%] rounded-lg p-4 ${
                 message.role === 'user'
                   ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
-                  : 'bg-gray-100 text-gray-800'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white'
               }`}
             >
               <p className="whitespace-pre-wrap">{message.content}</p>
               <p
                 className={`text-xs mt-2 ${
-                  message.role === 'user' ? 'text-purple-100' : 'text-gray-500'
+                  message.role === 'user' ? 'text-purple-100' : 'text-gray-500 dark:text-gray-400'
                 }`}
               >
                 {message.timestamp.toLocaleTimeString([], {
@@ -292,10 +292,10 @@ export default function AIAdvisor({ initialMessage }: AIAdvisorProps) {
 
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-gray-100 rounded-lg p-4">
+            <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4">
               <div className="flex items-center space-x-2">
-                <Loader2 className="w-4 h-4 animate-spin text-purple-500" />
-                <span className="text-sm text-gray-600">Thinking...</span>
+                <Loader2 className="w-4 h-4 animate-spin text-purple-500 dark:text-purple-400" />
+                <span className="text-sm text-gray-600 dark:text-gray-300">Thinking...</span>
               </div>
             </div>
           </div>
@@ -306,10 +306,10 @@ export default function AIAdvisor({ initialMessage }: AIAdvisorProps) {
 
       {/* Suggestions */}
       {suggestions.length > 0 && (
-        <div className="px-4 py-3 border-t border-gray-200 bg-gray-50">
+        <div className="px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
           <div className="flex items-center space-x-2 mb-2">
-            <Lightbulb className="w-4 h-4 text-purple-500" />
-            <span className="text-xs font-semibold text-gray-700">Suggestions:</span>
+            <Lightbulb className="w-4 h-4 text-purple-500 dark:text-purple-400" />
+            <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">Suggestions:</span>
           </div>
           <div className="flex flex-wrap gap-2">
             {suggestions.map((suggestion, index) => (
@@ -317,7 +317,7 @@ export default function AIAdvisor({ initialMessage }: AIAdvisorProps) {
                 key={index}
                 onClick={() => handleSuggestionClick(suggestion)}
                 disabled={isLoading}
-                className="text-xs bg-white border border-purple-200 text-purple-700 px-3 py-2 rounded-lg hover:bg-purple-50 transition-colors disabled:opacity-50"
+                className="text-xs bg-white dark:bg-gray-800 border border-purple-200 dark:border-purple-700 text-purple-700 dark:text-purple-400 px-3 py-2 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors disabled:opacity-50"
               >
                 {suggestion}
               </button>
@@ -327,7 +327,7 @@ export default function AIAdvisor({ initialMessage }: AIAdvisorProps) {
       )}
 
       {/* Input */}
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -341,7 +341,7 @@ export default function AIAdvisor({ initialMessage }: AIAdvisorProps) {
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask me anything about nutrition..."
             disabled={isLoading}
-            className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none disabled:bg-gray-100"
+            className="flex-1 px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:border-purple-500 focus:outline-none disabled:bg-gray-100 dark:disabled:bg-gray-700 dark:bg-gray-700 dark:text-white"
           />
           <button
             type="submit"

@@ -43,9 +43,9 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-green-50 via-blue-50 to-purple-50">
+      <section className="relative overflow-hidden bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800">
         <div className="max-w-7xl mx-auto px-4 py-20 md:py-28">
           <div className="text-center">
             {/* Logo */}
@@ -54,14 +54,14 @@ export default function HomePage() {
             </div>
 
             {/* Headline */}
-            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
+            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
               Eat to Beat Disease with{' '}
               <span className="bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
                 5x5x5 System
               </span>
             </h1>
 
-            <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-600 dark:text-gray-200 mb-8 max-w-3xl mx-auto">
               Join thousands using Dr. William Li's revolutionary 5x5x5 framework to harness the power of food for better health and disease prevention.
             </p>
 
@@ -76,14 +76,14 @@ export default function HomePage() {
               </Link>
               <Link
                 href="/login"
-                className="w-full sm:w-auto px-8 py-4 bg-white text-gray-800 rounded-lg hover:bg-gray-50 transition-all font-bold text-lg shadow-lg border-2 border-gray-200"
+                className="w-full sm:w-auto px-8 py-4 bg-white dark:bg-gray-800 text-gray-800 dark:text-white rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all font-bold text-lg shadow-lg border-2 border-gray-200 dark:border-gray-600"
               >
                 Sign In
               </Link>
             </div>
 
             {/* Social Proof */}
-            <p className="mt-8 text-sm text-gray-500">
+            <p className="mt-8 text-sm text-gray-500 dark:text-gray-300">
               Join 10,000+ people on their health journey
             </p>
           </div>
@@ -98,13 +98,13 @@ export default function HomePage() {
       </section>
 
       {/* Defense Systems Section */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-white dark:bg-gray-900">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
               Five Defense Systems for Optimal Health
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-600 dark:text-gray-200 max-w-3xl mx-auto">
               Based on cutting-edge research, each system plays a crucial role in disease prevention
             </p>
           </div>
@@ -115,18 +115,18 @@ export default function HomePage() {
               return (
                 <div
                   key={system}
-                  className={`border-2 rounded-xl p-6 transition-all hover:shadow-lg ${info.bgColor} ${info.borderColor}`}
+                  className={`border-2 rounded-xl p-6 transition-all hover:shadow-lg dark:hover:shadow-xl dark:shadow-gray-900/50 ${info.bgColor} ${info.borderColor} dark:bg-opacity-10`}
                 >
                   <div className="text-4xl mb-3">{info.icon}</div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
                     {info.displayName}
                   </h3>
-                  <p className="text-gray-700 text-sm mb-4">{info.description}</p>
+                  <p className="text-gray-700 dark:text-gray-200 text-sm mb-4">{info.description}</p>
                   <div className="flex flex-wrap gap-1">
                     {info.keyFoods.slice(0, 3).map((food) => (
                       <span
                         key={food}
-                        className="text-xs bg-white px-2 py-1 rounded-full font-medium"
+                        className="text-xs bg-white dark:bg-gray-800 px-2 py-1 rounded-full font-medium text-gray-700 dark:text-gray-200"
                       >
                         {food}
                       </span>
@@ -140,13 +140,13 @@ export default function HomePage() {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-20 bg-gray-50 dark:bg-gray-800">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
               Everything You Need for Your Health Journey
             </h2>
-            <p className="text-xl text-gray-600">
+            <p className="text-xl text-gray-600 dark:text-gray-200">
               Powerful tools to help you eat to beat disease
             </p>
           </div>
@@ -157,17 +157,17 @@ export default function HomePage() {
               return (
                 <div
                   key={index}
-                  className="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-all"
+                  className="bg-white dark:bg-gray-900 rounded-xl p-8 shadow-lg hover:shadow-xl dark:hover:shadow-2xl dark:shadow-gray-900/50 transition-all border dark:border-gray-700"
                 >
                   <div
                     className={`inline-flex items-center justify-center w-12 h-12 bg-gradient-to-r ${feature.color} rounded-lg mb-4`}
                   >
                     <Icon className="w-6 h-6 text-white" />
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                     {feature.title}
                   </h3>
-                  <p className="text-gray-600">{feature.description}</p>
+                  <p className="text-gray-600 dark:text-gray-200">{feature.description}</p>
                 </div>
               );
             })}
@@ -176,11 +176,11 @@ export default function HomePage() {
       </section>
 
       {/* Benefits Section */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-white dark:bg-gray-900">
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-6">
                 Why Choose 5x5x5 Wellness Hub?
               </h2>
               <div className="space-y-4">
@@ -189,30 +189,30 @@ export default function HomePage() {
                     <div className="flex-shrink-0 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center mt-1">
                       <Check className="w-4 h-4 text-white" />
                     </div>
-                    <p className="text-lg text-gray-700">{benefit}</p>
+                    <p className="text-lg text-gray-700 dark:text-gray-200">{benefit}</p>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-green-100 to-blue-100 rounded-2xl p-8">
-              <div className="bg-white rounded-xl p-8 shadow-lg">
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">
+            <div className="bg-gradient-to-br from-green-100 to-blue-100 dark:from-green-900/20 dark:to-blue-900/20 rounded-2xl p-8">
+              <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-lg border dark:border-gray-700">
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
                   Start Your Journey Today
                 </h3>
-                <p className="text-gray-600 mb-6">
+                <p className="text-gray-600 dark:text-gray-200 mb-6">
                   Join our community and discover how the right foods can transform your health.
                 </p>
                 <ul className="space-y-3 mb-6">
-                  <li className="flex items-center space-x-2 text-gray-700">
+                  <li className="flex items-center space-x-2 text-gray-700 dark:text-gray-200">
                     <Check className="w-5 h-5 text-green-500" />
                     <span>Free to get started</span>
                   </li>
-                  <li className="flex items-center space-x-2 text-gray-700">
+                  <li className="flex items-center space-x-2 text-gray-700 dark:text-gray-200">
                     <Check className="w-5 h-5 text-green-500" />
                     <span>No credit card required</span>
                   </li>
-                  <li className="flex items-center space-x-2 text-gray-700">
+                  <li className="flex items-center space-x-2 text-gray-700 dark:text-gray-200">
                     <Check className="w-5 h-5 text-green-500" />
                     <span>Access to all features</span>
                   </li>
@@ -240,7 +240,7 @@ export default function HomePage() {
           </p>
           <Link
             href="/signup"
-            className="inline-flex items-center space-x-2 px-8 py-4 bg-white text-green-600 rounded-lg hover:bg-gray-100 transition-all font-bold text-lg shadow-xl"
+            className="inline-flex items-center space-x-2 px-8 py-4 bg-white dark:bg-gray-800 text-green-600 dark:text-green-400 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all font-bold text-lg shadow-xl"
           >
             <span>Start Your Free Journey</span>
             <ArrowRight className="w-5 h-5" />

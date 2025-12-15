@@ -116,7 +116,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-50 backdrop-blur-sm bg-white/95">
+    <nav className="bg-white dark:bg-gray-900 shadow-lg border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 backdrop-blur-sm bg-white/95 dark:bg-gray-900/95">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -159,8 +159,8 @@ export default function Navbar() {
                     <button
                       className={`flex items-center space-x-1.5 px-3 py-2 rounded-xl font-medium transition-all duration-200 ${
                         isGroupActive
-                          ? 'bg-gradient-to-r from-green-50 to-blue-50 text-green-700 shadow-sm border border-green-200'
-                          : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                          ? 'bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/30 dark:to-blue-900/30 text-green-700 dark:text-green-400 shadow-sm border border-green-200 dark:border-green-800'
+                          : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
                       }`}
                     >
                       <Icon className="w-4 h-4" />
@@ -171,7 +171,7 @@ export default function Navbar() {
                     {/* Dropdown Menu */}
                     {showMenu && (
                       <div className="absolute top-full left-0 pt-1 z-50">
-                        <div className="w-64 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <div className="w-64 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-100 dark:border-gray-700 py-2 animate-in fade-in slide-in-from-top-1 duration-200">
                           {group.items.map((item) => {
                             const ItemIcon = item.icon;
                             return (
@@ -180,11 +180,11 @@ export default function Navbar() {
                                 href={item.href}
                                 className={`flex items-center space-x-3 px-4 py-2.5 mx-2 rounded-lg transition-all duration-150 ${
                                   isActive(item.href)
-                                    ? 'bg-gradient-to-r from-green-50 to-blue-50 text-green-700 shadow-sm'
-                                    : 'text-gray-700 hover:bg-gray-50'
+                                    ? 'bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/30 dark:to-blue-900/30 text-green-700 dark:text-green-400 shadow-sm'
+                                    : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'
                                 }`}
                               >
-                                <ItemIcon className={`w-5 h-5 ${isActive(item.href) ? 'text-green-600' : 'text-gray-400'}`} />
+                                <ItemIcon className={`w-5 h-5 ${isActive(item.href) ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`} />
                                 <span className="text-sm font-medium">{item.label}</span>
                               </Link>
                             );
@@ -202,9 +202,13 @@ export default function Navbar() {
                   key={group.label}
                   href={group.href!}
                   className={`flex items-center space-x-2 px-3 py-2 rounded-xl font-medium transition-all duration-200 ${
-                    isActive(group.href!)
-                      ? 'bg-gradient-to-r from-green-50 to-blue-50 text-green-700 shadow-sm border border-green-200'
-                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                    group.label === 'Community'
+                      ? isActive(group.href!)
+                        ? 'bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/30 dark:to-blue-900/30 text-green-700 dark:text-green-400 shadow-sm border border-green-200 dark:border-green-800'
+                        : 'text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-700 dark:hover:text-purple-300'
+                      : isActive(group.href!)
+                        ? 'bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/30 dark:to-blue-900/30 text-green-700 dark:text-green-400 shadow-sm border border-green-200 dark:border-green-800'
+                        : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -266,7 +270,7 @@ export default function Navbar() {
                       {mealPlanLimit.maxLimit === Infinity ? 'Unlimited' : `${mealPlanLimit.currentUsage}/${mealPlanLimit.maxLimit}`}
                     </span>
                   </div>
-                  <div className="text-[10px] text-gray-500 font-medium">Meal Plans</div>
+                  <div className="text-[10px] text-gray-500 dark:text-gray-300 font-medium">Meal Plans</div>
                   {/* Progress bar */}
                   {typeof mealPlanLimit.maxLimit === 'number' && mealPlanLimit.maxLimit !== Infinity && (
                     <div className="w-16 h-1 bg-gray-200 rounded-full overflow-hidden">
@@ -307,7 +311,7 @@ export default function Navbar() {
                       {aiLimit.maxLimit === Infinity ? 'Unlimited' : `${aiLimit.currentUsage}/${aiLimit.maxLimit}`}
                     </span>
                   </div>
-                  <div className="text-[10px] text-gray-500 font-medium">AI Questions</div>
+                  <div className="text-[10px] text-gray-500 dark:text-gray-300 font-medium">AI Questions</div>
                   {/* Progress bar */}
                   {typeof aiLimit.maxLimit === 'number' && aiLimit.maxLimit !== Infinity && (
                     <div className="w-16 h-1 bg-gray-200 rounded-full overflow-hidden">
@@ -350,15 +354,15 @@ export default function Navbar() {
               >
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center space-x-2 p-2 rounded-xl hover:bg-gray-50 transition-all duration-200 border border-transparent hover:border-gray-200"
+                  className="flex items-center space-x-2 p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200 border border-transparent hover:border-gray-200 dark:hover:border-gray-700"
                 >
                   <div className="w-9 h-9 bg-gradient-to-br from-green-500 via-green-600 to-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-md">
                     {session.user.name?.[0]?.toUpperCase() || 'U'}
                   </div>
-                  <span className="hidden md:block text-sm font-medium text-gray-700">
+                  <span className="hidden md:block text-sm font-medium text-gray-700 dark:text-gray-200">
                     {session.user.name}
                   </span>
-                  <ChevronDown className={`hidden md:block w-4 h-4 text-gray-400 transition-transform duration-200 ${showUserMenu ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`hidden md:block w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${showUserMenu ? 'rotate-180' : ''}`} />
                 </button>
 
                 {/* Dropdown Menu */}
@@ -368,25 +372,25 @@ export default function Navbar() {
                       className="fixed inset-0 z-10"
                       onClick={() => setShowUserMenu(false)}
                     />
-                    <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-200 py-1 z-20">
-                      <div className="px-4 py-3 border-b border-gray-200">
+                    <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 py-1 z-20">
+                      <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-sm font-medium text-gray-900">
+                            <p className="text-sm font-medium text-gray-900 dark:text-white">
                               {session.user.name}
                             </p>
-                            <p className="text-xs text-gray-500">{session.user.email}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-300">{session.user.email}</p>
                           </div>
                           <TierBadge className="ml-2" />
                         </div>
                       </div>
 
                       {/* Subscription & Usage Stats - All Tiers */}
-                      <div className="px-4 py-3 border-b border-gray-200 bg-gradient-to-br from-gray-50 to-blue-50">
+                      <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-700 dark:to-blue-900/20">
                         {/* FREE Users - Show Usage Limits */}
                         {tier === 'FREE' && (
                           <>
-                            <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-3">
+                            <h4 className="text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide mb-3">
                               Monthly Usage Limits
                             </h4>
                             <div className="space-y-3">
@@ -394,21 +398,21 @@ export default function Navbar() {
                               <div>
                                 <div className="flex items-center justify-between text-sm mb-1">
                                   <div className="flex items-center space-x-2">
-                                    <Calendar className="w-4 h-4 text-blue-500" />
-                                    <span className="text-gray-700 font-medium">Meal Plans</span>
+                                    <Calendar className="w-4 h-4 text-blue-500 dark:text-blue-400" />
+                                    <span className="text-gray-700 dark:text-gray-200 font-medium">Meal Plans</span>
                                   </div>
                                   <span className={`font-semibold ${
                                     typeof mealPlanLimit.maxLimit === 'number' && mealPlanLimit.currentUsage >= mealPlanLimit.maxLimit
-                                      ? 'text-red-600'
+                                      ? 'text-red-600 dark:text-red-400'
                                       : mealPlanLimit.isApproachingLimit
-                                        ? 'text-amber-600'
-                                        : 'text-gray-700'
+                                        ? 'text-amber-600 dark:text-amber-400'
+                                        : 'text-gray-700 dark:text-gray-200'
                                   }`}>
                                     {mealPlanLimit.maxLimit === Infinity ? 'Unlimited' : `${mealPlanLimit.currentUsage}/${mealPlanLimit.maxLimit}`}
                                   </span>
                                 </div>
                                 {typeof mealPlanLimit.maxLimit === 'number' && mealPlanLimit.maxLimit !== Infinity && (
-                                  <div className="w-full bg-gray-200 rounded-full h-2">
+                                  <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
                                     <div 
                                       className={`h-2 rounded-full transition-all duration-300 ${
                                         mealPlanLimit.currentUsage >= mealPlanLimit.maxLimit
@@ -506,11 +510,11 @@ export default function Navbar() {
                         {/* PREMIUM Users - Show Plan Benefits */}
                         {String(tier) === 'PREMIUM' && (
                           <>
-                            <h4 className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-2 flex items-center space-x-1">
+                            <h4 className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-2 flex items-center space-x-1">
                               <Crown className="w-3 h-3" />
                               <span>Premium Plan</span>
                             </h4>
-                            <div className="space-y-2 text-sm text-gray-700">
+                            <div className="space-y-2 text-sm text-gray-700 dark:text-gray-200">
                               <div className="flex items-center space-x-2">
                                 <CheckCircle2 className="w-4 h-4 text-green-500" />
                                 <span>Unlimited Meal Plans</span>
@@ -538,11 +542,11 @@ export default function Navbar() {
                         {/* FAMILY Users - Show Plan Benefits */}
                         {String(tier) === 'FAMILY' && (
                           <>
-                            <h4 className="text-xs font-semibold text-purple-600 uppercase tracking-wide mb-2 flex items-center space-x-1">
+                            <h4 className="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wide mb-2 flex items-center space-x-1">
                               <Crown className="w-3 h-3" />
                               <span>Family Plan</span>
                             </h4>
-                            <div className="space-y-2 text-sm text-gray-700">
+                            <div className="space-y-2 text-sm text-gray-700 dark:text-gray-200">
                               <div className="flex items-center space-x-2">
                                 <CheckCircle2 className="w-4 h-4 text-green-500" />
                                 <span>Unlimited Meal Plans</span>
@@ -574,7 +578,7 @@ export default function Navbar() {
 
                       <Link
                         href="/profile"
-                        className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                         onClick={() => setShowUserMenu(false)}
                       >
                         <User className="w-4 h-4" />
@@ -583,18 +587,18 @@ export default function Navbar() {
 
                       <Link
                         href="/settings"
-                        className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                         onClick={() => setShowUserMenu(false)}
                       >
                         <Settings className="w-4 h-4" />
                         <span>Settings</span>
                       </Link>
 
-                      <hr className="my-1" />
+                      <hr className="my-1 dark:border-gray-700" />
 
                       <button
                         onClick={handleSignOut}
-                        className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                        className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                       >
                         <LogOut className="w-4 h-4" />
                         <span>Sign Out</span>
@@ -615,12 +619,12 @@ export default function Navbar() {
             {/* Mobile Menu Toggle */}
             <button
               onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="lg:hidden p-2.5 rounded-xl hover:bg-gray-50 transition-all duration-200 border border-transparent hover:border-gray-200"
+              className="lg:hidden p-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200 border border-transparent hover:border-gray-200 dark:hover:border-gray-700"
             >
               {showMobileMenu ? (
-                <X className="w-6 h-6 text-gray-700" />
+                <X className="w-6 h-6 text-gray-700 dark:text-gray-200" />
               ) : (
-                <Menu className="w-6 h-6 text-gray-700" />
+                <Menu className="w-6 h-6 text-gray-700 dark:text-gray-200" />
               )}
             </button>
           </div>
@@ -628,7 +632,7 @@ export default function Navbar() {
 
         {/* Mobile Menu */}
         {showMobileMenu && (
-          <div className="lg:hidden py-4 border-t border-gray-200 bg-gradient-to-b from-gray-50 to-white">
+          <div className="lg:hidden py-4 border-t border-gray-200 dark:border-gray-700 bg-gradient-to-b from-gray-50 to-white dark:from-gray-800 dark:to-gray-900">
             {/* Mobile Usage Stats for Free Users - Enhanced */}
             {status === 'authenticated' && session?.user && tier === 'FREE' && (
               <div className="px-4 py-4 mb-4 bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-200 rounded-xl mx-4 shadow-md">
@@ -741,7 +745,7 @@ export default function Navbar() {
                 if (group.hasDropdown && group.items) {
                   return (
                     <div key={group.label} className="mb-3">
-                      <div className="px-3 py-2 text-xs font-bold text-gray-600 uppercase tracking-wider flex items-center space-x-2">
+                      <div className="px-3 py-2 text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider flex items-center space-x-2">
                         <Icon className="w-3.5 h-3.5" />
                         <span>{group.label}</span>
                       </div>
@@ -754,11 +758,11 @@ export default function Navbar() {
                             onClick={() => setShowMobileMenu(false)}
                             className={`flex items-center space-x-3 px-4 py-3 ml-2 rounded-xl font-medium transition-all duration-200 ${
                               isActive(item.href)
-                                ? 'bg-gradient-to-r from-green-50 to-blue-50 text-green-700 shadow-sm border border-green-200'
-                                : 'text-gray-700 hover:bg-gray-50'
+                                ? 'bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/30 dark:to-blue-900/30 text-green-700 dark:text-green-400 shadow-sm border border-green-200 dark:border-green-800'
+                                : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
                             }`}
                           >
-                            <ItemIcon className={`w-5 h-5 ${isActive(item.href) ? 'text-green-600' : 'text-gray-400'}`} />
+                            <ItemIcon className={`w-5 h-5 ${isActive(item.href) ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`} />
                             <span>{item.label}</span>
                           </Link>
                         );
@@ -774,12 +778,20 @@ export default function Navbar() {
                     href={group.href!}
                     onClick={() => setShowMobileMenu(false)}
                     className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
-                      isActive(group.href!)
-                        ? 'bg-gradient-to-r from-green-50 to-blue-50 text-green-700 shadow-sm border border-green-200'
-                        : 'text-gray-700 hover:bg-gray-50'
+                      group.label === 'Community'
+                        ? isActive(group.href!)
+                          ? 'bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/30 dark:to-blue-900/30 text-green-700 dark:text-green-400 shadow-sm border border-green-200 dark:border-green-800'
+                          : 'text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-700 dark:hover:text-purple-300'
+                        : isActive(group.href!)
+                          ? 'bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/30 dark:to-blue-900/30 text-green-700 dark:text-green-400 shadow-sm border border-green-200 dark:border-green-800'
+                          : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
                     }`}
                   >
-                    <Icon className={`w-5 h-5 ${isActive(group.href!) ? 'text-green-600' : 'text-gray-400'}`} />
+                    <Icon className={`w-5 h-5 ${
+                      group.label === 'Community'
+                        ? isActive(group.href!) ? 'text-green-600 dark:text-green-400' : 'text-purple-600 dark:text-purple-400'
+                        : isActive(group.href!) ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'
+                    }`} />
                     <span>{group.label}</span>
                   </Link>
                 );

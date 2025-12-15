@@ -108,7 +108,7 @@ export default function RecipeGenerationError({
             {getErrorTitle()}
           </h3>
           
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-sm text-gray-600 dark:text-gray-200 mb-4">
             {getErrorDescription()}
           </p>
 
@@ -129,10 +129,10 @@ export default function RecipeGenerationError({
           {/* Detailed error message */}
           {error.message && (
             <details className="text-left">
-              <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700 mb-2">
+              <summary className="text-xs text-gray-500 dark:text-gray-300 cursor-pointer hover:text-gray-700 mb-2">
                 Technical details
               </summary>
-              <div className="bg-gray-50 rounded p-2 text-xs font-mono text-gray-700 break-words">
+              <div className="bg-gray-50 dark:bg-gray-700 rounded p-2 text-xs font-mono text-gray-700 break-words">
                 {error.message}
               </div>
             </details>
@@ -148,7 +148,7 @@ export default function RecipeGenerationError({
               className={cn(
                 'flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors',
                 error.type === 'RATE_LIMIT' && error.retryAfter && error.retryAfter > 60
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-300 cursor-not-allowed'
                   : 'bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
               )}
             >
@@ -161,7 +161,7 @@ export default function RecipeGenerationError({
           
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+            className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
           >
             Close
           </button>
@@ -170,15 +170,15 @@ export default function RecipeGenerationError({
         {/* Help text */}
         <div className="mt-4 text-center">
           {error.type === 'RATE_LIMIT' ? (
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-500 dark:text-gray-300">
               <span className="font-medium">Tip:</span> Upgrade to Premium for higher limits and batch generation
             </p>
           ) : error.type === 'TIMEOUT' ? (
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-500 dark:text-gray-300">
               <span className="font-medium">Tip:</span> Try being more specific with fewer requirements for faster generation
             </p>
           ) : (
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-500 dark:text-gray-300">
               Still having issues? <a href="/support" className="text-blue-600 hover:underline">Contact support</a>
             </p>
           )}

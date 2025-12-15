@@ -264,7 +264,7 @@ export default function RecipeDetailView({
             >
               <Heart
                 className={`w-5 h-5 ${
-                  recipe.isFavorited ? 'fill-red-500 text-red-500' : 'text-gray-600'
+                  recipe.isFavorited ? 'fill-red-500 text-red-500' : 'text-gray-600 dark:text-gray-200'
                 }`}
               />
             </button>
@@ -274,7 +274,7 @@ export default function RecipeDetailView({
               className="p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-colors"
               aria-label="Print recipe"
             >
-              <Printer className="w-5 h-5 text-gray-600" />
+              <Printer className="w-5 h-5 text-gray-600 dark:text-gray-200" />
             </button>
             
             <ShareMenu
@@ -323,20 +323,20 @@ export default function RecipeDetailView({
                 <button
                   onClick={() => adjustServings(-1)}
                   disabled={servings <= 1}
-                  className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="p-2 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   aria-label="Decrease servings"
                 >
                   <Minus className="w-4 h-4" />
                 </button>
                 
-                <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-lg min-w-20 justify-center">
-                  <Users className="w-4 h-4 text-gray-600" />
+                <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg min-w-20 justify-center">
+                  <Users className="w-4 h-4 text-gray-600 dark:text-gray-200" />
                   <span className="text-lg font-semibold">{servings}</span>
                 </div>
                 
                 <button
                   onClick={() => adjustServings(1)}
-                  className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+                  className="p-2 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 transition-colors"
                   aria-label="Increase servings"
                 >
                   <Plus className="w-4 h-4" />
@@ -346,7 +346,7 @@ export default function RecipeDetailView({
 
             {/* Rating */}
             <div className="flex items-center gap-2 no-print">
-              <span className="text-sm text-gray-600">Rate:</span>
+              <span className="text-sm text-gray-600 dark:text-gray-200">Rate:</span>
               <div className="flex gap-1">
                 {[1, 2, 3, 4, 5].map(rating => (
                   <button
@@ -366,7 +366,7 @@ export default function RecipeDetailView({
                 ))}
               </div>
               {recipe.averageRating && (
-                <span className="text-sm text-gray-600 ml-2">
+                <span className="text-sm text-gray-600 dark:text-gray-200 ml-2">
                   ({recipe.averageRating.toFixed(1)})
                 </span>
               )}
@@ -422,7 +422,7 @@ export default function RecipeDetailView({
               {ingredients.map((ingredient, index) => (
                 <label
                   key={index}
-                  className={`flex items-start gap-3 p-3 rounded-lg border transition-all cursor-pointer hover:bg-gray-50 ${
+                  className={`flex items-start gap-3 p-3 rounded-lg border transition-all cursor-pointer hover:bg-gray-50 dark:bg-gray-700 ${
                     checkedIngredients.has(index)
                       ? 'bg-green-50 border-green-200'
                       : 'border-gray-200'
@@ -449,18 +449,18 @@ export default function RecipeDetailView({
                   </div>
                   
                   <div className="flex-1">
-                    <div className={`${checkedIngredients.has(index) ? 'line-through text-gray-500' : 'text-gray-900'}`}>
+                    <div className={`${checkedIngredients.has(index) ? 'line-through text-gray-500 dark:text-gray-300' : 'text-gray-900'}`}>
                       <span className="font-medium">
                         {scaleIngredientAmount(ingredient.amount, servingScale)}
                         {ingredient.unit && ` ${ingredient.unit}`}
                       </span>
                       <span className="ml-2">{ingredient.name}</span>
                       {ingredient.optional && (
-                        <span className="ml-2 text-sm text-gray-500 italic">(optional)</span>
+                        <span className="ml-2 text-sm text-gray-500 dark:text-gray-300 italic">(optional)</span>
                       )}
                     </div>
                     {ingredient.notes && (
-                      <p className="text-sm text-gray-600 mt-1">{ingredient.notes}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-200 mt-1">{ingredient.notes}</p>
                     )}
                   </div>
                 </label>
@@ -520,8 +520,8 @@ export default function RecipeDetailView({
                         <p className="text-gray-900 leading-relaxed mb-4">{instruction}</p>
                         
                         {/* Image placeholder */}
-                        <div className="bg-gray-100 rounded-lg h-32 flex items-center justify-center border-2 border-dashed border-gray-300">
-                          <div className="text-center text-gray-500">
+                        <div className="bg-gray-100 dark:bg-gray-700 rounded-lg h-32 flex items-center justify-center border-2 border-dashed border-gray-300">
+                          <div className="text-center text-gray-500 dark:text-gray-300">
                             <Camera className="w-8 h-8 mx-auto mb-2 opacity-50" />
                             <p className="text-sm">Step {index + 1} Image</p>
                           </div>
@@ -568,7 +568,7 @@ export default function RecipeDetailView({
                         {fact.value}{fact.unit}
                       </span>
                       {fact.dailyValue && (
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-gray-500 dark:text-gray-300">
                           {fact.dailyValue}% DV
                         </div>
                       )}
@@ -576,7 +576,7 @@ export default function RecipeDetailView({
                   </div>
                 ))}
                 
-                <div className="text-xs text-gray-500 mt-4 pt-2 border-t border-gray-300">
+                <div className="text-xs text-gray-500 dark:text-gray-300 mt-4 pt-2 border-t border-gray-300">
                   * Percent Daily Values are based on a 2,000 calorie diet.
                 </div>
               </div>

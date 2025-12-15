@@ -240,7 +240,7 @@ export function ShareButton({
     return (
       <button
         onClick={handleNativeShare}
-        className={`p-2 hover:bg-gray-100 rounded-lg transition-colors ${className}`}
+        className={`p-2 hover:bg-gray-100 dark:bg-gray-700 rounded-lg transition-colors ${className}`}
         title="Share"
       >
         <Share2 className="w-5 h-5" />
@@ -266,7 +266,7 @@ export function ShareButton({
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors ${className}`}
+        className={`flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-700 transition-colors ${className}`}
       >
         <Share2 className="w-4 h-4" />
         <span>Share</span>
@@ -287,7 +287,7 @@ export function ShareButton({
                 <h3 className="font-semibold text-gray-900">Share</h3>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="p-1 hover:bg-gray-100 rounded"
+                  className="p-1 hover:bg-gray-100 dark:bg-gray-700 rounded"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -298,12 +298,12 @@ export function ShareButton({
               {/* Copy Link */}
               <button
                 onClick={handleCopyLink}
-                className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 rounded-lg transition-colors"
+                className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors"
               >
                 {copied ? (
                   <Check className="w-5 h-5 text-green-500" />
                 ) : (
-                  <Copy className="w-5 h-5 text-gray-600" />
+                  <Copy className="w-5 h-5 text-gray-600 dark:text-gray-200" />
                 )}
                 <span className="text-sm">{copied ? 'Copied!' : 'Copy Link'}</span>
               </button>
@@ -311,7 +311,7 @@ export function ShareButton({
               {/* WhatsApp */}
               <button
                 onClick={handleWhatsApp}
-                className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 rounded-lg transition-colors"
+                className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors"
               >
                 <MessageCircle className="w-5 h-5 text-green-600" />
                 <span className="text-sm">WhatsApp</span>
@@ -320,7 +320,7 @@ export function ShareButton({
               {/* Email */}
               <button
                 onClick={handleEmail}
-                className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 rounded-lg transition-colors"
+                className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors"
               >
                 <Mail className="w-5 h-5 text-blue-600" />
                 <span className="text-sm">Email</span>
@@ -331,12 +331,12 @@ export function ShareButton({
                 <>
                   <div className="my-2 border-t border-gray-200" />
                   <div className="px-3 py-1">
-                    <p className="text-xs font-semibold text-gray-500 uppercase">Add to Calendar</p>
+                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase">Add to Calendar</p>
                   </div>
                   
                   <button
                     onClick={() => handleCalendar('google')}
-                    className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 rounded-lg transition-colors"
+                    className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors"
                   >
                     <Calendar className="w-5 h-5 text-blue-600" />
                     <span className="text-sm">Google Calendar</span>
@@ -344,15 +344,15 @@ export function ShareButton({
 
                   <button
                     onClick={() => handleCalendar('ical')}
-                    className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 rounded-lg transition-colors"
+                    className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors"
                   >
-                    <Calendar className="w-5 h-5 text-gray-600" />
+                    <Calendar className="w-5 h-5 text-gray-600 dark:text-gray-200" />
                     <span className="text-sm">Apple Calendar</span>
                   </button>
 
                   <button
                     onClick={() => handleCalendar('outlook')}
-                    className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 rounded-lg transition-colors"
+                    className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors"
                   >
                     <Calendar className="w-5 h-5 text-blue-500" />
                     <span className="text-sm">Outlook</span>
@@ -365,12 +365,12 @@ export function ShareButton({
                 <>
                   <div className="my-2 border-t border-gray-200" />
                   <div className="px-3 py-1">
-                    <p className="text-xs font-semibold text-gray-500 uppercase">Social Media</p>
+                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase">Social Media</p>
                   </div>
 
                   <button
                     onClick={() => handleSocial('facebook')}
-                    className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 rounded-lg transition-colors"
+                    className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors"
                   >
                     <Facebook className="w-5 h-5 text-blue-600" />
                     <span className="text-sm">Facebook</span>
@@ -378,7 +378,7 @@ export function ShareButton({
 
                   <button
                     onClick={() => handleSocial('twitter')}
-                    className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 rounded-lg transition-colors"
+                    className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors"
                   >
                     <Twitter className="w-5 h-5 text-sky-500" />
                     <span className="text-sm">Twitter</span>
@@ -386,7 +386,7 @@ export function ShareButton({
 
                   <button
                     onClick={() => handleSocial('linkedin')}
-                    className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 rounded-lg transition-colors"
+                    className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors"
                   >
                     <Linkedin className="w-5 h-5 text-blue-700" />
                     <span className="text-sm">LinkedIn</span>
@@ -397,21 +397,21 @@ export function ShareButton({
               {/* Export Options */}
               <div className="my-2 border-t border-gray-200" />
               <div className="px-3 py-1">
-                <p className="text-xs font-semibold text-gray-500 uppercase">Export</p>
+                <p className="text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase">Export</p>
               </div>
 
               <button
                 onClick={handleTextExport}
-                className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 rounded-lg transition-colors"
+                className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors"
               >
-                <FileText className="w-5 h-5 text-gray-600" />
+                <FileText className="w-5 h-5 text-gray-600 dark:text-gray-200" />
                 <span className="text-sm">Download as Text</span>
               </button>
 
               {hasFeature(Feature.APPLE_NOTES_SYNC) && (
                 <button
                   onClick={() => handleNotesExport('apple')}
-                  className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 rounded-lg transition-colors"
+                  className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors"
                 >
                   <StickyNote className="w-5 h-5 text-yellow-600" />
                   <span className="text-sm">Apple Notes</span>
@@ -421,7 +421,7 @@ export function ShareButton({
               {hasFeature(Feature.GOOGLE_KEEP_SYNC) && (
                 <button
                   onClick={() => handleNotesExport('google')}
-                  className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 rounded-lg transition-colors"
+                  className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors"
                 >
                   <StickyNote className="w-5 h-5 text-amber-500" />
                   <span className="text-sm">Google Keep</span>
@@ -431,9 +431,9 @@ export function ShareButton({
               {hasFeature(Feature.QR_CODES) && (
                 <button
                   onClick={handleQRCode}
-                  className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 rounded-lg transition-colors"
+                  className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors"
                 >
-                  <QrCode className="w-5 h-5 text-gray-600" />
+                  <QrCode className="w-5 h-5 text-gray-600 dark:text-gray-200" />
                   <span className="text-sm">Generate QR Code</span>
                 </button>
               )}
@@ -443,12 +443,12 @@ export function ShareButton({
                 <>
                   <div className="my-2 border-t border-gray-200" />
                   <div className="px-3 py-1">
-                    <p className="text-xs font-semibold text-gray-500 uppercase">Grocery Services</p>
+                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase">Grocery Services</p>
                   </div>
 
                   <button
                     onClick={() => handleGroceryService('instacart')}
-                    className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 rounded-lg transition-colors"
+                    className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors"
                   >
                     <ShoppingCart className="w-5 h-5 text-green-600" />
                     <span className="text-sm">Open in Instacart</span>
@@ -456,7 +456,7 @@ export function ShareButton({
 
                   <button
                     onClick={() => handleGroceryService('amazon')}
-                    className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 rounded-lg transition-colors"
+                    className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors"
                   >
                     <ShoppingCart className="w-5 h-5 text-orange-600" />
                     <span className="text-sm">Open in Amazon Fresh</span>
@@ -473,7 +473,7 @@ export function ShareButton({
                   alt="QR Code" 
                   className="w-full h-auto rounded"
                 />
-                <p className="text-xs text-gray-500 text-center mt-2">
+                <p className="text-xs text-gray-500 dark:text-gray-300 text-center mt-2">
                   Scan to view on mobile
                 </p>
               </div>

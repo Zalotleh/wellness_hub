@@ -38,7 +38,7 @@ export default function AdvisorPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-900 dark:to-gray-800 py-8 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -47,10 +47,10 @@ export default function AdvisorPage() {
               <Sparkles className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-800">
+              <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
                 AI Nutrient Advisor
               </h1>
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-gray-400">
                 Get personalized nutrition guidance powered by AI
               </p>
             </div>
@@ -66,9 +66,9 @@ export default function AdvisorPage() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Quick Topics */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="font-bold text-gray-900 mb-4 flex items-center space-x-2">
-                <Lightbulb className="w-5 h-5 text-purple-500" />
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700">
+              <h3 className="font-bold text-gray-900 dark:text-white mb-4 flex items-center space-x-2">
+                <Lightbulb className="w-5 h-5 text-purple-500 dark:text-purple-400" />
                 <span>Quick Topics</span>
               </h3>
               <div className="space-y-3">
@@ -76,15 +76,15 @@ export default function AdvisorPage() {
                   <button
                     key={index}
                     onClick={() => setQuickQuestion(topic.question)}
-                    className={`w-full text-left p-4 bg-gradient-to-r ${topic.color} rounded-lg hover:shadow-md transition-all`}
+                    className={`w-full text-left p-4 bg-gradient-to-r ${topic.color} dark:from-gray-700 dark:to-gray-600 rounded-lg hover:shadow-md transition-all`}
                   >
                     <div className="flex items-center space-x-3">
                       <span className="text-2xl">{topic.icon}</span>
                       <div>
-                        <p className="font-bold text-gray-900 text-sm">
+                        <p className="font-bold text-gray-900 dark:text-white text-sm">
                           {topic.title}
                         </p>
-                        <p className="text-xs text-gray-600 mt-1">
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                           {topic.question}
                         </p>
                       </div>
@@ -95,12 +95,12 @@ export default function AdvisorPage() {
             </div>
 
             {/* Defense Systems Reference */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="font-bold text-gray-900 mb-2 flex items-center space-x-2">
-                <BookOpen className="w-5 h-5 text-blue-500" />
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700">
+              <h3 className="font-bold text-gray-900 dark:text-white mb-2 flex items-center space-x-2">
+                <BookOpen className="w-5 h-5 text-blue-500 dark:text-blue-400" />
                 <span>5 Defense Systems</span>
               </h3>
-              <p className="text-xs text-gray-600 mb-4 bg-blue-50 p-2 rounded border border-blue-200">
+              <p className="text-xs text-gray-600 dark:text-gray-400 mb-4 bg-blue-50 dark:bg-blue-900/20 p-2 rounded border border-blue-200 dark:border-blue-700">
                 💡 <span className="font-medium">Click any defense system below</span> to learn about it and discover which foods support your health.
               </p>
               <div className="space-y-2">
@@ -112,16 +112,16 @@ export default function AdvisorPage() {
                       onClick={() =>
                         setQuickQuestion(`Tell me about ${info.displayName} and which foods support it`)
                       }
-                      className={`w-full text-left p-3 rounded-lg ${info.bgColor} hover:shadow-md hover:scale-[1.02] transition-all group`}
+                      className={`w-full text-left p-3 rounded-lg ${info.bgColor} dark:bg-gray-700 hover:shadow-md hover:scale-[1.02] transition-all group`}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
                           <span className="text-lg">{info.icon}</span>
-                          <span className="text-sm font-medium text-gray-900">
+                          <span className="text-sm font-medium text-gray-900 dark:text-white">
                             {info.displayName}
                           </span>
                         </div>
-                        <span className="text-xs text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span className="text-xs text-gray-500 dark:text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
                           Learn more →
                         </span>
                       </div>
@@ -132,11 +132,11 @@ export default function AdvisorPage() {
             </div>
 
             {/* Popular Questions */}
-            <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-6 border-2 border-blue-200">
-              <h3 className="font-bold text-blue-900 mb-3">
+            <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg p-6 border-2 border-blue-200 dark:border-blue-700">
+              <h3 className="font-bold text-blue-900 dark:text-blue-300 mb-3">
                 💡 Popular Questions
               </h3>
-              <ul className="text-sm text-blue-800 space-y-2">
+              <ul className="text-sm text-blue-800 dark:text-blue-400 space-y-2">
                 <li
                   onClick={() => setQuickQuestion('How do I start the 5x5x5 system?')}
                   className="cursor-pointer hover:underline"
@@ -165,38 +165,38 @@ export default function AdvisorPage() {
             </div>
 
             {/* Quick Links */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="font-bold text-gray-900 mb-3">Related Resources</h3>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700">
+              <h3 className="font-bold text-gray-900 dark:text-white mb-3">Related Resources</h3>
               <div className="space-y-2">
                 <a
                   href="/recipes"
-                  className="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="block p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                 >
                   <div className="flex items-center space-x-2">
-                    <ChefHat className="w-4 h-4 text-green-600" />
-                    <span className="text-sm font-medium text-gray-900">
+                    <ChefHat className="w-4 h-4 text-green-600 dark:text-green-400" />
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">
                       Browse Recipes
                     </span>
                   </div>
                 </a>
                 <a
                   href="/learn"
-                  className="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="block p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                 >
                   <div className="flex items-center space-x-2">
-                    <BookOpen className="w-4 h-4 text-blue-600" />
-                    <span className="text-sm font-medium text-gray-900">
+                    <BookOpen className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">
                       Learn 5x5x5
                     </span>
                   </div>
                 </a>
                 <a
                   href="/meal-planner"
-                  className="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="block p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                 >
                   <div className="flex items-center space-x-2">
                     <span className="text-lg">📅</span>
-                    <span className="text-sm font-medium text-gray-900">
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">
                       Meal Planner
                     </span>
                   </div>

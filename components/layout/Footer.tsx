@@ -38,10 +38,10 @@ export default function Footer() {
               </div>
               <div>
                 <span className="text-xl font-bold text-white">5x5x5 Wellness Hub</span>
-                <span className="block text-sm text-gray-400">Eat to Beat Disease</span>
+                <span className="block text-sm text-gray-400 dark:text-gray-300">Eat to Beat Disease</span>
               </div>
             </div>
-            <p className="text-sm text-gray-400 mb-4">
+            <p className="text-sm text-gray-400 dark:text-gray-300 mb-4">
               A community-driven platform based on Dr. William Li's 5x5x5 system for health and disease prevention through food.
             </p>
             <div className="flex space-x-3">
@@ -133,10 +133,10 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="mt-12 pt-8 border-t border-gray-800">
           <div className="flex flex-col md:flex-row items-center justify-between">
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-gray-400 dark:text-gray-300">
               © {currentYear} 5x5x5 Wellness Hub. All rights reserved.
             </p>
-            <p className="text-sm text-gray-400 mt-2 md:mt-0">
+            <p className="text-sm text-gray-400 dark:text-gray-300 mt-2 md:mt-0">
               Built with ❤️ for better health
             </p>
           </div>

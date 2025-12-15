@@ -135,7 +135,7 @@ export default function ProgressTracker({
   return (
     <div className="space-y-6">
       {/* Overall Progress */}
-      <div className="bg-gradient-to-r from-green-500 to-blue-500 rounded-lg p-6 text-white">
+      <div className="bg-gradient-to-r from-green-500 to-blue-500 dark:from-green-600 dark:to-blue-600 rounded-lg p-6 text-white shadow-lg border border-green-400 dark:border-green-700">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Progress Information */}
           <div>
@@ -165,7 +165,7 @@ export default function ProgressTracker({
           </div>
 
           {/* Calendar */}
-          <div className="bg-white rounded-lg p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
             <div className="min-w-[280px]">
               <Calendar
                 selected={date}
@@ -192,7 +192,7 @@ export default function ProgressTracker({
               className={`border-2 rounded-lg p-4 transition-all cursor-pointer ${
                 isSelected
                   ? `${systemInfo.borderColor} ${systemInfo.bgColor} scale-105 shadow-lg`
-                  : 'border-gray-200 bg-white hover:shadow-md'
+                  : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:shadow-md'
               } ${isComplete ? 'ring-2 ring-green-500' : ''}`}
               onClick={() => setSelectedSystem(isSelected ? null : system)}
             >
@@ -200,7 +200,7 @@ export default function ProgressTracker({
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center space-x-2">
                   <span className="text-2xl">{systemInfo.icon}</span>
-                  <span className="font-bold text-sm">{systemInfo.displayName}</span>
+                  <span className="font-bold text-sm dark:text-white">{systemInfo.displayName}</span>
                 </div>
                 {isComplete && (
                   <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
@@ -212,12 +212,12 @@ export default function ProgressTracker({
               {/* Progress Bar */}
               <div className="mb-3">
                 <div className="flex items-center justify-between text-xs mb-1">
-                  <span className="font-medium">
+                  <span className="font-medium dark:text-gray-300">
                     {progress.count}/5 foods
                   </span>
-                  <span className="text-gray-500">{Math.round(progress.percentage)}%</span>
+                  <span className="text-gray-500 dark:text-gray-400">{Math.round(progress.percentage)}%</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                   <div
                     className={`h-2 rounded-full transition-all duration-300 ${
                       isComplete ? 'bg-green-500' : `bg-${systemInfo.color}`
@@ -233,7 +233,7 @@ export default function ProgressTracker({
                   {progress.foods.map((food, idx) => (
                     <span
                       key={idx}
-                      className="text-xs bg-white px-2 py-1 rounded border"
+                      className="text-xs bg-white dark:bg-gray-700 dark:text-gray-300 px-2 py-1 rounded border border-gray-200 dark:border-gray-600"
                     >
                       {food}
                     </span>
@@ -247,10 +247,10 @@ export default function ProgressTracker({
 
       {/* Food Logging Form */}
       {selectedSystem && (
-        <div className="bg-white border-2 border-green-500 rounded-lg p-6 shadow-lg">
+        <div className="bg-white dark:bg-gray-800 border-2 border-green-500 dark:border-green-600 rounded-lg p-6 shadow-lg">
           <form onSubmit={handleSubmit}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-800">
+              <h3 className="text-xl font-bold text-gray-800 dark:text-white">
                 Log Foods for {getSystemInfo(selectedSystem)?.displayName}
               </h3>
               <button
@@ -260,9 +260,9 @@ export default function ProgressTracker({
                   setFoodSearch('');
                   setShowAllFoods(false);
                 }}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               >
-                <X className="w-5 h-5 text-gray-500" />
+                <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
               </button>
             </div>
 
@@ -270,7 +270,7 @@ export default function ProgressTracker({
             <div
               className={`mb-4 p-4 rounded-lg ${getSystemInfo(selectedSystem)?.bgColor}`}
             >
-              <p className="text-sm font-medium mb-3">
+              <p className="text-sm font-medium mb-3 dark:text-gray-800">
                 {getSystemInfo(selectedSystem)?.description}
               </p>
               
@@ -283,7 +283,7 @@ export default function ProgressTracker({
                     value={foodSearch}
                     onChange={(e) => setFoodSearch(e.target.value)}
                     placeholder="Search foods..."
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:border-green-500 focus:outline-none text-sm"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-green-500 focus:outline-none text-sm dark:bg-gray-700 dark:text-white"
                   />
                 </div>
               </div>
@@ -291,7 +291,7 @@ export default function ProgressTracker({
               {/* Food Suggestions */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-gray-700">
+                  <span className="text-xs font-semibold text-gray-700 dark:text-gray-800">
                     {foodSearch ? `Found ${filteredFoods.length} foods:` : 'Suggested foods:'} 
                     <span className="ml-1 text-gray-500">
                       (Click to add)
@@ -324,13 +324,13 @@ export default function ProgressTracker({
                 </div>
                 
                 {!showAllFoods && filteredFoods.length > 15 && (
-                  <p className="text-xs text-gray-500 text-center mt-2">
+                  <p className="text-xs text-gray-500 dark:text-gray-700 text-center mt-2">
                     + {filteredFoods.length - 15} more foods available
                   </p>
                 )}
                 
                 {foodSearch && filteredFoods.length === 0 && (
-                  <p className="text-xs text-gray-500 text-center py-2">
+                  <p className="text-xs text-gray-500 dark:text-gray-700 text-center py-2">
                     No foods found. Try a different search or type your own food below.
                   </p>
                 )}
@@ -339,7 +339,7 @@ export default function ProgressTracker({
 
             {/* Food Inputs */}
             <div className="space-y-3 mb-4">
-              <label className="block text-sm font-semibold text-gray-700">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                 What did you eat? (Max 5 foods)
               </label>
               {foodInputs.map((food, index) => (
@@ -348,14 +348,14 @@ export default function ProgressTracker({
                     type="text"
                     value={food}
                     onChange={(e) => handleFoodChange(index, e.target.value)}
-                    className="flex-1 px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none"
+                    className="flex-1 px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:border-green-500 focus:outline-none dark:bg-gray-700 dark:text-white"
                     placeholder={`Food ${index + 1} (e.g., Tomatoes)`}
                   />
                   {foodInputs.length > 1 && (
                     <button
                       type="button"
                       onClick={() => handleRemoveFoodInput(index)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                     >
                       <X className="w-5 h-5" />
                     </button>
@@ -367,7 +367,7 @@ export default function ProgressTracker({
                 <button
                   type="button"
                   onClick={handleAddFoodInput}
-                  className="flex items-center space-x-2 text-green-600 hover:text-green-700 font-medium"
+                  className="flex items-center space-x-2 text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 font-medium"
                 >
                   <Plus className="w-4 h-4" />
                   <span>Add another food</span>
@@ -377,14 +377,14 @@ export default function ProgressTracker({
 
             {/* Notes */}
             <div className="mb-4">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                 Notes (optional)
               </label>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={2}
-                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none"
+                className="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:border-green-500 focus:outline-none dark:bg-gray-700 dark:text-white"
                 placeholder="How did you feel? Any observations?"
               />
             </div>
@@ -396,7 +396,7 @@ export default function ProgressTracker({
                 isSubmitting ||
                 foodInputs.filter((f) => f.trim()).length === 0
               }
-              className="w-full bg-green-500 text-white py-3 rounded-lg font-bold hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+              className="w-full bg-green-500 dark:bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-600 dark:hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
             >
               {isSubmitting ? (
                 <>

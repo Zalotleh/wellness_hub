@@ -64,12 +64,12 @@ export function FeatureGate({
               <Users className="w-12 h-12 mx-auto text-blue-500" />
             )}
             {!requiredTier && (
-              <Lock className="w-12 h-12 mx-auto text-gray-500" />
+              <Lock className="w-12 h-12 mx-auto text-gray-500 dark:text-gray-300" />
             )}
           </div>
           
           <h3 className="text-lg font-semibold mb-2">Premium Feature</h3>
-          <p className="text-gray-600 mb-4">{message}</p>
+          <p className="text-gray-600 dark:text-gray-200 mb-4">{message}</p>
           
           <button className="bg-gradient-to-r from-green-500 to-blue-500 text-white px-6 py-2 rounded-lg font-medium hover:from-green-600 hover:to-blue-600 transition-all">
             Upgrade to {requiredTier}
@@ -125,7 +125,7 @@ export function UsageLimitBar({
   return (
     <div className={`space-y-2 ${className}`}>
       <div className="flex justify-between text-sm">
-        <span className="text-gray-600">
+        <span className="text-gray-600 dark:text-gray-200">
           {currentUsage} / {limitNum} used this month
         </span>
         {remaining !== null && (
@@ -179,7 +179,7 @@ export function TierBadge({ className = '' }: TierBadgeProps) {
   const { tier, isTrialing } = useFeatureAccess();
 
   const colors = {
-    FREE: 'bg-gray-100 text-gray-700 border-gray-300',
+    FREE: 'bg-gray-100 dark:bg-gray-700 text-gray-700 border-gray-300',
     PREMIUM: 'bg-gradient-to-r from-amber-50 to-amber-100 text-amber-700 border-amber-300',
     FAMILY: 'bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 border-blue-300',
   };

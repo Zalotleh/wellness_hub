@@ -128,13 +128,13 @@ export default function SmartShoppingList({
   if (!shoppingList && !error) {
     return (
       <div className={cn('p-6 text-center', className)}>
-        <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-          <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+          <svg className="w-8 h-8 text-gray-400 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 5M7 13l-1.5-5m0 0L4 5H2m5 8h10" />
           </svg>
         </div>
         <h3 className="text-lg font-medium text-gray-900 mb-2">No Shopping List</h3>
-        <p className="text-gray-600 mb-4">Generate a smart shopping list from your meal plan recipes.</p>
+        <p className="text-gray-600 dark:text-gray-200 mb-4">Generate a smart shopping list from your meal plan recipes.</p>
         
         <div className="space-y-4 max-w-sm mx-auto">
           <div className="flex items-center space-x-2">
@@ -206,7 +206,7 @@ export default function SmartShoppingList({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">{shoppingList?.title || 'Shopping List'}</h2>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 dark:text-gray-200">
             {progress.checked} of {progress.total} items completed ({progress.percentage}%)
           </p>
         </div>
@@ -214,7 +214,7 @@ export default function SmartShoppingList({
         <div className="flex items-center space-x-2">
           <button
             onClick={() => setViewMode(viewMode === 'category' ? 'list' : 'category')}
-            className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
+            className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 dark:bg-gray-700"
           >
             {viewMode === 'category' ? 'List View' : 'Category View'}
           </button>
@@ -237,7 +237,7 @@ export default function SmartShoppingList({
       </div>
 
       {/* Controls */}
-      <div className="flex flex-wrap items-center gap-4 p-4 bg-gray-50 rounded-lg">
+      <div className="flex flex-wrap items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
         <div className="flex-1">
           <input
             type="text"
@@ -366,9 +366,9 @@ function CategoryView({
       'Frozen': 'bg-cyan-100 text-cyan-800 border-cyan-200',
       'Beverages': 'bg-orange-100 text-orange-800 border-orange-200',
       'Snacks': 'bg-pink-100 text-pink-800 border-pink-200',
-      'Other': 'bg-gray-100 text-gray-800 border-gray-200',
+      'Other': 'bg-gray-100 dark:bg-gray-700 text-gray-800 border-gray-200',
     };
-    return colors[category] || 'bg-gray-100 text-gray-800 border-gray-200';
+    return colors[category] || 'bg-gray-100 dark:bg-gray-700 text-gray-800 border-gray-200';
   };
 
   return (
@@ -489,7 +489,7 @@ function ShoppingListItemComponent({
   return (
     <div className={cn(
       'px-4 py-3 flex items-center space-x-3 transition-all duration-200',
-      item.checked ? 'bg-gray-50 opacity-75' : 'bg-white hover:bg-gray-50',
+      item.checked ? 'bg-gray-50 dark:bg-gray-700 opacity-75' : 'bg-white hover:bg-gray-50 dark:hover:bg-gray-700',
       isUpdating && 'pointer-events-none opacity-50'
     )}>
       <input
@@ -505,16 +505,16 @@ function ShoppingListItemComponent({
           <div className="flex-1">
             <h4 className={cn(
               'font-medium text-gray-900',
-              item.checked && 'line-through text-gray-500'
+              item.checked && 'line-through text-gray-500 dark:text-gray-300'
             )}>
               {item.ingredient}
             </h4>
             
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
+            <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-200">
               <span>
                 {item.quantity} {item.unit}
                 {item.originalUnit && item.originalUnit !== item.unit && (
-                  <span className="text-gray-400"> (was {item.originalUnit})</span>
+                  <span className="text-gray-400 dark:text-gray-300"> (was {item.originalUnit})</span>
                 )}
               </span>
               
@@ -527,11 +527,11 @@ function ShoppingListItemComponent({
             </div>
 
             {item.notes && (
-              <p className="text-xs text-gray-500 mt-1">{item.notes}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-300 mt-1">{item.notes}</p>
             )}
 
             {showNutrition && item.nutritionInfo && (
-              <div className="flex items-center space-x-3 text-xs text-gray-500 mt-1">
+              <div className="flex items-center space-x-3 text-xs text-gray-500 dark:text-gray-300 mt-1">
                 {item.nutritionInfo.calories && (
                   <span>{item.nutritionInfo.calories} cal</span>
                 )}
@@ -551,7 +551,7 @@ function ShoppingListItemComponent({
             <div className="text-right">
               <div className={cn(
                 'font-medium',
-                item.checked ? 'text-gray-400 line-through' : 'text-gray-900'
+                item.checked ? 'text-gray-400 dark:text-gray-300 line-through' : 'text-gray-900'
               )}>
                 ${item.estimatedCost.toFixed(2)}
               </div>

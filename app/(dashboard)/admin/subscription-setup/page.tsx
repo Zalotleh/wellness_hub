@@ -98,16 +98,16 @@ export default function AdminSubscriptionSetup() {
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-700 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600">Please sign in to access admin tools.</p>
+          <p className="text-gray-600 dark:text-gray-200">Please sign in to access admin tools.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-700 p-6">
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-lg shadow-md p-6">
           <h1 className="text-2xl font-bold text-gray-800 mb-6">
@@ -138,20 +138,20 @@ export default function AdminSubscriptionSetup() {
                 <div className="flex justify-between items-start mb-2">
                   <div>
                     <h3 className="font-semibold text-gray-800">{user.name}</h3>
-                    <p className="text-sm text-gray-600">{user.email}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-200">{user.email}</p>
                   </div>
                   <div className="text-right">
                     <span className={`px-2 py-1 rounded text-sm font-medium ${{
-                      'FREE': 'bg-gray-100 text-gray-800',
+                      'FREE': 'bg-gray-100 dark:bg-gray-700 text-gray-800',
                       'PREMIUM': 'bg-blue-100 text-blue-800',
                       'FAMILY': 'bg-purple-100 text-purple-800',
-                    }[user.subscriptionTier] || 'bg-gray-100 text-gray-800'}`}>
+                    }[user.subscriptionTier] || 'bg-gray-100 dark:bg-gray-700 text-gray-800'}`}>
                       {user.subscriptionTier}
                     </span>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
+                <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 dark:text-gray-200 mb-3">
                   <div>Status: {user.subscriptionStatus || 'N/A'}</div>
                   <div>Meal Plans Used: {user.mealPlansThisMonth}</div>
                   <div>AI Questions: {user.aiQuestionsThisMonth}</div>
@@ -164,21 +164,21 @@ export default function AdminSubscriptionSetup() {
                   <button
                     onClick={() => setSubscription(user.email, 'FREE')}
                     disabled={loading}
-                    className="px-3 py-1 bg-gray-100 text-gray-800 rounded text-sm hover:bg-gray-200 disabled:bg-gray-50"
+                    className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-800 rounded text-sm hover:bg-gray-200 disabled:bg-gray-50 dark:bg-gray-700"
                   >
                     Set FREE
                   </button>
                   <button
                     onClick={() => setSubscription(user.email, 'PREMIUM')}
                     disabled={loading}
-                    className="px-3 py-1 bg-blue-100 text-blue-800 rounded text-sm hover:bg-blue-200 disabled:bg-gray-50"
+                    className="px-3 py-1 bg-blue-100 text-blue-800 rounded text-sm hover:bg-blue-200 disabled:bg-gray-50 dark:bg-gray-700"
                   >
                     Set PREMIUM
                   </button>
                   <button
                     onClick={() => setSubscription(user.email, 'FAMILY')}
                     disabled={loading}
-                    className="px-3 py-1 bg-purple-100 text-purple-800 rounded text-sm hover:bg-purple-200 disabled:bg-gray-50"
+                    className="px-3 py-1 bg-purple-100 text-purple-800 rounded text-sm hover:bg-purple-200 disabled:bg-gray-50 dark:bg-gray-700"
                   >
                     Set FAMILY
                   </button>

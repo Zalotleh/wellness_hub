@@ -19,6 +19,7 @@ model User {
   updatedAt                  DateTime          @updatedAt
   measurementSystem          String            @default("imperial") // 'imperial' or 'metric'
   language                   String            @default("en") // 'en', 'es', 'fr', 'de'
+  theme                      String            @default("light") // 'light', 'dark', 'auto'
   subscriptionTier           SubscriptionTier  @default(FREE)
   subscriptionStatus         String?
   stripeCustomerId           String?           @unique

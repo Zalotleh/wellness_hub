@@ -63,16 +63,16 @@ export default function RecipesPage() {
   ].filter(Boolean).length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 py-8 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">
+              <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-2">
                 Community Recipes
               </h1>
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-gray-200">
                 Discover health-boosting recipes from our 5x5x5 community
               </p>
             </div>
@@ -97,18 +97,18 @@ export default function RecipesPage() {
           </div>
 
           {/* Search & Filter Bar */}
-          <div className="bg-white rounded-lg shadow-md p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:border dark:border-gray-700 p-4">
             <div className="flex flex-col md:flex-row gap-4">
               {/* Search Input */}
               <div className="flex-1 relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search className="h-5 w-5 text-gray-400" />
+                  <Search className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                 </div>
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => handleSearch(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors"
+                  className="block w-full pl-10 pr-3 py-3 border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors placeholder:text-gray-400 dark:placeholder:text-gray-500"
                   placeholder="Search by recipe name, ingredient, or creator..."
                 />
               </div>
@@ -117,7 +117,7 @@ export default function RecipesPage() {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
-                className="px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors bg-white"
+                className="px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors bg-white dark:bg-gray-700 dark:text-gray-200"
               >
                 <option value="recent">Most Recent</option>
                 <option value="popular">Most Popular</option>
@@ -131,7 +131,7 @@ export default function RecipesPage() {
                   className={`flex items-center space-x-2 px-4 py-3 rounded-lg font-medium transition-colors ${
                     filterByUser === session.user.id
                       ? 'bg-blue-500 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
                   }`}
                 >
                   <User className="w-5 h-5" />
@@ -145,13 +145,13 @@ export default function RecipesPage() {
                 className={`flex items-center space-x-2 px-4 py-3 rounded-lg font-medium transition-colors ${
                   showFilters || activeFiltersCount > 0
                     ? 'bg-green-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
                 }`}
               >
                 <SlidersHorizontal className="w-5 h-5" />
                 <span>Filters</span>
                 {activeFiltersCount > 0 && (
-                  <span className="bg-white text-green-600 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
+                  <span className="bg-white dark:bg-gray-800 text-green-600 dark:text-green-400 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
                     {activeFiltersCount}
                   </span>
                 )}
@@ -160,13 +160,13 @@ export default function RecipesPage() {
 
             {/* Filter Panel */}
             {showFilters && (
-              <div className="mt-4 pt-4 border-t border-gray-200">
+              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-semibold text-gray-800">Filter by Defense System</h3>
+                  <h3 className="font-semibold text-gray-800 dark:text-white">Filter by Defense System</h3>
                   {activeFiltersCount > 0 && (
                     <button
                       onClick={clearFilters}
-                      className="text-sm text-red-600 hover:text-red-700 font-medium"
+                      className="text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium"
                     >
                       Clear all
                     </button>
@@ -179,7 +179,7 @@ export default function RecipesPage() {
                     className={`px-3 py-2 rounded-lg font-medium transition-colors ${
                       selectedSystem === null
                         ? 'bg-green-500 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
                     }`}
                   >
                     All
@@ -194,8 +194,8 @@ export default function RecipesPage() {
                         onClick={() => setSelectedSystem(isSelected ? null : system)}
                         className={`px-3 py-2 rounded-lg font-medium transition-colors text-left ${
                           isSelected
-                            ? `${info.bgColor} ${info.textColor} ring-2 ring-offset-2 ${info.borderColor}`
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? `${info.bgColor} ${info.textColor} ring-2 ring-offset-2 ${info.borderColor}`
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
                         }`}
                       >
                         <span className="text-lg">{info.icon}</span>
@@ -206,15 +206,15 @@ export default function RecipesPage() {
                 </div>
 
                 {/* Creator Filter */}
-                <div className="mt-6 pt-4 border-t border-gray-200">
-                  <h3 className="font-semibold text-gray-800 mb-3">Filter by Creator</h3>
+                <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <h3 className="font-semibold text-gray-800 dark:text-white mb-3">Filter by Creator</h3>
                   <div className="flex flex-wrap gap-2">
                     <button
                       onClick={() => setFilterByUser(null)}
                       className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
                         filterByUser === null
                           ? 'bg-green-500 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
                       }`}
                     >
                       <ChefHat className="w-4 h-4" />
@@ -227,7 +227,7 @@ export default function RecipesPage() {
                         className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
                           filterByUser === session.user.id
                             ? 'bg-blue-500 text-white'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
                         }`}
                       >
                         <User className="w-4 h-4" />
@@ -236,9 +236,9 @@ export default function RecipesPage() {
                     )}
                   </div>
                   
-                  {filterByUser && (
-                    <div className="mt-3 p-3 bg-blue-50 rounded-lg">
-                      <p className="text-sm text-blue-600">
+                    {filterByUser && (
+                    <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
+                      <p className="text-sm text-blue-600 dark:text-blue-300">
                         {filterByUser === session?.user?.id ? (
                           <>
                             <span className="font-medium">Showing only recipes created by you</span>
@@ -247,7 +247,7 @@ export default function RecipesPage() {
                           <>
                             <span className="font-medium">Filtering by a specific creator</span>
                             <br />
-                            <span className="text-xs">Click "All Creators" to remove filter</span>
+                            <span className="text-xs text-blue-700 dark:text-blue-300">Click "All Creators" to remove filter</span>
                           </>
                         )}
                       </p>
@@ -261,27 +261,27 @@ export default function RecipesPage() {
 
         {/* Help Banner - Dismissible Tip */}
         {showHelpBanner && !filterByUser && recipes.length > 0 && (
-          <div className="mb-6 bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 rounded-lg p-4 animate-fade-in">
+          <div className="mb-6 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/10 dark:to-purple-900/10 border-2 border-blue-200 dark:border-blue-800 rounded-lg p-4 animate-fade-in">
             <div className="flex items-start justify-between">
               <div className="flex items-start space-x-3">
                 <div className="flex-shrink-0">
-                  <Info className="w-5 h-5 text-blue-600 mt-0.5" />
+                  <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-semibold text-blue-900 mb-1">
+                  <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-1">
                     💡 Quick Tip: Discover Recipes by Creator
                   </h4>
-                  <p className="text-sm text-blue-700">
+                  <p className="text-sm text-blue-700 dark:text-blue-200">
                     Click on any <span className="font-semibold underline">creator's name</span> on a recipe card to view all their recipes instantly!
                   </p>
                 </div>
               </div>
               <button
                 onClick={dismissHelpBanner}
-                className="flex-shrink-0 p-1 hover:bg-blue-100 rounded-lg transition-colors"
+                className="flex-shrink-0 p-1 hover:bg-blue-100 dark:hover:bg-blue-800 rounded-lg transition-colors"
                 aria-label="Dismiss tip"
               >
-                <X className="w-4 h-4 text-blue-600" />
+                <X className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               </button>
             </div>
           </div>
@@ -289,7 +289,7 @@ export default function RecipesPage() {
 
         {/* Results Summary */}
         <div className="mb-6 flex items-center justify-between">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 dark:text-gray-200">
             {loading ? (
               'Loading recipes...'
             ) : (
@@ -320,14 +320,14 @@ export default function RecipesPage() {
           <div className="flex items-center justify-center py-20">
             <div className="text-center">
               <Loader2 className="w-12 h-12 text-green-500 animate-spin mx-auto mb-4" />
-              <p className="text-gray-600">Loading delicious recipes...</p>
+              <p className="text-gray-600 dark:text-gray-200">Loading delicious recipes...</p>
             </div>
           </div>
         ) : recipes.length === 0 ? (
           <div className="text-center py-20">
-            <ChefHat className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-gray-800 mb-2">No recipes found</h3>
-            <p className="text-gray-600 mb-6">
+            <ChefHat className="w-16 h-16 text-gray-400 dark:text-gray-300 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">No recipes found</h3>
+            <p className="text-gray-600 dark:text-gray-200 mb-6">
               {searchQuery || selectedSystem
                 ? 'Try adjusting your filters or search query'
                 : 'Be the first to create a recipe!'}
@@ -336,7 +336,7 @@ export default function RecipesPage() {
               {(searchQuery || selectedSystem) && (
                 <button
                   onClick={clearFilters}
-                  className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                  className="px-6 py-3 border-2 border-gray-300 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:bg-gray-700 transition-colors font-medium"
                 >
                   Clear Filters
                 </button>
@@ -367,7 +367,7 @@ export default function RecipesPage() {
                 <button
                   onClick={prevPage}
                   disabled={pagination.page === 1}
-                  className="px-4 py-2 border-2 border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                  className="px-4 py-2 border-2 border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
                 >
                   Previous
                 </button>
@@ -385,14 +385,14 @@ export default function RecipesPage() {
                     .map((page, index, array) => (
                       <React.Fragment key={page}>
                         {index > 0 && array[index - 1] !== page - 1 && (
-                          <span className="px-2 text-gray-500">...</span>
+                          <span className="px-2 text-gray-500 dark:text-gray-300">...</span>
                         )}
                         <button
                           onClick={() => goToPage(page)}
                           className={`w-10 h-10 rounded-lg font-medium transition-colors ${
                             pagination.page === page
                               ? 'bg-green-500 text-white'
-                              : 'border-2 border-gray-300 hover:bg-gray-50'
+                              : 'border-2 border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                           }`}
                         >
                           {page}
@@ -404,7 +404,7 @@ export default function RecipesPage() {
                 <button
                   onClick={nextPage}
                   disabled={pagination.page === pagination.totalPages}
-                  className="px-4 py-2 border-2 border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                  className="px-4 py-2 border-2 border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
                 >
                   Next
                 </button>

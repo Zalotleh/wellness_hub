@@ -59,7 +59,7 @@ class ErrorBoundary extends Component<Props, State> {
 
       // Default error UI
       return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-700 flex items-center justify-center p-4">
           <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <AlertTriangle className="w-8 h-8 text-red-600" />
@@ -69,13 +69,13 @@ class ErrorBoundary extends Component<Props, State> {
               Oops! Something went wrong
             </h1>
             
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 dark:text-gray-200 mb-6">
               We encountered an unexpected error. Don't worry, our team has been notified and we're working on a fix.
             </p>
 
             {/* Error details in development */}
             {process.env.NODE_ENV === 'development' && this.state.error && (
-              <details className="text-left mb-6 p-4 bg-gray-100 rounded-lg">
+              <details className="text-left mb-6 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
                 <summary className="cursor-pointer font-medium text-gray-900 mb-2">
                   <Bug className="inline w-4 h-4 mr-2" />
                   Error Details (Development)
@@ -117,7 +117,7 @@ class ErrorBoundary extends Component<Props, State> {
             <div className="mt-4 pt-4 border-t border-gray-200">
               <a
                 href="/"
-                className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                className="inline-flex items-center gap-2 text-sm text-gray-600 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors"
               >
                 <Home className="w-4 h-4" />
                 Return to Home

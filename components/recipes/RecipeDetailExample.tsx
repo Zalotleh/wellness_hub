@@ -195,7 +195,7 @@ export default function RecipeDetailExample({ className = '' }: RecipeDetailExam
   return (
     <div className={`space-y-6 ${className}`}>
       {/* Demo Controls */}
-      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+      <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200">
         <h3 className="text-lg font-semibold mb-4 text-gray-900">Recipe Detail Demo</h3>
         
         <div className="flex flex-wrap gap-3 mb-4">
@@ -207,7 +207,7 @@ export default function RecipeDetailExample({ className = '' }: RecipeDetailExam
             Switch Recipe
           </button>
           
-          <div className="flex items-center gap-2 text-sm text-gray-600">
+          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-200">
             <Star className="w-4 h-4" />
             <span>Current recipe: <strong>{currentRecipe.title}</strong></span>
           </div>
@@ -282,7 +282,7 @@ export default function RecipeDetailExample({ className = '' }: RecipeDetailExam
 // Provider component for app integration
 export function RecipeDetailProvider({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-700">
       <div className="container mx-auto px-4 py-8">
         {children}
       </div>

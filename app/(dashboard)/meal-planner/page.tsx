@@ -12,17 +12,17 @@ import { Calendar, ChefHat, TrendingUp, Sparkles, Shield, Target, Activity } fro
 // Custom error boundary for meal planner
 function MealPlannerErrorFallback() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center p-4">
-      <div className="max-w-lg w-full bg-white rounded-lg shadow-lg p-8 text-center">
-        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-          <ChefHat className="w-8 h-8 text-red-600" />
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
+      <div className="max-w-lg w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 text-center border dark:border-gray-700">
+        <div className="w-16 h-16 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
+          <ChefHat className="w-8 h-8 text-red-600 dark:text-red-400" />
         </div>
         
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
           Meal Planner Temporarily Unavailable
         </h2>
         
-        <p className="text-gray-600 mb-6">
+        <p className="text-gray-600 dark:text-gray-200 mb-6">
           We're experiencing issues with the meal planner. Please try refreshing the page or check back in a few minutes.
         </p>
         
@@ -86,7 +86,7 @@ export default function MealPlannerPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
       <main className="py-8 px-4">
         <div className="max-w-7xl mx-auto">
           {/* Enhanced Header */}
@@ -96,10 +96,10 @@ export default function MealPlannerPage() {
                 <Calendar className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl sm:text-4xl font-bold text-gray-800">
+                <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 dark:text-white">
                   AI Meal Planner
                 </h1>
-                <p className="text-gray-600 text-lg">
+                <p className="text-gray-600 dark:text-gray-300 text-lg">
                   Powered by the 5x5x5 Defense System
                 </p>
               </div>
@@ -155,67 +155,67 @@ export default function MealPlannerPage() {
           <section className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6" aria-labelledby="features-heading">
             <h2 id="features-heading" className="sr-only">Meal Planner Features</h2>
             
-            <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-                <Shield className="w-6 h-6 text-green-600" />
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow border dark:border-gray-700">
+              <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center mb-4">
+                <Shield className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
-              <h3 className="font-bold text-gray-900 mb-2">Balanced Defense Systems</h3>
-              <p className="text-sm text-gray-600">
+              <h3 className="font-bold text-gray-900 dark:text-white mb-2">Balanced Defense Systems</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300">
                 Every meal plan ensures comprehensive coverage of all five defense systems: Angiogenesis, Regeneration, Microbiome, DNA Protection, and Immunity.
               </p>
             </div>
 
-            <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                <Activity className="w-6 h-6 text-blue-600" />
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow border dark:border-gray-700">
+              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mb-4">
+                <Activity className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
-              <h3 className="font-bold text-gray-900 mb-2">AI-Powered Optimization</h3>
-              <p className="text-sm text-gray-600">
+              <h3 className="font-bold text-gray-900 dark:text-white mb-2">AI-Powered Optimization</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300">
                 Advanced algorithms ensure diverse meals with optimal nutrient distribution, cooking methods, and ingredient variety throughout the week.
               </p>
             </div>
 
-            <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
-                <Target className="w-6 h-6 text-purple-600" />
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow border dark:border-gray-700">
+              <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center mb-4">
+                <Target className="w-6 h-6 text-purple-600 dark:text-purple-400" />
               </div>
-              <h3 className="font-bold text-gray-900 mb-2">Fully Customizable</h3>
-              <p className="text-sm text-gray-600">
+              <h3 className="font-bold text-gray-900 dark:text-white mb-2">Fully Customizable</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300">
                 Personalize every aspect: edit meals, adjust portions, set dietary restrictions, generate shopping lists, and share with others.
               </p>
             </div>
           </section>
 
           {/* Enhanced Tips Section */}
-          <section className="mt-8 bg-blue-50 border-2 border-blue-200 rounded-lg p-6" aria-labelledby="tips-heading">
-            <h3 id="tips-heading" className="font-bold text-blue-900 mb-4 flex items-center gap-2">
+          <section className="mt-8 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-lg p-6" aria-labelledby="tips-heading">
+            <h3 id="tips-heading" className="font-bold text-blue-900 dark:text-blue-300 mb-4 flex items-center gap-2">
               <Sparkles className="w-5 h-5" />
               Pro Meal Planning Tips
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <ul className="space-y-3 text-sm text-blue-800">
+              <ul className="space-y-3 text-sm text-blue-800 dark:text-blue-300">
                 <li className="flex items-start space-x-3">
-                  <span className="text-blue-600 font-bold">•</span>
+                  <span className="text-blue-600 dark:text-blue-400 font-bold">•</span>
                   <span>
                     <strong>Sunday Prep:</strong> Batch prepare ingredients and proteins for the week ahead
                   </span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-blue-600 font-bold">•</span>
+                  <span className="text-blue-600 dark:text-blue-400 font-bold">•</span>
                   <span>
                     <strong>Smart Shopping:</strong> Export your shopping list and organize by store layout
                   </span>
                 </li>
               </ul>
-              <ul className="space-y-3 text-sm text-blue-800">
+              <ul className="space-y-3 text-sm text-blue-800 dark:text-blue-300">
                 <li className="flex items-start space-x-3">
-                  <span className="text-blue-600 font-bold">•</span>
+                  <span className="text-blue-600 dark:text-blue-400 font-bold">•</span>
                   <span>
                     <strong>Flexible Swapping:</strong> Feel free to move meals between days as needed
                   </span>
                 </li>
                 <li className="flex items-start space-x-3">
-                  <span className="text-blue-600 font-bold">•</span>
+                  <span className="text-blue-600 dark:text-blue-400 font-bold">•</span>
                   <span>
                     <strong>Leftover Strategy:</strong> Plan larger portions for strategic leftover meals
                   </span>

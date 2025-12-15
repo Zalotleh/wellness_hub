@@ -136,10 +136,10 @@ export default function MealPlanViewPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading meal plan...</p>
+          <p className="text-gray-600 dark:text-gray-300">Loading meal plan...</p>
         </div>
       </div>
     );
@@ -147,9 +147,9 @@ export default function MealPlanViewPage() {
 
   if (error || !mealPlan) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-600 mb-4">{error || 'Meal plan not found'}</p>
+          <p className="text-red-600 dark:text-red-400 mb-4">{error || 'Meal plan not found'}</p>
           <Link href="/saved-plans" className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
             Back to Saved Plans
           </Link>
@@ -159,13 +159,13 @@ export default function MealPlanViewPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
       <div className="p-4">
         <div className="max-w-7xl mx-auto">
           <div className="mb-6 flex items-center justify-between">
             <Link 
               href="/saved-plans"
-              className="inline-flex items-center text-gray-600 hover:text-gray-800"
+              className="inline-flex items-center text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Saved Plans
@@ -173,7 +173,7 @@ export default function MealPlanViewPage() {
             
             <button
               onClick={() => setIsDeleteModalOpen(true)}
-              className="inline-flex items-center px-3 py-2 text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+              className="inline-flex items-center px-3 py-2 text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-700 dark:hover:text-red-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
             >
               <Trash2 className="w-4 h-4 mr-2" />
               Delete Plan
@@ -181,8 +181,8 @@ export default function MealPlanViewPage() {
           </div>
           
           {error && (
-            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-600">{error}</p>
+            <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+              <p className="text-red-600 dark:text-red-300">{error}</p>
             </div>
           )}
           

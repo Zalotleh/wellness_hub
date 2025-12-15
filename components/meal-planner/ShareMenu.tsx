@@ -108,8 +108,8 @@ export default function ShareMenu({
       icon: Copy,
       description: 'Copy shareable link to clipboard',
       action: handleCopyLink,
-      color: 'text-gray-700',
-      bgColor: 'hover:bg-gray-50',
+      color: 'text-gray-700 dark:text-gray-200',
+      bgColor: 'hover:bg-gray-50 dark:hover:bg-gray-700',
     },
     {
       id: 'whatsapp',
@@ -117,8 +117,8 @@ export default function ShareMenu({
       icon: MessageCircle,
       description: 'Share via WhatsApp',
       action: () => onShare('whatsapp'),
-      color: 'text-green-600',
-      bgColor: 'hover:bg-green-50',
+      color: 'text-green-600 dark:text-green-400',
+      bgColor: 'hover:bg-green-50 dark:hover:bg-green-900/20',
     },
     {
       id: 'email',
@@ -126,8 +126,8 @@ export default function ShareMenu({
       icon: Mail,
       description: 'Share via email',
       action: () => onShare('email'),
-      color: 'text-blue-600',
-      bgColor: 'hover:bg-blue-50',
+      color: 'text-blue-600 dark:text-blue-400',
+      bgColor: 'hover:bg-blue-50 dark:hover:bg-blue-900/20',
     },
     {
       id: 'facebook',
@@ -135,8 +135,8 @@ export default function ShareMenu({
       icon: Facebook,
       description: 'Share on Facebook',
       action: () => onShare('facebook'),
-      color: 'text-blue-700',
-      bgColor: 'hover:bg-blue-50',
+      color: 'text-blue-700 dark:text-blue-400',
+      bgColor: 'hover:bg-blue-50 dark:hover:bg-blue-900/20',
     },
     {
       id: 'twitter',
@@ -144,8 +144,8 @@ export default function ShareMenu({
       icon: Twitter,
       description: 'Share on Twitter',
       action: () => onShare('twitter'),
-      color: 'text-sky-500',
-      bgColor: 'hover:bg-sky-50',
+      color: 'text-sky-500 dark:text-sky-400',
+      bgColor: 'hover:bg-sky-50 dark:hover:bg-sky-900/20',
     },
     {
       id: 'linkedin',
@@ -153,8 +153,8 @@ export default function ShareMenu({
       icon: Linkedin,
       description: 'Share on LinkedIn',
       action: () => onShare('linkedin'),
-      color: 'text-blue-600',
-      bgColor: 'hover:bg-blue-50',
+      color: 'text-blue-600 dark:text-blue-400',
+      bgColor: 'hover:bg-blue-50 dark:hover:bg-blue-900/20',
     },
   ];
 
@@ -165,31 +165,31 @@ export default function ShareMenu({
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-black bg-opacity-25 z-40 sm:hidden" onClick={onClose} />
+      <div className="fixed inset-0 bg-black bg-opacity-25 dark:bg-opacity-50 z-[60] sm:hidden" onClick={onClose} />
       
       {/* Menu */}
       <div 
         ref={menuRef}
         className={`
-          absolute right-0 top-full mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50
+          absolute right-0 top-full mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-[60]
           transform transition-all duration-200 origin-top-right
           ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'}
           ${className}
         `}
       >
         {/* Header */}
-        <div className="px-4 py-3 border-b border-gray-200">
+        <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">Share Meal Plan</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Share Meal Plan</h3>
             <button
               onClick={onClose}
-              className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
+              className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
               aria-label="Close share menu"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
-          <p className="text-sm text-gray-600 mt-1 truncate" title={mealPlanTitle}>
+          <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 truncate" title={mealPlanTitle}>
             {mealPlanTitle}
           </p>
         </div>
@@ -198,10 +198,10 @@ export default function ShareMenu({
         <div className="p-4">
           {!canShare ? (
             <div className="text-center py-4">
-              <div className="text-gray-400 mb-2">
+              <div className="text-gray-400 dark:text-gray-500 mb-2">
                 <Share2 className="w-8 h-8 mx-auto" />
               </div>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-300">
                 Please save the meal plan first to enable sharing.
               </p>
             </div>
@@ -209,7 +209,7 @@ export default function ShareMenu({
             <>
               {/* Share Options */}
               <div className="space-y-1 mb-4">
-                <h4 className="text-sm font-medium text-gray-900 mb-2">Share with others</h4>
+                <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Share with others</h4>
                 {shareOptions.map((option) => {
                   const Icon = option.icon;
                   return (
@@ -224,15 +224,15 @@ export default function ShareMenu({
                     >
                       <Icon className="w-5 h-5 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium">
+                        <div className="font-medium dark:text-white">
                           {option.id === 'link' && copiedToClipboard ? 'Copied!' : option.label}
                         </div>
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
                           {option.description}
                         </div>
                       </div>
                       {option.id === 'link' && copiedToClipboard && (
-                        <Check className="w-4 h-4 text-green-600" />
+                        <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
                       )}
                     </button>
                   );
@@ -241,7 +241,7 @@ export default function ShareMenu({
 
               {/* Share URL Display */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                   Shareable Link
                 </label>
                 <div className="flex gap-2">
@@ -249,15 +249,15 @@ export default function ShareMenu({
                     type="text"
                     value={shareUrl}
                     readOnly
-                    className="flex-1 px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 px-3 py-2 text-sm bg-gray-50 dark:bg-gray-700 dark:text-white border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <button
                     onClick={handleCopyLink}
-                    className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+                    className="px-3 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg transition-colors"
                     title="Copy to clipboard"
                   >
                     {copiedToClipboard ? (
-                      <Check className="w-4 h-4 text-green-600" />
+                      <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
                     ) : (
                       <Copy className="w-4 h-4" />
                     )}
@@ -266,12 +266,12 @@ export default function ShareMenu({
               </div>
 
               {/* Export Section */}
-              <div className="border-t border-gray-200 pt-4">
-                <h4 className="text-sm font-medium text-gray-900 mb-2">Export & Download</h4>
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Export & Download</h4>
                 <button
                   onClick={handlePDFExport}
                   disabled={isExportingPDF}
-                  className="w-full flex items-center gap-3 px-3 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full flex items-center gap-3 px-3 py-2 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isExportingPDF ? (
                     <Loader2 className="w-5 h-5 animate-spin flex-shrink-0" />
@@ -279,10 +279,10 @@ export default function ShareMenu({
                     <Download className="w-5 h-5 flex-shrink-0" />
                   )}
                   <div className="flex-1 text-left">
-                    <div className="font-medium">
+                    <div className="font-medium dark:text-white">
                       {isExportingPDF ? 'Generating PDF...' : 'Export as PDF'}
                     </div>
-                    <div className="text-xs text-red-600">
+                    <div className="text-xs text-red-600 dark:text-red-400">
                       Download printable meal plan
                     </div>
                   </div>
@@ -290,10 +290,10 @@ export default function ShareMenu({
               </div>
 
               {/* QR Code Section (Optional) */}
-              <div className="border-t border-gray-200 pt-4 mt-4">
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
                 <button
                   onClick={() => setShowQR(!showQR)}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                  className="w-full flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 rounded-lg transition-colors"
                 >
                   <QrCode className="w-5 h-5" />
                   <span className="font-medium">
@@ -302,14 +302,14 @@ export default function ShareMenu({
                 </button>
                 
                 {showQR && (
-                  <div className="mt-3 p-4 bg-gray-50 rounded-lg text-center">
-                    <div className="w-32 h-32 bg-white border border-gray-200 rounded-lg mx-auto mb-2 flex items-center justify-center">
-                      <QrCode className="w-16 h-16 text-gray-400" />
+                  <div className="mt-3 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg text-center">
+                    <div className="w-32 h-32 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg mx-auto mb-2 flex items-center justify-center">
+                      <QrCode className="w-16 h-16 text-gray-400 dark:text-gray-500" />
                     </div>
-                    <p className="text-xs text-gray-600">
+                    <p className="text-xs text-gray-600 dark:text-gray-300">
                       QR code for quick sharing
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       (Scan with phone camera)
                     </p>
                   </div>
@@ -320,8 +320,8 @@ export default function ShareMenu({
         </div>
 
         {/* Footer */}
-        <div className="px-4 py-3 bg-gray-50 rounded-b-lg border-t border-gray-200">
-          <div className="flex items-center gap-2 text-xs text-gray-500">
+        <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-b-lg border-t border-gray-200 dark:border-gray-700">
+          <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
             <ExternalLink className="w-3 h-3" />
             <span>Shared meal plans are publicly accessible</span>
           </div>
