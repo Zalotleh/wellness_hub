@@ -348,14 +348,18 @@ export default function EnhancedMealPlanner({
         sortedDailyMenus.forEach((dailyMenu: any, dayIndex: number) => {
           if (dailyMenu.meals && Array.isArray(dailyMenu.meals)) {
             const dayNames = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-            const dayName = dayNames[dayIndex % 7] || 'monday';
+            // Calculate week number (1-based) and day of week (0-6)
+            const weekNumber = Math.floor(dayIndex / 7) + 1;
+            const dayOfWeek = dayIndex % 7;
+            const dayName = dayNames[dayOfWeek] || 'monday';
             
             dailyMenu.meals.forEach((meal: any) => {
               flattenedMeals.push({
-                id: meal.id || `${dayName}-${meal.mealType}`,
+                id: meal.id || `week${weekNumber}-${dayName}-${meal.mealType}`,
                 mealName: meal.mealName || 'Unnamed Meal',
                 mealType: meal.mealType || 'breakfast',
                 day: dayName,
+                week: weekNumber,
                 slot: meal.mealType || 'breakfast',
                 defenseSystems: meal.defenseSystems || [],
                 prepTime: meal.prepTime ? (typeof meal.prepTime === 'string' ? parseInt(meal.prepTime) : meal.prepTime) : 30,
