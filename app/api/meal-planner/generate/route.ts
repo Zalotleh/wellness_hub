@@ -107,7 +107,15 @@ Guidelines:
 - Balance complexity across the ${weekText}
 - Consider meal prep efficiency (similar ingredients)
 
-Respond ONLY with valid JSON, no additional text.`;
+RESPONSE FORMAT REQUIREMENTS:
+1. Respond with ONLY valid JSON - no explanations, no markdown, no code blocks
+2. Ensure all property names are in double quotes
+3. Ensure all string values are in double quotes
+4. Do not include trailing commas
+5. Do not include comments
+6. Start your response with { and end with }
+
+Respond ONLY with valid JSON, no additional text or formatting.`;
 
     const anthropicApiKey = process.env.ANTHROPIC_API_KEY;
 
@@ -140,7 +148,7 @@ Respond ONLY with valid JSON, no additional text.`;
           },
           body: JSON.stringify({
             model: 'claude-sonnet-4-20250514',
-            max_tokens: 4000,
+            max_tokens: 8000, // Increased for multi-week plans (2 weeks = 42 meals)
             messages: [
               {
                 role: 'user',
@@ -211,6 +219,9 @@ Respond ONLY with valid JSON, no additional text.`;
       // Try to extract and clean JSON if wrapped in markdown code blocks or has extra content
       let jsonText = responseText;
       
+      // Log first 500 chars for debugging
+      console.log('📄 Raw response preview (first 500 chars):', jsonText.substring(0, 500));
+      
       // Remove markdown code blocks if present
       jsonText = jsonText.replace(/```json\s*/g, '').replace(/```\s*/g, '');
       
@@ -225,6 +236,11 @@ Respond ONLY with valid JSON, no additional text.`;
       // Clean up common JSON issues
       // Fix trailing commas before closing braces/brackets
       jsonText = jsonText.replace(/,(\s*[}\]])/g, '$1');
+      // Fix unescaped quotes in strings (basic attempt)
+      // Fix missing commas between properties (look for }" followed by ")
+      jsonText = jsonText.replace(/("\s*)\n(\s*"[^"]+"\s*:)/g, '$1,$2');
+      
+      console.log('🔧 Cleaned JSON preview (first 500 chars):', jsonText.substring(0, 500));
       
       mealPlan = JSON.parse(jsonText);
 
@@ -250,10 +266,17 @@ Respond ONLY with valid JSON, no additional text.`;
         }
       }
     } catch (parseError) {
-      console.error('Failed to parse meal plan JSON:', parseError);
+      console.error('❌ Failed to parse meal plan JSON:', parseError);
+      console.error('📄 Failed JSON length:', responseText.length, 'chars');
+      console.error('📄 Failed JSON preview (first 1000 chars):', responseText.substring(0, 1000));
+      console.error('📄 Failed JSON preview (around error position):', 
+        parseError instanceof SyntaxError && parseError.message.includes('position') 
+          ? responseText.substring(Math.max(0, parseInt(parseError.message.match(/\d+/)?.[0] || '0') - 100), parseInt(parseError.message.match(/\d+/)?.[0] || '0') + 100)
+          : 'N/A'
+      );
       return NextResponse.json({
         data: generateMockMealPlan(duration),
-        message: 'Generated fallback meal plan',
+        message: 'Generated fallback meal plan due to AI response parsing error',
       });
     }
 
