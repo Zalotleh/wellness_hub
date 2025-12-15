@@ -41,7 +41,8 @@ interface MealPlan {
   weekStart?: string | Date;
   weekEnd?: string | Date;
   defaultServings?: number;
-  duration?: number; // Number of weeks
+  duration?: number; // Number of weeks (for in-memory state)
+  durationWeeks?: number; // Number of weeks (from database)
   createdAt?: Date;
   updatedAt?: Date;
   userId?: string;
@@ -1056,7 +1057,7 @@ export default function EnhancedMealPlanner({
         ) : (
           <MealPlanView
             meals={mealPlan.meals}
-            duration={mealPlan.duration || configuration.duration || 1}
+            duration={mealPlan.durationWeeks || mealPlan.duration || configuration.duration || 1}
             onMealUpdate={handleMealUpdate}
             onMealDelete={handleMealDelete}
             onMealCopy={handleMealCopy}

@@ -99,6 +99,12 @@ export default function MealPlanView({
     return acc;
   }, {} as Record<number, Record<string, Record<string, Meal[]>>>);
 
+  // Debug logging
+  console.log('📊 MealPlanView - Total meals received:', meals.length);
+  console.log('📊 MealPlanView - Weeks in grouped data:', Object.keys(mealsByWeekAndDay));
+  console.log('📊 MealPlanView - Duration (weeks):', duration);
+  console.log('📊 MealPlanView - Sample meals:', meals.slice(0, 5).map(m => ({ week: m.week, day: m.day, slot: m.slot, name: m.mealName })));
+
   // Also keep the old structure for backward compatibility (first week only)
   const mealsByDay = mealsByWeekAndDay[selectedWeek] || {};
 
