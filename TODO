@@ -99,11 +99,17 @@ enhancements:
 -when the meal plan is gnereated, provide a notification note that the meal planner will generate recipes ideas, and if users like the title or idea they can click generate to generate that recipe
 
 
--the prgress bar for meal plan creator, goes to the 100% then back to 90% fix this, ew plan inside the meal plan page doesnt work, after creating a new meal plan the user s redirected to meal plan page, at the bottom of the page, redirect the customer to the calendar view, top of the page.
-the meal plan for 2 weeks generated, but the following issues happened:
+-the prgress bar for meal plan creator, goes to the 100% then back to 90% fix this, X
+-the button of New plan inside the meal plan page doesnt work, X
+-after creating a new meal plan the user s redirected to meal plan page, at the bottom of the page, redirect the customer to the calendar view, top of the page. X
+-the meal plan for 2 weeks generated, but the following issues happened:
 the list view show like that: Monday> Breakfast , Monday>Lunch, Monday> Dinner, Monday> Breakfast , Monday>Lunch, Monday> Dinner, Tuesday> Breakfast, Tuesday> Lunch, Tuesday> Dinner, Tuesday> Breakfast, Tuesday> Lunch, Tuesday> Dinner and so on.
 and in the Calnder View: similar issue, where Monday has 2 Breakfast, 2 Lunch, 2 Dinner
-and another issue that the recipes for each dy are repeated, for example monday's recipes are the same for the next week Monday recipes.
+and another issue that the recipes for each dy are repeated, for example monday's recipes are the same for the next week Monday recipes. X
+
+
+there is a delete button inside the Create your Meal Plan page, i noticed when i select new mea plan fro a meal plan page, in the url i am still in the meal plan page itself, user should go to: /meal-planner page right? X
+
 Plan for nextjs 15 Later:
 
 Next.js 15 Migration Scope
