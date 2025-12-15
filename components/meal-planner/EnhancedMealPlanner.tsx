@@ -380,15 +380,16 @@ export default function EnhancedMealPlanner({
       };
       
       setMealPlan(transformedPlan);
-      setCurrentStep('view');
       
-      // Scroll to top of page to show calendar view
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-
       // Call callback if provided
       if (onPlanSave) {
         console.log('🎉 Calling onPlanSave callback');
         onPlanSave(savedPlan);
+        // Don't set view mode or scroll - let the redirect handle navigation
+      } else {
+        // Only set view mode if no callback (standalone usage)
+        setCurrentStep('view');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
 
     } catch (error) {

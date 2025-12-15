@@ -70,9 +70,8 @@ export default function MealPlannerPage() {
     
     // Redirect to the individual meal plan page after creation
     if (plan?.id) {
-      setTimeout(() => {
-        router.push(`/meal-planner/${plan.id}`);
-      }, 1500); // Small delay to allow user to see the success message
+      // Use replace to avoid flash of create page
+      router.replace(`/meal-planner/${plan.id}`);
     }
   };
 

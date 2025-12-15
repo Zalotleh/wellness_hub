@@ -208,13 +208,25 @@ Respond ONLY with valid JSON, no additional text.`;
     // Parse JSON from response
     let mealPlan;
     try {
-      // Try to extract JSON if wrapped in markdown code blocks
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        mealPlan = JSON.parse(jsonMatch[0]);
-      } else {
-        mealPlan = JSON.parse(responseText);
+      // Try to extract and clean JSON if wrapped in markdown code blocks or has extra content
+      let jsonText = responseText;
+      
+      // Remove markdown code blocks if present
+      jsonText = jsonText.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+      
+      // Try to find the JSON object (look for outermost braces)
+      const firstBrace = jsonText.indexOf('{');
+      const lastBrace = jsonText.lastIndexOf('}');
+      
+      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        jsonText = jsonText.substring(firstBrace, lastBrace + 1);
       }
+      
+      // Clean up common JSON issues
+      // Fix trailing commas before closing braces/brackets
+      jsonText = jsonText.replace(/,(\s*[}\]])/g, '$1');
+      
+      mealPlan = JSON.parse(jsonText);
 
       // Log what we received to debug multi-week issues
       const weekKeys = Object.keys(mealPlan).filter(k => k.startsWith('week'));
