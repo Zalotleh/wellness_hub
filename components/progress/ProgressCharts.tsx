@@ -405,29 +405,29 @@ export default function ProgressCharts({ weeklyData }: ProgressChartsProps) {
       </div>
 
       {/* Insights & Recommendations */}
-      <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-2 border-blue-200 dark:border-blue-700 rounded-lg p-6">
-        <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">
+      <div className="bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 rounded-lg p-6">
+        <h3 className="text-lg font-bold text-gray-800 mb-4">
           💡 Insights & Recommendations
         </h3>
         <div className="space-y-3">
           {weeklyData.weeklyStats.overallCompletion >= 80 ? (
             <div className="flex items-start space-x-2">
-              <span className="text-green-600 dark:text-green-400 font-bold">✓</span>
-              <p className="text-sm text-gray-700 dark:text-gray-300">
+              <span className="text-green-600 font-bold">✓</span>
+              <p className="text-sm text-gray-700">
                 <strong>Excellent work!</strong> You're consistently hitting your 5x5x5 goals. Keep it up!
               </p>
             </div>
           ) : weeklyData.weeklyStats.overallCompletion >= 50 ? (
             <div className="flex items-start space-x-2">
-              <span className="text-yellow-600 dark:text-yellow-400 font-bold">→</span>
-              <p className="text-sm text-gray-700 dark:text-gray-300">
+              <span className="text-yellow-600 font-bold">→</span>
+              <p className="text-sm text-gray-700">
                 <strong>Good progress!</strong> Try to be more consistent with all five defense systems.
               </p>
             </div>
           ) : (
             <div className="flex items-start space-x-2">
-              <span className="text-red-600 dark:text-red-400 font-bold">!</span>
-              <p className="text-sm text-gray-700 dark:text-gray-300">
+              <span className="text-red-600 font-bold">!</span>
+              <p className="text-sm text-gray-700">
                 <strong>Let's improve!</strong> Focus on logging foods daily to build the habit.
               </p>
             </div>
@@ -435,8 +435,8 @@ export default function ProgressCharts({ weeklyData }: ProgressChartsProps) {
 
           {weeklyData.weeklyStats.daysActive < 5 && (
             <div className="flex items-start space-x-2">
-              <span className="text-blue-600 dark:text-blue-400 font-bold">→</span>
-              <p className="text-sm text-gray-700 dark:text-gray-300">
+              <span className="text-blue-600 font-bold">→</span>
+              <p className="text-sm text-gray-700">
                 Try to log foods at least 5 days per week for best results.
               </p>
             </div>
@@ -444,8 +444,8 @@ export default function ProgressCharts({ weeklyData }: ProgressChartsProps) {
 
           {systemComparisonData.some((s) => s.percentage < 40) && (
             <div className="flex items-start space-x-2">
-              <span className="text-purple-600 dark:text-purple-400 font-bold">→</span>
-              <p className="text-sm text-gray-700 dark:text-gray-300">
+              <span className="text-purple-600 font-bold">→</span>
+              <p className="text-sm text-gray-700">
                 Focus on{' '}
                 {systemComparisonData
                   .filter((s) => s.percentage < 40)
@@ -458,8 +458,8 @@ export default function ProgressCharts({ weeklyData }: ProgressChartsProps) {
 
           {weeklyData.weeklyStats.bestSystem && (
             <div className="flex items-start space-x-2">
-              <span className="text-green-600 dark:text-green-400 font-bold">★</span>
-              <p className="text-sm text-gray-700 dark:text-gray-300">
+              <span className="text-green-600 font-bold">★</span>
+              <p className="text-sm text-gray-700">
                 You're doing great with{' '}
                 {DEFENSE_SYSTEMS[weeklyData.weeklyStats.bestSystem as DefenseSystem]?.displayName}! 
                 Use the same approach for other systems.

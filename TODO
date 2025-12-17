@@ -111,10 +111,11 @@ and another issue that the recipes for each dy are repeated, for example monday'
 there is a delete button inside the Create your Meal Plan page, i noticed when i select new mea plan fro a meal plan page, in the url i am still in the meal plan page itself, user should go to: /meal-planner page right? X
 
 
-- recipe ai generator has an issue, i tried to create recipe many time but i always got the error: The AI generated an incomplete recipe. Please try again. This attempt was not counted against your limit.
+- recipe ai generator has an issue, i tried to create recipe many time but i always got the error: The AI generated an incomplete recipe. Please try again. This attempt was not counted against your limit. X
 
 ✓ Not Counted Against Your Limit
 You can try again immediately
+
 -- the terminal output:
 prisma:query SELECT "public"."User"."id", "public"."User"."subscriptionTier"::text, "public"."User"."subscriptionStatus", "public"."User"."recipeGenerationsThisMonth", "public"."User"."lastResetDate" FROM "public"."User" WHERE ("public"."User"."id" = $1 AND 1=1) LIMIT $2 OFFSET $3
 📝 Request body: {
@@ -188,13 +189,21 @@ This vibrant Buddha bowl combines probiotic-rich tempeh and miso with prebiotic 
   'Missing or too short cooking instructions (has 52 chars, needs at least 100)',
   'Instructions are placeholder text, not real cooking steps'
 ]
- POST /api/ai/generate 500 in 19237ms
+ POST /api/ai/generate 500 in 19237ms X
 
-
-- in recipe page, the share button needs enhancement and better dialouge message than the toast notification for sharing anf for deleting the recipe.
+ -check the authorization logic in the app, so pages can been seen for logged in users, users can see their own pages, only them nobody esle.. etc
+- if user in free plan generates recipe and doesnt save it, does this rcipe counts for his recipes generation limit? because user can generate as many recipe as they want without saving them, right?
+- in recipe page, the share button needs enhancement and better dialouge message than the toast notification for sharing and for deleting the recipe.
 - Create Shopping List inside the Recipe detail page, doest work, an error says: No valid recipes found.
 - adding recipes to the facourites list doesnt work.
 - instruction on recipe ai generator, like select minimum 3 ingredients, gives error if user doesnt slect required info, add the ability to click on ingredient and add them automatically
+- the footer inside the Meal planner page, to be extended to the other pages
+- the filter in saved plan page, can be enhanced based on the mea plans attributes.
+-in the meal plan,there is "Shopping List" button right beside the Stat button, delete this shopping list button,when i lcikc on Create Shopping list i get a toast notifcation for error message and success message add a better dialouge UI for it. light mode ad dark mode.
+- botton Create Shooping List inside the meal plan, when the shopping list is created it becomes View List, make it View Shopping List.
+- update meal plan, needs a better UI dialough, or success message than toast notification, dark mode and light mode.
+- inside the shopping list, cick share, click copy to clipboard a toast notification shows, create a better sucess message.
+- Community pages, topics, create one..
 
 Plan for nextjs 15 Later:
 

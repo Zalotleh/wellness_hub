@@ -675,15 +675,15 @@ export default function AIRecipeGenerator({
         </div>
       ) : (
         /* Generated Recipe Display */
-        <div className="bg-white rounded-lg shadow-md p-6 space-y-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:border dark:border-gray-700 p-6 space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-2xl font-bold text-gray-800">
+            <h3 className="text-2xl font-bold text-gray-800 dark:text-white">
               🎉 Your AI-Generated Recipe
             </h3>
             <button
               type="button"
               onClick={() => setGeneratedRecipe(null)}
-              className="p-2 hover:bg-gray-100 dark:bg-gray-700 rounded-lg"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
             >
               <X className="w-5 h-5 text-gray-500 dark:text-gray-300" />
             </button>
@@ -692,7 +692,7 @@ export default function AIRecipeGenerator({
           {/* Recipe Content */}
           <div className="space-y-4">
             <div>
-              <h4 className="text-xl font-bold text-gray-800">
+              <h4 className="text-xl font-bold text-gray-800 dark:text-white">
                 {generatedRecipe.title}
               </h4>
               <div

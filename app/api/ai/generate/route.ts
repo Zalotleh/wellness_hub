@@ -268,6 +268,12 @@ BAD EXAMPLES:
 - "Healthy Dinner"
 - "Immunity Boost Meal"
 
+CRITICAL FORMAT INSTRUCTIONS:
+1. DO NOT use markdown headers (# or ##) in your response
+2. Use plain text with the exact labels shown below
+3. Each section label should be on its own line followed by a colon
+4. Start each ingredient and nutrient with a dash (-)
+
 Please provide the recipe in the following EXACT format:
 
 TITLE: [A specific, creative recipe name that describes the dish - NOT the defense system]
@@ -417,10 +423,21 @@ function parseAIRecipe(recipeText: string, defenseSystem: DefenseSystem): any {
 
   let currentSection = '';
 
-  // First pass - look specifically for TITLE
-  const titleLine = lines.find(line => line.trim().startsWith('TITLE:'));
+  // Helper function to normalize line (remove markdown headers)
+  const normalizeLine = (line: string): string => {
+    // Remove markdown headers: # TITLE: -> TITLE:, ## DESCRIPTION: -> DESCRIPTION:
+    return line.replace(/^#+\s*/, '').trim();
+  };
+
+  // First pass - look specifically for TITLE (handle both TITLE: and # TITLE:)
+  const titleLine = lines.find(line => {
+    const normalized = normalizeLine(line);
+    return normalized.startsWith('TITLE:');
+  });
+  
   if (titleLine) {
-    const title = titleLine.replace('TITLE:', '').trim();
+    const normalized = normalizeLine(titleLine);
+    const title = normalized.replace('TITLE:', '').trim();
     // Ensure title is not too long and is meaningful
     if (title && title !== '[Creative recipe name]' && title.length >= 3) {
       recipe.title = title.length > 100 ? title.substring(0, 97) + '...' : title;
@@ -430,30 +447,45 @@ function parseAIRecipe(recipeText: string, defenseSystem: DefenseSystem): any {
 
   for (const line of lines) {
     const trimmedLine = line.trim();
+    const normalizedLine = normalizeLine(trimmedLine);
 
-    if (trimmedLine.startsWith('DESCRIPTION:')) {
-      recipe.description = trimmedLine.replace('DESCRIPTION:', '').trim();
+    // Handle DESCRIPTION (with or without markdown headers)
+    if (normalizedLine.startsWith('DESCRIPTION:')) {
+      recipe.description = normalizedLine.replace('DESCRIPTION:', '').trim();
       console.log('✅ Description found');
-    } else if (trimmedLine.startsWith('PREP_TIME:')) {
-      recipe.prepTime = trimmedLine.replace('PREP_TIME:', '').trim();
-    } else if (trimmedLine.startsWith('COOK_TIME:')) {
-      recipe.cookTime = trimmedLine.replace('COOK_TIME:', '').trim();
-    } else if (trimmedLine.startsWith('SERVINGS:')) {
-      recipe.servings = parseInt(trimmedLine.replace('SERVINGS:', '').trim());
-    } else if (trimmedLine === 'INGREDIENTS:') {
+    } 
+    // Handle PREP_TIME
+    else if (normalizedLine.startsWith('PREP_TIME:')) {
+      recipe.prepTime = normalizedLine.replace('PREP_TIME:', '').trim();
+    } 
+    // Handle COOK_TIME
+    else if (normalizedLine.startsWith('COOK_TIME:')) {
+      recipe.cookTime = normalizedLine.replace('COOK_TIME:', '').trim();
+    } 
+    // Handle SERVINGS
+    else if (normalizedLine.startsWith('SERVINGS:')) {
+      recipe.servings = parseInt(normalizedLine.replace('SERVINGS:', '').trim());
+    } 
+    // Section headers
+    else if (normalizedLine === 'INGREDIENTS:') {
       currentSection = 'ingredients';
       console.log('📝 Entering ingredients section');
-    } else if (trimmedLine === 'INSTRUCTIONS:') {
+    } 
+    else if (normalizedLine === 'INSTRUCTIONS:') {
       currentSection = 'instructions';
       recipe.instructions = '';
       console.log('📝 Entering instructions section');
-    } else if (trimmedLine === 'NUTRIENTS:') {
+    } 
+    else if (normalizedLine === 'NUTRIENTS:') {
       currentSection = 'nutrients';
       console.log('📝 Entering nutrients section');
-    } else if (currentSection === 'ingredients' && trimmedLine.startsWith('-')) {
+    } 
+    // Parse ingredients
+    else if (currentSection === 'ingredients' && trimmedLine.startsWith('-')) {
       const ingredientText = trimmedLine.substring(1).trim();
       
       // Better parsing: "2 cups flour" -> amount: "2", unit: "cups", name: "flour"
+      // Also handle: "200 g tempeh", "30 ml olive oil", "2 clove garlic, minced"
       const match = ingredientText.match(/^(\d+\.?\d*)\s+([a-zA-Z]+)\s+(.+)$/);
       
       if (match) {
@@ -464,17 +496,28 @@ function parseAIRecipe(recipeText: string, defenseSystem: DefenseSystem): any {
           unit: unit.trim()
         });
       } else {
-        // Fallback for items like "pinch of salt" or "to taste"
+        // Fallback for items like "1 pinch black pepper" or "Fresh parsley, as needed"
         const parts = ingredientText.split(' ');
         if (parts.length >= 2) {
-          const amount = parts[0];
-          const unit = parts[1];
-          const name = parts.slice(2).join(' ') || parts[1];
-          recipe.ingredients.push({ 
-            name: name, 
-            amount: amount,
-            unit: unit === name ? '' : unit
-          });
+          // Check if first part is a number
+          const firstPart = parts[0];
+          if (/^\d+\.?\d*$/.test(firstPart)) {
+            const amount = firstPart;
+            const unit = parts[1];
+            const name = parts.slice(2).join(' ') || parts[1];
+            recipe.ingredients.push({ 
+              name: name, 
+              amount: amount,
+              unit: unit === name ? '' : unit
+            });
+          } else {
+            // No numeric amount (e.g., "Fresh parsley, as needed")
+            recipe.ingredients.push({ 
+              name: ingredientText, 
+              amount: '',
+              unit: 'as needed'
+            });
+          }
         } else {
           // Single word ingredient
           recipe.ingredients.push({ 
@@ -484,13 +527,24 @@ function parseAIRecipe(recipeText: string, defenseSystem: DefenseSystem): any {
           });
         }
       }
-    } else if (currentSection === 'instructions') {
-      recipe.instructions += trimmedLine + '\n';
-    } else if (currentSection === 'nutrients' && trimmedLine.startsWith('-')) {
+    } 
+    // Parse instructions (collect all lines in instructions section)
+    else if (currentSection === 'instructions') {
+      // Skip empty lines
+      if (trimmedLine.length > 0) {
+        recipe.instructions += trimmedLine + '\n';
+      }
+    } 
+    // Parse nutrients
+    else if (currentSection === 'nutrients' && trimmedLine.startsWith('-')) {
       const nutrientText = trimmedLine.substring(1).trim();
-      const [name, value] = nutrientText.split(':').map((s) => s.trim());
-      if (name && value) {
-        recipe.nutrients[name] = value;
+      const colonIndex = nutrientText.indexOf(':');
+      if (colonIndex > 0) {
+        const name = nutrientText.substring(0, colonIndex).trim();
+        const value = nutrientText.substring(colonIndex + 1).trim();
+        if (name && value) {
+          recipe.nutrients[name] = value;
+        }
       }
     }
   }

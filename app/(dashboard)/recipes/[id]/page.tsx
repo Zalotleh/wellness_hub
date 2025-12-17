@@ -465,7 +465,7 @@ export default function RecipeDetailPage() {
                     ))}
                   </ol>
                 ) : (
-                  <pre className="whitespace-pre-wrap font-sans text-gray-700 dark:text-gray-200 leading-relaxed">
+                  <pre className="whitespace-pre-wrap font-sans text-gray-700 dark:text-gray-200 leading-relaxed bg-transparent dark:bg-transparent">
                     {recipe.instructions}
                   </pre>
                 )}
