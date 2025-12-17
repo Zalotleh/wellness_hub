@@ -34,6 +34,64 @@ export default function AIRecipeGenerator({
     measurementSystem: 'imperial' | 'metric';
   } | null>(null);
   const [wasNotCounted, setWasNotCounted] = useState(false);
+  const [showTips, setShowTips] = useState(true);
+
+  // Quality Score Calculator
+  const calculateQualityScore = () => {
+    const validIngredients = ingredients.filter((ing) => ing.trim() !== '');
+    let score = 0;
+    let tips: string[] = [];
+
+    // Defense system selected (always true)
+    score += 1;
+
+    // Ingredients scoring
+    if (validIngredients.length === 0) {
+      tips.push('Add at least 3 ingredients for better results');
+    } else if (validIngredients.length < 3) {
+      score += 1;
+      tips.push(`Add ${3 - validIngredients.length} more ingredient${3 - validIngredients.length > 1 ? 's' : ''} for a creative recipe`);
+    } else if (validIngredients.length >= 3 && validIngredients.length <= 5) {
+      score += 2;
+      tips.push('Great ingredient count! Perfect for a balanced recipe');
+    } else {
+      score += 2;
+      tips.push('Excellent variety! This will create a unique recipe');
+    }
+
+    // Dietary restrictions
+    if (dietaryRestrictions.length > 0) {
+      score += 1;
+      tips.push('Dietary restrictions help personalize your recipe');
+    } else {
+      tips.push('Add dietary restrictions to customize your recipe');
+    }
+
+    // Meal type specificity
+    if (mealType !== 'any') {
+      score += 1;
+      tips.push('Specific meal type helps create targeted recipes');
+    } else {
+      tips.push('Select a specific meal type for better results');
+    }
+
+    return { score, maxScore: 5, tips };
+  };
+
+  const qualityData = calculateQualityScore();
+  const qualityPercentage = (qualityData.score / qualityData.maxScore) * 100;
+  const qualityColor = 
+    qualityPercentage >= 80 ? 'text-green-600 dark:text-green-400' :
+    qualityPercentage >= 60 ? 'text-yellow-600 dark:text-yellow-400' :
+    'text-orange-600 dark:text-orange-400';
+  const qualityBgColor = 
+    qualityPercentage >= 80 ? 'bg-green-100 dark:bg-green-900/20' :
+    qualityPercentage >= 60 ? 'bg-yellow-100 dark:bg-yellow-900/20' :
+    'bg-orange-100 dark:bg-orange-900/20';
+  const qualityBarColor = 
+    qualityPercentage >= 80 ? 'bg-green-500' :
+    qualityPercentage >= 60 ? 'bg-yellow-500' :
+    'bg-orange-500';
 
   // Get user's measurement preference on mount
   useEffect(() => {
@@ -400,6 +458,110 @@ export default function AIRecipeGenerator({
         </p>
       </div>
 
+      {!generatedRecipe && (
+        <>
+          {/* Quality Score Indicator */}
+          <div className={`${qualityBgColor} border-2 ${qualityPercentage >= 80 ? 'border-green-300 dark:border-green-700' : qualityPercentage >= 60 ? 'border-yellow-300 dark:border-yellow-700' : 'border-orange-300 dark:border-orange-700'} rounded-lg p-4 space-y-3`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="text-2xl">
+                  {qualityPercentage >= 80 ? '🌟' : qualityPercentage >= 60 ? '⭐' : '💡'}
+                </span>
+                <div>
+                  <h3 className="font-bold text-gray-900 dark:text-white">Input Quality Score</h3>
+                  <p className="text-xs text-gray-600 dark:text-gray-300">
+                    {qualityPercentage >= 80 ? 'Excellent! Ready for best results' : 
+                     qualityPercentage >= 60 ? 'Good start! A few improvements will help' : 
+                     'Add more details for better recipes'}
+                  </p>
+                </div>
+              </div>
+              <div className={`text-2xl font-bold ${qualityColor}`}>
+                {qualityData.score}/{qualityData.maxScore}
+              </div>
+            </div>
+            
+            {/* Progress Bar */}
+            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+              <div 
+                className={`h-full ${qualityBarColor} transition-all duration-500 ease-out`}
+                style={{ width: `${qualityPercentage}%` }}
+              ></div>
+            </div>
+
+            {/* Tips */}
+            {qualityData.tips.length > 0 && qualityData.score < qualityData.maxScore && (
+              <div className="pt-2 border-t border-current/20">
+                <button
+                  onClick={() => setShowTips(!showTips)}
+                  className="flex items-center justify-between w-full text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white"
+                >
+                  <span>💡 Tips to improve your recipe ({qualityData.tips.length})</span>
+                  <span className="transform transition-transform">{showTips ? '▼' : '▶'}</span>
+                </button>
+                {showTips && (
+                  <ul className="mt-2 space-y-1">
+                    {qualityData.tips.map((tip, index) => (
+                      <li key={index} className="text-xs text-gray-600 dark:text-gray-300 flex items-start space-x-2">
+                        <span className="text-purple-500 mt-0.5">•</span>
+                        <span>{tip}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Quick Examples Section - Collapsible */}
+          <details className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <summary className="cursor-pointer font-semibold text-blue-900 dark:text-blue-200 flex items-center space-x-2 hover:text-blue-700 dark:hover:text-blue-100">
+              <span>📚</span>
+              <span>Quick Examples: What Makes a Great Recipe Request?</span>
+            </summary>
+            <div className="mt-4 space-y-4 text-sm">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border-l-4 border-green-500">
+                  <div className="flex items-start space-x-2 mb-2">
+                    <span className="text-green-500 font-bold">✓</span>
+                    <span className="font-bold text-gray-900 dark:text-white">Good Example</span>
+                  </div>
+                  <ul className="space-y-1 text-gray-600 dark:text-gray-300 text-xs">
+                    <li><strong>System:</strong> Microbiome</li>
+                    <li><strong>Ingredients:</strong> Greek yogurt, kimchi, oats, blueberries</li>
+                    <li><strong>Restrictions:</strong> Vegetarian</li>
+                    <li><strong>Meal:</strong> Breakfast</li>
+                    <li className="pt-1 text-green-600 dark:text-green-400"><strong>Result:</strong> "Probiotic Power Bowl"</li>
+                  </ul>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border-l-4 border-red-500">
+                  <div className="flex items-start space-x-2 mb-2">
+                    <span className="text-red-500 font-bold">✗</span>
+                    <span className="font-bold text-gray-900 dark:text-white">Common Mistake</span>
+                  </div>
+                  <ul className="space-y-1 text-gray-600 dark:text-gray-300 text-xs">
+                    <li><strong>System:</strong> Any</li>
+                    <li><strong>Ingredients:</strong> chicken</li>
+                    <li><strong>Restrictions:</strong> None</li>
+                    <li><strong>Meal:</strong> Any</li>
+                    <li className="pt-1 text-red-600 dark:text-red-400"><strong>Result:</strong> Generic, wasted generation</li>
+                  </ul>
+                </div>
+              </div>
+              <div className="bg-purple-50 dark:bg-purple-900/20 rounded p-3 text-xs text-gray-700 dark:text-gray-200">
+                <p className="font-semibold mb-1">💡 Pro Tips:</p>
+                <ul className="space-y-1 pl-4 list-disc">
+                  <li>Mix food types: 1 protein + 2 vegetables + 1 grain = variety</li>
+                  <li>Be specific with restrictions: "low-sodium" works better than "healthy"</li>
+                  <li>Choose a defense system that matches your health goals</li>
+                  <li>3-5 ingredients work best for creative, balanced recipes</li>
+                </ul>
+              </div>
+            </div>
+          </details>
+        </>
+      )}
+
       {!generatedRecipe ? (
         /* Configuration Form */
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:border dark:border-gray-700 p-6 space-y-6">
@@ -468,9 +630,21 @@ export default function AIRecipeGenerator({
 
           {/* Ingredients Input */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">
-              Ingredients you'd like to use (optional)
-            </label>
+            <div className="flex items-center justify-between mb-3">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200">
+                Ingredients you'd like to use (optional)
+              </label>
+              <span className={`text-xs font-medium px-2 py-1 rounded ${
+                ingredients.filter(i => i.trim()).length >= 3 
+                  ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                  : ingredients.filter(i => i.trim()).length > 0
+                  ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+              }`}>
+                {ingredients.filter(i => i.trim()).length} ingredient{ingredients.filter(i => i.trim()).length !== 1 ? 's' : ''}
+                {ingredients.filter(i => i.trim()).length < 3 && ' (add 3+ recommended)'}
+              </span>
+            </div>
             <div className="space-y-2">
               {ingredients.map((ingredient, index) => (
                 <div key={index} className="flex items-center space-x-2">

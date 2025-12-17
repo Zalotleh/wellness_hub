@@ -70,13 +70,16 @@ export async function POST(
       );
     }
 
-    // Get user with subscription info
+    // Get user with subscription info and generation counts
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: {
         id: true,
         subscriptionTier: true,
+        subscriptionStatus: true,
         trialEndsAt: true,
+        recipeGenerationsThisMonth: true,
+        lastResetDate: true,
       },
     });
 
@@ -85,6 +88,51 @@ export async function POST(
     }
 
     const featureAccess = getUserFeatureAccess(user);
+
+    // Check if monthly reset is needed
+    const now = new Date();
+    const lastReset = user.lastResetDate || new Date(0);
+    const daysSinceReset = Math.floor((now.getTime() - lastReset.getTime()) / (1000 * 60 * 60 * 24));
+
+    let currentRecipeGenerationsCount = user.recipeGenerationsThisMonth;
+
+    if (daysSinceReset >= 30) {
+      // Reset monthly counters
+      await prisma.user.update({
+        where: { id: session.user.id },
+        data: {
+          recipeGenerationsThisMonth: 0,
+          lastResetDate: now,
+        },
+      });
+      currentRecipeGenerationsCount = 0;
+    }
+
+    // Check recipe generation limit (unified counter for both standalone and meal plan recipes)
+    const recipeGenerationsLimit = featureAccess.getLimit('recipe_generations_per_month');
+    
+    if (typeof recipeGenerationsLimit === 'number' && recipeGenerationsLimit !== Infinity) {
+      // Calculate how many recipes we're about to generate
+      const recipesToGenerate = batch && mealIds ? mealIds.length : 1;
+      
+      if (currentRecipeGenerationsCount + recipesToGenerate > recipeGenerationsLimit) {
+        return NextResponse.json(
+          {
+            error: 'Recipe generation limit reached',
+            message: `You've used ${currentRecipeGenerationsCount}/${recipeGenerationsLimit} AI recipe generations this month. ${
+              recipesToGenerate > 1 
+                ? `You need ${recipesToGenerate} more but only have ${recipeGenerationsLimit - currentRecipeGenerationsCount} remaining.`
+                : 'Upgrade to Premium for unlimited recipe generation.'
+            }`,
+            limit: recipeGenerationsLimit,
+            current: currentRecipeGenerationsCount,
+            needed: recipesToGenerate,
+            upgrade: true,
+          },
+          { status: 403 }
+        );
+      }
+    }
 
     // Check batch generation permission
     if (batch && mealIds && mealIds.length > 1 && !featureAccess.hasFeature(Feature.BATCH_RECIPE_GENERATION)) {
@@ -139,10 +187,27 @@ export async function POST(
         forceRegenerate
       );
       
+      // Increment counter for successful generations (only if not unlimited)
+      const successfulCount = recipes.filter(r => r.success).length;
+      if (typeof recipeGenerationsLimit === 'number' && recipeGenerationsLimit !== Infinity && successfulCount > 0) {
+        await prisma.user.update({
+          where: { id: session.user.id },
+          data: {
+            recipeGenerationsThisMonth: {
+              increment: successfulCount,
+            },
+          },
+        });
+      }
+      
       return NextResponse.json({
         data: recipes,
-        message: `Generated ${recipes.filter(r => r.success).length} out of ${mealIds.length} recipes successfully`,
+        message: `Generated ${successfulCount} out of ${mealIds.length} recipes successfully`,
         errors: recipes.filter(r => !r.success),
+        countedAgainstLimit: typeof recipeGenerationsLimit === 'number' && recipeGenerationsLimit !== Infinity,
+        remainingGenerations: typeof recipeGenerationsLimit === 'number' && recipeGenerationsLimit !== Infinity 
+          ? recipeGenerationsLimit - (currentRecipeGenerationsCount + successfulCount)
+          : Infinity,
       });
     }
 
@@ -156,9 +221,25 @@ export async function POST(
         forceRegenerate
       );
       
+      // Increment counter (only if not unlimited)
+      if (typeof recipeGenerationsLimit === 'number' && recipeGenerationsLimit !== Infinity) {
+        await prisma.user.update({
+          where: { id: session.user.id },
+          data: {
+            recipeGenerationsThisMonth: {
+              increment: 1,
+            },
+          },
+        });
+      }
+      
       return NextResponse.json({
         data: recipe,
         message: 'Recipe generated successfully',
+        countedAgainstLimit: typeof recipeGenerationsLimit === 'number' && recipeGenerationsLimit !== Infinity,
+        remainingGenerations: typeof recipeGenerationsLimit === 'number' && recipeGenerationsLimit !== Infinity 
+          ? recipeGenerationsLimit - (currentRecipeGenerationsCount + 1)
+          : Infinity,
       });
     }
 

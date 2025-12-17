@@ -41,8 +41,17 @@ export default function LoginPage() {
         return;
       }
 
-      // Successful login
-      router.push('/recipes');
+      // Fetch session to check user role
+      const sessionResponse = await fetch('/api/auth/session');
+      const session = await sessionResponse.json();
+      
+      // Redirect based on role
+      if (session?.user?.role === 'ADMIN') {
+        router.push('/admin');
+      } else {
+        router.push('/recipes');
+      }
+      
       router.refresh();
     } catch (err) {
       setError('An unexpected error occurred. Please try again.');

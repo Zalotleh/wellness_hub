@@ -15,6 +15,7 @@ model User {
   password                   String?
   image                      String?
   bio                        String?
+  role                       UserRole          @default(USER)
   createdAt                  DateTime          @default(now())
   updatedAt                  DateTime          @updatedAt
   measurementSystem          String            @default("imperial") // 'imperial' or 'metric'
@@ -398,4 +399,9 @@ enum MealPlanStatus {
   DRAFT
   ACTIVE
   ARCHIVED
+}
+
+enum UserRole {
+  USER
+  ADMIN
 }

@@ -70,7 +70,7 @@ export const FEATURE_LIMITS: Record<string, FeatureLimit> = {
   saved_meal_plans: { free: 3, premium: Infinity, family: Infinity },
   
   // Recipes
-  recipe_generations_per_month: { free: 7, premium: Infinity, family: Infinity },
+  recipe_generations_per_month: { free: 30, premium: Infinity, family: Infinity },
   saved_recipes: { free: 10, premium: Infinity, family: Infinity },
   
   // AI Advisor

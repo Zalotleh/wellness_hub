@@ -67,7 +67,7 @@ export const authOptions: NextAuthOptions = {
       if (session?.user && token.id) {
         session.user.id = token.id as string;
         
-        // Fetch fresh user data including subscription info
+        // Fetch fresh user data including subscription info and role
         try {
           const userData = await prisma.user.findUnique({
             where: { id: token.id as string },
@@ -76,6 +76,7 @@ export const authOptions: NextAuthOptions = {
               email: true,
               name: true,
               image: true,
+              role: true,
               subscriptionTier: true,
               subscriptionStatus: true,
               trialEndsAt: true,
@@ -86,7 +87,8 @@ export const authOptions: NextAuthOptions = {
           });
           
           if (userData) {
-            // Add subscription data to session
+            // Add subscription data and role to session
+            (session.user as any).role = userData.role;
             (session.user as any).subscriptionTier = userData.subscriptionTier;
             (session.user as any).subscriptionStatus = userData.subscriptionStatus;
             (session.user as any).trialEndsAt = userData.trialEndsAt;

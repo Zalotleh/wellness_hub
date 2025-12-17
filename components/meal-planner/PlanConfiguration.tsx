@@ -34,6 +34,75 @@ export default function PlanConfiguration({
 }: PlanConfigurationProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [showTips, setShowTips] = useState(true);
+
+  // Quality Score Calculator for Meal Plans
+  const calculateQualityScore = () => {
+    let score = 0;
+    let tips: string[] = [];
+
+    // Duration scoring (always has a value, but preference matters)
+    if (configuration.duration >= 2) {
+      score += 1;
+      tips.push('Great! Longer plans provide better variety and balance');
+    } else {
+      tips.push('Consider a 2+ week plan for better nutritional variety');
+    }
+
+    // Servings specified (not default)
+    if (configuration.servings && configuration.servings !== 2) {
+      score += 1;
+      tips.push('Servings customized for accurate portions');
+    } else {
+      tips.push('Adjust servings to match your household size');
+    }
+
+    // Defense systems selected
+    if (configuration.focusSystems && configuration.focusSystems.length > 0) {
+      if (configuration.focusSystems.length >= 2) {
+        score += 1;
+        tips.push('Excellent! Multiple systems ensure balanced nutrition');
+      } else {
+        score += 0.5;
+        tips.push('Add 1-2 more defense systems for better balance');
+      }
+    } else {
+      tips.push('Select 2-3 defense systems for targeted health benefits');
+    }
+
+    // Dietary restrictions
+    if (configuration.dietaryRestrictions && configuration.dietaryRestrictions.length > 0) {
+      score += 1;
+      tips.push('Dietary preferences help personalize your plan');
+    } else {
+      tips.push('Add dietary restrictions to ensure all recipes match your needs');
+    }
+
+    // Title and description
+    if (configuration.title && configuration.title.trim().length > 0) {
+      score += 1;
+      tips.push('Good! A clear title helps you organize your plans');
+    } else {
+      tips.push('Add a descriptive title for your meal plan');
+    }
+
+    return { score, maxScore: 5, tips };
+  };
+
+  const qualityData = calculateQualityScore();
+  const qualityPercentage = (qualityData.score / qualityData.maxScore) * 100;
+  const qualityColor = 
+    qualityPercentage >= 80 ? 'text-green-600 dark:text-green-400' :
+    qualityPercentage >= 60 ? 'text-yellow-600 dark:text-yellow-400' :
+    'text-orange-600 dark:text-orange-400';
+  const qualityBgColor = 
+    qualityPercentage >= 80 ? 'bg-green-100 dark:bg-green-900/20' :
+    qualityPercentage >= 60 ? 'bg-yellow-100 dark:bg-yellow-900/20' :
+    'bg-orange-100 dark:bg-orange-900/20';
+  const qualityBarColor = 
+    qualityPercentage >= 80 ? 'bg-green-500' :
+    qualityPercentage >= 60 ? 'bg-yellow-500' :
+    'bg-orange-500';
 
   const restrictions = [
     { id: 'vegetarian', label: 'Vegetarian', description: 'No meat or fish' },
@@ -157,6 +226,109 @@ export default function PlanConfiguration({
             Customize your weekly meal plan with AI-generated recipes tailored to your preferences and dietary needs.
           </p>
         </div>
+
+        {/* Quality Score Indicator */}
+        <div className={`${qualityBgColor} border-2 ${qualityPercentage >= 80 ? 'border-green-300 dark:border-green-700' : qualityPercentage >= 60 ? 'border-yellow-300 dark:border-yellow-700' : 'border-orange-300 dark:border-orange-700'} rounded-lg p-4 mb-6 space-y-3`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <span className="text-2xl">
+                {qualityPercentage >= 80 ? '🌟' : qualityPercentage >= 60 ? '⭐' : '💡'}
+              </span>
+              <div>
+                <h3 className="font-bold text-gray-900 dark:text-white">Plan Quality Score</h3>
+                <p className="text-xs text-gray-600 dark:text-gray-300">
+                  {qualityPercentage >= 80 ? 'Excellent! Your plan is well-configured' : 
+                   qualityPercentage >= 60 ? 'Good start! A few tweaks will optimize it' : 
+                   'Add more details for a better meal plan'}
+                </p>
+              </div>
+            </div>
+            <div className={`text-2xl font-bold ${qualityColor}`}>
+              {qualityData.score.toFixed(1)}/{qualityData.maxScore}
+            </div>
+          </div>
+          
+          {/* Progress Bar */}
+          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+            <div 
+              className={`h-full ${qualityBarColor} transition-all duration-500 ease-out`}
+              style={{ width: `${qualityPercentage}%` }}
+            ></div>
+          </div>
+
+          {/* Tips */}
+          {qualityData.tips.length > 0 && qualityData.score < qualityData.maxScore && (
+            <div className="pt-2 border-t border-current/20">
+              <button
+                onClick={() => setShowTips(!showTips)}
+                className="flex items-center justify-between w-full text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white"
+              >
+                <span>💡 Tips to improve your plan ({qualityData.tips.length})</span>
+                <span className="transform transition-transform">{showTips ? '▼' : '▶'}</span>
+              </button>
+              {showTips && (
+                <ul className="mt-2 space-y-1">
+                  {qualityData.tips.map((tip, index) => (
+                    <li key={index} className="text-xs text-gray-600 dark:text-gray-300 flex items-start space-x-2">
+                      <span className="text-green-500 mt-0.5">•</span>
+                      <span>{tip}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Quick Examples Section */}
+        <details className="mb-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+          <summary className="cursor-pointer font-semibold text-blue-900 dark:text-blue-200 flex items-center space-x-2 hover:text-blue-700 dark:hover:text-blue-100">
+            <span>📚</span>
+            <span>Quick Examples: What Makes a Great Meal Plan?</span>
+          </summary>
+          <div className="mt-4 space-y-4 text-sm">
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border-l-4 border-green-500">
+                <div className="flex items-start space-x-2 mb-2">
+                  <span className="text-green-500 font-bold">✓</span>
+                  <span className="font-bold text-gray-900 dark:text-white">Good Example</span>
+                </div>
+                <ul className="space-y-1 text-gray-600 dark:text-gray-300 text-xs">
+                  <li><strong>Title:</strong> "Family Microbiome Boost Plan"</li>
+                  <li><strong>Duration:</strong> 2 weeks</li>
+                  <li><strong>Servings:</strong> 4 people</li>
+                  <li><strong>Systems:</strong> Microbiome + Immunity</li>
+                  <li><strong>Restrictions:</strong> Dairy-free, nut-free</li>
+                  <li className="pt-1 text-green-600 dark:text-green-400"><strong>Result:</strong> Balanced, personalized plan</li>
+                </ul>
+              </div>
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border-l-4 border-red-500">
+                <div className="flex items-start space-x-2 mb-2">
+                  <span className="text-red-500 font-bold">✗</span>
+                  <span className="font-bold text-gray-900 dark:text-white">Common Mistake</span>
+                </div>
+                <ul className="space-y-1 text-gray-600 dark:text-gray-300 text-xs">
+                  <li><strong>Title:</strong> "Meal Plan"</li>
+                  <li><strong>Duration:</strong> 1 week</li>
+                  <li><strong>Servings:</strong> Default (2)</li>
+                  <li><strong>Systems:</strong> None selected</li>
+                  <li><strong>Restrictions:</strong> None</li>
+                  <li className="pt-1 text-red-600 dark:text-red-400"><strong>Result:</strong> Generic, may not fit needs</li>
+                </ul>
+              </div>
+            </div>
+            <div className="bg-green-50 dark:bg-green-900/20 rounded p-3 text-xs text-gray-700 dark:text-gray-200">
+              <p className="font-semibold mb-1">💡 Pro Tips:</p>
+              <ul className="space-y-1 pl-4 list-disc">
+                <li>Choose 2+ defense systems for balanced nutrition across the week</li>
+                <li>Longer plans (2-4 weeks) provide better variety and reduce repetition</li>
+                <li>Specify servings accurately for correct shopping list quantities</li>
+                <li>Add all dietary restrictions upfront to ensure every recipe matches</li>
+                <li>Give your plan a descriptive name for easy organization</li>
+              </ul>
+            </div>
+          </div>
+        </details>
 
         {/* Validation Errors */}
         {validationErrors.length > 0 && (

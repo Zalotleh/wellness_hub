@@ -1,22 +1,22 @@
 issues:
-- for premium and Family users, they dont have the same user dropdown menu as the free one, limits, upgrade .. etc X
+- for premium and Family users, they dont have the same user dropdown menu as the free one, limits, upgrade .. etc XDONE ✅
 
--stats: REcpies, Favourites, Progress, Completion, Recent Activity, inside profile page are not reflecting the real numbers? X
+-stats: REcpies, Favourites, Progress, Completion, Recent Activity, inside profile page are not reflecting the real numbers? XDONE ✅
 
 -from the meal plan, if i click to view the recipe, and then go back, it takes me to the recipes page, while the normal 
-thing to happen is to take me back to the meal plan page, where i was initially X
+thing to happen is to take me back to the meal plan page, where i was initially XDONE ✅
 
--the plan dates are wrong it shows: Dec 13 - Dec 13, 2025 X
+-the plan dates are wrong it shows: Dec 13 - Dec 13, 2025 XDONE ✅
 
-- the user i created has free plan, yet i could create more than one meal plan X
+- the user i created has free plan, yet i could create more than one meal plan XDONE ✅
 
-- the stats on the user dropdown menue, usage limits, progress bars are not reflecting the real data. X
+- the stats on the user dropdown menue, usage limits, progress bars are not reflecting the real data. XDONE ✅
 
--inside the AI recipe generator, provide a better way of showing if the defense system is selected. change color. also while the recipe is beng generated, i can still click on button inside the page, can we grey out the page in the background and provide a loading visual? is there a better way of hanlding this? open o suggestions. X
+-inside the AI recipe generator, provide a better way of showing if the defense system is selected. change color. also while the recipe is beng generated, i can still click on button inside the page, can we grey out the page in the background and provide a loading visual? is there a better way of hanlding this? open o suggestions. XDONE ✅
 
-- inside the meal, at the bottom of the page for each day, there is + to add a new meal, snack, but it doesnt work to add a new snack meal. X
+- inside the meal, at the bottom of the page for each day, there is + to add a new meal, snack, but it doesnt work to add a new snack meal. XDONE ✅
 
--for the Ai generating recipe, the recipe title needs to be more specific, right now it reflects the defense system selected, if i select immunity system then the generated recipe title is immunity recipe, modify the prompt to fix this issue. X
+-for the Ai generating recipe, the recipe title needs to be more specific, right now it reflects the defense system selected, if i select immunity system then the generated recipe title is immunity recipe, modify the prompt to fix this issue. XDONE ✅
 
 
 - i created a shopping list from a meal plan, click create then i was redirected to page where it says:
@@ -41,21 +41,21 @@ Deselect All
 
 Mark All Complete
 
-Mark All Incomplete X
+Mark All Incomplete XDONE ✅
 
-- inside shopping list, add item button doesnt work X
-- user can check the item but clicking on a circle to mark the item as complete, and beside that circle there a square to select the item to delete or mark as complete(when clicking on the sauqre a new UI section shows to select if you want to mark as complete or delete), this is confusing, i want to have simpler than this, better UI, and also user should know what complete means, the whole thing should be handled in much better way. X
+- inside shopping list, add item button doesnt work XDONE ✅
+- user can check the item but clicking on a circle to mark the item as complete, and beside that circle there a square to select the item to delete or mark as complete(when clicking on the sauqre a new UI section shows to select if you want to mark as complete or delete), this is confusing, i want to have simpler than this, better UI, and also user should know what complete means, the whole thing should be handled in much better way. XDONE ✅
 
-- inside shopping list page, export list button doesnt work X
-- ability to share the list on whatsapp, or other messaging application? X
+- inside shopping list page, export list button doesnt work XDONE ✅
+- ability to share the list on whatsapp, or other messaging application? XDONE ✅
 
-- inside shopping lists page, the shopping list card that shows on the card itself doesnt reflect the shopping list data, as an exmple: i selected the items as complete but outside on the card it still shows 0 completed. X
+- inside shopping lists page, the shopping list card that shows on the card itself doesnt reflect the shopping list data, as an exmple: i selected the items as complete but outside on the card it still shows 0 completed. XDONE ✅
 
-- shopping list takes the exact gram, quanity of each items, as i am planning to connect these shopping list to shopping api like amazon fresh, we need to find a better way of handling the quanitity, for exaple 2 cups of milk, user can make an order of 2 cups of milk, any suggestion? X
+- shopping list takes the exact gram, quanity of each items, as i am planning to connect these shopping list to shopping api like amazon fresh, we need to find a better way of handling the quanitity, for exaple 2 cups of milk, user can make an order of 2 cups of milk, any suggestion? XDONE ✅
 
-- in the progress page, weekly analytics, i have 0 activity, but in the Best System i can see a placeholder: Angiogenesis, remove that placeholder. X
+- in the progress page, weekly analytics, i have 0 activity, but in the Best System i can see a placeholder: Angiogenesis, remove that placeholder. X DONE ✅
 
-- in the AI Advisor, the page view moves to the bottom of the page after generating, make the view stable and focused on the chat view, and another issue, when the chat is generated, i can see at the top of the chat there is a notification bar with x, i clicked on the x and it cleared teh chat, it is ok, but i want this to be more user intuitive, i didnt know it is going to clear the chat though. X
+- in the AI Advisor, the page view moves to the bottom of the page after generating, make the view stable and focused on the chat view, and another issue, when the chat is generated, i can see at the top of the chat there is a notification bar with x, i clicked on the x and it cleared teh chat, it is ok, but i want this to be more user intuitive, i didnt know it is going to clear the chat though. X DONE ✅
 
 - in the right side bar, the section of 5 Defense Systems
 
@@ -75,43 +75,41 @@ DNA Protection
 Immunity
 
 provide a clear way of using these key words, like: Click on the defenese system to tell you more and which foods support it, as na example, but you can be creative with it.
-if i leave the ai advisor page, the chat is gone, is there a way of saving the chat, and also we need to have a disclaimer that this advisory is not replacing your doctor or nutrisitnist, user is recommended to verify the ifnormation created, and check with their specialist or doctor befor applying these recommendations.. etc X
+if i leave the ai advisor page, the chat is gone, is there a way of saving the chat, and also we need to have a disclaimer that this advisory is not replacing your doctor or nutrisitnist, user is recommended to verify the ifnormation created, and check with their specialist or doctor befor applying these recommendations.. etc X DONE ✅
 
 
 enhancements:
 
-- for recipe and meal plan generation, what is the prompt are we using, are we using all the ingredients mentioned in the william li book? X
--settings page is empty. gives 404 page X
--build a 404 page X
--build terms of service & Privacy Policy pages X
-- add create shopping list inside recipe's page, to create a shopping list for one recipe X
+- for recipe and meal plan generation, what is the prompt are we using, are we using all the ingredients mentioned in the william li book? X DONE ✅
+-settings page is empty. gives 404 page X DONE ✅
+-build a 404 page X DONE ✅
+-build terms of service & Privacy Policy pages X DONE ✅
+- add create shopping list inside recipe's page, to create a shopping list for one recipe X DONE ✅
 
 **-for shopping list, make it inceremental, if users selects 1 plan now, then came back and selected another plan or recipe, so to have a total shopping cart to be sent to the shopping api.
 
--for the navigation bar, can we get the meal plans items together, recipes items together: recipes, ai generator, manual recipe generator? X
+-for the navigation bar, can we get the meal plans items together, recipes items together: recipes, ai generator, manual recipe generator? X DONE ✅
 
--the meal plan is for only 1 week, can we have for 4 weeks option as well? X
+-the meal plan is for only 1 week, can we have for 4 weeks option as well? X DONE ✅
 
--in the meal plan, the default view should be the one, what other user friendly and intuitive view we can have? X
+-in the meal plan, the default view should be the one, what other user friendly and intuitive view we can have? X DONE ✅
 
 **-can we add a feature to select the country for the user so the recipes can as much closer to the common ingredients we can find in that specifc country?
+**-when the meal plan is gnereated, provide a notification note that the meal planner will generate recipes ideas, and if users like the title or idea they can click generate to generate that recipe
 
--when the meal plan is gnereated, provide a notification note that the meal planner will generate recipes ideas, and if users like the title or idea they can click generate to generate that recipe
-
-
--the prgress bar for meal plan creator, goes to the 100% then back to 90% fix this, X
--the button of New plan inside the meal plan page doesnt work, X
--after creating a new meal plan the user s redirected to meal plan page, at the bottom of the page, redirect the customer to the calendar view, top of the page. X
+-the prgress bar for meal plan creator, goes to the 100% then back to 90% fix this, XDONE ✅
+-the button of New plan inside the meal plan page doesnt work, X DONE ✅
+-after creating a new meal plan the user s redirected to meal plan page, at the bottom of the page, redirect the customer to the calendar view, top of the page. XDONE ✅
 -the meal plan for 2 weeks generated, but the following issues happened:
 the list view show like that: Monday> Breakfast , Monday>Lunch, Monday> Dinner, Monday> Breakfast , Monday>Lunch, Monday> Dinner, Tuesday> Breakfast, Tuesday> Lunch, Tuesday> Dinner, Tuesday> Breakfast, Tuesday> Lunch, Tuesday> Dinner and so on.
 and in the Calnder View: similar issue, where Monday has 2 Breakfast, 2 Lunch, 2 Dinner
-and another issue that the recipes for each dy are repeated, for example monday's recipes are the same for the next week Monday recipes. X
+and another issue that the recipes for each dy are repeated, for example monday's recipes are the same for the next week Monday recipes. XDONE ✅
 
 
-there is a delete button inside the Create your Meal Plan page, i noticed when i select new mea plan fro a meal plan page, in the url i am still in the meal plan page itself, user should go to: /meal-planner page right? X
+there is a delete button inside the Create your Meal Plan page, i noticed when i select new mea plan fro a meal plan page, in the url i am still in the meal plan page itself, user should go to: /meal-planner page right? XDONE ✅
 
 
-- recipe ai generator has an issue, i tried to create recipe many time but i always got the error: The AI generated an incomplete recipe. Please try again. This attempt was not counted against your limit. X
+- recipe ai generator has an issue, i tried to create recipe many time but i always got the error: The AI generated an incomplete recipe. Please try again. This attempt was not counted against your limit. DONE ✅
 
 ✓ Not Counted Against Your Limit
 You can try again immediately
@@ -189,10 +187,61 @@ This vibrant Buddha bowl combines probiotic-rich tempeh and miso with prebiotic 
   'Missing or too short cooking instructions (has 52 chars, needs at least 100)',
   'Instructions are placeholder text, not real cooking steps'
 ]
- POST /api/ai/generate 500 in 19237ms X
+ POST /api/ai/generate 500 in 19237ms DONE ✅
 
- -check the authorization logic in the app, so pages can been seen for logged in users, users can see their own pages, only them nobody esle.. etc
+-check the authorization logic in the app, so pages can been seen for logged in users, users can see their own pages, only them nobody esle.. etc - DONE ✅
+
+  📚 See: /docs/AUTHORIZATION_SUMMARY.md for complete implementation
+  🚀 To activate: Run `npx prisma db push` then `npx prisma generate`
+  👤 Set admin: UPDATE "User" SET role = 'ADMIN' WHERE email = 'your-email@example.com';
+  🔐 Features: Role-based auth (USER/ADMIN), ownership checks, admin analytics at /admin
+  
 - if user in free plan generates recipe and doesnt save it, does this rcipe counts for his recipes generation limit? because user can generate as many recipe as they want without saving them, right?
+  Answer: Currently NO - recipes only count when saved. The validation step prevents bad recipes from counting. 
+  This is actually GOOD for UX - users can try until they get a good recipe. Only quality recipes count toward limit.
+  If you want to change this, we can add counter increment before validation.
+  
+
+✅ AI Recipe Generator Guidance System Implemented (Phase 1):
+  📊 Updated limits: 30 generations/month (was 7) for FREE tier
+  🎯 Real-time input quality scoring (5-point scale with visual indicator)
+  💡 Smart tips that adapt based on user input
+  📚 Collapsible examples section showing good vs. bad inputs
+  📈 Ingredient counter with color-coded feedback (0 → yellow → green at 3+)
+  🌟 Quality percentage calculation: 0-60% (needs work), 60-80% (good), 80-100% (excellent)
+  
+✅ Meal Plan Generator Guidance System Implemented (Phase 1):
+  🎯 Real-time plan quality scoring (5-point scale)
+  💡 Smart tips for duration, servings, systems, restrictions, and title
+  📚 Collapsible examples showing good vs. bad meal plans
+  🌟 Quality-based feedback: optimize your plan before generating
+  📊 Scoring: Duration, Servings, Defense Systems, Dietary Restrictions, Title
+  
+✅ Unified AI Generation Counter Implemented:
+  🔗 Standalone recipes AND meal plan recipes share the same 30/month limit
+  📊 FREE: 30 total AI generations (use however you want)
+  ⚡ Both endpoints now check and increment recipeGenerationsThisMonth
+  📝 API returns remainingGenerations and countedAgainstLimit info
+  🎯 Fair: Same AI call = same cost = same counter
+  
+  Strategy: Guide users to success instead of strict limits
+  - 10 saved recipes, 30 generations = ~3 attempts per good recipe  
+  - Users learn through helpful feedback, not frustration
+  - Better inputs → Better results → Higher conversions to Premium
+  
+🔄 TODO: Phase 2 for Both Generators - NEXT
+  - First-time user onboarding modal (3 steps walkthrough)
+  - Real-time ingredient/food suggestions based on defense system
+  - Success rate tracking in localStorage
+  - Personalized tips based on generation history
+  - "You're improving!" encouragement messages
+  
+🔄 TODO: Phase 3 for Both Generators
+  - Save draft feature (3 drafts, 24hr expiry)
+  - Community examples showcase
+  - Advanced analytics for admins (validation failure patterns)
+  - Batch operations optimization
+  
 - in recipe page, the share button needs enhancement and better dialouge message than the toast notification for sharing and for deleting the recipe.
 - Create Shopping List inside the Recipe detail page, doest work, an error says: No valid recipes found.
 - adding recipes to the facourites list doesnt work.
@@ -204,6 +253,7 @@ This vibrant Buddha bowl combines probiotic-rich tempeh and miso with prebiotic 
 - update meal plan, needs a better UI dialough, or success message than toast notification, dark mode and light mode.
 - inside the shopping list, cick share, click copy to clipboard a toast notification shows, create a better sucess message.
 - Community pages, topics, create one..
+- change passowrd, forgot password, notifications..
 
 Plan for nextjs 15 Later:
 
