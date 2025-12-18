@@ -35,8 +35,7 @@ export async function GET() {
             createdAt: true,
           },
         },
-        ratings: {
-          where: { value: { gte: 4 } }, // Count 4+ star ratings as favorites
+        favorites: {
           include: {
             recipe: {
               select: {
@@ -44,6 +43,9 @@ export async function GET() {
                 title: true,
               },
             },
+          },
+          orderBy: {
+            createdAt: 'desc',
           },
         },
         progress: {
@@ -68,7 +70,7 @@ export async function GET() {
       recipesCount: user.recipes.length,
       mealPlansCount: user.mealPlans.length,
       shoppingListsCount: user.shoppingLists.length,
-      ratingsCount: user.ratings.length,
+      favoritesCount: user.favorites.length,
       progressCount: user.progress.length,
     });
 
@@ -76,7 +78,7 @@ export async function GET() {
     const recipesCreated = user.recipes.length;
     const mealPlansCreated = user.mealPlans.length;
     const shoppingListsCreated = user.shoppingLists.length;
-    const recipesFavorited = user.ratings.length;
+    const recipesFavorited = user.favorites.length;
     
     // Get unique days with progress (since Progress model has one entry per defenseSystem per day)
     const uniqueDates = new Set(user.progress.map(p => p.date.toISOString().split('T')[0]));
@@ -110,12 +112,12 @@ export async function GET() {
       totalCompletion = Math.round(totalCompletion / progressByDate.size);
     }
 
-    // Get recent activity - combine recipes, meal plans, shopping lists, and progress
+    // Get recent activity - combine recipes, meal plans, shopping lists, favorites, and progress
     const recentRecipes = user.recipes.slice(0, 3);
     const recentMealPlans = user.mealPlans.slice(0, 3);
     const recentShoppingLists = user.shoppingLists.slice(0, 3);
     const recentProgress = user.progress.slice(0, 5);
-    const recentRatings = user.ratings.slice(0, 3);
+    const recentFavorites = user.favorites.slice(0, 3);
 
     // Combine and sort recent activity
     const recentActivity = [
@@ -143,11 +145,11 @@ export async function GET() {
         linkUrl: `/progress`,
         timestamp: entry.createdAt,
       })),
-      ...recentRatings.map((rating) => ({
+      ...recentFavorites.map((favorite) => ({
         type: 'recipe_favorited' as const,
-        title: rating.recipe.title,
-        linkUrl: `/recipes/${rating.recipe.id}`,
-        timestamp: rating.createdAt,
+        title: favorite.recipe.title,
+        linkUrl: `/recipes/${favorite.recipe.id}`,
+        timestamp: favorite.createdAt,
       })),
     ]
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())

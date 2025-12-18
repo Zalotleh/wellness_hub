@@ -299,16 +299,18 @@ This vibrant Buddha bowl combines probiotic-rich tempeh and miso with prebiotic 
   - Save draft feature (3 drafts, 24hr expiry)
   - Community examples showcase
   
-- in recipe page, the share button needs enhancement and better dialouge message than the toast notification for sharing and for deleting the recipe.
-- Create Shopping List inside the Recipe detail page, doest work, an error says: No valid recipes found.
-- adding recipes to the favourites list doesnt work.
--add the ability to click on ingredient and add them automatically
-- the footer inside the Meal planner page, to be extended to the other pages
-- the filter in saved plan page, can be enhanced based on the mea plans attributes.
--in the meal plan,there is "Shopping List" button right beside the Stat button, delete this shopping list button,when i clikc on Create Shopping list i get a toast notifcation for error message and success message add a better dialouge UI for it. light mode ad dark mode.
-- botton Create Shooping List inside the meal plan, when the shopping list is created it becomes View List, make it View Shopping List.
-- update meal plan, needs a better UI dialough, or success message than toast notification, dark mode and light mode.
-- inside the shopping list, cick share, click copy to clipboard a toast notification shows, create a better sucess message.
+- in recipe page, the share button needs enhancement and better dialouge message than the toast notification for sharing and for deleting the recipe. DONE ✅
+- Create Shopping List inside the Recipe detail page, doest work, an error says: No valid recipes found. and An error occurred while creating the shopping list DONE ✅
+
+- adding recipes to the favourites list doesnt work. DONE ✅
+
+-add the ability to click on ingredient and add them automatically DONE ✅
+- the footer inside the Meal planner page, to be extended to the other pages DONE ✅
+- the filter in saved plan page, can be enhanced based on the mea plans attributes. DONE ✅
+-in the meal plan,there is "Shopping List" button right beside the Stat button, delete this shopping list button,when i clikc on Create Shopping list i get a toast notifcation for error message and success message add a better dialouge UI for it. light mode ad dark mode. DONE ✅
+- botton Create Shooping List inside the meal plan, when the shopping list is created it becomes View List, make it View Shopping List.DONE ✅
+- update meal plan button, needs a better UI dialough, or success message than toast notification, dark mode and light mode. DONE ✅
+- inside the shopping list, cick share,then click on copy clipboard a toast notification shows, create a better sucess message. DONE ✅
 - Community pages, topics, create one..
 - change passowrd, forgot password, notifications..
 

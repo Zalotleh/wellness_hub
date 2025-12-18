@@ -26,6 +26,7 @@ export default function RecipeForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [measurementSystem, setMeasurementSystem] = useState<'imperial' | 'metric'>('imperial');
+  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
 
   // Get user's measurement preference on mount
   useEffect(() => {
@@ -112,6 +113,28 @@ export default function RecipeForm({
       ...prev,
       ingredients: [...prev.ingredients, { name: '', quantity: '', unit: '' }],
     }));
+  };
+
+  const addIngredientFromSuggestion = (foodName: string) => {
+    // Find first empty ingredient slot
+    const emptyIndex = formData.ingredients.findIndex(
+      (ing) => !ing.name.trim() && !ing.quantity.trim() && !ing.unit.trim()
+    );
+
+    if (emptyIndex >= 0) {
+      // Fill empty slot
+      updateIngredient(emptyIndex, 'name', foodName);
+    } else {
+      // Add new ingredient
+      setFormData((prev) => ({
+        ...prev,
+        ingredients: [...prev.ingredients, { name: foodName, quantity: '', unit: '' }],
+      }));
+    }
+
+    // Show feedback
+    setFeedbackMessage(`"${foodName}" added to ingredients!`);
+    setTimeout(() => setFeedbackMessage(null), 2000);
   };
 
   const removeIngredient = (index: number) => {
@@ -342,7 +365,12 @@ export default function RecipeForm({
               {/* Show key foods for selected systems */}
               {formData.defenseSystems.length > 0 && (
                 <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
-                  <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">Key Foods for Selected Systems:</h4>
+                  <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                    💡 Key Foods for Selected Systems:
+                  </h4>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
+                    Click any food to add it to your ingredients
+                  </p>
                   <div className="space-y-2">
                     {formData.defenseSystems.map((system) => {
                       const info = DEFENSE_SYSTEMS[system];
@@ -352,11 +380,23 @@ export default function RecipeForm({
                           <div className="flex-1">
                             <div className="text-sm font-medium text-gray-800 dark:text-gray-200">{info.displayName}:</div>
                             <div className="flex flex-wrap gap-1 mt-1">
-                              {info.keyFoods.slice(0, 5).map((food) => (
-                                <span key={food} className="text-xs bg-white dark:bg-gray-800 px-2 py-1 rounded-full border border-gray-200 dark:border-gray-600 dark:text-gray-200">
+                              {info.keyFoods.slice(0, 8).map((food) => (
+                                <button
+                                  key={food}
+                                  type="button"
+                                  onClick={() => addIngredientFromSuggestion(food)}
+                                  className="text-xs bg-white dark:bg-gray-800 px-2 py-1 rounded-full border border-gray-200 dark:border-gray-600 dark:text-gray-200 hover:bg-green-50 dark:hover:bg-green-900/20 hover:border-green-500 dark:hover:border-green-500 transition-colors cursor-pointer flex items-center gap-1"
+                                  title={`Click to add ${food} to ingredients`}
+                                >
+                                  <Plus className="w-3 h-3" />
                                   {food}
-                                </span>
+                                </button>
                               ))}
+                              {info.keyFoods.length > 8 && (
+                                <span className="text-xs text-gray-500 dark:text-gray-400 px-2 py-1">
+                                  +{info.keyFoods.length - 8} more
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -705,6 +745,18 @@ export default function RecipeForm({
           </div>
         </div>
       </form>
+
+      {/* Feedback Toast Notification */}
+      {feedbackMessage && (
+        <div className="fixed bottom-4 right-4 z-50 animate-slide-up">
+          <div className="bg-green-500 text-white px-6 py-3 rounded-lg shadow-xl flex items-center space-x-3">
+            <div className="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+              <Plus className="w-5 h-5" />
+            </div>
+            <span className="font-medium">{feedbackMessage}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

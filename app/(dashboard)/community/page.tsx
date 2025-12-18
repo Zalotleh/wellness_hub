@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Users, Trophy, TrendingUp, MessageSquare, Heart, Award, Star, ChefHat } from 'lucide-react';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
 import { DefenseSystem } from '@/types';
+import Footer from '@/components/layout/Footer';
 
 export default function CommunityPage() {
   const [activeTab, setActiveTab] = useState<'contributors' | 'discussions' | 'leaderboard'>('contributors');
@@ -381,6 +382,9 @@ export default function CommunityPage() {
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

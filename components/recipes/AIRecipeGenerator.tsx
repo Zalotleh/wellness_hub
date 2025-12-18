@@ -733,12 +733,33 @@ export default function AIRecipeGenerator({
 
           {/* System Info */}
           <div className={`p-4 rounded-lg ${systemInfo.bgColor} dark:opacity-90`}>
-            <h4 className="font-bold text-sm mb-2 text-gray-900 dark:text-white">Key Foods for {systemInfo.displayName}:</h4>
+            <h4 className="font-bold text-sm mb-2 text-gray-900 dark:text-white">
+              💡 Key Foods for {systemInfo.displayName}:
+            </h4>
+            <p className="text-xs text-gray-700 dark:text-gray-800 mb-3">
+              Click any food to add it to your ingredients
+            </p>
             <div className="flex flex-wrap gap-2">
               {systemInfo.keyFoods.map((food) => (
-                <span key={food} className="text-xs bg-white dark:bg-white/90 dark:text-gray-900 px-2 py-1 rounded">
+                <button
+                  key={food}
+                  type="button"
+                  onClick={() => {
+                    // Find first empty slot or add new
+                    const emptyIndex = ingredients.findIndex(i => !i.trim());
+                    if (emptyIndex >= 0) {
+                      handleIngredientChange(emptyIndex, food);
+                    } else {
+                      setIngredients([...ingredients, food]);
+                    }
+                  }}
+                  disabled={isGenerating || isSaving}
+                  className="text-xs bg-white dark:bg-white/90 dark:text-gray-900 px-3 py-1.5 rounded-full hover:bg-green-50 dark:hover:bg-green-100 hover:ring-2 hover:ring-green-500 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 font-medium"
+                  title={`Click to add ${food} to ingredients`}
+                >
+                  <Plus className="w-3 h-3" />
                   {food}
-                </span>
+                </button>
               ))}
             </div>
           </div>

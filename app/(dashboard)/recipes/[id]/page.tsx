@@ -21,6 +21,7 @@ import {
   ShoppingCart,
 } from 'lucide-react';
 import { RecipeWithRelations } from '@/types';
+import { ConfirmDialog, ShareDialog } from '@/components/ui/DialogComponents';
 
 interface RecipeDetail extends RecipeWithRelations {
   totalRatings?: number;
@@ -44,6 +45,12 @@ export default function RecipeDetailPage() {
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [isSubmittingRating, setIsSubmittingRating] = useState(false);
   const [isCreatingShoppingList, setIsCreatingShoppingList] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showShoppingListDialog, setShowShoppingListDialog] = useState(false);
+  const [shoppingListMessage, setShoppingListMessage] = useState({ type: '', message: '' });
+  const [isFavoriting, setIsFavoriting] = useState(false);
 
   useEffect(() => {
     fetchRecipe();
@@ -115,9 +122,12 @@ export default function RecipeDetailPage() {
     }
   };
 
-  const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this recipe?')) return;
+  const handleDelete = () => {
+    setShowDeleteDialog(true);
+  };
 
+  const confirmDelete = async () => {
+    setIsDeleting(true);
     try {
       const response = await fetch(`/api/recipes/${params.id}`, {
         method: 'DELETE',
@@ -128,19 +138,42 @@ export default function RecipeDetailPage() {
       }
     } catch (error) {
       console.error('Error deleting recipe:', error);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
-  const handleShare = async () => {
-    if (navigator.share) {
-      await navigator.share({
-        title: recipe?.title,
-        text: recipe?.description || undefined,
-        url: window.location.href,
+  const handleShare = () => {
+    setShowShareDialog(true);
+  };
+
+  const handleFavorite = async () => {
+    if (!session?.user || isFavoriting) return;
+
+    setIsFavoriting(true);
+    try {
+      const response = await fetch('/api/favorites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ recipeId: params.id }),
       });
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      alert('Link copied to clipboard!');
+
+      if (response.ok) {
+        const data = await response.json();
+        // Update recipe with new favorite status and count
+        setRecipe((prev) => prev ? {
+          ...prev,
+          isFavorited: data.isFavorited,
+          _count: {
+            ...prev._count,
+            favorites: data.favoriteCount,
+          },
+        } : null);
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+    } finally {
+      setIsFavoriting(false);
     }
   };
 
@@ -162,14 +195,47 @@ export default function RecipeDetailPage() {
       const data = await response.json();
 
       if (response.ok) {
-        // Redirect to the newly created shopping list
-        router.push(`/shopping-lists/${data.id}`);
+        console.log('Shopping list created, response:', data);
+        console.log('Shopping list ID:', data.data?.id, 'or', data.id);
+        
+        // Show success dialog
+        setShoppingListMessage({ 
+          type: 'success', 
+          message: 'Shopping list created successfully!' 
+        });
+        setShowShoppingListDialog(true);
+        
+        // Redirect after a short delay
+        // API returns data nested in data.data object
+        const shoppingListId = data.data?.id || data.id;
+        
+        if (!shoppingListId) {
+          console.error('No shopping list ID found in response:', data);
+          setShoppingListMessage({ 
+            type: 'error', 
+            message: 'Shopping list created but ID not found. Please check shopping lists page.' 
+          });
+          return;
+        }
+        
+        setTimeout(() => {
+          router.push(`/shopping-lists/${shoppingListId}`);
+        }, 1500);
       } else {
-        alert(data.error || 'Failed to create shopping list');
+        // Show error dialog
+        setShoppingListMessage({ 
+          type: 'error', 
+          message: data.error || 'Failed to create shopping list' 
+        });
+        setShowShoppingListDialog(true);
       }
     } catch (error) {
       console.error('Error creating shopping list:', error);
-      alert('An error occurred while creating the shopping list');
+      setShoppingListMessage({ 
+        type: 'error', 
+        message: 'An error occurred while creating the shopping list' 
+      });
+      setShowShoppingListDialog(true);
     } finally {
       setIsCreatingShoppingList(false);
     }
@@ -345,12 +411,17 @@ export default function RecipeDetailPage() {
                   </span>
                 </div>
 
-                <div className="flex items-center space-x-2">
-                  <Heart className={`w-6 h-6 ${recipe.isFavorited ? 'fill-red-500 text-red-500' : 'text-gray-400 dark:text-gray-300'}`} />
+                <button
+                  onClick={handleFavorite}
+                  disabled={!session?.user || isFavoriting}
+                  className="flex items-center space-x-2 hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
+                  title={recipe.isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+                >
+                  <Heart className={`w-6 h-6 ${recipe.isFavorited ? 'fill-red-500 text-red-500' : 'text-gray-400 dark:text-gray-300 hover:text-red-500'} transition-colors`} />
                   <span className="text-sm text-gray-600 dark:text-gray-300">
                     {recipe._count.favorites} favorites
                   </span>
-                </div>
+                </button>
               </div>
 
               {session?.user && (
@@ -589,6 +660,47 @@ export default function RecipeDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Share Dialog */}
+      <ShareDialog
+        isOpen={showShareDialog}
+        onClose={() => setShowShareDialog(false)}
+        title={recipe?.title || ''}
+        url={typeof window !== 'undefined' ? window.location.href : ''}
+        description={recipe?.description || undefined}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        onConfirm={confirmDelete}
+        title="Delete Recipe?"
+        message="Are you sure you want to delete this recipe? This action cannot be undone and all associated data will be permanently removed."
+        confirmText="Delete Recipe"
+        cancelText="Cancel"
+        type="danger"
+        icon={<Trash2 className="w-6 h-6 text-red-600 dark:text-red-400" />}
+        isLoading={isDeleting}
+      />
+
+      {/* Shopping List Dialog */}
+      <ConfirmDialog
+        isOpen={showShoppingListDialog}
+        onClose={() => setShowShoppingListDialog(false)}
+        onConfirm={() => setShowShoppingListDialog(false)}
+        title={shoppingListMessage.type === 'success' ? 'Success!' : 'Error'}
+        message={shoppingListMessage.message}
+        confirmText="OK"
+        type={shoppingListMessage.type === 'success' ? 'success' : 'danger'}
+        icon={
+          shoppingListMessage.type === 'success' ? (
+            <ShoppingCart className="w-6 h-6 text-green-600 dark:text-green-400" />
+          ) : (
+            <ShoppingCart className="w-6 h-6 text-red-600 dark:text-red-400" />
+          )
+        }
+      />
     </div>
   );
 }

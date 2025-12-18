@@ -324,53 +324,22 @@ export default function MealPlanHeader({
             />
           </div>
 
-          {/* Shopping List Buttons */}
-          {hasExistingShoppingList ? (
-            <>
-              {/* Update Shopping List Button */}
-              <button
-                onClick={onGenerateShoppingList}
-                disabled={isGeneratingShoppingList || checkingShoppingList}
-                className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-              >
-                {isGeneratingShoppingList || checkingShoppingList ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <ShoppingCart className="w-4 h-4" />
-                )}
-                <span className="hidden lg:inline">
-                  {checkingShoppingList ? 'Checking...' : 'Update List'}
-                </span>
-              </button>
-              
-              {/* View Shopping List Button */}
-              {onViewShoppingList && (
-                <button
-                  onClick={onViewShoppingList}
-                  className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  <Eye className="w-4 h-4" />
-                  <span className="hidden lg:inline">View List</span>
-                </button>
-              )}
-            </>
-          ) : (
-            /* Create Shopping List Button */
-            <button
-              onClick={onGenerateShoppingList}
-              disabled={isGeneratingShoppingList || checkingShoppingList}
-              className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-            >
-              {isGeneratingShoppingList || checkingShoppingList ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <ShoppingCart className="w-4 h-4" />
-              )}
-              <span className="hidden lg:inline">
-                {checkingShoppingList ? 'Checking...' : 'Create Shopping List'}
-              </span>
-            </button>
-          )}
+          {/* Shopping List Button */}
+          <button
+            onClick={onGenerateShoppingList}
+            disabled={isGeneratingShoppingList || checkingShoppingList}
+            className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+            title={hasExistingShoppingList ? 'Update Shopping List' : 'Create Shopping List'}
+          >
+            {isGeneratingShoppingList || checkingShoppingList ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <ShoppingCart className="w-4 h-4" />
+            )}
+            <span className="hidden lg:inline">
+              {checkingShoppingList ? 'Checking...' : hasExistingShoppingList ? 'Update List' : 'Create Shopping List'}
+            </span>
+          </button>
 
           {/* New Plan Button */}
           <button

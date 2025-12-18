@@ -2,14 +2,17 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Utensils, Clock, Users, Plus, CheckSquare, Square, Trash2, MoreVertical, Heart, X, Bookmark, Search, Filter, Calendar } from 'lucide-react';
+import { Utensils, Clock, Users, Plus, CheckSquare, Square, Trash2, MoreVertical, Heart, X, Bookmark, Search, Filter, Calendar, Shield } from 'lucide-react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { DeleteConfirmationDialog } from '@/components/ui/ConfirmationDialog';
+import Footer from '@/components/layout/Footer';
+import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
 
 export default function SavedPlansPage() {
   const { data: session, status } = useSession();
   const [mealPlans, setMealPlans] = useState<any[]>([]);
+  const [filteredPlans, setFilteredPlans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedPlans, setSelectedPlans] = useState<Set<string>>(new Set());
@@ -18,12 +21,27 @@ export default function SavedPlansPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
   const [showBulkActions, setShowBulkActions] = useState(false);
+  
+  // Filter states
+  const [showFilters, setShowFilters] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDuration, setSelectedDuration] = useState<number | null>(null);
+  const [selectedServings, setSelectedServings] = useState<number | null>(null);
+  const [selectedSystems, setSelectedSystems] = useState<string[]>([]);
+  const [selectedRestrictions, setSelectedRestrictions] = useState<string[]>([]);
+  const [selectedVisibility, setSelectedVisibility] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<'recent' | 'oldest' | 'title' | 'duration'>('recent');
 
   useEffect(() => {
     if (session?.user) {
       fetchMealPlans();
     }
   }, [session]);
+
+  // Apply filters whenever filters or mealPlans change
+  useEffect(() => {
+    applyFilters();
+  }, [mealPlans, searchQuery, selectedDuration, selectedServings, selectedSystems, selectedRestrictions, selectedVisibility, sortBy]);
 
   const fetchMealPlans = async () => {
     try {
@@ -61,6 +79,92 @@ export default function SavedPlansPage() {
       setLoading(false);
     }
   };
+
+  const applyFilters = () => {
+    let filtered = [...mealPlans];
+
+    // Search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(plan =>
+        plan.title?.toLowerCase().includes(query) ||
+        plan.description?.toLowerCase().includes(query)
+      );
+    }
+
+    // Duration filter
+    if (selectedDuration !== null) {
+      filtered = filtered.filter(plan => plan.durationWeeks === selectedDuration);
+    }
+
+    // Servings filter
+    if (selectedServings !== null) {
+      filtered = filtered.filter(plan => plan.defaultServings === selectedServings);
+    }
+
+    // Defense systems filter
+    if (selectedSystems.length > 0) {
+      filtered = filtered.filter(plan =>
+        plan.focusSystems && selectedSystems.some((system: string) => plan.focusSystems.includes(system))
+      );
+    }
+
+    // Dietary restrictions filter
+    if (selectedRestrictions.length > 0) {
+      filtered = filtered.filter(plan =>
+        plan.dietaryRestrictions && selectedRestrictions.some((restriction: string) => plan.dietaryRestrictions.includes(restriction))
+      );
+    }
+
+    // Visibility filter
+    if (selectedVisibility) {
+      filtered = filtered.filter(plan => plan.visibility === selectedVisibility);
+    }
+
+    // Sort
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'recent':
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        case 'oldest':
+          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        case 'title':
+          return (a.title || '').localeCompare(b.title || '');
+        case 'duration':
+          return (b.durationWeeks || 0) - (a.durationWeeks || 0);
+        default:
+          return 0;
+      }
+    });
+
+    setFilteredPlans(filtered);
+  };
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setSelectedDuration(null);
+    setSelectedServings(null);
+    setSelectedSystems([]);
+    setSelectedRestrictions([]);
+    setSelectedVisibility(null);
+    setSortBy('recent');
+  };
+
+  const toggleSystem = (system: string) => {
+    setSelectedSystems(prev =>
+      prev.includes(system) ? prev.filter(s => s !== system) : [...prev, system]
+    );
+  };
+
+  const toggleRestriction = (restriction: string) => {
+    setSelectedRestrictions(prev =>
+      prev.includes(restriction) ? prev.filter(r => r !== restriction) : [...prev, restriction]
+    );
+  };
+
+  const hasActiveFilters = searchQuery || selectedDuration !== null || selectedServings !== null || 
+                          selectedSystems.length > 0 || selectedRestrictions.length > 0 || 
+                          selectedVisibility !== null || sortBy !== 'recent';
 
   const handleSelectPlan = (planId: string) => {
     const newSelection = new Set(selectedPlans);
@@ -239,6 +343,193 @@ export default function SavedPlansPage() {
           </div>
         </div>
 
+        {/* Search and Filter Bar */}
+        {mealPlans.length > 0 && (
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-6 border dark:border-gray-700">
+            <div className="flex flex-col space-y-4">
+              {/* Search and Filter Toggle */}
+              <div className="flex items-center space-x-3">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search meal plans..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:text-white"
+                  />
+                </div>
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                    showFilters || hasActiveFilters
+                      ? 'bg-green-500 text-white hover:bg-green-600'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600'
+                  }`}
+                >
+                  <Filter className="w-4 h-4" />
+                  <span className="hidden sm:inline">Filters</span>
+                  {hasActiveFilters && !showFilters && (
+                    <span className="bg-white text-green-600 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+                      {[selectedDuration !== null, selectedServings !== null, selectedSystems.length > 0, selectedRestrictions.length > 0, selectedVisibility !== null, sortBy !== 'recent'].filter(Boolean).length}
+                    </span>
+                  )}
+                </button>
+                {hasActiveFilters && (
+                  <button
+                    onClick={clearFilters}
+                    className="flex items-center space-x-2 px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                    <span className="hidden sm:inline">Clear</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Filter Panel */}
+              {showFilters && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-4 border-t dark:border-gray-700">
+                  {/* Duration Filter */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <Clock className="w-4 h-4 inline mr-1" />
+                      Duration
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {[1, 2, 3, 4].map((weeks) => (
+                        <button
+                          key={weeks}
+                          onClick={() => setSelectedDuration(selectedDuration === weeks ? null : weeks)}
+                          className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                            selectedDuration === weeks
+                              ? 'bg-green-500 text-white'
+                              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                          }`}
+                        >
+                          {weeks} Week{weeks > 1 ? 's' : ''}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Servings Filter */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <Users className="w-4 h-4 inline mr-1" />
+                      Servings
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {[1, 2, 4, 6].map((servings) => (
+                        <button
+                          key={servings}
+                          onClick={() => setSelectedServings(selectedServings === servings ? null : servings)}
+                          className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                            selectedServings === servings
+                              ? 'bg-green-500 text-white'
+                              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                          }`}
+                        >
+                          {servings} {servings === 1 ? 'Person' : 'People'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Sort By */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Sort By
+                    </label>
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value as any)}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:text-white"
+                    >
+                      <option value="recent">Most Recent</option>
+                      <option value="oldest">Oldest First</option>
+                      <option value="title">Title (A-Z)</option>
+                      <option value="duration">Duration</option>
+                    </select>
+                  </div>
+
+                  {/* Defense Systems Filter */}
+                  <div className="md:col-span-2 lg:col-span-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <Shield className="w-4 h-4 inline mr-1" />
+                      Defense Systems
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {Object.values(DEFENSE_SYSTEMS).map((system) => (
+                        <button
+                          key={system.id}
+                          onClick={() => toggleSystem(system.id)}
+                          className={`px-3 py-1.5 rounded-lg text-xs transition-colors ${
+                            selectedSystems.includes(system.id)
+                              ? 'bg-green-500 text-white'
+                              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                          }`}
+                          title={system.name}
+                        >
+                          {system.icon} {system.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Dietary Restrictions Filter */}
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Dietary Restrictions
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {['vegetarian', 'vegan', 'gluten-free', 'dairy-free', 'nut-free', 'low-carb', 'keto', 'paleo'].map((restriction) => (
+                        <button
+                          key={restriction}
+                          onClick={() => toggleRestriction(restriction)}
+                          className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                            selectedRestrictions.includes(restriction)
+                              ? 'bg-green-500 text-white'
+                              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                          }`}
+                        >
+                          {restriction}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Visibility Filter */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Visibility
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {['PRIVATE', 'PUBLIC', 'FRIENDS'].map((visibility) => (
+                        <button
+                          key={visibility}
+                          onClick={() => setSelectedVisibility(selectedVisibility === visibility ? null : visibility)}
+                          className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                            selectedVisibility === visibility
+                              ? 'bg-green-500 text-white'
+                              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                          }`}
+                        >
+                          {visibility}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Results Count */}
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                Showing <span className="font-semibold text-gray-900 dark:text-white">{filteredPlans.length}</span> of <span className="font-semibold">{mealPlans.length}</span> meal plans
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Bulk Actions Bar */}
         {showBulkActions && mealPlans.length > 0 && (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-6 border dark:border-gray-700">
@@ -274,24 +565,6 @@ export default function SavedPlansPage() {
             </div>
           </div>
         )}
-
-        {/* Filters */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-6 border dark:border-gray-700">
-          <div className="flex items-center space-x-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Search saved plans..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              />
-            </div>
-            <button className="flex items-center space-x-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200">
-              <Filter className="w-4 h-4" />
-              <span>Filter</span>
-            </button>
-          </div>
-        </div>
 
         {/* Error Message */}
         {error && (
@@ -343,9 +616,28 @@ export default function SavedPlansPage() {
               </Link>
             </div>
           </div>
+        ) : filteredPlans.length === 0 ? (
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-12 text-center border dark:border-gray-700">
+            <div className="max-w-md mx-auto">
+              <div className="bg-gradient-to-r from-yellow-100 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30 p-4 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+                <Search className="w-10 h-10 text-yellow-600 dark:text-yellow-400" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">No Plans Match Your Filters</h2>
+              <p className="text-gray-600 dark:text-gray-300 mb-8">
+                Try adjusting your filters or clear them to see all plans.
+              </p>
+              <button
+                onClick={clearFilters}
+                className="inline-flex items-center space-x-2 px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-all"
+              >
+                <X className="w-4 h-4" />
+                <span>Clear All Filters</span>
+              </button>
+            </div>
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Array.isArray(mealPlans) && mealPlans.map((plan: any) => (
+            {filteredPlans.map((plan: any) => (
               <div key={plan.id} className={`bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 relative group border dark:border-gray-700 ${
                 selectedPlans.has(plan.id) ? 'ring-2 ring-blue-500' : ''
               }`}>
@@ -444,6 +736,9 @@ export default function SavedPlansPage() {
           isLoading={isDeleting}
         />
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

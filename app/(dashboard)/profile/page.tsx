@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { User, Mail, Calendar, Edit2, Save, X, Loader2, ChefHat, TrendingUp, Heart, ShoppingCart, CalendarCheck } from 'lucide-react';
+import Footer from '@/components/layout/Footer';
 
 // Helper function to format time ago
 function getTimeAgo(date: Date): string {
@@ -363,6 +364,9 @@ export default function ProfilePage() {
           )}
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

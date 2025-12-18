@@ -146,11 +146,10 @@ export async function POST(request: NextRequest) {
       }
 
     } else if (type === 'recipes') {
-      // Handle recipes
+      // Handle recipes - users can create shopping lists from any recipe they can view
       const recipes = await prisma.recipe.findMany({
         where: {
           id: { in: sourceIds },
-          userId: session.user.id,
         },
       });
 
@@ -256,8 +255,15 @@ export async function POST(request: NextRequest) {
       } as any,
     });
 
+    console.log('✅ Shopping list created:', {
+      id: shoppingList.id,
+      title: shoppingList.title,
+      totalItems: shoppingList.totalItems,
+    });
+
     return NextResponse.json({
       success: true,
+      id: shoppingList.id, // Add id at top level too
       data: {
         ...shoppingList,
         items: consolidatedIngredients,

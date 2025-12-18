@@ -10,6 +10,7 @@ import ShareMenu from './ShareMenu';
 import MealPlanHeader from './MealPlanHeader';
 import PlanConfiguration from './PlanConfiguration';
 import MealPlanView from './MealPlanView';
+import { ConfirmDialog } from '@/components/ui/DialogComponents';
 import {
   GeneratingOverlay,
   OptimisticUpdate,
@@ -70,6 +71,35 @@ export default function EnhancedMealPlanner({
   const [isGenerating, setIsGenerating] = useState(false);
   const [optimisticAction, setOptimisticAction] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  
+  // Shopping List Dialog states
+  const [shoppingListDialog, setShoppingListDialog] = useState<{
+    isOpen: boolean;
+    type: 'success' | 'error';
+    title: string;
+    message: string;
+    shoppingListId?: string;
+    itemCount?: number;
+  }>({
+    isOpen: false,
+    type: 'success',
+    title: '',
+    message: '',
+  });
+
+  // Save/Update Dialog states
+  const [saveDialog, setSaveDialog] = useState<{
+    isOpen: boolean;
+    type: 'success' | 'error';
+    title: string;
+    message: string;
+    mealPlanId?: string;
+  }>({
+    isOpen: false,
+    type: 'success',
+    title: '',
+    message: '',
+  });
 
   // Configuration state
   const [configuration, setConfiguration] = useState<ConfigurationData>({
@@ -752,7 +782,13 @@ export default function EnhancedMealPlanner({
     
     try {
       if (!mealPlan.id) {
-        throw new Error('Meal plan must be saved before generating shopping list');
+        setShoppingListDialog({
+          isOpen: true,
+          type: 'error',
+          title: 'Save Required',
+          message: 'Please save your meal plan before generating a shopping list.',
+        });
+        return;
       }
 
       const response = await fetch(`/api/meal-planner/${mealPlan.id}/shopping-list`, {
@@ -769,25 +805,48 @@ export default function EnhancedMealPlanner({
       if (!response.ok) {
         const errorData = await response.json();
         if (errorData.code === 'NO_RECIPES') {
-          throw new Error('Please generate recipes for your meals before creating a shopping list.');
+          setShoppingListDialog({
+            isOpen: true,
+            type: 'error',
+            title: 'No Recipes Found',
+            message: 'Please generate recipes for your meals before creating a shopping list.',
+          });
+        } else {
+          setShoppingListDialog({
+            isOpen: true,
+            type: 'error',
+            title: 'Generation Failed',
+            message: errorData.error || 'Failed to generate shopping list. Please try again.',
+          });
         }
-        throw new Error(errorData.error || 'Failed to generate shopping list');
+        return;
       }
 
       const shoppingListData = await response.json();
+      const itemCount = shoppingListData.data?.items?.length || 0;
+      const listId = shoppingListData.data?.id || shoppingListData.id;
       
-      // Handle shopping list (could open modal, download PDF, etc.)
-      console.log('Shopping list generated:', shoppingListData);
-      
-      // TODO: Display shopping list in modal or redirect to shopping list page
-      alert(`Shopping list generated with ${shoppingListData.data?.items?.length || 0} items!`);
+      // Show success dialog
+      setShoppingListDialog({
+        isOpen: true,
+        type: 'success',
+        title: 'Shopping List Created!',
+        message: `Your shopping list has been generated with ${itemCount} item${itemCount !== 1 ? 's' : ''}. Would you like to view it now?`,
+        shoppingListId: listId,
+        itemCount,
+      });
       
       // Trigger header refresh for shopping list status
       setShoppingListGenerated(prev => prev + 1);
 
     } catch (error) {
       console.error('Error generating shopping list:', error);
-      setError(error instanceof Error ? error.message : 'Failed to generate shopping list');
+      setShoppingListDialog({
+        isOpen: true,
+        type: 'error',
+        title: 'Unexpected Error',
+        message: error instanceof Error ? error.message : 'An unexpected error occurred while generating the shopping list.',
+      });
     } finally {
       setOptimisticAction(null);
     }
@@ -831,9 +890,10 @@ export default function EnhancedMealPlanner({
     setMealPlan(updatedPlan);
 
     try {
+      const isUpdate = !!mealPlan.id;
       let response;
       
-      if (mealPlan.id) {
+      if (isUpdate) {
         // Update existing meal plan
         response = await fetch(`/api/meal-planner/${mealPlan.id}`, {
           method: 'PATCH',
@@ -858,7 +918,15 @@ export default function EnhancedMealPlanner({
         
         // Handle meal plan limit error
         if (response.status === 403 && errorData.upgradeRequired) {
-          throw new Error(errorData.message || 'Meal plan limit reached. Please upgrade to create more plans.');
+          setSaveDialog({
+            isOpen: true,
+            type: 'error',
+            title: 'Meal Plan Limit Reached',
+            message: errorData.message || 'You have reached your meal plan limit. Please upgrade to create more plans.',
+          });
+          // Revert optimistic update
+          setMealPlan(mealPlan);
+          return;
         }
         
         throw new Error(errorData.error || 'Failed to save plan');
@@ -916,9 +984,28 @@ export default function EnhancedMealPlanner({
         onPlanSave(transformedSavedPlan);
       }
 
+      // Show success dialog
+      const mealCount = flattenedMeals.length;
+      setSaveDialog({
+        isOpen: true,
+        type: 'success',
+        title: isUpdate ? 'Meal Plan Updated!' : 'Meal Plan Saved!',
+        message: isUpdate 
+          ? `Your meal plan "${transformedSavedPlan.title}" has been successfully updated with ${mealCount} meal${mealCount !== 1 ? 's' : ''}.`
+          : `Your meal plan "${transformedSavedPlan.title}" has been successfully saved with ${mealCount} meal${mealCount !== 1 ? 's' : ''}.`,
+        mealPlanId: transformedSavedPlan.id,
+      });
+
     } catch (error) {
       console.error('Error saving plan:', error);
-      setError('Failed to save plan');
+      
+      // Show error dialog
+      setSaveDialog({
+        isOpen: true,
+        type: 'error',
+        title: 'Save Failed',
+        message: error instanceof Error ? error.message : 'An unexpected error occurred while saving your meal plan. Please try again.',
+      });
       
       // Revert optimistic update
       setMealPlan(mealPlan);
@@ -1086,6 +1173,36 @@ export default function EnhancedMealPlanner({
           </div>
         </div>
       )}
+
+      {/* Shopping List Dialog */}
+      <ConfirmDialog
+        isOpen={shoppingListDialog.isOpen}
+        onClose={() => setShoppingListDialog({ ...shoppingListDialog, isOpen: false })}
+        onConfirm={() => {
+          if (shoppingListDialog.type === 'success' && shoppingListDialog.shoppingListId) {
+            router.push(`/shopping-lists/${shoppingListDialog.shoppingListId}`);
+          }
+          setShoppingListDialog({ ...shoppingListDialog, isOpen: false });
+        }}
+        title={shoppingListDialog.title}
+        message={shoppingListDialog.message}
+        confirmText={shoppingListDialog.type === 'success' ? 'View Shopping List' : 'OK'}
+        cancelText={shoppingListDialog.type === 'success' ? 'Close' : undefined}
+        type={shoppingListDialog.type === 'success' ? 'success' : 'danger'}
+      />
+
+      {/* Save/Update Dialog */}
+      <ConfirmDialog
+        isOpen={saveDialog.isOpen}
+        onClose={() => setSaveDialog({ ...saveDialog, isOpen: false })}
+        onConfirm={() => {
+          setSaveDialog({ ...saveDialog, isOpen: false });
+        }}
+        title={saveDialog.title}
+        message={saveDialog.message}
+        confirmText="OK"
+        type={saveDialog.type === 'success' ? 'success' : 'danger'}
+      />
     </div>
   );
 }

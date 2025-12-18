@@ -8,6 +8,7 @@ import { DefenseSystem } from '@/types';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
 import { Search, SlidersHorizontal, Plus, Sparkles, ChefHat, Loader2, User, X, Info } from 'lucide-react';
 import Link from 'next/link';
+import Footer from '@/components/layout/Footer';
 
 export default function RecipesPage() {
   const { data: session } = useSession();
@@ -429,6 +430,9 @@ export default function RecipesPage() {
           </Link>
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

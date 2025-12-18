@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
 import { DefenseSystem } from '@/types';
 import { BookOpen, ChevronDown, ChevronUp, CheckCircle, Lightbulb, Heart } from 'lucide-react';
+import Footer from '@/components/layout/Footer';
 
 export default function LearnPage() {
   const [expandedSystem, setExpandedSystem] = useState<DefenseSystem | null>(null);
@@ -330,6 +331,9 @@ export default function LearnPage() {
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

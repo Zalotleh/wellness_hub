@@ -6,6 +6,7 @@ import AIAdvisor from '@/components/advisor/AIAdvisor';
 import { Sparkles, BookOpen, ChefHat, Lightbulb } from 'lucide-react';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
 import { DefenseSystem } from '@/types';
+import Footer from '@/components/layout/Footer';
 
 export default function AdvisorPage() {
   const [quickQuestion, setQuickQuestion] = useState<string>('');
@@ -206,6 +207,9 @@ export default function AdvisorPage() {
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

@@ -8,6 +8,7 @@ import ProgressCharts from '@/components/progress/ProgressCharts';
 import { addDays, subDays, isToday, format } from 'date-fns';
 import { CalendarDays, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 import { TrendingUp, Calendar, BarChart3 } from 'lucide-react';
+import Footer from '@/components/layout/Footer';
 
 export default function ProgressPage() {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -146,6 +147,9 @@ export default function ProgressPage() {
           </div>
         )}
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

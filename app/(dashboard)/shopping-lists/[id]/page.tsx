@@ -24,6 +24,7 @@ import {
   Smartphone,
   Info
 } from 'lucide-react';
+import { ConfirmDialog } from '@/components/ui/DialogComponents';
 
 interface ShoppingListItem {
   ingredient: string;
@@ -78,6 +79,17 @@ export default function ShoppingListDetailPage() {
     quantity: 1,
     unit: '',
     category: 'Other'
+  });
+  const [copyDialog, setCopyDialog] = useState<{
+    isOpen: boolean;
+    type: 'success' | 'error';
+    title: string;
+    message: string;
+  }>({
+    isOpen: false,
+    type: 'success',
+    title: '',
+    message: '',
   });
 
   useEffect(() => {
@@ -422,10 +434,25 @@ export default function ShoppingListDetailPage() {
     const text = generateShareText();
     try {
       await navigator.clipboard.writeText(text);
-      alert('✅ Shopping list copied to clipboard!');
+      
+      // Show success dialog
+      const itemCount = shoppingList?.items.length || 0;
+      setCopyDialog({
+        isOpen: true,
+        type: 'success',
+        title: 'Copied to Clipboard!',
+        message: `Your shopping list "${shoppingList?.title}" with ${itemCount} item${itemCount !== 1 ? 's' : ''} has been copied to your clipboard. You can now paste it anywhere you like!`,
+      });
     } catch (err) {
       console.error('Failed to copy:', err);
-      alert('❌ Failed to copy to clipboard');
+      
+      // Show error dialog
+      setCopyDialog({
+        isOpen: true,
+        type: 'error',
+        title: 'Copy Failed',
+        message: 'Failed to copy the shopping list to your clipboard. Please try again or use a different sharing method.',
+      });
     }
   };
 
@@ -1167,6 +1194,17 @@ export default function ShoppingListDetailPage() {
           </div>
         </div>
       )}
+
+      {/* Copy to Clipboard Dialog */}
+      <ConfirmDialog
+        isOpen={copyDialog.isOpen}
+        onClose={() => setCopyDialog({ ...copyDialog, isOpen: false })}
+        onConfirm={() => setCopyDialog({ ...copyDialog, isOpen: false })}
+        title={copyDialog.title}
+        message={copyDialog.message}
+        confirmText="OK"
+        type={copyDialog.type === 'success' ? 'success' : 'danger'}
+      />
     </div>
   );
 }

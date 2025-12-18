@@ -23,6 +23,7 @@ import {
 import MealPlanSelectionModal from '@/components/shopping-lists/MealPlanSelectionModal';
 import RecipeSelectionModal from '@/components/shopping-lists/RecipeSelectionModal';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
+import Footer from '@/components/layout/Footer';
 
 interface ShoppingListItem {
   ingredient: string;
@@ -508,6 +509,9 @@ export default function ShoppingListsPage() {
           </div>
         }
       />
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }
