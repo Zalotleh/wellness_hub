@@ -312,7 +312,20 @@ This vibrant Buddha bowl combines probiotic-rich tempeh and miso with prebiotic 
 - update meal plan button, needs a better UI dialough, or success message than toast notification, dark mode and light mode. DONE ✅
 - inside the shopping list, cick share,then click on copy clipboard a toast notification shows, create a better sucess message. DONE ✅
 - Community pages, topics, create one..
-- change passowrd, forgot password, notifications..
+- change password, forgot password - DONE ✅
+  ✅ Database schema with PasswordResetToken model
+  ✅ Forgot password API with secure token generation
+  ✅ Reset password API with token validation
+  ✅ Change password API for authenticated users
+  ✅ Reset password page with token from email
+  ✅ Change password form component
+  ✅ Email templates (HTML + text fallback)
+  ✅ Email utility with SendGrid/Resend integration ready
+  ✅ Password strength validation
+  ✅ Success/error dialogs with dark mode
+  ✅ Confirmation emails after password changes
+  📚 Full documentation in /docs/PASSWORD_RESET_FEATURE.md
+- notifications..
 
 Plan for nextjs 15 Later:
 

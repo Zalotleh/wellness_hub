@@ -53,6 +53,7 @@ model User {
   savedPlans                 SavedMealPlan[]
   sessions                   Session[]
   shoppingLists              ShoppingList[]
+  passwordResetTokens        PasswordResetToken[]
 }
 
 model Account {
@@ -87,6 +88,21 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expires   DateTime
+  used      Boolean  @default(false)
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+  
+  @@index([token])
+  @@index([userId])
+  @@index([expires])
 }
 
 model Recipe {
