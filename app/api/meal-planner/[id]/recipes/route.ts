@@ -4,6 +4,8 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { getUserFeatureAccess, Feature } from '@/lib/features/feature-flags';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
+import { logAIGeneration } from '@/lib/ai-generation/analytics';
+import { executeBatch, BatchTask } from '@/lib/ai-generation/batch-optimizer';
 
 // Rate limiting store (in production, use Redis or database)
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
@@ -508,43 +510,33 @@ async function generateBatchRecipes(
   customInstructions?: string,
   forceRegenerate = false
 ): Promise<any[]> {
-  const results = [];
-  
-  // Generate recipes sequentially to avoid rate limits
-  for (let i = 0; i < mealIds.length; i++) {
-    const mealId = mealIds[i];
-    
-    try {
-      const recipe = await generateSingleRecipe(
-        userId, 
-        mealId, 
-        mealPlan, 
+  // Create batch tasks for parallel execution
+  const tasks: BatchTask<any>[] = mealIds.map((mealId) => ({
+    id: mealId,
+    execute: async () => {
+      return await generateSingleRecipe(
+        userId,
+        mealId,
+        mealPlan,
         customInstructions,
         forceRegenerate
       );
-      
-      results.push({
-        mealId,
-        recipe,
-        success: true,
-      });
-      
-      // Add delay between requests (2 seconds) to respect rate limits
-      if (i < mealIds.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 2000));
-      }
-      
-    } catch (error) {
-      console.error(`Failed to generate recipe for meal ${mealId}:`, error);
-      results.push({
-        mealId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        success: false,
-      });
-    }
-  }
-  
-  return results;
+    },
+  }));
+
+  // Execute with optimized batch processing
+  // Concurrency of 3 means 3 recipes generated in parallel
+  // 500ms delay between batches to respect rate limits
+  const results = await executeBatch(tasks, 3, 500);
+
+  // Transform results into expected format
+  return results.map((result) => ({
+    mealId: result.id,
+    recipe: result.data,
+    success: result.success,
+    error: result.error,
+    duration: result.duration,
+  }));
 }
 
 // GET - Fetch recipes for a meal plan

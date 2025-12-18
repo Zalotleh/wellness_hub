@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { DefenseSystem } from '@/types';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
 import { FeatureAccess, type SubscriptionTier } from '@/lib/features/feature-flags';
+import { logAIGeneration } from '@/lib/ai-generation/analytics';
 
 export async function POST(request: NextRequest) {
   try {
@@ -161,6 +162,23 @@ export async function POST(request: NextRequest) {
     
     if (!isValidRecipe.valid) {
       console.error('⚠️ Recipe failed quality validation:', isValidRecipe.reasons);
+      
+      // Log failed generation for analytics
+      await logAIGeneration({
+        userId: session.user.id,
+        generationType: 'recipe',
+        success: false,
+        defenseSystem: defenseSystem,
+        ingredientCount: ingredients?.length || 0,
+        hasDietaryRestrictions: dietaryRestrictions?.length > 0,
+        hasMealType: mealType && mealType !== 'any',
+        validationErrors: isValidRecipe.reasons,
+        inputData: { defenseSystem, ingredients, dietaryRestrictions, mealType },
+        outputData: parsedRecipe,
+        modelUsed: 'claude-sonnet-4-5-20250929',
+        tokensUsed: anthropicData.usage?.output_tokens || 0,
+      });
+      
       // Don't increment counter - this generation failed
       return NextResponse.json(
         { 
@@ -182,6 +200,22 @@ export async function POST(request: NextRequest) {
           increment: 1,
         },
       },
+    });
+
+    // Log successful generation for analytics
+    await logAIGeneration({
+      userId: session.user.id,
+      generationType: 'recipe',
+      success: true,
+      defenseSystem: defenseSystem,
+      ingredientCount: ingredients?.length || 0,
+      hasDietaryRestrictions: dietaryRestrictions?.length > 0,
+      hasMealType: mealType && mealType !== 'any',
+      validationErrors: [],
+      inputData: { defenseSystem, ingredients, dietaryRestrictions, mealType },
+      outputData: parsedRecipe,
+      modelUsed: 'claude-sonnet-4-5-20250929',
+      tokensUsed: anthropicData.usage?.output_tokens || 0,
     });
 
     return NextResponse.json({

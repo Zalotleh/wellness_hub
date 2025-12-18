@@ -38,6 +38,7 @@ model User {
   privacyAccepted            Boolean           @default(false)
   privacyAcceptedAt          DateTime?
   accounts                   Account[]
+  aiGenerationLogs           AIGenerationLog[]
   comments                   Comment[]
   favorites                  Favorite[]
   generatedRecipes           GeneratedRecipe[]
@@ -405,3 +406,30 @@ enum UserRole {
   USER
   ADMIN
 }
+
+// AI Generation Analytics Model
+model AIGenerationLog {
+  id                   String        @id @default(cuid())
+  userId               String
+  user                 User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  generationType       String        // 'recipe' or 'mealplan'
+  success              Boolean       // Did validation pass?
+  qualityScore         Float?        // Quality score at generation time
+  defenseSystem        DefenseSystem?
+  ingredientCount      Int?
+  hasDietaryRestrictions Boolean     @default(false)
+  hasMealType          Boolean       @default(false)
+  validationErrors     String[]      // Array of validation error messages
+  inputData            Json?         // Store the input parameters
+  outputData           Json?         // Store the generated data (if successful)
+  apiResponseTime      Int?          // Response time in milliseconds
+  modelUsed            String?       // AI model version used
+  tokensUsed           Int?          // Number of tokens consumed
+  createdAt            DateTime      @default(now())
+  
+  @@index([userId])
+  @@index([generationType])
+  @@index([success])
+  @@index([createdAt])
+}
+
