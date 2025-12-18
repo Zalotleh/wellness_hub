@@ -361,8 +361,13 @@ for admin dashboard:
 recipe genetaing Success Rate Tracking: Track how often validation passes
 Admin Dashboard: See ai recipe/meal plan, shopping list generating validation failure patterns
 
+Other fixes:
+- integrate shopping api
+-password change implementation, check files: docs/PASSWORD_QUICK_START.md and docs/PASSWORD_RESET_FEATURE.md
+- email smpt provider setting for password and notifications.
 
-
+Cleanup Tasks Completed:
+✅ Deleted update_dark_mode.py script (obsolete - dark mode classes already in components)
 
 
 
