@@ -3,8 +3,16 @@
 import React, { useState, useEffect } from 'react';
 import { DefenseSystem, RecipeFormData } from '@/types';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
-import { Sparkles, Loader2, Plus, X, Wand2 } from 'lucide-react';
+import { Sparkles, Loader2, Plus, X, Wand2, Info } from 'lucide-react';
 import { getMeasurementPreference } from '@/lib/shopping/measurement-system';
+import { getSmartSuggestions } from '@/lib/suggestions/ingredient-suggestions';
+import {
+  trackGeneration,
+  shouldShowOnboarding,
+  shouldShowEncouragement,
+  getPersonalizedTips,
+} from '@/lib/tracking/generation-stats';
+import AIGeneratorOnboarding from '@/components/onboarding/AIGeneratorOnboarding';
 
 interface AIRecipeGeneratorProps {
   onRecipeGenerated?: (recipe: RecipeFormData) => void;
@@ -35,6 +43,9 @@ export default function AIRecipeGenerator({
   } | null>(null);
   const [wasNotCounted, setWasNotCounted] = useState(false);
   const [showTips, setShowTips] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [encouragementMsg, setEncouragementMsg] = useState<string | null>(null);
+  const [ingredientSuggestions, setIngredientSuggestions] = useState<string[]>([]);
 
   // Quality Score Calculator
   const calculateQualityScore = () => {
@@ -97,7 +108,30 @@ export default function AIRecipeGenerator({
   useEffect(() => {
     const preference = getMeasurementPreference();
     setMeasurementSystem(preference.system);
+
+    // Check if should show onboarding
+    setShowOnboarding(shouldShowOnboarding());
+    
+    // Check for encouragement message
+    const encouragement = shouldShowEncouragement();
+    if (encouragement.show) {
+      setEncouragementMsg(encouragement.message);
+      // Auto-hide after 5 seconds
+      setTimeout(() => setEncouragementMsg(null), 5000);
+    }
   }, []);
+
+  // Update ingredient suggestions when inputs change
+  useEffect(() => {
+    const validIngredients = ingredients.filter((ing) => ing.trim() !== '');
+    const suggestions = getSmartSuggestions(
+      defenseSystem,
+      mealType,
+      dietaryRestrictions,
+      validIngredients
+    );
+    setIngredientSuggestions(suggestions.slice(0, 8)); // Limit to 8 suggestions
+  }, [defenseSystem, mealType, dietaryRestrictions, ingredients]);
 
   const mealTypes = ['any', 'breakfast', 'lunch', 'dinner', 'snack', 'dessert'];
   const commonRestrictions = [
@@ -204,11 +238,43 @@ export default function AIRecipeGenerator({
       console.log('✅ Validated recipe:', validatedRecipe);
       setGeneratedRecipe(validatedRecipe);
 
+      // Track successful generation
+      const nonEmptyIngredients = ingredients.filter((ing) => ing.trim() !== '');
+      trackGeneration(
+        true,
+        qualityData.score,
+        nonEmptyIngredients.length,
+        dietaryRestrictions.length > 0,
+        mealType !== 'any',
+        'recipe'
+      );
+
+      // Check for encouragement after tracking
+      const encouragement = shouldShowEncouragement();
+      if (encouragement.show) {
+        setEncouragementMsg(encouragement.message);
+        setTimeout(() => setEncouragementMsg(null), 5000);
+      }
+
       if (onRecipeGenerated) {
         onRecipeGenerated(validatedRecipe);
       }
     } catch (err: any) {
       console.error('❌ Error in handleGenerate:', err);
+      
+      // Track failed generation (only if it wasn't due to validation/not counted)
+      if (!wasNotCounted) {
+        const validIngredients = ingredients.filter((ing) => ing.trim() !== '');
+        trackGeneration(
+          false,
+          qualityData.score,
+          validIngredients.length,
+          dietaryRestrictions.length > 0,
+          mealType !== 'any',
+          'recipe'
+        );
+      }
+      
       setError(err.message || 'Failed to generate recipe');
     } finally {
       setIsGenerating(false);
@@ -385,8 +451,57 @@ export default function AIRecipeGenerator({
 
   const systemInfo = DEFENSE_SYSTEMS[defenseSystem];
 
+  const handleOnboardingComplete = (selectedSystem?: DefenseSystem) => {
+    if (selectedSystem) {
+      setDefenseSystem(selectedSystem);
+    }
+  };
+
   return (
     <div className="space-y-6 relative">
+      {/* Onboarding Modal */}
+      {showOnboarding && (
+        <AIGeneratorOnboarding
+          onClose={() => setShowOnboarding(false)}
+          onComplete={handleOnboardingComplete}
+          type="recipe"
+        />
+      )}
+
+      {/* Encouragement Message */}
+      {encouragementMsg && (
+        <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-start gap-3 animate-slide-in">
+          <Info className="w-5 h-5 mt-0.5 flex-shrink-0" />
+          <div className="flex-1">
+            <p className="font-medium">{encouragementMsg}</p>
+          </div>
+          <button
+            onClick={() => setEncouragementMsg(null)}
+            className="text-white/80 hover:text-white transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+      )}
+
+      {/* Personalized Tips (from history) */}
+      {!showOnboarding && getPersonalizedTips().length > 0 && (
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+          <h4 className="font-semibold text-blue-900 dark:text-blue-200 mb-2 flex items-center gap-2">
+            <Wand2 className="w-4 h-4" />
+            Personalized Tips for You
+          </h4>
+          <ul className="space-y-2">
+            {getPersonalizedTips().slice(0, 3).map((tip, index) => (
+              <li key={index} className="text-sm text-blue-800 dark:text-blue-300 flex items-start gap-2">
+                <span className="text-blue-500 mt-0.5">→</span>
+                <span>{tip}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {/* Loading Overlay - Covers entire component during generation */}
       {isGenerating && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center backdrop-blur-sm">
@@ -687,6 +802,44 @@ export default function AIRecipeGenerator({
                 </div>
               </button>
             </div>
+
+            {/* Smart Ingredient Suggestions */}
+            {ingredientSuggestions.length > 0 && ingredients.filter(i => i.trim()).length < 5 && (
+              <div className="mt-4 p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
+                <div className="flex items-center gap-2 mb-3">
+                  <Wand2 className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                  <h4 className="text-sm font-semibold text-purple-900 dark:text-purple-200">
+                    Smart Suggestions for {DEFENSE_SYSTEMS[defenseSystem].displayName}
+                    {mealType !== 'any' && ` ${mealType.charAt(0).toUpperCase() + mealType.slice(1)}`}
+                  </h4>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {ingredientSuggestions.map((suggestion, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => {
+                        // Find first empty slot or add new
+                        const emptyIndex = ingredients.findIndex(i => !i.trim());
+                        if (emptyIndex >= 0) {
+                          handleIngredientChange(emptyIndex, suggestion);
+                        } else {
+                          setIngredients([...ingredients, suggestion]);
+                        }
+                      }}
+                      disabled={isGenerating || isSaving}
+                      className="px-3 py-1.5 bg-white dark:bg-gray-700 border border-purple-300 dark:border-purple-600 rounded-full text-sm text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-800/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      {suggestion}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-purple-600 dark:text-purple-400 mt-2">
+                  Click any suggestion to add it to your recipe
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Meal Type */}

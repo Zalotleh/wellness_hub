@@ -1,9 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Sparkles, Loader2, User, Users, Globe, ChefHat, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Sparkles, Loader2, User, Users, Globe, ChefHat, AlertCircle, TrendingUp, Lightbulb } from 'lucide-react';
 import { DefenseSystem } from '@/types';
 import SystemSelector from './SystemSelector';
+import OnboardingModal from '@/components/ai-generation/OnboardingModal';
+import { trackGeneration, getStats, getEncouragementMessage } from '@/lib/ai-generation/progress-tracker';
+import { getMealPlanSuggestions, getSuggestedTitles } from '@/lib/ai-generation/mealplan-suggestions';
 
 interface ConfigurationData {
   title: string;
@@ -35,6 +38,50 @@ export default function PlanConfiguration({
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [showTips, setShowTips] = useState(true);
+
+  // Phase 2: Onboarding and tracking
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [generationStats, setGenerationStats] = useState<any>(null);
+  const [encouragementMessage, setEncouragementMessage] = useState<string>('');
+  const [smartSuggestions, setSmartSuggestions] = useState<any[]>([]);
+  const [suggestedTitles, setSuggestedTitles] = useState<string[]>([]);
+
+  // Check if this is the user's first time
+  useEffect(() => {
+    const hasSeenOnboarding = localStorage.getItem('meal_plan_onboarding_completed');
+    if (!hasSeenOnboarding) {
+      setShowOnboarding(true);
+    }
+  }, []);
+
+  // Load generation stats
+  useEffect(() => {
+    const stats = getStats('mealplan');
+    setGenerationStats(stats);
+    
+    if (stats.totalAttempts > 0) {
+      const message = getEncouragementMessage(stats);
+      setEncouragementMessage(message);
+    }
+  }, [configuration]);
+
+  // Generate smart suggestions based on configuration
+  useEffect(() => {
+    const suggestions = getMealPlanSuggestions(
+      configuration.focusSystems,
+      configuration.duration,
+      configuration.servings,
+      configuration.dietaryRestrictions
+    );
+    setSmartSuggestions(suggestions);
+
+    const titles = getSuggestedTitles(
+      configuration.focusSystems,
+      configuration.duration,
+      configuration.dietaryRestrictions
+    );
+    setSuggestedTitles(titles);
+  }, [configuration.focusSystems, configuration.duration, configuration.servings, configuration.dietaryRestrictions]);
 
   // Quality Score Calculator for Meal Plans
   const calculateQualityScore = () => {
@@ -179,6 +226,16 @@ export default function PlanConfiguration({
 
   const handleGenerate = () => {
     if (validateConfiguration()) {
+      // Track generation attempt
+      trackGeneration(
+        true,
+        qualityData.score,
+        configuration.focusSystems.length,
+        configuration.dietaryRestrictions.length > 0,
+        configuration.duration >= 2,
+        'mealplan'
+      );
+      
       onGenerate();
     }
   };
@@ -211,8 +268,42 @@ export default function PlanConfiguration({
     });
   };
 
+  const handleOnboardingComplete = () => {
+    localStorage.setItem('meal_plan_onboarding_completed', 'true');
+    setShowOnboarding(false);
+  };
+
   return (
     <div className={`max-w-4xl mx-auto ${className}`}>
+      {/* Onboarding Modal */}
+      <OnboardingModal 
+        show={showOnboarding} 
+        onComplete={handleOnboardingComplete}
+        context="mealplan"
+      />
+
+      {/* Encouragement Banner */}
+      {encouragementMessage && generationStats && generationStats.totalAttempts > 0 && (
+        <div className="mb-6 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200 dark:border-purple-700 rounded-lg p-4">
+          <div className="flex items-start space-x-3">
+            <div className="flex-shrink-0">
+              <TrendingUp className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-purple-900 dark:text-purple-100">
+                {encouragementMessage}
+              </p>
+              {generationStats.successfulGenerations > 0 && (
+                <p className="text-xs text-purple-700 dark:text-purple-300 mt-1">
+                  Success rate: {Math.round((generationStats.successfulGenerations / generationStats.totalAttempts) * 100)}% 
+                  • Average quality: {generationStats.averageQualityScore.toFixed(1)}/5.0
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 sm:p-8 border dark:border-gray-700">
         {/* Header */}
         <div className="text-center mb-8">
@@ -372,6 +463,30 @@ export default function PlanConfiguration({
               <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                 {configuration.title.length}/100 characters
               </div>
+              
+              {/* Suggested Titles */}
+              {!configuration.title && suggestedTitles.length > 0 && (
+                <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <div className="flex items-start space-x-2 mb-2">
+                    <Lightbulb className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                    <p className="text-xs font-medium text-blue-900 dark:text-blue-100">
+                      Suggested titles based on your selections:
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {suggestedTitles.map((title, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => onConfigurationChange({ title })}
+                        className="text-xs px-3 py-1.5 bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
+                      >
+                        {title}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Description */}
@@ -634,6 +749,41 @@ export default function PlanConfiguration({
               </div>
             )}
           </div>
+
+          {/* Smart Suggestions Panel */}
+          {smartSuggestions.length > 0 && (
+            <div className="mt-6 p-5 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg">
+              <div className="flex items-start space-x-3 mb-4">
+                <Lightbulb className="w-5 h-5 text-indigo-600 dark:text-indigo-400 mt-0.5 flex-shrink-0" />
+                <div>
+                  <h4 className="font-semibold text-indigo-900 dark:text-indigo-100 mb-1">
+                    Smart Suggestions
+                  </h4>
+                  <p className="text-xs text-indigo-700 dark:text-indigo-300">
+                    Personalized tips based on your configuration
+                  </p>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                {smartSuggestions.map((suggestion, idx) => (
+                  <div key={idx} className="bg-white/70 dark:bg-gray-800/70 rounded-lg p-3">
+                    <p className="text-xs font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                      {suggestion.category}
+                    </p>
+                    <ul className="space-y-1">
+                      {suggestion.suggestions.map((tip: string, tipIdx: number) => (
+                        <li key={tipIdx} className="text-xs text-gray-700 dark:text-gray-300 flex items-start">
+                          <span className="text-indigo-500 mr-2">•</span>
+                          <span>{tip}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Generate Button */}
           <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
