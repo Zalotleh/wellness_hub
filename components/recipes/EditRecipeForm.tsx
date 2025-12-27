@@ -97,11 +97,11 @@ export default function EditRecipeForm({ recipe }: EditRecipeFormProps) {
       // Show success message
       setShowSuccess(true);
 
-      // Redirect after 3 seconds to give user time to see success
+      // Redirect after 2 seconds
       setTimeout(() => {
         router.push(`/recipes/${recipe.id}`);
         router.refresh();
-      }, 3000);
+      }, 2000);
     } catch (error) {
       console.error('Error updating recipe:', error);
       throw error; // Re-throw so RecipeForm can handle it
@@ -116,10 +116,10 @@ export default function EditRecipeForm({ recipe }: EditRecipeFormProps) {
             <CheckCircle2 className="w-12 h-12 text-white" />
           </div>
           <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-3">
-            Recipe Updated Successfully!
+            Saving Your Recipe...
           </h2>
           <p className="text-gray-600 dark:text-gray-300 mb-6 text-lg">
-            Your changes have been saved.
+            Your changes have been saved successfully!
           </p>
           
           <div className="space-y-3">
@@ -130,7 +130,7 @@ export default function EditRecipeForm({ recipe }: EditRecipeFormProps) {
               View Recipe Now
             </button>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Auto-redirecting in 3 seconds...
+              Redirecting in 2 seconds...
             </p>
           </div>
         </div>
