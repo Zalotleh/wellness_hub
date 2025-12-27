@@ -405,6 +405,47 @@ export default function RecipeForm({
                   </div>
                 </div>
               )}
+              {/* Live ingredient preview (show ingredients added so far while still on Step 1) */}
+              {formData.ingredients && formData.ingredients.some(ing => ing.name.trim()) && (
+                <div className="mt-4 p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700">
+                  <div className="flex items-center justify-between">
+                    <h5 className="text-sm font-semibold text-gray-800 dark:text-white">Ingredient preview</h5>
+                    <button
+                      type="button"
+                      onClick={() => setCurrentStep(2)}
+                      className="text-xs px-3 py-1 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors"
+                    >
+                      Edit ingredients
+                    </button>
+                  </div>
+
+                  <div className="mt-3 grid grid-cols-1 gap-2">
+                    {formData.ingredients
+                      .filter((ing) => ing.name.trim())
+                      .slice(0, 6)
+                      .map((ing, idx) => (
+                        <div key={idx} className="flex items-center justify-between text-sm text-gray-700 dark:text-gray-200">
+                          <div className="flex items-center gap-3">
+                            <span className="inline-block w-2 h-2 bg-green-500 rounded-full" />
+                            <div>
+                              <div className="font-medium">{ing.name}</div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400">{ing.quantity || "—"} {ing.unit || ''}</div>
+                            </div>
+                          </div>
+                          <div>
+                            <button
+                              type="button"
+                              onClick={() => setCurrentStep(2)}
+                              className="text-xs text-gray-600 dark:text-gray-300 hover:underline"
+                            >
+                              Edit
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Time and Servings */}
