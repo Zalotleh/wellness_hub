@@ -282,11 +282,15 @@ Admin Dashboard: See ai recipe/meal plan, shopping list generating validation fa
 
 Other fixes:
 - ✅ FIXED (Dec 27, 2025): Manual recipe creation UX - Merged Steps 1 & 2 into two-column Recipe Setup. Key Foods on left, live ingredients on right. Simplified from 4 steps to 3 steps (Recipe Setup → Instructions → Review).
-- in manual recipe creator, when user creates or updates a recipe, when reaches the review step, the review steps shows/appears for a very short period of time and then user is redirected to the recipe page.
+- ✅ FIXED (Dec 27, 2025): Recipe review step - Added success screen with 3-second delay before redirect. Users can now properly review their recipe on Step 3, then see clear success feedback after submitting before being redirected. Applies to both create and update flows.
 - add imgae to the recipe, manual recipe generator. can we for AI recipe generator?
+
 - when user is logged, and goes to home page, he is recirected to the home page before signing in, is uer is signed in, then should be redirected to the recipes page, or create another hom age for signed in users.
+
 - in a saved meal plan, in the day view, user can add a new breakfast, new launch, , new dinner, what if we rename this to Add new Meal or snack instead, as users can add whatever they want?
-_ in the saved meal plan, in the day view, if i click on the ... to copy meal,edit, delete the meal, the drop dwon menu is having the same recipe card view, which means that if teh menu card is short(small vertically) then part of the menu will not show as it is hidden behind the page's backgound.
+
+- in the saved meal plan, in the day view, if i click on the ... to copy meal,edit, delete the meal, the drop dwon menu is having the same recipe card view, which means that if teh menu card is short(small vertically) then part of the menu will not show as it is hidden behind the page's backgound.
+
 - in the meal plan generator page, the defense system information message which shows on hovering over the defense system, show vertically,the text is wrapped vertically, like 2 words in each line, can we have better UI for it?
 - when user signs out they are redirected to this url: https://your-domain.com/login
 - create pages: ABout, FAQ, contact, cookie policy, blog or community? add community link to the footer
