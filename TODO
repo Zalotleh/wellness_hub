@@ -288,7 +288,7 @@ Other fixes:
 
 - ✅ FIXED (Dec 27, 2025): Home page redirect - Authenticated users visiting home page (/) are now automatically redirected to /recipes page. Landing page with sign in/sign up only shows for non-authenticated users.
 
-- in a saved meal plan, in the day view, user can add a new breakfast, new launch, , new dinner, what if we rename this to Add new Meal or snack instead, as users can add whatever they want?
+- ✅ FIXED (Dec 27, 2025): Meal plan add button labels - Renamed "Add Breakfast/Lunch/Dinner" buttons to "Add Meal or Snack" throughout meal plan day view. Users can now add any type of meal or snack to any time slot, providing more flexibility.
 
 - in the saved meal plan, in the day view, if i click on the ... to copy meal,edit, delete the meal, the drop dwon menu is having the same recipe card view, which means that if teh menu card is short(small vertically) then part of the menu will not show as it is hidden behind the page's backgound.
 

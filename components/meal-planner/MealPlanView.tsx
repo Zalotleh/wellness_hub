@@ -204,7 +204,7 @@ export default function MealPlanView({
         >
           <span className="text-base">{slotIcon}</span>
           <Plus className="w-4 h-4" />
-          <span>Add {slotLabel}</span>
+          <span>Add Meal or Snack</span>
         </button>
       </div>
     );
@@ -591,7 +591,7 @@ export default function MealPlanView({
                               >
                                 <span>{slot.icon}</span>
                                 <Plus className="w-3 h-3" />
-                                <span>Add {slot.label}</span>
+                                <span>Add Meal or Snack</span>
                               </button>
                             );
                           }
@@ -704,10 +704,11 @@ export default function MealPlanView({
                           <button
                             key={slot.key}
                             onClick={() => onAddMeal(day.key, slot.key)}
-                            className="w-full text-left px-2 py-1.5 bg-gray-50 dark:bg-gray-700 rounded text-xs text-gray-500 dark:text-gray-300 hover:bg-green-50 hover:text-green-600 transition-colors"
+                            className="w-full text-left px-2 py-1.5 bg-gray-50 dark:bg-gray-700 rounded text-xs text-gray-500 dark:text-gray-300 hover:bg-green-50 hover:text-green-600 transition-colors flex items-center gap-1"
                           >
-                            <span className="mr-1">{slot.icon}</span>
-                            {slot.label}
+                            <span>{slot.icon}</span>
+                            <Plus className="w-3 h-3" />
+                            <span>Add Meal or Snack</span>
                           </button>
                         );
                       }
