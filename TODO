@@ -286,7 +286,7 @@ Other fixes:
 
 - ✅ FIXED (Dec 27, 2025): Recipe images - Manual recipe image upload implemented with URL input + file upload (max 10MB). Server-side optimization with Sharp: creates optimized WebP versions (85% quality, max 1920px) + thumbnails (400x400, 80% quality). Uses Next.js Image component for automatic optimization and lazy loading. Saves ~60-70% storage per image. Local filesystem storage at /public/uploads/recipes/. Ready for AI recipe generator integration.
 
-- when user is logged, and goes to home page, he is recirected to the home page before signing in, is uer is signed in, then should be redirected to the recipes page, or create another hom age for signed in users.
+- ✅ FIXED (Dec 27, 2025): Home page redirect - Authenticated users visiting home page (/) are now automatically redirected to /recipes page. Landing page with sign in/sign up only shows for non-authenticated users.
 
 - in a saved meal plan, in the day view, user can add a new breakfast, new launch, , new dinner, what if we rename this to Add new Meal or snack instead, as users can add whatever they want?
 

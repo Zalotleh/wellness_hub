@@ -1,11 +1,20 @@
-'use client';
-
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { Heart, ChefHat, TrendingUp, Users, Sparkles, ArrowRight, Check } from 'lucide-react';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
 import { DefenseSystem } from '@/types';
 
-export default function HomePage() {
+export default async function HomePage() {
+  // Check if user is authenticated
+  const session = await getServerSession(authOptions);
+  
+  // If user is logged in, redirect to recipes page
+  if (session) {
+    redirect('/recipes');
+  }
+
   const features = [
     {
       icon: ChefHat,
