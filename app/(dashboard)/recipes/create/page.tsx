@@ -4,12 +4,13 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import RecipeForm from '@/components/recipes/RecipeForm';
 import { RecipeFormData } from '@/types';
-import { ChefHat, ArrowLeft } from 'lucide-react';
+import { ChefHat, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function CreateRecipePage() {
   const router = useRouter();
   const [showSuccess, setShowSuccess] = useState(false);
+  const [createdRecipeId, setCreatedRecipeId] = useState<string | null>(null);
 
   const handleSubmit = async (data: RecipeFormData) => {
     const response = await fetch('/api/recipes', {
@@ -25,34 +26,51 @@ export default function CreateRecipePage() {
 
     const { data: newRecipe } = await response.json();
 
-    // Show success message
+    // Store the recipe ID and show success message
+    setCreatedRecipeId(newRecipe.id);
     setShowSuccess(true);
 
-    // Redirect after 2 seconds
+    // Redirect after 3 seconds to give user time to see success
     setTimeout(() => {
       router.push(`/recipes/${newRecipe.id}`);
-    }, 2000);
+    }, 3000);
   };
 
   const handleCancel = () => {
     router.push('/recipes');
   };
 
+  const handleViewNow = () => {
+    if (createdRecipeId) {
+      router.push(`/recipes/${createdRecipeId}`);
+    }
+  };
+
   if (showSuccess) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 max-w-md text-center">
-          <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-            <ChefHat className="w-8 h-8 text-white" />
+          <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
+            <CheckCircle2 className="w-12 h-12 text-white" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
+          <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-3">
             Recipe Created Successfully!
           </h2>
-          <p className="text-gray-600 dark:text-gray-200 mb-4">
+          <p className="text-gray-600 dark:text-gray-300 mb-6 text-lg">
             Your recipe has been saved and is now visible to the community.
           </p>
-          <div className="animate-spin w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full mx-auto"></div>
-          <p className="text-sm text-gray-500 dark:text-gray-300 mt-4">Redirecting...</p>
+          
+          <div className="space-y-3">
+            <button
+              onClick={handleViewNow}
+              className="w-full px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-semibold"
+            >
+              View Recipe Now
+            </button>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Auto-redirecting in 3 seconds...
+            </p>
+          </div>
         </div>
       </div>
     );

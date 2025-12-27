@@ -1,8 +1,10 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { RecipeFormData, RecipeWithRelations } from '@/types';
 import RecipeForm from './RecipeForm';
+import { CheckCircle2 } from 'lucide-react';
 
 interface EditRecipeFormProps {
   recipe: RecipeWithRelations;
@@ -11,8 +13,13 @@ interface EditRecipeFormProps {
 
 export default function EditRecipeForm({ recipe }: EditRecipeFormProps) {
   const router = useRouter();
+  const [showSuccess, setShowSuccess] = useState(false);
   
   const handleCancel = () => {
+    router.push(`/recipes/${recipe.id}`);
+  };
+
+  const handleViewNow = () => {
     router.push(`/recipes/${recipe.id}`);
   };
 
@@ -87,13 +94,49 @@ export default function EditRecipeForm({ recipe }: EditRecipeFormProps) {
         throw new Error('Failed to update recipe');
       }
 
-      router.refresh(); // Refresh the server components
-      router.push(`/recipes/${recipe.id}`); // Redirect to recipe page
-      router.refresh();
+      // Show success message
+      setShowSuccess(true);
+
+      // Redirect after 3 seconds to give user time to see success
+      setTimeout(() => {
+        router.push(`/recipes/${recipe.id}`);
+        router.refresh();
+      }, 3000);
     } catch (error) {
       console.error('Error updating recipe:', error);
+      throw error; // Re-throw so RecipeForm can handle it
     }
   };
+
+  if (showSuccess) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 max-w-md text-center">
+          <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
+            <CheckCircle2 className="w-12 h-12 text-white" />
+          </div>
+          <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-3">
+            Recipe Updated Successfully!
+          </h2>
+          <p className="text-gray-600 dark:text-gray-300 mb-6 text-lg">
+            Your changes have been saved.
+          </p>
+          
+          <div className="space-y-3">
+            <button
+              onClick={handleViewNow}
+              className="w-full px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-semibold"
+            >
+              View Recipe Now
+            </button>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Auto-redirecting in 3 seconds...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
