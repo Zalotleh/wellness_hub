@@ -184,7 +184,8 @@ export default function RecipeForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateStep2()) {
+    // Only allow submission from Step 3 (Review)
+    if (currentStep !== 3) {
       return;
     }
 
