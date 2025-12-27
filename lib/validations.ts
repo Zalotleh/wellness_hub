@@ -21,7 +21,11 @@ export const recipeSchema = z.object({
   servings: z.number().int().positive().optional(),
   defenseSystems: z.array(z.nativeEnum(DefenseSystem)).min(1, 'Please select at least one defense system'),
   nutrients: z.record(z.string()).optional(),
-  imageUrl: z.union([z.string().url('Invalid image URL'), z.literal('')]).optional(),
+  imageUrl: z.union([
+    z.string().url('Invalid image URL'), // Full URLs (https://...)
+    z.string().startsWith('/uploads/', 'Invalid image path'), // Local uploads (/uploads/...)
+    z.literal('') // Empty string
+  ]).optional(),
 });
 
 export type RecipeSchemaType = z.infer<typeof recipeSchema>;

@@ -6,6 +6,7 @@ import { Plus, X, Clock, Users, ChefHat, Loader2 } from 'lucide-react';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
 import { getUnitsBySystem, getSuggestedUnitsBySystem, getUnitLabel } from '@/lib/constants/measurement-units';
 import { getMeasurementPreference } from '@/lib/shopping/measurement-system';
+import ImageUploader from './ImageUploader';
 
 interface RecipeFormProps {
   onSubmit: (data: RecipeFormData) => Promise<void>;
@@ -547,6 +548,23 @@ export default function RecipeForm({
                     </span>
                   </div>
                 </button>
+
+                {/* Recipe Image */}
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4">
+                    Recipe Image (Optional)
+                  </h3>
+                  <ImageUploader
+                    currentImageUrl={formData.imageUrl}
+                    onSave={(imageUrl) => {
+                      setFormData(prev => ({ ...prev, imageUrl }));
+                    }}
+                    onRemove={() => {
+                      setFormData(prev => ({ ...prev, imageUrl: '' }));
+                    }}
+                    allowUpload={true}
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -609,6 +627,20 @@ export default function RecipeForm({
                   })}
                 </div>
               </div>
+
+              {/* Recipe Image Preview */}
+              {formData.imageUrl && (
+                <div className="rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-700">
+                  <img
+                    src={formData.imageUrl}
+                    alt={formData.title}
+                    className="w-full h-64 object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </div>
+              )}
 
               {/* Description */}
               {formData.description && (
