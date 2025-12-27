@@ -65,7 +65,7 @@ export default function Navbar() {
       items: [
         { href: '/recipes', label: 'Browse Recipes', icon: ChefHat },
         { href: '/recipes/ai-generate', label: 'AI Recipe Generator', icon: Sparkles },
-        { href: '/recipes/create', label: 'Create Recipe', icon: PlusCircle },
+        { href: '/recipes/create', label: 'Add Your Own Recipe', icon: PlusCircle },
       ],
     },
     {

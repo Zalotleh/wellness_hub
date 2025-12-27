@@ -285,7 +285,7 @@ export default function MealPlanView({
                       <div className="w-6 h-6 bg-gray-100 dark:bg-gray-700 group-hover:bg-green-200 rounded-full flex items-center justify-center transition-colors">
                         <Plus className="w-4 h-4" />
                       </div>
-                      <span className="font-medium">Add Another {slot.label}</span>
+                      <span className="font-medium">Add a Snack or Another Meal</span>
                     </button>
                   </div>
                 ) : (
