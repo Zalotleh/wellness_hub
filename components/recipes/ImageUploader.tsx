@@ -72,10 +72,10 @@ export default function ImageUploader({
   const handleFileSelect = async (file: File) => {
     setError('');
 
-    // Validate file size (5MB max)
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    // Validate file size (10MB max)
+    const maxSize = 10 * 1024 * 1024; // 10MB
     if (file.size > maxSize) {
-      setError('File size must be less than 5MB');
+      setError('File size must be less than 10MB');
       return;
     }
 
@@ -259,7 +259,7 @@ export default function ImageUploader({
                 {isUploading ? 'Uploading...' : 'Click to upload or drag and drop'}
               </span>
               <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                JPG, PNG, WEBP, or GIF (max 5MB)
+                JPG, PNG, WEBP, or GIF (max 10MB)
               </span>
             </label>
           </div>

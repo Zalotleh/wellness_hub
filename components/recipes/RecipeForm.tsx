@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { DefenseSystem, RecipeFormData } from '@/types';
 import { Plus, X, Clock, Users, ChefHat, Loader2 } from 'lucide-react';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
@@ -631,14 +632,16 @@ export default function RecipeForm({
               {/* Recipe Image Preview */}
               {formData.imageUrl && (
                 <div className="rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-700">
-                  <img
-                    src={formData.imageUrl}
-                    alt={formData.title}
-                    className="w-full h-64 object-cover"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
+                  <div className="relative w-full h-64">
+                    <Image
+                      src={formData.imageUrl}
+                      alt={formData.title || 'Recipe image'}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      priority={false}
+                    />
+                  </div>
                 </div>
               )}
 

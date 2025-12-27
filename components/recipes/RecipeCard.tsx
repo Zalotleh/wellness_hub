@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { RecipeWithRelations } from '@/types';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
 import { Star, Clock, User, Heart, MessageCircle, ChefHat } from 'lucide-react';
@@ -17,13 +18,15 @@ export default function RecipeCard({ recipe, onFavorite, onFilterByCreator }: Re
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 overflow-hidden group border dark:border-gray-700">
-      {/* Image Placeholder */}
+      {/* Image */}
       <div className="relative h-48 bg-gradient-to-br from-green-400 to-blue-400 flex items-center justify-center overflow-hidden">
         {recipe.imageUrl ? (
-          <img
+          <Image
             src={recipe.imageUrl}
             alt={recipe.title}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+            fill
+            className="object-cover group-hover:scale-110 transition-transform duration-300"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
         ) : (
           <ChefHat className="w-24 h-24 text-white opacity-50 group-hover:scale-110 transition-transform duration-300" />
