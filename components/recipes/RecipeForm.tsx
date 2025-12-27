@@ -27,6 +27,7 @@ export default function RecipeForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [measurementSystem, setMeasurementSystem] = useState<'imperial' | 'metric'>('imperial');
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+  const [canSubmit, setCanSubmit] = useState(false);
 
   // Get user's measurement preference on mount
   useEffect(() => {
@@ -183,12 +184,16 @@ export default function RecipeForm({
   // Form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Only allow submission from Step 3 (Review)
-    if (currentStep !== 3) {
+    
+    console.log('handleSubmit called - Step:', currentStep, 'canSubmit:', canSubmit);
+    
+    // Prevent any accidental submission - only process on Step 3 AND if submit was explicitly clicked
+    if (currentStep !== 3 || !canSubmit) {
+      console.log('Form submission blocked - Step:', currentStep, 'canSubmit:', canSubmit);
       return;
     }
 
+    console.log('Processing submission from Step 3');
     setIsSubmitting(true);
 
     try {
@@ -205,6 +210,7 @@ export default function RecipeForm({
       setErrors({ submit: error.message || 'Failed to save recipe' });
     } finally {
       setIsSubmitting(false);
+      setCanSubmit(false); // Reset the flag
     }
   };
 
@@ -701,6 +707,10 @@ export default function RecipeForm({
               <button
                 type="submit"
                 disabled={isSubmitting}
+                onClick={() => {
+                  console.log('Submit button clicked - enabling submission');
+                  setCanSubmit(true);
+                }}
                 className="px-8 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
               >
                 {isSubmitting ? (
