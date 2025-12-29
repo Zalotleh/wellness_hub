@@ -285,21 +285,21 @@ export default function SystemSelector({
 
                 {/* Enhanced Hover Tooltip */}
                 {showTooltip === key && !isDisabled && (
-                  <div className="absolute z-20 bottom-full left-1/2 transform -translate-x-1/2 mb-3 opacity-0 animate-fade-in">
-                    <div className="px-4 py-3 bg-gray-900 dark:bg-gray-800 text-white text-sm rounded-xl shadow-2xl max-w-xs border border-gray-700 dark:border-gray-600">
+                  <div className="absolute z-20 bottom-full left-1/2 transform -translate-x-1/2 mb-3 opacity-0 animate-fade-in pointer-events-none">
+                    <div className="px-5 py-4 bg-gray-900 dark:bg-gray-800 text-white text-sm rounded-xl shadow-2xl min-w-[280px] max-w-md border border-gray-700 dark:border-gray-600">
                       <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 bg-gray-800 dark:bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <Info className="w-4 h-4 text-gray-300 dark:text-gray-400" />
+                        <div className="w-9 h-9 bg-gray-800 dark:bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <Info className="w-5 h-5 text-gray-300 dark:text-gray-400" />
                         </div>
-                        <div>
-                          <div className="font-semibold text-white">{system.displayName}</div>
-                          <div className="text-gray-300 dark:text-gray-400 mt-1 text-xs leading-relaxed">
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-white mb-2">{system.displayName}</div>
+                          <div className="text-gray-300 dark:text-gray-400 text-xs leading-relaxed whitespace-normal">
                             {system.description}
                           </div>
                           {system.keyFoods && system.keyFoods.length > 0 && (
-                            <div className="mt-2 pt-2 border-t border-gray-700 dark:border-gray-600">
-                              <div className="text-xs font-medium text-gray-400 mb-1">Key Foods:</div>
-                              <div className="text-xs text-gray-300 dark:text-gray-400">
+                            <div className="mt-3 pt-3 border-t border-gray-700 dark:border-gray-600">
+                              <div className="text-xs font-medium text-gray-400 mb-2">Key Foods:</div>
+                              <div className="text-xs text-gray-300 dark:text-gray-400 leading-relaxed">
                                 {system.keyFoods.slice(0, 3).join(', ')}
                                 {system.keyFoods.length > 3 && `...`}
                               </div>

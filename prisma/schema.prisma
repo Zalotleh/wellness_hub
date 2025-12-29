@@ -235,6 +235,7 @@ model Meal {
   id                 String           @id @default(cuid())
   dailyMenuId        String
   mealType           String
+  slot               String?          // Where the meal appears (breakfast/lunch/dinner/snack section)
   mealName           String
   servings           Int?
   defenseSystems     String[]

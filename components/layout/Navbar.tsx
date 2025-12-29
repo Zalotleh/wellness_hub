@@ -112,7 +112,15 @@ export default function Navbar() {
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
 
   const handleSignOut = async () => {
-    await signOut({ callbackUrl: '/login' });
+    // Clear any cached pages to prevent back button from showing stale data
+    if (typeof window !== 'undefined' && 'caches' in window) {
+      // Clear all caches
+      caches.keys().then(names => {
+        names.forEach(name => caches.delete(name));
+      });
+    }
+    
+    await signOut({ callbackUrl: '/' });
   };
 
   return (

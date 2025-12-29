@@ -105,6 +105,7 @@ export async function POST(request: NextRequest) {
       data: {
         dailyMenuId: dailyMenu.id,
         mealType: mealType || slot,
+        slot: slot, // Persist the slot so meal stays in place on refresh
         mealName: mealName || `New ${slot.charAt(0).toUpperCase() + slot.slice(1)}`,
         servings: servings || 2,
         defenseSystems: defenseSystems || [],
@@ -128,11 +129,17 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ Meal created successfully:', newMeal.id);
 
-    // Return the meal with the day and slot info for client state management
+    // Calculate week number from the meal plan
+    const planWeekStart = new Date(mealPlan.weekStart);
+    const mealDate = new Date(dailyMenu.date);
+    const weekNumber = Math.floor((mealDate.getTime() - planWeekStart.getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1;
+
+    // Return the meal with the day, slot, and week info for client state management
     return NextResponse.json({
       ...newMeal,
       day,
       slot,
+      week: weekNumber,
     });
   } catch (error: any) {
     console.error('💥 Error adding meal:', error);
@@ -173,6 +180,13 @@ export async function PATCH(request: NextRequest) {
           },
         },
       },
+      include: {
+        dailyMenu: {
+          include: {
+            mealPlan: true,
+          },
+        },
+      },
     });
 
     if (!meal) {
@@ -206,7 +220,21 @@ export async function PATCH(request: NextRequest) {
 
     console.log('✅ Meal updated successfully:', updatedMeal.id);
 
-    return NextResponse.json(updatedMeal);
+    // Calculate day, slot, and week from the meal's dailyMenu
+    const mealDate = new Date(meal.dailyMenu.date);
+    const planWeekStart = new Date(meal.dailyMenu.mealPlan.weekStart);
+    const dayOfWeek = mealDate.getDay();
+    const dayMapping = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const day = dayMapping[dayOfWeek];
+    const weekNumber = Math.floor((mealDate.getTime() - planWeekStart.getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1;
+
+    // Return the complete meal object with day, slot (from DB or fallback to mealType), and week
+    return NextResponse.json({
+      ...updatedMeal,
+      day,
+      slot: updatedMeal.slot || updatedMeal.mealType, // Use persisted slot, fallback to mealType for backward compatibility
+      week: weekNumber,
+    });
   } catch (error: any) {
     console.error('💥 Error updating meal:', error);
     return NextResponse.json(

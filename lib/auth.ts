@@ -48,15 +48,29 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   pages: {
-    signIn: '/auth/login',
-    signOut: '/auth/logout',
-    error: '/auth/error',
+    signIn: '/login',
+    error: '/login',
   },
   session: {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      // Handle sign-out redirects
+      if (url.startsWith('/api/auth/signout')) {
+        return baseUrl;
+      }
+      // Redirect to login if trying to access auth routes
+      if (url.includes('/auth/login') || url.includes('/auth/logout')) {
+        return `${baseUrl}/login`;
+      }
+      // Allows relative callback URLs
+      if (url.startsWith('/')) return `${baseUrl}${url}`;
+      // Allows callback URLs on the same origin
+      else if (new URL(url).origin === baseUrl) return url;
+      return baseUrl;
+    },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;

@@ -62,7 +62,7 @@ export default function MealPlanViewPage() {
                 mealName: meal.mealName || 'Unnamed Meal',
                 mealType: meal.mealType || 'breakfast',
                 day: dayName,
-                slot: meal.mealType || 'breakfast',
+                slot: meal.slot || meal.mealType || 'breakfast', // Use persisted slot, fallback to mealType
                 week: weekNumber,
                 defenseSystems: meal.defenseSystems || [],
                 prepTime: meal.prepTime ? (typeof meal.prepTime === 'string' ? parseInt(meal.prepTime) : meal.prepTime) : 30,

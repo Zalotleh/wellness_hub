@@ -10,6 +10,7 @@ import ShareMenu from './ShareMenu';
 import MealPlanHeader from './MealPlanHeader';
 import PlanConfiguration from './PlanConfiguration';
 import MealPlanView from './MealPlanView';
+import AddMealModal from './AddMealModal';
 import { ConfirmDialog } from '@/components/ui/DialogComponents';
 import {
   GeneratingOverlay,
@@ -130,6 +131,10 @@ export default function EnhancedMealPlanner({
   // Progress tracking
   const [generationProgress, setGenerationProgress] = useState(0);
   const [shoppingListGenerated, setShoppingListGenerated] = useState(0); // Counter to trigger refresh
+
+  // Meal type selector state
+  const [showMealTypeSelector, setShowMealTypeSelector] = useState(false);
+  const [pendingMealAdd, setPendingMealAdd] = useState<{ day: string; slot: string; week?: number } | null>(null);
 
   // Initialize with existing plan if provided
   useEffect(() => {
@@ -441,7 +446,10 @@ export default function EnhancedMealPlanner({
   const handleMealUpdate = useCallback(async (mealId: string, updates: Partial<Meal>) => {
     setOptimisticAction('Updating meal');
     
-    // Optimistic update
+    // Store original meal for potential rollback
+    const originalMeal = mealPlan.meals.find(m => m.id === mealId);
+    
+    // Optimistic update - preserve all fields, only update what's changed
     setMealPlan(prev => ({
       ...prev,
       meals: prev.meals.map(meal => 
@@ -450,12 +458,13 @@ export default function EnhancedMealPlanner({
     }));
 
     try {
-      const response = await fetch(`/api/meals/${mealId}`, {
+      // Server expects PATCH to /api/meals with body { mealId, updates }
+      const response = await fetch(`/api/meals`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(updates),
+        body: JSON.stringify({ mealId, updates }),
       });
 
       if (!response.ok) {
@@ -464,7 +473,7 @@ export default function EnhancedMealPlanner({
 
       const updatedMeal = await response.json();
       
-      // Update with actual server response
+      // Update with actual server response (includes day, slot, week from server)
       setMealPlan(prev => ({
         ...prev,
         meals: prev.meals.map(meal => 
@@ -475,13 +484,15 @@ export default function EnhancedMealPlanner({
     } catch (error) {
       console.error('Error updating meal:', error);
       
-      // Revert optimistic update
-      setMealPlan(prev => ({
-        ...prev,
-        meals: prev.meals.map(meal => 
-          meal.id === mealId ? meal : meal
-        ),
-      }));
+      // Revert optimistic update to original state
+      if (originalMeal) {
+        setMealPlan(prev => ({
+          ...prev,
+          meals: prev.meals.map(meal => 
+            meal.id === mealId ? originalMeal : meal
+          ),
+        }));
+      }
       
       setError('Failed to update meal');
     } finally {
@@ -503,7 +514,8 @@ export default function EnhancedMealPlanner({
     }));
 
     try {
-      const response = await fetch(`/api/meals/${mealId}`, {
+      // Server expects DELETE to /api/meals?mealId=<id>
+      const response = await fetch(`/api/meals?mealId=${encodeURIComponent(mealId)}`, {
         method: 'DELETE',
       });
 
@@ -587,15 +599,23 @@ export default function EnhancedMealPlanner({
   }, []);
 
   // Add new meal
-  const handleAddMeal = useCallback(async (day: string, slot: string) => {
+  const handleAddMeal = useCallback(async (day: string, slot: string, mealType?: string, week?: number) => {
+    // If no mealType provided, show selector
+    if (!mealType) {
+      setPendingMealAdd({ day, slot, week });
+      setShowMealTypeSelector(true);
+      return;
+    }
+
     setOptimisticAction('Adding meal');
     
     const newMeal: Meal = {
       id: `temp-${Date.now()}`,
-      mealType: slot,
-      mealName: `New ${slot.charAt(0).toUpperCase() + slot.slice(1)}`,
+      mealType: mealType,
+      mealName: `New ${ mealType.charAt(0).toUpperCase() + mealType.slice(1) }`,
       day,
       slot,
+      week: week || 1,
       defenseSystems: [],
       servings: configuration.servings,
     };
@@ -648,7 +668,19 @@ export default function EnhancedMealPlanner({
     }
   }, [configuration.servings, mealPlan.id]);
 
-  // Regenerate meal
+  // Handle meal type selection from modal
+  const handleMealTypeSelected = useCallback((selectedMealType: string, selectedSlot: string) => {
+    setShowMealTypeSelector(false);
+    if (pendingMealAdd) {
+      handleAddMeal(pendingMealAdd.day, selectedSlot, selectedMealType, pendingMealAdd.week);
+      setPendingMealAdd(null);
+    }
+  }, [pendingMealAdd, handleAddMeal]);
+
+  const handleMealTypeSelectorCancel = useCallback(() => {
+    setShowMealTypeSelector(false);
+    setPendingMealAdd(null);
+  }, []);  // Regenerate meal
   const handleRegenerateMeal = useCallback(async (mealId: string) => {
     setOptimisticAction('Regenerating meal');
     
@@ -1146,6 +1178,15 @@ export default function EnhancedMealPlanner({
         isVisible={!!optimisticAction}
         action={optimisticAction || ''}
       />
+
+      {/* Meal Add Modal */}
+      {showMealTypeSelector && pendingMealAdd && (
+        <AddMealModal
+          currentSlot={pendingMealAdd.slot}
+          onSelect={handleMealTypeSelected}
+          onCancel={handleMealTypeSelectorCancel}
+        />
+      )}
 
       {/* Error display */}
       {error && (

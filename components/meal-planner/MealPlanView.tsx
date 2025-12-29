@@ -27,7 +27,7 @@ interface MealPlanViewProps {
   onMealUpdate: (mealId: string, updates: Partial<Meal>) => void;
   onMealDelete: (mealId: string) => void;
   onMealCopy: (meal: Meal) => void;
-  onAddMeal: (day: string, slot: string) => void;
+  onAddMeal: (day: string, slot: string, mealType?: string, week?: number) => void;
   onRegenerateMeal: (mealId: string) => void;
   onViewRecipe: (recipeId: string) => void;
   onGenerateShoppingList: () => void;
@@ -79,10 +79,11 @@ export default function MealPlanView({
     { key: 'breakfast', label: 'Breakfast', icon: '🌅', time: '8:00 AM' },
     { key: 'lunch', label: 'Lunch', icon: '☀️', time: '12:30 PM' },
     { key: 'dinner', label: 'Dinner', icon: '🌙', time: '6:30 PM' },
-    { key: 'snack', label: 'Snack', icon: '🍎', time: 'Anytime' },
+    // Snack is now handled separately in dedicated section below
   ];
 
   // Group meals by week and day
+  // Normalize snack slots (morning-snack, afternoon-snack, evening-snack → snack)
   const mealsByWeekAndDay = meals.reduce((acc, meal) => {
     const week = meal.week || 1;
     if (!acc[week]) {
@@ -91,10 +92,14 @@ export default function MealPlanView({
     if (!acc[week][meal.day]) {
       acc[week][meal.day] = {};
     }
-    if (!acc[week][meal.day][meal.slot]) {
-      acc[week][meal.day][meal.slot] = [];
+    
+    // Normalize all snack types to 'snack' for display grouping
+    const displaySlot = meal.slot?.includes('snack') ? 'snack' : (meal.slot || 'breakfast');
+    
+    if (!acc[week][meal.day][displaySlot]) {
+      acc[week][meal.day][displaySlot] = [];
     }
-    acc[week][meal.day][meal.slot].push(meal);
+    acc[week][meal.day][displaySlot].push(meal);
     return acc;
   }, {} as Record<number, Record<string, Record<string, Meal[]>>>);
 
@@ -129,6 +134,24 @@ export default function MealPlanView({
       totalServings: allMeals.reduce((sum: number, meal: Meal) => sum + (meal.servings || 1), 0),
       defenseSystems: systemInfos,
     };
+  };
+
+  // Helper function to get snack type icon for compact views
+  const getSnackTypeIcon = (slot?: string) => {
+    if (!slot || !slot.includes('snack')) return null;
+    
+    switch (slot) {
+      case 'morning-snack':
+        return '☀️';
+      case 'afternoon-snack':
+        return '🌤️';
+      case 'evening-snack':
+        return '🌙';
+      case 'snack':
+        return '⏰';
+      default:
+        return null;
+    }
   };
 
   // Handle keyboard navigation
@@ -183,7 +206,7 @@ export default function MealPlanView({
     setSelectedDay(daysOfWeek[newDayIndex].key);
   };
 
-  const renderEmptySlot = (day: string, slot: string) => {
+  const renderEmptySlot = (day: string, slot: string, weekNum: number = selectedWeek) => {
     const slotInfo = mealSlots.find(s => s.key === slot);
     const slotLabel = slotInfo?.label || slot;
     const slotIcon = slotInfo?.icon || '🍽️';
@@ -198,7 +221,7 @@ export default function MealPlanView({
         <p className="text-gray-500 dark:text-gray-300 text-sm mb-1">No {slotLabel.toLowerCase()} planned</p>
         <p className="text-xs text-gray-400 dark:text-gray-300 mb-3">Click below to add a meal or snack</p>
         <button
-          onClick={() => onAddMeal(day, slot)}
+          onClick={() => onAddMeal(day, slot, undefined, weekNum)}
           disabled={isGenerating}
           className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors text-sm font-medium shadow-sm hover:shadow-md"
         >
@@ -267,6 +290,7 @@ export default function MealPlanView({
                         }}
                         dayIndex={daysOfWeek.findIndex(d => d.key === day.key)}
                         mealIndex={index}
+                        isPrimary={index === 0} // First meal is primary
                         onMealUpdate={(dayIndex: number, mealIndex: number, updates: any) => {
                           onMealUpdate(meal.id, updates);
                         }}
@@ -276,24 +300,88 @@ export default function MealPlanView({
                       />
                     ))}
                     
-                    {/* Add Another Meal Button (especially useful for snacks) */}
+                    {/* Add Another Meal Button */}
                     <button
-                      onClick={() => onAddMeal(day.key, slot.key)}
+                      onClick={() => onAddMeal(day.key, slot.key, undefined, weekNum)}
                       disabled={isGenerating}
-                      className="w-full px-4 py-3 border-2 border-dashed border-gray-200 rounded-lg text-sm text-gray-600 dark:text-gray-200 hover:border-green-500 hover:bg-green-50 hover:text-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
+                      className="w-full px-4 py-3 border-2 border-dashed border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-600 dark:text-gray-200 hover:border-green-500 dark:hover:border-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-700 dark:hover:text-green-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
                     >
-                      <div className="w-6 h-6 bg-gray-100 dark:bg-gray-700 group-hover:bg-green-200 rounded-full flex items-center justify-center transition-colors">
+                      <div className="w-6 h-6 bg-gray-100 dark:bg-gray-700 group-hover:bg-green-200 dark:group-hover:bg-green-800 rounded-full flex items-center justify-center transition-colors">
                         <Plus className="w-4 h-4" />
                       </div>
-                      <span className="font-medium">Add a Snack or Another Meal</span>
+                      <span className="font-medium">Add Extra Meal</span>
                     </button>
                   </div>
                 ) : (
-                  renderEmptySlot(day.key, slot.key)
+                  renderEmptySlot(day.key, slot.key, weekNum)
                 )}
               </div>
             );
           })}
+
+          {/* Dedicated Snacks Section */}
+          <div className="space-y-3 pt-4 border-t-2 border-gray-300 dark:border-gray-600 mt-6">
+            {/* Snacks Header */}
+            <div className="flex items-center gap-2 px-2">
+              <span className="text-lg">🍎</span>
+              <h4 className="font-medium text-gray-900 dark:text-white">Snacks</h4>
+              <span className="text-xs text-gray-500 dark:text-gray-400">Throughout the day</span>
+            </div>
+
+            {/* Snacks */}
+            {dayMealsToUse['snack'] && dayMealsToUse['snack'].length > 0 ? (
+              <div className="space-y-3">
+                {dayMealsToUse['snack'].map((meal, index) => (
+                  <MealCard
+                    key={meal.id}
+                    meal={{
+                      ...meal,
+                      mealType: 'snack',
+                      prepTime: meal.prepTime?.toString(),
+                      cookTime: meal.cookTime?.toString(),
+                    }}
+                    dayIndex={daysOfWeek.findIndex(d => d.key === day.key)}
+                    mealIndex={index}
+                    isPrimary={true} // All snacks are primary (show MAIN badge)
+                    onMealUpdate={(dayIndex: number, mealIndex: number, updates: any) => {
+                      onMealUpdate(meal.id, updates);
+                    }}
+                    onGenerateRecipe={() => onRegenerateMeal(meal.id)}
+                    onViewRecipe={onViewRecipe}
+                    isGeneratingRecipe={isGenerating}
+                  />
+                ))}
+                
+                {/* Add Another Snack Button */}
+                <button
+                  onClick={() => onAddMeal(day.key, 'snack', undefined, weekNum)}
+                  disabled={isGenerating}
+                  className="w-full px-4 py-3 border-2 border-dashed border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-600 dark:text-gray-200 hover:border-green-500 dark:hover:border-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-700 dark:hover:text-green-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
+                >
+                  <div className="w-6 h-6 bg-gray-100 dark:bg-gray-700 group-hover:bg-green-200 dark:group-hover:bg-green-800 rounded-full flex items-center justify-center transition-colors">
+                    <Plus className="w-4 h-4" />
+                  </div>
+                  <span className="font-medium">Add Snack</span>
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => onAddMeal(day.key, 'snack', undefined, weekNum)}
+                disabled={isGenerating}
+                className="w-full px-6 py-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-green-500 dark:hover:border-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
+              >
+                <div className="flex flex-col items-center gap-3">
+                  <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 group-hover:bg-green-200 dark:group-hover:bg-green-800 rounded-full flex items-center justify-center transition-colors">
+                    <span className="text-2xl">🍎</span>
+                  </div>
+                  <div>
+                    <div className="font-medium text-gray-900 dark:text-white mb-1">Add Your First Snack</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">Keep your energy up throughout the day</div>
+                  </div>
+                </div>
+              </button>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -389,14 +477,24 @@ export default function MealPlanView({
 
   const renderListView = () => {
     // Create a chronological list of all meals across all weeks
-    const allMeals: Array<{ week: number; day: string; dayLabel: string; slot: string; slotInfo: any; meal: Meal }> = [];
+    const allMeals: Array<{ week: number; day: string; dayLabel: string; slot: string; slotInfo: any; meal: Meal; isPrimary: boolean }> = [];
+    
+    // All meal/snack slots to iterate through
+    const allSlots = [
+      { key: 'breakfast', label: 'Breakfast', icon: '🌅', time: '8:00 AM' },
+      { key: 'lunch', label: 'Lunch', icon: '☀️', time: '12:30 PM' },
+      { key: 'dinner', label: 'Dinner', icon: '🌙', time: '6:30 PM' },
+      { key: 'snack', label: 'Snack', icon: '🍎', time: 'Anytime' },
+    ];
     
     // Iterate through all weeks
     for (let weekNum = 1; weekNum <= duration; weekNum++) {
       daysOfWeek.forEach((day) => {
-        mealSlots.forEach((slot) => {
+        allSlots.forEach((slot) => {
           const slotMeals = mealsByWeekAndDay[weekNum]?.[day.key]?.[slot.key] || [];
-          slotMeals.forEach((meal) => {
+          slotMeals.forEach((meal, index) => {
+            // All snacks are primary, meals use index === 0
+            const isPrimary = slot.key === 'snack' ? true : index === 0;
             allMeals.push({
               week: weekNum,
               day: day.key,
@@ -404,6 +502,7 @@ export default function MealPlanView({
               slot: slot.key,
               slotInfo: slot,
               meal,
+              isPrimary,
             });
           });
         });
@@ -447,7 +546,7 @@ export default function MealPlanView({
                 </div>
               )}
 
-              {weekMeals.map(({ week, day, dayLabel, slot, slotInfo, meal }, index) => (
+              {weekMeals.map(({ week, day, dayLabel, slot, slotInfo, meal, isPrimary }, index) => (
                 <div 
                   key={`${week}-${day}-${slot}-${meal.id}-${index}`}
                   className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow"
@@ -477,6 +576,7 @@ export default function MealPlanView({
                         }}
                         dayIndex={daysOfWeek.findIndex(d => d.key === day)}
                         mealIndex={index}
+                        isPrimary={isPrimary}
                         onMealUpdate={(dayIndex: number, mealIndex: number, updates: any) => {
                           onMealUpdate(meal.id, updates);
                         }}
@@ -585,13 +685,13 @@ export default function MealPlanView({
                             return (
                               <button
                                 key={slot.key}
-                                onClick={() => onAddMeal(day.key, slot.key)}
+                                onClick={() => onAddMeal(day.key, slot.key, undefined, weekNum)}
                                 disabled={isGenerating}
                                 className="w-full px-3 py-2 border border-dashed border-gray-200 dark:border-gray-600 rounded-lg text-xs text-gray-500 dark:text-gray-400 hover:border-green-400 dark:hover:border-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-700 dark:hover:text-green-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                               >
                                 <span>{slot.icon}</span>
                                 <Plus className="w-3 h-3" />
-                                <span>Add Meal or Snack</span>
+                                <span>Add {slot.label}</span>
                               </button>
                             );
                           }
@@ -644,6 +744,77 @@ export default function MealPlanView({
                             </div>
                           );
                         })}
+
+                        {/* Dedicated Snacks Section in Calendar */}
+                        {(() => {
+                          const snackMeals = mealsByWeekAndDay[weekNum]?.[day.key]?.['snack'] || [];
+                          
+                          if (snackMeals.length === 0) {
+                            return (
+                              <button
+                                key="snack-section"
+                                onClick={() => onAddMeal(day.key, 'snack', undefined, weekNum)}
+                                disabled={isGenerating}
+                                className="w-full px-3 py-2 border border-dashed border-gray-200 dark:border-gray-600 rounded-lg text-xs text-gray-500 dark:text-gray-400 hover:border-green-400 dark:hover:border-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-700 dark:hover:text-green-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mt-2 border-t-2"
+                              >
+                                <span>🍎</span>
+                                <Plus className="w-3 h-3" />
+                                <span>Add Snack</span>
+                              </button>
+                            );
+                          }
+
+                          return (
+                            <div key="snack-section" className="space-y-2 mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
+                              {snackMeals.map((meal) => {
+                                const snackTypeIcon = getSnackTypeIcon(meal.slot);
+                                return (
+                                  <div
+                                    key={meal.id}
+                                    className="p-2 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-100 dark:border-gray-600 hover:border-gray-200 dark:hover:border-gray-500 transition-colors group cursor-pointer"
+                                    onClick={() => meal.recipeId && onViewRecipe(meal.recipeId)}
+                                  >
+                                    <div className="flex items-start gap-2">
+                                      <span className="text-sm flex-shrink-0">{snackTypeIcon || '🍎'}</span>
+                                      <div className="flex-1 min-w-0">
+                                        <div className="text-xs font-semibold text-gray-900 dark:text-white truncate group-hover:text-green-600 dark:group-hover:text-green-400">
+                                        {meal.mealName}
+                                      </div>
+                                      <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                        {meal.cookTime && (
+                                          <span className="flex items-center gap-0.5">
+                                            <Clock className="w-2.5 h-2.5" />
+                                            {meal.cookTime}m
+                                          </span>
+                                        )}
+                                        {meal.defenseSystems && meal.defenseSystems.length > 0 && (
+                                          <span className="flex items-center gap-0.5">
+                                            <Target className="w-2.5 h-2.5" />
+                                            {meal.defenseSystems.length}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                    {!meal.recipeGenerated && (
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          onRegenerateMeal(meal.id);
+                                        }}
+                                        disabled={isGenerating}
+                                        className="flex-shrink-0 p-1 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/20 rounded transition-colors"
+                                        title="Generate recipe"
+                                      >
+                                        <Sparkles className="w-3 h-3" />
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                              })}
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
                   );
@@ -703,7 +874,7 @@ export default function MealPlanView({
                         return (
                           <button
                             key={slot.key}
-                            onClick={() => onAddMeal(day.key, slot.key)}
+                            onClick={() => onAddMeal(day.key, slot.key, undefined, selectedWeek)}
                             className="w-full text-left px-2 py-1.5 bg-gray-50 dark:bg-gray-700 rounded text-xs text-gray-500 dark:text-gray-300 hover:bg-green-50 hover:text-green-600 transition-colors flex items-center gap-1"
                           >
                             <span>{slot.icon}</span>

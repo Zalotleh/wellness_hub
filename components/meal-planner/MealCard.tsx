@@ -7,11 +7,13 @@ import {
 } from 'lucide-react';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
 import { DefenseSystem } from '@/types';
+import { DeleteConfirmationDialog } from '@/components/ui/ConfirmationDialog';
 
 interface Meal {
   id?: string;
   mealType: string;
   mealName: string;
+  slot?: string; // Added to track snack timing
   defenseSystems: DefenseSystem[];
   prepTime?: string;
   cookTime?: string;
@@ -26,6 +28,7 @@ interface MealCardProps {
   dayIndex: number;
   mealIndex: number;
   isGeneratingRecipe?: boolean;
+  isPrimary?: boolean; // First meal in a slot is primary
   onMealUpdate: (dayIndex: number, mealIndex: number, updates: Partial<Meal>) => void;
   onGenerateRecipe: (mealId: string) => void;
   onViewRecipe?: (recipeId: string) => void;
@@ -38,6 +41,7 @@ export default function MealCard({
   dayIndex,
   mealIndex,
   isGeneratingRecipe = false,
+  isPrimary = false,
   onMealUpdate,
   onGenerateRecipe,
   onViewRecipe,
@@ -50,6 +54,7 @@ export default function MealCard({
   const [showMenu, setShowMenu] = useState(false);
   const [isOptimisticLoading, setIsOptimisticLoading] = useState(false);
   const [recipeGenerationProgress, setRecipeGenerationProgress] = useState(0);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   
   const editInputRef = useRef<HTMLInputElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -150,10 +155,13 @@ export default function MealCard({
   };
 
   const handleDeleteMeal = () => {
-    if (confirm('Are you sure you want to remove this meal?')) {
-      onMealUpdate(dayIndex, mealIndex, { mealName: '', defenseSystems: [] });
-    }
     setShowMenu(false);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteMeal = () => {
+    onMealUpdate(dayIndex, mealIndex, { mealName: '', defenseSystems: [] });
+    setShowDeleteDialog(false);
   };
 
   const getMealTypeIcon = (type: string) => {
@@ -186,6 +194,23 @@ export default function MealCard({
     }
   };
 
+  const getSnackTypeInfo = (slot?: string) => {
+    if (!slot || !slot.includes('snack')) return null;
+    
+    switch (slot) {
+      case 'morning-snack':
+        return { label: 'Morning', icon: '☀️', color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700' };
+      case 'afternoon-snack':
+        return { label: 'Afternoon', icon: '🌤️', color: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 border-orange-300 dark:border-orange-700' };
+      case 'evening-snack':
+        return { label: 'Evening', icon: '🌙', color: 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border-indigo-300 dark:border-indigo-700' };
+      case 'snack':
+        return { label: 'Anytime', icon: '⏰', color: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-400 border-gray-300 dark:border-gray-600' };
+      default:
+        return null;
+    }
+  };
+
   const isLoading = isGeneratingRecipe || isOptimisticLoading;
   const hasRecipe = meal.recipeGenerated && meal.recipeId;
   const isEmpty = !meal.mealName.trim();
@@ -202,16 +227,40 @@ export default function MealCard({
 
   return (
     <div className={`
-      group relative border border-gray-200 dark:border-gray-700 rounded-xl transition-all duration-300
-      hover:shadow-lg hover:border-gray-300 dark:hover:border-gray-600 bg-white dark:bg-gray-800 overflow-hidden
+      group relative border rounded-xl transition-all duration-300 overflow-visible
+      ${isPrimary 
+        ? 'border-2 border-green-300 dark:border-green-700 bg-gradient-to-br from-white to-green-50 dark:from-gray-800 dark:to-green-900/20 shadow-md hover:shadow-xl' 
+        : 'border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 ml-4 hover:shadow-lg'
+      }
+      hover:border-gray-300 dark:hover:border-gray-600
       ${isEmpty ? 'border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50' : ''}
       ${isLoading ? 'ring-2 ring-blue-500/20' : ''}
-      ${hasRecipe ? 'ring-1 ring-green-500/30 bg-gradient-to-br from-white to-green-50/30 dark:from-gray-800 dark:to-green-900/10' : ''}
+      ${hasRecipe && !isPrimary ? 'ring-1 ring-green-500/30' : ''}
       ${className}
     `}>
+      {/* Primary Meal Badge */}
+      {isPrimary && !isEmpty && (
+        <div className="absolute -top-2 left-3 z-20">
+          <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-gradient-to-r from-green-500 to-emerald-600 text-white text-[10px] font-bold shadow-md">
+            <span className="text-xs">⭐</span>
+            <span>MAIN</span>
+          </div>
+        </div>
+      )}
+
+      {/* Extra Option Badge */}
+      {!isPrimary && !isEmpty && (
+        <div className="absolute -top-2 left-3 z-20">
+          <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-500 dark:bg-blue-600 text-white text-[10px] font-semibold shadow-md">
+            <span className="text-xs">+</span>
+            <span>EXTRA</span>
+          </div>
+        </div>
+      )}
+
       {/* Loading Progress Bar */}
       {isLoading && (
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gray-200 dark:bg-gray-700">
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gray-200 dark:bg-gray-700 rounded-t-xl overflow-hidden">
           <div 
             className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300"
             style={{ width: `${recipeGenerationProgress}%` }}
@@ -220,9 +269,9 @@ export default function MealCard({
       )}
 
       {/* Recipe Status Indicator */}
-      <div className="absolute top-3 right-3">
+      <div className="absolute top-2 right-2 z-10">
         <div className={`
-          w-3 h-3 rounded-full transition-all duration-300
+          w-2.5 h-2.5 rounded-full transition-all duration-300
           ${recipeStatus === 'ready' ? 'bg-green-500 shadow-lg shadow-green-500/50' : ''}
           ${recipeStatus === 'generating' ? 'bg-blue-500 animate-pulse' : ''}
           ${recipeStatus === 'pending' ? 'bg-gray-300 dark:bg-gray-600' : ''}
@@ -230,7 +279,7 @@ export default function MealCard({
         `} />
       </div>
 
-      <div className={`p-4 ${showCompact ? 'sm:p-3' : 'sm:p-5'}`}>
+      <div className={`p-4 ${showCompact ? 'sm:p-3' : 'sm:p-5'} ${!isEmpty ? 'pt-5' : ''}`}>
         <div className="flex items-start justify-between gap-3">
           {/* Left Content */}
           <div className="flex-1 min-w-0">
@@ -315,14 +364,33 @@ export default function MealCard({
               ) : (
                 <div className="group/title">
                   <div className="flex items-start justify-between gap-2 mb-2">
-                    <h4 className="text-lg font-bold text-gray-900 dark:text-white flex-1 min-w-0 break-words leading-tight">
-                      {meal.mealName || (
-                        <span className="text-gray-400 dark:text-gray-500 italic">No meal planned</span>
-                      )}
-                    </h4>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="text-lg font-bold text-gray-900 dark:text-white break-words leading-tight">
+                          {meal.mealName || (
+                            <span className="text-gray-400 dark:text-gray-500 italic">No meal planned</span>
+                          )}
+                        </h4>
+                        {/* Snack Type Badge */}
+                        {meal.mealType === 'snack' && (() => {
+                          const snackInfo = getSnackTypeInfo(meal.slot);
+                          if (!snackInfo) return null;
+                          return (
+                            <span className={`
+                              inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide border
+                              ${snackInfo.color}
+                            `}>
+                              <span>{snackInfo.icon}</span>
+                              <span>{snackInfo.label}</span>
+                            </span>
+                          );
+                        })()}
+                      </div>
+                    </div>
                     <button
                       onClick={() => setIsEditing(true)}
-                      className="opacity-0 group-hover/title:opacity-100 p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-all"
+                      // Make edit icon visible by default with decent contrast, improve hover
+                      className="opacity-80 hover:opacity-100 p-1 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-all"
                       aria-label="Edit meal"
                     >
                       <Edit2 className="w-4 h-4" />
@@ -460,7 +528,8 @@ export default function MealCard({
               <div className="relative" ref={menuRef}>
                 <button
                   onClick={() => setShowMenu(!showMenu)}
-                  className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                  // Make more/options icon reasonably visible by default
+                  className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors opacity-80 hover:opacity-100"
                   aria-label="More options"
                   aria-expanded={showMenu}
                 >
@@ -517,6 +586,15 @@ export default function MealCard({
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        isOpen={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        onConfirm={confirmDeleteMeal}
+        itemName={meal.mealName || 'this meal'}
+        itemType="meal"
+      />
     </div>
   );
 }

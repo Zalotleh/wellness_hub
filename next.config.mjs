@@ -10,6 +10,25 @@ const nextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: '/auth/login',
+        destination: '/login',
+        permanent: true,
+      },
+      {
+        source: '/auth/logout',
+        destination: '/',
+        permanent: true,
+      },
+      {
+        source: '/auth/error',
+        destination: '/login',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

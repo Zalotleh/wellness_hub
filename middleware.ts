@@ -3,8 +3,19 @@ import { NextResponse } from 'next/server';
 
 export default withAuth(
   function middleware(req) {
-    // Allow the request to continue
-    return NextResponse.next();
+    const response = NextResponse.next();
+    
+    // Add cache-control headers for protected routes to prevent browser caching
+    const { pathname } = req.nextUrl;
+    const protectedPaths = ['/meal-planner', '/saved-plans', '/progress', '/profile'];
+    
+    if (protectedPaths.some(path => pathname.startsWith(path))) {
+      response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      response.headers.set('Pragma', 'no-cache');
+      response.headers.set('Expires', '0');
+    }
+    
+    return response;
   },
   {
     callbacks: {

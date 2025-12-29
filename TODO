@@ -276,9 +276,7 @@ PDF Exports	0/month	pdfExportsThisMonth	⏳ Ready (when feature added)
 Image Generations	0/month (10 for PREMIUM)	imageGenerationsThisMonth
 
 
-for admin dashboard:
-recipe genetaing Success Rate Tracking: Track how often validation passes
-Admin Dashboard: See ai recipe/meal plan, shopping list generating validation failure patterns
+
 
 Other fixes:
 - ✅ FIXED (Dec 27, 2025): Manual recipe creation UX - Merged Steps 1 & 2 into two-column Recipe Setup. Key Foods on left, live ingredients on right. Simplified from 4 steps to 3 steps (Recipe Setup → Instructions → Review).
@@ -290,17 +288,90 @@ Other fixes:
 
 - ✅ FIXED (Dec 27, 2025): Meal plan add button labels - Renamed "Add Breakfast/Lunch/Dinner" buttons to "Add Meal or Snack" throughout meal plan day view. Users can now add any type of meal or snack to any time slot, providing more flexibility.
 
-- in the saved meal plan, in the day view, if i click on the ... to copy meal,edit, delete the meal, the drop dwon menu is having the same recipe card view, which means that if teh menu card is short(small vertically) then part of the menu will not show as it is hidden behind the page's backgound.
+-  ✅ FIXED check the adding new meal or snack, if i add a new snack right after breakfast, the meal type itself shows breakfast, also i get an error when i edit the recipe/meal name:
 
-- in the meal plan generator page, the defense system information message which shows on hovering over the defense system, show vertically,the text is wrapped vertically, like 2 words in each line, can we have better UI for it?
-- when user signs out they are redirected to this url: https://your-domain.com/login
-- create pages: ABout, FAQ, contact, cookie policy, blog or community? add community link to the footer
-- are we using pgae: app/(dashboard)/pdf-test/page.tsx?
+EnhancedMealPlanner.tsx:453  PATCH http://localhost:3000/api/meals/cmjoomcyn0003tdhjtce5nuk9 404 (Not Found)
+eval @ EnhancedMealPlanner.tsx:453
+onMealUpdate @ MealPlanView.tsx:271
+handleSaveEdit @ MealCard.tsx:91
+callCallback @ react-dom.development.js:20565
+invokeGuardedCallbackImpl @ react-dom.development.js:20614
+invokeGuardedCallback @ react-dom.development.js:20689
+invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:20703
+executeDispatch @ react-dom.development.js:32128
+processDispatchQueueItemsInOrder @ react-dom.development.js:32160
+processDispatchQueue @ react-dom.development.js:32173
+dispatchEventsForPlugins @ react-dom.development.js:32184
+eval @ react-dom.development.js:32374
+batchedUpdates$1 @ react-dom.development.js:24953
+batchedUpdates @ react-dom.development.js:28844
+dispatchEventForPluginEventSystem @ react-dom.development.js:32373
+dispatchEvent @ react-dom.development.js:30141
+dispatchDiscreteEvent @ react-dom.development.js:30112
+EnhancedMealPlanner.tsx:476 Error updating meal: Error: Failed to update meal
+    at eval (EnhancedMealPlanner.tsx:462:15)
+also the edit icon and the 3 dots ... are not visible, only if i hover on them they change color to grey, check their color against background in light and dark modes.
+
+- ✅ FIXED  in the saved meal plan, in the day view, if i click on remove meal, add the deletion dialouge confirmation we have implemented on meal deletion, or the common deletion dialouge confirmation we have in the app. right now we have a toast notification.
+
+- ✅ FIXED  in the meal plan generator page, the defense system information message which shows on hovering over the defense system, show vertically,the text is wrapped vertically, like 2 words in each line, can we have better UI for it?
+
+- ✅ FIXED when user signs out they are redirected to this url: https://your-domain.com/login
+
+- ✅ DONE create pages: About, FAQ, contact, cookie policy, add community link to the footer
+  Created:
+  - /app/(marketing)/about/page.tsx - Comprehensive about page with mission, 5 defense systems, features, and vision
+  - /app/(marketing)/faq/page.tsx - Detailed FAQ with 8 categories (General, Accounts & Plans, Meal Plans & Recipes, Progress & Tracking, AI Features, Community, Technical, Billing)
+  - /app/(marketing)/contact/page.tsx - Contact form with category selection, success confirmation, and contact info
+  - /app/(marketing)/cookies/page.tsx - Complete cookie policy with types, management, and third-party info
+  - /app/(marketing)/layout.tsx - Marketing pages layout with Navbar and Footer
+  Updated:
+  - components/layout/Footer.tsx - Added "Community" link in Resources section (replaced "Blog" link)
+
+- ✅ DONE Deleted unused PDF test page: app/(dashboard)/pdf-test/page.tsx - Was a development test page with no navigation links or references in the app. Removed to clean up codebase.
+
+
 -  integrate shopping api
--password change implementation, check files: docs/PASSWORD_QUICK_START.md and docs/PASSWORD_RESET_FEATURE.md
+
+-password change implementation depends on smpt, the feature hasnt been tested yet, check files: docs/PASSWORD_QUICK_START.md and docs/PASSWORD_RESET_FEATURE.md
+
+-  Update available 5.22.0 -> 7.2.0                       │
+│                                                         │
+│  This is a major update - please follow the guide at    │
+│  https://pris.ly/d/major-version-upgrade                │
+│                                                         │
+│  Run the following to update                            │
+│    npm i --save-dev prisma@latest                       │
+│    npm i @prisma/client@latest 
+
 - email smpt provider setting for password and notifications.
 
+for admin dashboard:
+recipe genetaing Success Rate Tracking: Track how often validation passes
+Admin Dashboard: See ai recipe/meal plan, shopping list generating validation failure patterns
+
 Idea for revenue instead of subscription, provide initial credits for users to use, create recipes, use all features using this credits, and they can top it up based on their preferences and usage. based on researc and best marekting and revenue generating strategse in the market, which strategy is better and why?
+- if the idea of the credit is calidated then we need to calculate how much credit a user can use to generate certain amouunt of recipes, ai advices, meal plans .. etc, calculate the cost of these generatinons, then calculate the cost for each credit and how much user can consume from these credits and decuct as well other costs, stripee, hosting, db, analytics, smpt, domain .. etc, and also think about how other features as an exmaple community perks can be ifluences by this credit system, the permium and family features in community are listed as below:
+**Premium Users:**
+- 🔒 Upload images in posts
+- 🔒 Upload videos
+- 🔒 Create polls
+- 🔒 Pin important posts
+- 🔒 Highlighted author badge
+- 🔒 Ad-free experience
+- 🔒 Priority support
+
+**Family Users:**
+- 🔒 Create custom topics
+- 🔒 Advanced analytics
+- 🔒 Export post history
+- 🔒 Bulk actions
+- 🔒 API access
+
+
+
+
+ Idea for revenue instead of subscription, provide initial credits for users to use, create recipes, use all features using this credits, and they can top it up based on their preferences and usage. based on researc and best marekting and revenue generating strategse in the market, which strategy is better and why?
 - if the idea of the credit is calidated then we need to calculate how much credit a user can use to generate certain amouunt of recipes, ai advices, meal plans .. etc, calculate the cost of these generatinons, then calculate the cost for each credit and how much user can consume from these credits and decuct as well other costs, stripee, hosting, db, analytics, smpt, domain .. etc, and also think about how other features as an exmaple community perks can be ifluences by this credit system, the permium and family features in community are listed as below:
 **Premium Users:**
 - 🔒 Upload images in posts
