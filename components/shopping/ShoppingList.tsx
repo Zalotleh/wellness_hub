@@ -440,7 +440,17 @@ export default function ShoppingList({
   const handleInstacartExport = () => {
     const itemNames = items
       .filter(item => !item.checked)
-      .map(item => `${item.ingredient} ${item.quantity} ${item.unit}`.trim());
+      .map(item => {
+        // Build string with only non-empty parts
+        const parts = [item.ingredient];
+        if (item.quantity && item.quantity > 0) {
+          parts.push(item.quantity.toString());
+        }
+        if (item.unit && item.unit.trim()) {
+          parts.push(item.unit);
+        }
+        return parts.join(' ');
+      });
     
     const url = generateInstacartLink(itemNames);
     window.open(url, '_blank', 'noopener,noreferrer');
@@ -449,7 +459,17 @@ export default function ShoppingList({
   const handleAmazonExport = () => {
     const itemNames = items
       .filter(item => !item.checked)
-      .map(item => `${item.ingredient} ${item.quantity} ${item.unit}`.trim());
+      .map(item => {
+        // Build string with only non-empty parts
+        const parts = [item.ingredient];
+        if (item.quantity && item.quantity > 0) {
+          parts.push(item.quantity.toString());
+        }
+        if (item.unit && item.unit.trim()) {
+          parts.push(item.unit);
+        }
+        return parts.join(' ');
+      });
     
     const url = generateAmazonFreshLink(itemNames);
     window.open(url, '_blank', 'noopener,noreferrer');

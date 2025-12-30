@@ -3,6 +3,43 @@
 ## Overview
 Integration plan for connecting Wellness Hub shopping lists with grocery delivery APIs and e-commerce platforms.
 
+## 🎯 Platform Selection Guide
+
+### Geographic-Based Recommendation:
+
+| Your Target Market | Recommended API | Why |
+|-------------------|-----------------|-----|
+| **🇺🇸 United States** | Instacart Connect | Largest network, best coverage |
+| **🇨🇦 Canada** | Instacart Connect | Best multi-retailer option |
+| **🇪🇺 Europe (Multi-country)** | **Pepesto** ⭐ | 11 countries, AI automation |
+| **🇨🇭 Switzerland** | Pepesto | Coop, Migros, Aldi Now, Farmy |
+| **🇬🇧 United Kingdom** | Pepesto | Tesco, Sainsbury's, Waitrose, Asda, Morrisons |
+| **🇩🇪 Germany** | Pepesto | REWE integration |
+| **🇳🇱 Netherlands** | Pepesto | Albert Heijn, Jumbo, Plus |
+| **🌍 Global/Multi-region** | Multi-API strategy | Pepesto (EU) + Instacart (NA) |
+
+### Quick Decision Tree:
+
+**Are your users primarily in Europe?**
+→ ✅ **Choose Pepesto** - Best European coverage, AI automation, 11 countries
+
+**Are your users primarily in US/Canada?**
+→ ✅ **Choose Instacart** - If you can get API access
+→ ⚠️ **Note:** Instacart may restrict access to non-US developers
+→ 🔄 **Fallback:** Use deep links only (Phase 1) until you establish US business entity
+
+**Planning global expansion?**
+→ ✅ **Implement both** - Pepesto for EU, Instacart for NA
+→ Use feature flags to show appropriate option based on user location
+
+### Important Developer Access Notes:
+
+- **Instacart**: May require US-based business registration. International developers outside US/Canada may face challenges getting approved for API access. Consider establishing US business entity or partner if targeting US market seriously.
+
+- **Pepesto**: Open to international developers. Based in Switzerland, developer-friendly for EU and global partners. Contact: orders@pepesto.com
+
+---
+
 ## Current Infrastructure ✅
 
 Your app already has foundational support for e-commerce integration:
@@ -15,6 +52,7 @@ Your app already has foundational support for e-commerce integration:
 2. **Utility Functions** (`lib/utils/sharing.ts`):
    - `generateInstacartLink()`: Creates Instacart shopping links
    - `generateAmazonFreshLink()`: Creates Amazon Fresh links
+   - Plus 4 more platforms (Walmart, Target, Kroger, Whole Foods)
 
 3. **Item Structure**:
    - Ingredient name
@@ -22,11 +60,16 @@ Your app already has foundational support for e-commerce integration:
    - Category (Produce, Proteins, Dairy, etc.)
    - Estimated cost tracking
 
+4. **Phase 1 Implementation** (Deep Links): ✅ COMPLETED
+   - QuickOrderButtons component with 6 platforms
+   - Smart item filtering and formatting
+   - User-friendly platform selection UI
+
 ---
 
 ## Available Shopping APIs & Services
 
-### 1. **Instacart API** ⭐ RECOMMENDED
+### 1. **Instacart API** ⭐ RECOMMENDED (US/Canada)
 **Why It's Great:**
 - Largest grocery delivery network in US/Canada
 - Partners with 1,400+ retailers (Kroger, Costco, Whole Foods, etc.)
@@ -46,6 +89,83 @@ Your app already has foundational support for e-commerce integration:
 - Delivery scheduling
 
 **Implementation Effort:** Medium (2-3 days)
+
+**Geographic Availability:** US and Canada only
+**Developer Access:** Requires application to Instacart Connect program. **NOTE:** Geographic restrictions may apply - primarily focused on US-based developers with US business registration. International developers outside US/Canada may face challenges getting API access.
+
+---
+
+### 1B. **Pepesto API** ⭐ RECOMMENDED (Europe) 🆕
+**Why It's Great:**
+- **Best for European markets** - supports 11 European countries
+- AI-powered recipe parsing and ingredient matching
+- Complete shopping cart automation via AI agent
+- Revenue sharing for referrals
+- Built and tested at scale for food platforms
+
+**Integration Type:** Pepesto Grocery Shopping API
+**Cost:** 
+- Recipe parsing: €0.05 per URL/text input
+- Product matching: €0.01 per request
+- Session creation: €1.00 + €0.03 per item
+- Full oneshot: €2.00 + €0.05 per input
+- Catalog access: €10.00 per request
+
+**Documentation:** https://www.pepesto.com/ai-grocery-shopping-agent/
+**Contact:** orders@pepesto.com
+
+**Supported Countries & Supermarkets:**
+- 🇨🇭 **Switzerland**: Coop, Migros, Aldi Now, Farmy
+- 🇬🇧 **UK**: Tesco, Sainsbury's, Waitrose, Asda, Morrisons
+- 🇩🇪 **Germany**: REWE
+- 🇳🇱 **Netherlands**: Albert Heijn, Jumbo, Plus
+- 🇧🇪 **Belgium**: Colruyt, Delhaize
+- 🇮🇹 **Italy**: Conad, Esselunga
+- 🇮🇪 **Ireland**: Dunnes Stores, SuperValu, Tesco Ireland
+- 🇵🇱 **Poland**: Frisco, Auchan
+- 🇧🇬 **Bulgaria**: eBag
+
+**Key Features:**
+- **AI-Powered Checkout Agent**: Automates entire shopping cart creation
+- **Recipe Parsing**: Converts recipe URLs/text to structured ingredient lists
+- **Product Matching**: Maps ingredients to real supermarket products
+- **Multi-Country Support**: Single API for all European markets
+- **Price Tracking**: Access catalog data for price comparison
+- **Licensed Recipes**: 1M+ recipe database available
+- **Revenue Sharing**: Earn referral commission on user purchases
+
+**API Endpoints:**
+- `/oneshot` - All-in-one: parse recipe + match products + create session
+- `/parse` - Convert recipe URL/text to structured data
+- `/products` - Match ingredients to supermarket products
+- `/session` - Create checkout-ready shopping cart
+- `/checkout` - AI agent drives cart automation (requires WebView/automation)
+- `/catalog` - Access full supermarket product catalogs
+- `/suggest` - Get recipe recommendations from 1M+ database
+
+**Implementation Effort:** Medium (2-3 days for basic, 4-5 for full automation)
+
+**Pros:**
+- ✅ Comprehensive European coverage (11 countries)
+- ✅ AI-powered automation reduces manual matching
+- ✅ Recipe + shopping in one platform
+- ✅ Revenue sharing opportunities
+- ✅ Active support and partnership approach
+- ✅ No geographic restrictions for developers
+
+**Cons:**
+- ⚠️ Europe-only (no US/Canada coverage)
+- ⚠️ Per-transaction pricing (can add up at scale)
+- ⚠️ Full checkout automation requires WebView implementation
+- ⚠️ Requires API key application (contact-based)
+
+**Best For:**
+- Apps targeting European users
+- Meal planning + recipe platforms
+- Apps wanting automated checkout flow
+- Businesses wanting referral revenue
+
+**Developer Access:** Contact orders@pepesto.com for API key - open to international developers, especially those targeting European markets.
 
 ---
 
@@ -647,3 +767,4 @@ If you want something live TODAY, enhance your existing deep link implementation
 ---
 
 Let me know which phase you want to start with, and I can begin implementation! 🚀
+for admin dashboard:

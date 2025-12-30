@@ -25,6 +25,7 @@ import {
   Info
 } from 'lucide-react';
 import { ConfirmDialog } from '@/components/ui/DialogComponents';
+import QuickOrderButtons from '@/components/shopping/QuickOrderButtons';
 
 interface ShoppingListItem {
   ingredient: string;
@@ -900,6 +901,14 @@ export default function ShoppingListDetailPage() {
               </p>
             </div>
           </div>
+        </div>
+
+        {/* Quick Order - Shop on Grocery Platforms */}
+        <div className="mt-6">
+          <QuickOrderButtons 
+            items={shoppingList.items}
+            onlyUnchecked={true}
+          />
         </div>
       </div>
 

@@ -225,7 +225,18 @@ export function ShareButton({
   const handleGroceryService = (service: 'instacart' | 'amazon') => {
     if (!shoppingList) return;
     
-    const items = shoppingList.items.map((item: any) => item.ingredient);
+    const items = shoppingList.items.map((item: any) => {
+      // Build string with only non-empty parts
+      const parts = [item.ingredient];
+      if (item.quantity && item.quantity > 0) {
+        parts.push(item.quantity.toString());
+      }
+      if (item.unit && item.unit.trim()) {
+        parts.push(item.unit);
+      }
+      return parts.join(' ');
+    });
+    
     const url = service === 'instacart' 
       ? generateInstacartLink(items)
       : generateAmazonFreshLink(items);

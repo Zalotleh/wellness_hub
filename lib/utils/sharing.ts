@@ -123,21 +123,101 @@ export function generateSocialImageData(mealPlan: {
 
 /**
  * Generate Instacart shopping link
+ * Opens Instacart with pre-searched items
+ * Note: Instacart works best with a single combined search or the first item only
  */
 export function generateInstacartLink(items: string[]): string {
-  // Instacart doesn't have a direct API for adding items, but you can deep link to search
-  // In production, you'd integrate with Instacart's partner API
-  const query = items.slice(0, 5).join(', '); // Limit to first 5 items
-  return `https://www.instacart.com/store/search?query=${encodeURIComponent(query)}`;
+  if (!items || items.length === 0) return 'https://www.instacart.com/store/search';
+  
+  // Use only the first item for better results, or combine all
+  const query = items[0]; // Using first item for best results
+  return `https://www.instacart.com/store/search?k=${encodeURIComponent(query)}`;
 }
 
 /**
  * Generate Amazon Fresh link
+ * Opens Amazon Fresh with pre-searched items
  */
 export function generateAmazonFreshLink(items: string[]): string {
-  // Amazon Fresh search URL
-  const query = items.slice(0, 5).join(' '); // Limit to first 5 items
-  return `https://www.amazon.com/alm/storefront?almBrandId=QW1hem9uIEZyZXNo&query=${encodeURIComponent(query)}`;
+  if (!items || items.length === 0) return 'https://www.amazon.com/alm/storefront?almBrandId=QW1hem9uIEZyZXNo';
+  
+  // Amazon Fresh uses 'k' parameter for search
+  const query = items[0]; // Use first item for best results
+  return `https://www.amazon.com/alm/storefront?almBrandId=QW1hem9uIEZyZXNo&k=${encodeURIComponent(query)}`;
+}
+
+/**
+ * Generate Walmart Grocery link
+ * Opens Walmart Grocery with search query
+ * Note: Walmart doesn't support multi-item search well
+ */
+export function generateWalmartLink(items: string[]): string {
+  if (!items || items.length === 0) return 'https://www.walmart.com/cp/food/976759';
+  
+  // Walmart works best with single search query
+  const query = items[0]; // Use first item
+  return `https://www.walmart.com/search?q=${encodeURIComponent(query)}&cat_id=976759`;
+}
+
+/**
+ * Generate Target link
+ * Opens Target with grocery search
+ */
+export function generateTargetLink(items: string[]): string {
+  if (!items || items.length === 0) return 'https://www.target.com/c/grocery/-/N-5xt1a';
+  
+  // Target search - use first item
+  const query = items[0];
+  return `https://www.target.com/s?searchTerm=${encodeURIComponent(query)}&category=5xt1a`;
+}
+
+/**
+ * Generate Kroger link
+ * Opens Kroger with search query
+ * Note: Kroger may block direct search links, opens general search instead
+ */
+export function generateKrogerLink(items: string[]): string {
+  if (!items || items.length === 0) return 'https://www.kroger.com/';
+  
+  // Kroger has anti-bot protection, use simpler URL
+  const query = items[0];
+  return `https://www.kroger.com/search?query=${encodeURIComponent(query)}`;
+}
+
+/**
+ * Generate Whole Foods link (via Amazon)
+ * Opens Whole Foods section on Amazon
+ */
+export function generateWholeFoodsLink(items: string[]): string {
+  if (!items || items.length === 0) return 'https://www.amazon.com/wholefoods';
+  
+  // Whole Foods on Amazon - use k parameter
+  const query = items[0];
+  return `https://www.amazon.com/s?k=${encodeURIComponent(query)}&i=wholefoods`;
+}
+
+/**
+ * Generate a generic grocery search link for multiple platforms
+ * Returns an object with all available platform links
+ */
+export interface GroceryPlatformLinks {
+  instacart: string;
+  amazon: string;
+  walmart: string;
+  target: string;
+  kroger: string;
+  wholeFoods: string;
+}
+
+export function generateAllGroceryLinks(items: string[]): GroceryPlatformLinks {
+  return {
+    instacart: generateInstacartLink(items),
+    amazon: generateAmazonFreshLink(items),
+    walmart: generateWalmartLink(items),
+    target: generateTargetLink(items),
+    kroger: generateKrogerLink(items),
+    wholeFoods: generateWholeFoodsLink(items),
+  };
 }
 
 /**
