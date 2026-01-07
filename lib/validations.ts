@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { DefenseSystem } from '@/types';
+import { DefenseSystem, MealTime, ConsumptionSource } from '@prisma/client';
 import { isValidUnit } from '@/lib/constants/measurement-units';
 
 // Recipe validation schema
@@ -93,3 +93,84 @@ export const profileUpdateSchema = z.object({
 });
 
 export type ProfileUpdateSchemaType = z.infer<typeof profileUpdateSchema>;
+
+// ============================================
+// NEW 5x5x5 PROGRESS TRACKING SCHEMAS
+// ============================================
+
+// Food consumption validation schema
+export const foodConsumptionSchema = z.object({
+  mealTime: z.nativeEnum(MealTime),
+  customMealName: z.string().max(50).optional(),
+  foodItems: z.array(
+    z.object({
+      name: z.string().min(1, 'Food name required'),
+      portion: z.string().optional(),
+      servings: z.number().positive().default(1),
+      customDefenseSystems: z.array(z.nativeEnum(DefenseSystem)).optional(),
+    })
+  ).min(1, 'At least one food item required'),
+  notes: z.string().max(500).optional(),
+  date: z.string().datetime().or(z.date()).optional(),
+});
+
+export type FoodConsumptionSchemaType = z.infer<typeof foodConsumptionSchema>;
+
+// Mark recipe consumed validation schema
+export const markRecipeConsumedSchema = z.object({
+  recipeId: z.string().cuid(),
+  mealTime: z.nativeEnum(MealTime),
+  customMealName: z.string().max(50).optional(),
+  servingsConsumed: z.number().positive().default(1),
+  notes: z.string().max(500).optional(),
+  date: z.string().datetime().or(z.date()).optional(),
+});
+
+export type MarkRecipeConsumedSchemaType = z.infer<typeof markRecipeConsumedSchema>;
+
+// Mark meal consumed validation schema
+export const markMealConsumedSchema = z.object({
+  mealId: z.string().cuid(),
+  mealPlanId: z.string().cuid(),
+  customMealName: z.string().max(50).optional(),
+  notes: z.string().max(500).optional(),
+  date: z.string().datetime().or(z.date()).optional(),
+});
+
+export type MarkMealConsumedSchemaType = z.infer<typeof markMealConsumedSchema>;
+
+// Sync meal plan validation schema
+export const syncMealPlanSchema = z.object({
+  mealPlanId: z.string().cuid(),
+  scope: z.enum(['DAY', 'WEEK', 'FULL']),
+  targetDate: z.string().datetime().or(z.date()).optional(), // Required for DAY scope
+});
+
+export type SyncMealPlanSchemaType = z.infer<typeof syncMealPlanSchema>;
+
+// Daily summary query params
+export const dailySummaryQuerySchema = z.object({
+  date: z.string().datetime().or(z.date()).optional(),
+  includeRecommendations: z.boolean().optional(),
+});
+
+export type DailySummaryQuerySchemaType = z.infer<typeof dailySummaryQuerySchema>;
+
+// Weekly summary query params
+export const weeklySummaryQuerySchema = z.object({
+  startDate: z.string().datetime().or(z.date()).optional(),
+  endDate: z.string().datetime().or(z.date()).optional(),
+});
+
+export type WeeklySummaryQuerySchemaType = z.infer<typeof weeklySummaryQuerySchema>;
+
+// Food database search params
+export const foodDatabaseSearchSchema = z.object({
+  query: z.string().optional(),
+  category: z.string().optional(),
+  defenseSystems: z.array(z.nativeEnum(DefenseSystem)).optional(),
+  minSystemCount: z.number().int().min(1).max(5).optional(),
+  limit: z.number().int().positive().max(100).default(50),
+});
+
+export type FoodDatabaseSearchSchemaType = z.infer<typeof foodDatabaseSearchSchema>;

@@ -128,6 +128,26 @@ export default function ProgressTracker({
     };
   };
 
+  // Get progress bar color class based on system
+  const getProgressBarColor = (system: DefenseSystem, isComplete: boolean) => {
+    if (isComplete) return 'bg-green-500';
+    
+    switch (system) {
+      case DefenseSystem.ANGIOGENESIS:
+        return 'bg-red-500';
+      case DefenseSystem.REGENERATION:
+        return 'bg-blue-500';
+      case DefenseSystem.MICROBIOME:
+        return 'bg-green-600';
+      case DefenseSystem.DNA_PROTECTION:
+        return 'bg-purple-500';
+      case DefenseSystem.IMMUNITY:
+        return 'bg-yellow-500';
+      default:
+        return 'bg-gray-500';
+    }
+  };
+
   const totalCompletion = Object.values(DefenseSystem).reduce((sum, system) => {
     return sum + getSystemProgress(system).percentage;
   }, 0) / 5;
@@ -219,9 +239,7 @@ export default function ProgressTracker({
                 </div>
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                   <div
-                    className={`h-2 rounded-full transition-all duration-300 ${
-                      isComplete ? 'bg-green-500' : `bg-${systemInfo.color}`
-                    }`}
+                    className={`h-2 rounded-full transition-all duration-300 ${getProgressBarColor(system, isComplete)}`}
                     style={{ width: `${progress.percentage}%` }}
                   />
                 </div>

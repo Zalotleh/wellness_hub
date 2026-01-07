@@ -8,52 +8,53 @@ datasource db {
 }
 
 model User {
-  id                         String            @id @default(cuid())
+  id                         String               @id @default(cuid())
   name                       String?
-  email                      String            @unique
+  email                      String               @unique
   emailVerified              DateTime?
   password                   String?
   image                      String?
   bio                        String?
-  role                       UserRole          @default(USER)
-  createdAt                  DateTime          @default(now())
-  updatedAt                  DateTime          @updatedAt
-  measurementSystem          String            @default("imperial") // 'imperial' or 'metric'
-  language                   String            @default("en") // 'en', 'es', 'fr', 'de'
-  theme                      String            @default("light") // 'light', 'dark', 'auto'
-  subscriptionTier           SubscriptionTier  @default(FREE)
+  createdAt                  DateTime             @default(now())
+  updatedAt                  DateTime             @updatedAt
+  subscriptionTier           SubscriptionTier     @default(FREE)
   subscriptionStatus         String?
-  stripeCustomerId           String?           @unique
-  stripeSubscriptionId       String?           @unique
+  stripeCustomerId           String?              @unique
+  stripeSubscriptionId       String?              @unique
   subscriptionEndsAt         DateTime?
   trialEndsAt                DateTime?
-  mealPlansThisMonth         Int               @default(0)
-  aiQuestionsThisMonth       Int               @default(0)
-  lastResetDate              DateTime          @default(now())
-  imageGenerationsThisMonth  Int               @default(0)
-  pdfExportsThisMonth        Int               @default(0)
-  recipeGenerationsThisMonth Int               @default(0)
-  termsAccepted              Boolean           @default(false)
-  termsAcceptedAt            DateTime?
-  privacyAccepted            Boolean           @default(false)
+  mealPlansThisMonth         Int                  @default(0)
+  aiQuestionsThisMonth       Int                  @default(0)
+  lastResetDate              DateTime             @default(now())
+  imageGenerationsThisMonth  Int                  @default(0)
+  pdfExportsThisMonth        Int                  @default(0)
+  recipeGenerationsThisMonth Int                  @default(0)
+  measurementSystem          String               @default("imperial")
+  language                   String               @default("en")
+  privacyAccepted            Boolean              @default(false)
   privacyAcceptedAt          DateTime?
-  accounts                   Account[]
+  termsAccepted              Boolean              @default(false)
+  termsAcceptedAt            DateTime?
+  theme                      String               @default("light")
+  role                       UserRole             @default(USER)
   aiGenerationLogs           AIGenerationLog[]
+  accounts                   Account[]
   comments                   Comment[]
   favorites                  Favorite[]
+  foodConsumptions           FoodConsumption[]
   generatedRecipes           GeneratedRecipe[]
   mealPlans                  MealPlan[]
   planComments               MealPlanComment[]
   planLikes                  MealPlanLike[]
   planReports                MealPlanReport[]
   pantryItems                PantryItem[]
+  passwordResetTokens        PasswordResetToken[]
   progress                   Progress[]
   ratings                    Rating[]
   recipes                    Recipe[]
   savedPlans                 SavedMealPlan[]
   sessions                   Session[]
   shoppingLists              ShoppingList[]
-  passwordResetTokens        PasswordResetToken[]
 }
 
 model Account {
@@ -91,39 +92,41 @@ model VerificationToken {
 }
 
 model PasswordResetToken {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  token     String   @unique
+  token     String    @unique
   expires   DateTime
-  used      Boolean  @default(false)
+  used      Boolean   @default(false)
   usedAt    DateTime?
-  createdAt DateTime @default(now())
-  
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([token])
   @@index([userId])
   @@index([expires])
 }
 
 model Recipe {
-  id             String          @id @default(cuid())
-  title          String
-  description    String?
-  ingredients    Json
-  instructions   String
-  prepTime       String?
-  cookTime       String?
-  servings       Int?
-  defenseSystems DefenseSystem[]
-  nutrients      Json?
-  imageUrl       String?
-  userId         String
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  comments       Comment[]
-  favorites      Favorite[]
-  ratings        Rating[]
-  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                  String            @id @default(cuid())
+  title               String
+  description         String?
+  ingredients         Json
+  instructions        String
+  prepTime            String?
+  cookTime            String?
+  servings            Int?
+  defenseSystems      DefenseSystem[]
+  nutrients           Json?
+  imageUrl            String?
+  userId              String
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  ingredientSystemMap Json?
+  comments            Comment[]
+  favorites           Favorite[]
+  consumptions        FoodConsumption[]
+  ratings             Rating[]
+  user                User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([createdAt])
@@ -178,10 +181,13 @@ model Progress {
   notes         String?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
+  deprecated    Boolean       @default(false)
+  migratedTo    String?
   user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, date, defenseSystem])
   @@index([userId, date])
+  @@index([deprecated])
 }
 
 model MealPlan {
@@ -191,7 +197,6 @@ model MealPlan {
   description         String?
   weekStart           DateTime
   weekEnd             DateTime
-  durationWeeks       Int                @default(1)
   defaultServings     Int                @default(2)
   visibility          MealPlanVisibility @default(PRIVATE)
   status              MealPlanStatus     @default(DRAFT)
@@ -205,7 +210,9 @@ model MealPlan {
   createdAt           DateTime           @default(now())
   updatedAt           DateTime           @updatedAt
   publishedAt         DateTime?
+  durationWeeks       Int                @default(1)
   dailyMenus          DailyMenu[]
+  consumptions        FoodConsumption[]
   user                User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   comments            MealPlanComment[]
   likedBy             MealPlanLike[]
@@ -232,25 +239,29 @@ model DailyMenu {
 }
 
 model Meal {
-  id                 String           @id @default(cuid())
+  id                 String            @id @default(cuid())
   dailyMenuId        String
   mealType           String
-  slot               String?          // Where the meal appears (breakfast/lunch/dinner/snack section)
   mealName           String
   servings           Int?
   defenseSystems     String[]
   prepTime           String?
   cookTime           String?
-  position           Int              @default(0)
+  position           Int               @default(0)
   customInstructions String?
-  recipeGenerated    Boolean          @default(false)
-  recipeId           String?          @unique
-  createdAt          DateTime         @default(now())
-  updatedAt          DateTime         @updatedAt
+  recipeGenerated    Boolean           @default(false)
+  recipeId           String?           @unique
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  slot               String?
+  consumed           Boolean           @default(false)
+  consumedAt         DateTime?
+  consumptions       FoodConsumption[]
   generatedRecipe    GeneratedRecipe?
-  dailyMenu          DailyMenu        @relation(fields: [dailyMenuId], references: [id], onDelete: Cascade)
+  dailyMenu          DailyMenu         @relation(fields: [dailyMenuId], references: [id], onDelete: Cascade)
 
   @@index([dailyMenuId, mealType])
+  @@index([consumed])
 }
 
 model GeneratedRecipe {
@@ -298,10 +309,10 @@ model ShoppingList {
   currency       String?   @default("USD")
   pantryFiltered Boolean   @default(false)
   lastExported   DateTime?
-  sourceType     String?   // 'meal-plans' or 'recipes'
-  sourceIds      Json?     // Array of source IDs (meal plan IDs or recipe IDs)
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+  sourceIds      Json?
+  sourceType     String?
   mealPlan       MealPlan? @relation(fields: [mealPlanId], references: [id], onDelete: Cascade)
   user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -393,6 +404,97 @@ model FeatureFlag {
   updatedAt         DateTime          @updatedAt
 }
 
+model AIGenerationLog {
+  id                     String         @id @default(cuid())
+  userId                 String
+  generationType         String
+  success                Boolean
+  qualityScore           Float?
+  defenseSystem          DefenseSystem?
+  ingredientCount        Int?
+  hasDietaryRestrictions Boolean        @default(false)
+  hasMealType            Boolean        @default(false)
+  validationErrors       String[]
+  inputData              Json?
+  outputData             Json?
+  apiResponseTime        Int?
+  modelUsed              String?
+  tokensUsed             Int?
+  createdAt              DateTime       @default(now())
+  user                   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([generationType])
+  @@index([success])
+  @@index([createdAt])
+}
+
+model FoodConsumption {
+  id           String            @id @default(cuid())
+  userId       String
+  date         DateTime          @db.Date
+  mealTime     MealTime
+  timeConsumed DateTime?
+  sourceType   ConsumptionSource
+  recipeId     String?
+  mealId       String?
+  mealPlanId   String?
+  servings     Float             @default(1)
+  notes        String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  meal         Meal?             @relation(fields: [mealId], references: [id])
+  mealPlan     MealPlan?         @relation(fields: [mealPlanId], references: [id])
+  recipe       Recipe?           @relation(fields: [recipeId], references: [id])
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  foodItems    FoodItem[]
+
+  @@index([userId, date])
+  @@index([userId, date, mealTime])
+  @@index([sourceType])
+  @@index([recipeId])
+  @@index([mealId])
+}
+
+model FoodItem {
+  id             String                 @id @default(cuid())
+  consumptionId  String
+  name           String
+  quantity       Float?
+  unit           String?
+  defenseSystems DefenseSystemBenefit[]
+  consumption    FoodConsumption        @relation(fields: [consumptionId], references: [id], onDelete: Cascade)
+
+  @@index([consumptionId])
+  @@index([name])
+}
+
+model DefenseSystemBenefit {
+  id            String          @id @default(cuid())
+  foodItemId    String
+  defenseSystem DefenseSystem
+  strength      BenefitStrength @default(MEDIUM)
+  foodItem      FoodItem        @relation(fields: [foodItemId], references: [id], onDelete: Cascade)
+
+  @@unique([foodItemId, defenseSystem])
+  @@index([defenseSystem])
+}
+
+model FoodDatabase {
+  id             String          @id @default(cuid())
+  name           String          @unique
+  category       String
+  defenseSystems DefenseSystem[]
+  nutrients      String[]
+  description    String?
+  systemBenefits Json
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@index([name])
+  @@index([category])
+}
+
 enum DefenseSystem {
   ANGIOGENESIS
   REGENERATION
@@ -424,29 +526,24 @@ enum UserRole {
   ADMIN
 }
 
-// AI Generation Analytics Model
-model AIGenerationLog {
-  id                   String        @id @default(cuid())
-  userId               String
-  user                 User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  generationType       String        // 'recipe' or 'mealplan'
-  success              Boolean       // Did validation pass?
-  qualityScore         Float?        // Quality score at generation time
-  defenseSystem        DefenseSystem?
-  ingredientCount      Int?
-  hasDietaryRestrictions Boolean     @default(false)
-  hasMealType          Boolean       @default(false)
-  validationErrors     String[]      // Array of validation error messages
-  inputData            Json?         // Store the input parameters
-  outputData           Json?         // Store the generated data (if successful)
-  apiResponseTime      Int?          // Response time in milliseconds
-  modelUsed            String?       // AI model version used
-  tokensUsed           Int?          // Number of tokens consumed
-  createdAt            DateTime      @default(now())
-  
-  @@index([userId])
-  @@index([generationType])
-  @@index([success])
-  @@index([createdAt])
+enum MealTime {
+  BREAKFAST
+  MORNING_SNACK
+  LUNCH
+  AFTERNOON_SNACK
+  DINNER
+  EVENING_SNACK
+  CUSTOM
 }
 
+enum ConsumptionSource {
+  MANUAL
+  RECIPE
+  MEAL_PLAN
+}
+
+enum BenefitStrength {
+  LOW
+  MEDIUM
+  HIGH
+}

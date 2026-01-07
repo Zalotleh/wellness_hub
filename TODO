@@ -1,254 +1,86 @@
-issues:
-- for premium and Family users, they dont have the same user dropdown menu as the free one, limits, upgrade .. etc XDONE ✅
-
--stats: REcpies, Favourites, Progress, Completion, Recent Activity, inside profile page are not reflecting the real numbers? XDONE ✅
-
--from the meal plan, if i click to view the recipe, and then go back, it takes me to the recipes page, while the normal 
-thing to happen is to take me back to the meal plan page, where i was initially XDONE ✅
-
--the plan dates are wrong it shows: Dec 13 - Dec 13, 2025 XDONE ✅
-
-- the user i created has free plan, yet i could create more than one meal plan XDONE ✅
-
-- the stats on the user dropdown menue, usage limits, progress bars are not reflecting the real data. XDONE ✅
-
--inside the AI recipe generator, provide a better way of showing if the defense system is selected. change color. also while the recipe is beng generated, i can still click on button inside the page, can we grey out the page in the background and provide a loading visual? is there a better way of hanlding this? open o suggestions. XDONE ✅
-
-- inside the meal, at the bottom of the page for each day, there is + to add a new meal, snack, but it doesnt work to add a new snack meal. XDONE ✅
-
--for the Ai generating recipe, the recipe title needs to be more specific, right now it reflects the defense system selected, if i select immunity system then the generated recipe title is immunity recipe, modify the prompt to fix this issue. XDONE ✅
 
 
-- i created a shopping list from a meal plan, click create then i was redirected to page where it says:
-Shopping List Not Found
-Shopping list not found
+## 🎉 SHOPPING API INTEGRATION - IN PROGRESS
 
-Go BackView All Lists
+### ✅ Phase 1: Deep Links - COMPLETED (Dec 30, 2024)
+- QuickOrderButtons component with 6 platforms (Instacart, Amazon Fresh, Walmart, Target, Kroger, Whole Foods)
+- Fixed deep link URLs for all platforms
+- Integrated into shopping list detail page
+- Documentation complete
 
-i clicked to go back, then i went to the shopping lists page, i can see that there is a shopping list card, the infor on the card says it has 10 items, i clicked view to see the list, but the list is empty, i can see the buttons and info but i cant see the 10 items:
-Shopping Progress
-0 of 0 items completed
+### 🔄 Phase 2: Pepesto API Integration - APPROVED & IN PROGRESS (Jan 7, 2025)
+**Status:** Pepesto approved! Waiting for API key
 
-0%
-complete
-Created 12/13/2025
-View Meal Plan
-Quick Actions
+**Contact:** Angel from Pepesto (orders@pepesto.com)
+**Response Date:** January 7, 2025
 
-Add Item
+**Pepesto Approval Details:**
+✅ Test/sandbox environment available - will issue temporary API key with pre-loaded credits
+✅ Quick onboarding timeline (hours/minutes for most endpoints, except /checkout)
+✅ Volume discounts available (case-by-case basis)
+✅ Technical support provided during integration
+✅ Open to design partnerships - scheduling call next week
 
-Deselect All
+**Next Steps:**
+1. [ ] Request test API key from Angel
+2. [ ] Schedule call with Angel to discuss:
+   - Integration timeline and phases
+   - Design partnership opportunities (e.g., meal planning + shopping automation)
+   - Volume discount structure for scaled usage
+   - Best practices for /checkout automation
+3. [ ] Provide timezone for scheduling call
+4. [ ] Start Phase 2A: Basic Integration (parse + products endpoints)
+5. [ ] Implement Phase 2B: Session creation and cart management
+6. [ ] Explore Phase 2C: /checkout automation (complex - requires WebView)
 
-Mark All Complete
+**Instacart Status:** Applied - waiting for response
 
-Mark All Incomplete XDONE ✅
+---
 
-- inside shopping list, add item button doesnt work XDONE ✅
-- user can check the item but clicking on a circle to mark the item as complete, and beside that circle there a square to select the item to delete or mark as complete(when clicking on the sauqre a new UI section shows to select if you want to mark as complete or delete), this is confusing, i want to have simpler than this, better UI, and also user should know what complete means, the whole thing should be handled in much better way. XDONE ✅
-
-- inside shopping list page, export list button doesnt work XDONE ✅
-- ability to share the list on whatsapp, or other messaging application? XDONE ✅
-
-- inside shopping lists page, the shopping list card that shows on the card itself doesnt reflect the shopping list data, as an exmple: i selected the items as complete but outside on the card it still shows 0 completed. XDONE ✅
-
-- shopping list takes the exact gram, quanity of each items, as i am planning to connect these shopping list to shopping api like amazon fresh, we need to find a better way of handling the quanitity, for exaple 2 cups of milk, user can make an order of 2 cups of milk, any suggestion? XDONE ✅
-
-- in the progress page, weekly analytics, i have 0 activity, but in the Best System i can see a placeholder: Angiogenesis, remove that placeholder. X DONE ✅
-
-- in the AI Advisor, the page view moves to the bottom of the page after generating, make the view stable and focused on the chat view, and another issue, when the chat is generated, i can see at the top of the chat there is a notification bar with x, i clicked on the x and it cleared teh chat, it is ok, but i want this to be more user intuitive, i didnt know it is going to clear the chat though. X DONE ✅
-
-- in the right side bar, the section of 5 Defense Systems
-
-🩸
-Angiogenesis
-
-🔄
-Regeneration
-
-🦠
-Microbiome
-
-🧬
-DNA Protection
-
-🛡️
-Immunity
-
-provide a clear way of using these key words, like: Click on the defenese system to tell you more and which foods support it, as na example, but you can be creative with it.
-if i leave the ai advisor page, the chat is gone, is there a way of saving the chat, and also we need to have a disclaimer that this advisory is not replacing your doctor or nutrisitnist, user is recommended to verify the ifnormation created, and check with their specialist or doctor befor applying these recommendations.. etc X DONE ✅
-
-
-enhancements:
-
-- for recipe and meal plan generation, what is the prompt are we using, are we using all the ingredients mentioned in the william li book? X DONE ✅
--settings page is empty. gives 404 page X DONE ✅
--build a 404 page X DONE ✅
--build terms of service & Privacy Policy pages X DONE ✅
-- add create shopping list inside recipe's page, to create a shopping list for one recipe X DONE ✅
+## OTHER FEATURES & IMPROVEMENTS
 
 **-for shopping list, make it inceremental, if users selects 1 plan now, then came back and selected another plan or recipe, so to have a total shopping cart to be sent to the shopping api.
 
--for the navigation bar, can we get the meal plans items together, recipes items together: recipes, ai generator, manual recipe generator? X DONE ✅
-
--the meal plan is for only 1 week, can we have for 4 weeks option as well? X DONE ✅
-
--in the meal plan, the default view should be the one, what other user friendly and intuitive view we can have? X DONE ✅
-
 **-can we add a feature to select the country for the user so the recipes can as much closer to the common ingredients we can find in that specifc country?
-**-when the meal plan is gnereated, provide a notification note that the meal planner will generate recipes ideas, and if users like the title or idea they can click generate to generate that recipe
-
--the prgress bar for meal plan creator, goes to the 100% then back to 90% fix this, XDONE ✅
--the button of New plan inside the meal plan page doesnt work, X DONE ✅
--after creating a new meal plan the user s redirected to meal plan page, at the bottom of the page, redirect the customer to the calendar view, top of the page. XDONE ✅
--the meal plan for 2 weeks generated, but the following issues happened:
-the list view show like that: Monday> Breakfast , Monday>Lunch, Monday> Dinner, Monday> Breakfast , Monday>Lunch, Monday> Dinner, Tuesday> Breakfast, Tuesday> Lunch, Tuesday> Dinner, Tuesday> Breakfast, Tuesday> Lunch, Tuesday> Dinner and so on.
-and in the Calnder View: similar issue, where Monday has 2 Breakfast, 2 Lunch, 2 Dinner
-and another issue that the recipes for each dy are repeated, for example monday's recipes are the same for the next week Monday recipes. XDONE ✅
 
 
-there is a delete button inside the Create your Meal Plan page, i noticed when i select new mea plan fro a meal plan page, in the url i am still in the meal plan page itself, user should go to: /meal-planner page right? XDONE ✅
+-  integrate shopping api
+
+-password change implementation depends on smpt, the feature hasnt been tested yet, check files: docs/PASSWORD_QUICK_START.md and docs/PASSWORD_RESET_FEATURE.md
+
+-  Update available 5.22.0 -> 7.2.0                       │
+│                                                         │
+│  This is a major update - please follow the guide at    │
+│  https://pris.ly/d/major-version-upgrade                │
+│                                                         │
+│  Run the following to update                            │
+│    npm i --save-dev prisma@latest                       │
+│    npm i @prisma/client@latest 
+
+- email smpt provider setting for password and notifications.
 
 
-- recipe ai generator has an issue, i tried to create recipe many time but i always got the error: The AI generated an incomplete recipe. Please try again. This attempt was not counted against your limit. DONE ✅
-
-- check the authorization logic in the app, so pages can been seen for logged in users, users can see their own pages, only them nobody esle.. etc - DONE ✅
-
-  📚 See: /docs/AUTHORIZATION_SUMMARY.md for complete implementation
-  🚀 To activate: Run `npx prisma db push` then `npx prisma generate`
-  👤 Set admin: UPDATE "User" SET role = 'ADMIN' WHERE email = 'your-email@example.com';
-  🔐 Features: Role-based auth (USER/ADMIN), ownership checks, admin analytics at /admin
-  
-- if user in free plan generates recipe and doesnt save it, does this rcipe counts for his recipes generation limit? because user can generate as many recipe as they want without saving them, right?
-
-
-✅ AI Recipe Generator Guidance System Implemented (Phase 1):
-  📊 Updated limits: 30 generations/month (was 7) for FREE tier
-  🎯 Real-time input quality scoring (5-point scale with visual indicator)
-  💡 Smart tips that adapt based on user input
-  📚 Collapsible examples section showing good vs. bad inputs
-  📈 Ingredient counter with color-coded feedback (0 → yellow → green at 3+)
-  🌟 Quality percentage calculation: 0-60% (needs work), 60-80% (good), 80-100% (excellent)
-  
-✅ AI Recipe Generator Enhanced UX (Phase 2) - COMPLETE:
-  🎓 First-time user onboarding modal (3-step tutorial)
-  💡 Real-time ingredient suggestions based on defense system & meal type
-  📊 Success rate tracking in localStorage (attempts, success, quality history)
-  🎯 Personalized tips based on generation history
-  💪 "You're improving!" encouragement messages after successful generations
-  📈 Average quality score tracking
-  🔄 Smart suggestions that filter out already-used ingredients
-  
-✅ Meal Plan Generator Guidance System Implemented (Phase 1):
-  🎯 Real-time plan quality scoring (5-point scale)
-  💡 Smart tips for duration, servings, systems, restrictions, and title
-  📚 Collapsible examples showing good vs. bad meal plans
-  🌟 Quality-based feedback: optimize your plan before generating
-  📊 Scoring: Duration, Servings, Defense Systems, Dietary Restrictions, Title
-  
-✅ Meal Plan Generator Enhanced UX (Phase 2) - COMPLETE:
-  🎓 First-time user onboarding modal (3-step tutorial)
-  💡 Real-time smart suggestions based on configuration
-  📊 Success rate tracking for meal plans in localStorage
-  🎯 Personalized tips based on plan generation history
-  💪 Encouragement messages after successful generations
-  🏷️ Suggested titles based on systems, restrictions, and duration
-  📈 Average quality score tracking
-  🔄 Smart suggestions that adapt to user selections
-  
-✅ Phase 2 Utility Files Created:
-  📁 /lib/ai-generation/progress-tracker.ts - Universal tracking system
-  📁 /lib/ai-generation/ingredient-suggestions.ts - Recipe ingredient suggestions
-  📁 /lib/ai-generation/mealplan-suggestions.ts - Meal plan configuration suggestions
-  📁 /components/ai-generation/OnboardingModal.tsx - Reusable onboarding component
-  
-✅ Unified AI Generation Counter Implemented:
-  🔗 Standalone recipes AND meal plan recipes share the same 30/month limit
-  📊 FREE: 30 total AI generations (use however you want)
-  ⚡ Both endpoints now check and increment recipeGenerationsThisMonth
-  📝 API returns remainingGenerations and countedAgainstLimit info
-  🎯 Fair: Same AI call = same cost = same counter
-  
-  Strategy: Guide users to success instead of strict limits
-  - 10 saved recipes, 30 generations = ~3 attempts per good recipe  
-  - Users learn through helpful feedback, not frustration
-  - Better inputs → Better results → Higher conversions to Premium
-  
-✅ Phase 3 for Both Generators - COMPLETE:
-  
-  🔍 Advanced Analytics for Admins:
-    ✅ AIGenerationLog database model for tracking all generations
-    ✅ Tracks success/failure, validation errors, quality scores
-    ✅ Records API response times, tokens used, model versions
-    ✅ Comprehensive analytics API (/api/admin/ai-analytics)
-    ✅ Admin dashboard at /admin/ai-analytics with:
-      - Overview metrics (success rate, quality score, response time)
-      - Success vs Failed by generation type (charts)
-      - Daily trend analysis
-      - Top validation errors with frequency
-      - Defense system performance stats
-      - Ingredient count analysis
-    ✅ Real-time logging integrated into both AI APIs
-  
-  ⚡ Batch Operations Optimization:
-    ✅ Parallel processing with concurrency control (3 concurrent)
-    ✅ Smart rate limiting with delays between batches
-    ✅ Performance improvement: 3x faster batch generation
-    ✅ Reduced API call overhead
-    ✅ Error handling per task with detailed tracking
-    ✅ Progress tracking utilities for batch operations
-    ✅ Retry logic with exponential backoff
-    ✅ Request caching for deduplication
-  
-  📁 New Files Created:
-    - /lib/ai-generation/analytics.ts - Analytics logging and retrieval
-    - /lib/ai-generation/batch-optimizer.ts - Optimized batch processing utilities
-    - /app/api/admin/ai-analytics/route.ts - Admin analytics API endpoint
-    - /app/(dashboard)/admin/ai-analytics/page.tsx - Analytics dashboard UI
-  
-  📊 Database Schema:
-    - Added AIGenerationLog model with comprehensive tracking fields
-    - Indexes on userId, generationType, success, createdAt for fast queries
-  
-  📈 Performance Improvements:
-    - Batch generation: From sequential (2s delay) to parallel (3 concurrent)
-    - Time saved: ~60% reduction for batch operations
-    - Example: 12 recipes now takes ~15s instead of ~24s
-  
-🔄 TODO: Draft Save Feature & Community Examples (Future)
-  - Save draft feature (3 drafts, 24hr expiry)
-  - Community examples showcase
-  
-- in recipe page, the share button needs enhancement and better dialouge message than the toast notification for sharing and for deleting the recipe. DONE ✅
-- Create Shopping List inside the Recipe detail page, doest work, an error says: No valid recipes found. and An error occurred while creating the shopping list DONE ✅
-
-- adding recipes to the favourites list doesnt work. DONE ✅
-
--add the ability to click on ingredient and add them automatically DONE ✅
-- the footer inside the Meal planner page, to be extended to the other pages DONE ✅
-- the filter in saved plan page, can be enhanced based on the mea plans attributes. DONE ✅
--in the meal plan,there is "Shopping List" button right beside the Stat button, delete this shopping list button,when i clikc on Create Shopping list i get a toast notifcation for error message and success message add a better dialouge UI for it. light mode ad dark mode. DONE ✅
-- botton Create Shooping List inside the meal plan, when the shopping list is created it becomes View List, make it View Shopping List.DONE ✅
-- update meal plan button, needs a better UI dialough, or success message than toast notification, dark mode and light mode. DONE ✅
-- inside the shopping list, cick share,then click on copy clipboard a toast notification shows, create a better sucess message. DONE ✅
-- Community pages, topics, create one..
-- change password, forgot password - DONE ✅
-  ✅ Database schema with PasswordResetToken model
-  ✅ Forgot password API with secure token generation
-  ✅ Reset password API with token validation
-  ✅ Change password API for authenticated users
-  ✅ Reset password page with token from email
-  ✅ Change password form component
-  ✅ Email templates (HTML + text fallback)
-  ✅ Email utility with SendGrid/Resend integration ready
-  ✅ Password strength validation
-  ✅ Success/error dialogs with dark mode
-  ✅ Confirmation emails after password changes
-  📚 Full documentation in /docs/PASSWORD_RESET_FEATURE.md
-- notifications..
-
+ 
 Plan for nextjs 15 Later:
 
-Next.js 15 Migration Scope
+Next.js 15 Mig
+
+-  integrate shopping api
+
+-password change implementation depends on smpt, the feature hasnt been tested yet, check files: docs/PASSWORD_QUICK_START.md and docs/PASSWORD_RESET_FEATURE.md
+
+-  Update available 5.22.0 -> 7.2.0                       │
+│                                                         │
+│  This is a major update - please follow the guide at    │
+│  https://pris.ly/d/major-version-upgrade                │
+│                                                         │
+│  Run the following to update                            │
+│    npm i --save-dev prisma@latest                       │
+│    npm i @prisma/client@latest 
+
+- email smpt provider setting for password and notifications.
+
+ration Scope
 ✅ API routes: Already compatible (using await)
 ❌ 20+ page files need refactoring (params/searchParams)
 ❌ React 18 → 19 upgrade required
@@ -259,76 +91,14 @@ The Safe Path
 Next.js 15: Plan for Q2 2025
 When you're ready:
 
-Allocate 1-2 days for migration
+Allocate 1-2 days g)/about/page.tsx - Comprehensive about page with mission, 5 defense systems, features, and vision
+  - /app/(marketing)/faq/page.tsx - Detailed FAQ with 8 categories (General, Accounts & Plans, Meal Plans & Recipes, Progress & Tracking, AI Features, Community, Technical, Billing)
+  - /app/(marketinfor migration
 Run the codemod: npx @next/codemod@canary upgrade latest
 Manually fix the 20+ files with params/searchParams
 Update React to 19
 Thorough testing across all features
-My advice: Patch to 14.2.35 today (takes 5 minutes), then schedule the Next.js 15 upgrade for when you have proper time to test everything. Security first, features second.
 
-✅ Comprehensive FREE Plan Limit Enforcement Implemented
-All Limits Now Protected:
-Feature	FREE Limit	Counter Field	Status
-Meal Plans	1/month	mealPlansThisMonth	✅ Enforced
-AI Questions	10/month	aiQuestionsThisMonth	✅ Enforced
-Recipe Generations	7/month	recipeGenerationsThisMonth	✅ Enforced
-PDF Exports	0/month	pdfExportsThisMonth	⏳ Ready (when feature added)
-Image Generations	0/month (10 for PREMIUM)	imageGenerationsThisMonth
-
-
-
-
-Other fixes:
-- ✅ FIXED (Dec 27, 2025): Manual recipe creation UX - Merged Steps 1 & 2 into two-column Recipe Setup. Key Foods on left, live ingredients on right. Simplified from 4 steps to 3 steps (Recipe Setup → Instructions → Review).
-- ✅ FIXED (Dec 27, 2025): Recipe review step - Fixed critical bug where form was submitting after Step 2, skipping Step 3 (Review). Now users MUST go through Step 1 → Step 2 → Step 3 (Review) before submission. Added success screen with 3-second delay after submission. Users can properly review their complete recipe before creating/updating.
-
-- ✅ FIXED (Dec 27, 2025): Recipe images - Manual recipe image upload implemented with URL input + file upload (max 10MB). Server-side optimization with Sharp: creates optimized WebP versions (85% quality, max 1920px) + thumbnails (400x400, 80% quality). Uses Next.js Image component for automatic optimization and lazy loading. Saves ~60-70% storage per image. Local filesystem storage at /public/uploads/recipes/. Ready for AI recipe generator integration.
-
-- ✅ FIXED (Dec 27, 2025): Home page redirect - Authenticated users visiting home page (/) are now automatically redirected to /recipes page. Landing page with sign in/sign up only shows for non-authenticated users.
-
-- ✅ FIXED (Dec 27, 2025): Meal plan add button labels - Renamed "Add Breakfast/Lunch/Dinner" buttons to "Add Meal or Snack" throughout meal plan day view. Users can now add any type of meal or snack to any time slot, providing more flexibility.
-
--  ✅ FIXED check the adding new meal or snack, if i add a new snack right after breakfast, the meal type itself shows breakfast, also i get an error when i edit the recipe/meal name:
-
-EnhancedMealPlanner.tsx:453  PATCH http://localhost:3000/api/meals/cmjoomcyn0003tdhjtce5nuk9 404 (Not Found)
-eval @ EnhancedMealPlanner.tsx:453
-onMealUpdate @ MealPlanView.tsx:271
-handleSaveEdit @ MealCard.tsx:91
-callCallback @ react-dom.development.js:20565
-invokeGuardedCallbackImpl @ react-dom.development.js:20614
-invokeGuardedCallback @ react-dom.development.js:20689
-invokeGuardedCallbackAndCatchFirstError @ react-dom.development.js:20703
-executeDispatch @ react-dom.development.js:32128
-processDispatchQueueItemsInOrder @ react-dom.development.js:32160
-processDispatchQueue @ react-dom.development.js:32173
-dispatchEventsForPlugins @ react-dom.development.js:32184
-eval @ react-dom.development.js:32374
-batchedUpdates$1 @ react-dom.development.js:24953
-batchedUpdates @ react-dom.development.js:28844
-dispatchEventForPluginEventSystem @ react-dom.development.js:32373
-dispatchEvent @ react-dom.development.js:30141
-dispatchDiscreteEvent @ react-dom.development.js:30112
-EnhancedMealPlanner.tsx:476 Error updating meal: Error: Failed to update meal
-    at eval (EnhancedMealPlanner.tsx:462:15)
-also the edit icon and the 3 dots ... are not visible, only if i hover on them they change color to grey, check their color against background in light and dark modes.
-
-- ✅ FIXED  in the saved meal plan, in the day view, if i click on remove meal, add the deletion dialouge confirmation we have implemented on meal deletion, or the common deletion dialouge confirmation we have in the app. right now we have a toast notification.
-
-- ✅ FIXED  in the meal plan generator page, the defense system information message which shows on hovering over the defense system, show vertically,the text is wrapped vertically, like 2 words in each line, can we have better UI for it?
-
-- ✅ FIXED when user signs out they are redirected to this url: https://your-domain.com/login
-
-- ✅ DONE create pages: About, FAQ, contact, cookie policy, add community link to the footer
-  Created:
-  - /app/(marketing)/about/page.tsx - Comprehensive about page with mission, 5 defense systems, features, and vision
-  - /app/(marketing)/faq/page.tsx - Detailed FAQ with 8 categories (General, Accounts & Plans, Meal Plans & Recipes, Progress & Tracking, AI Features, Community, Technical, Billing)
-  - /app/(marketing)/contact/page.tsx - Contact form with category selection, success confirmation, and contact info
-  - /app/(marketing)/cookies/page.tsx - Complete cookie policy with types, management, and third-party info
-  - /app/(marketing)/layout.tsx - Marketing pages layout with Navbar and Footer
-  Updated:
-  - components/layout/Footer.tsx - Added "Community" link in Resources section (replaced "Blog" link)
-
-- ✅ DONE Deleted unused PDF test page: app/(dashboard)/pdf-test/page.tsx - Was a development test page with no navigation links or references in the app. Removed to clean up codebase.
 
 
 -  integrate shopping api
@@ -350,46 +120,12 @@ for admin dashboard:
 recipe genetaing Success Rate Tracking: Track how often validation passes
 Admin Dashboard: See ai recipe/meal plan, shopping list generating validation failure patterns
 
-Idea for revenue instead of subscription, provide initial credits for users to use, create recipes, use all features using this credits, and they can top it up based on their preferences and usage. based on researc and best marekting and revenue generating strategse in the market, which strategy is better and why?
-- if the idea of the credit is calidated then we need to calculate how much credit a user can use to generate certain amouunt of recipes, ai advices, meal plans .. etc, calculate the cost of these generatinons, then calculate the cost for each credit and how much user can consume from these credits and decuct as well other costs, stripee, hosting, db, analytics, smpt, domain .. etc, and also think about how other features as an exmaple community perks can be ifluences by this credit system, the permium and family features in community are listed as below:
-**Premium Users:**
-- 🔒 Upload images in posts
-- 🔒 Upload videos
-- 🔒 Create polls
-- 🔒 Pin important posts
-- 🔒 Highlighted author badge
-- 🔒 Ad-free experience
-- 🔒 Priority support
+the front page, should be the progress, and from there depending on what you lack you ask the Ai to generate a new meal. recipe, or plan.
+and shows a recommendations based on the actual progress,
+when you click on the home page, the header should be reminder for user why this is important.
+then the tracker, should have a recommendation to create a recipe or plan based on the status, and this should be as a sequesnce of actions. create recipe/plan> create shopping list> purchase> log to track... with notifciations sent if any step hasnt been completed.
+- based on the status, to have smart recommendation system which will take in consideration the user history, current status and recommend a meal plan or a recipe, link the home page with the meal plan generator and the recipe generators.
 
-**Family Users:**
-- 🔒 Create custom topics
-- 🔒 Advanced analytics
-- 🔒 Export post history
-- 🔒 Bulk actions
-- 🔒 API access
-
-
-
-
- Idea for revenue instead of subscription, provide initial credits for users to use, create recipes, use all features using this credits, and they can top it up based on their preferences and usage. based on researc and best marekting and revenue generating strategse in the market, which strategy is better and why?
-- if the idea of the credit is calidated then we need to calculate how much credit a user can use to generate certain amouunt of recipes, ai advices, meal plans .. etc, calculate the cost of these generatinons, then calculate the cost for each credit and how much user can consume from these credits and decuct as well other costs, stripee, hosting, db, analytics, smpt, domain .. etc, and also think about how other features as an exmaple community perks can be ifluences by this credit system, the permium and family features in community are listed as below:
-**Premium Users:**
-- 🔒 Upload images in posts
-- 🔒 Upload videos
-- 🔒 Create polls
-- 🔒 Pin important posts
-- 🔒 Highlighted author badge
-- 🔒 Ad-free experience
-- 🔒 Priority support
-
-**Family Users:**
-- 🔒 Create custom topics
-- 🔒 Advanced analytics
-- 🔒 Export post history
-- 🔒 Bulk actions
-- 🔒 API access
-
-
-
-
- 
+rearrange the nav bar, meal plannin rename it to more friendly one, move it before the recipes.
+- meal plan, male the options for each step drop down list, with a default selected option for each.
+- have the dietry preference as part of the user preferences, and to be a default for their meal plan and recipe generators

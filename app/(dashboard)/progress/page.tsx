@@ -5,14 +5,22 @@ import { useProgress, useProgressStats } from '@/hooks/useProgress';
 import { useProgressDays } from '@/hooks/useProgressDays';
 import ProgressTracker from '@/components/progress/ProgressTracker';
 import ProgressCharts from '@/components/progress/ProgressCharts';
+import ScoreCard5x5x5 from '@/components/progress/ScoreCard5x5x5';
+import MealTimeTracker from '@/components/progress/MealTimeTracker';
+import SystemProgressChart from '@/components/progress/SystemProgressChart';
+import SmartRecommendations from '@/components/progress/SmartRecommendations';
+import FoodLogModal from '@/components/progress/FoodLogModal';
 import { addDays, subDays, isToday, format } from 'date-fns';
-import { CalendarDays, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight, RefreshCw, Plus } from 'lucide-react';
 import { TrendingUp, Calendar, BarChart3 } from 'lucide-react';
 import Footer from '@/components/layout/Footer';
+import type { MealTime } from '@/components/progress/MealTimeTracker';
 
 export default function ProgressPage() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [activeTab, setActiveTab] = useState<'today' | 'weekly'>('today');
+  const [showFoodLogModal, setShowFoodLogModal] = useState(false);
+  const [selectedMealTime, setSelectedMealTime] = useState<MealTime>('BREAKFAST');
 
   const { progress, dailyProgress, loading: progressLoading, logFood } = useProgress(selectedDate);
   const { stats, loading: statsLoading, refetch: refetchStats } = useProgressStats('week');
@@ -20,6 +28,21 @@ export default function ProgressPage() {
 
   const handleLogFood = async (system: any, foods: string[], notes?: string) => {
     await logFood(system, foods, notes);
+  };
+
+  const handleMealTimeClick = (mealTime: MealTime) => {
+    setSelectedMealTime(mealTime);
+    setShowFoodLogModal(true);
+  };
+
+  const handleFoodLogSuccess = () => {
+    // Refresh progress data after successful food log
+    window.location.reload();
+  };
+
+  const handleFoodRecommendationClick = (food: any) => {
+    // Open food log modal with the selected food pre-populated
+    setShowFoodLogModal(true);
   };
 
   // Convert progress data to the format expected by ProgressTracker
@@ -73,55 +96,54 @@ export default function ProgressPage() {
 
         {/* Content */}
         {activeTab === 'today' ? (
-          <div>
+          <div className="space-y-6">
             {progressLoading ? (
               <div className="flex items-center justify-center py-20">
                 <div className="animate-spin w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full"></div>
               </div>
             ) : (
-              <ProgressTracker
-                currentProgress={currentProgress}
-                onLogFood={handleLogFood}
-                date={selectedDate}
-                onDateChange={setSelectedDate}
-                daysWithProgress={daysWithProgress}
-              />
+              <>
+                {/* Score Card */}
+                <ScoreCard5x5x5 
+                  date={selectedDate} 
+                  onRefresh={() => window.location.reload()}
+                />
+
+                {/* Meal Time Tracker */}
+                <MealTimeTracker
+                  date={selectedDate}
+                  onMealClick={handleMealTimeClick}
+                />
+
+                {/* Charts Row */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* System Progress Chart */}
+                  <SystemProgressChart date={selectedDate} />
+
+                  {/* Smart Recommendations */}
+                  <SmartRecommendations 
+                    date={selectedDate}
+                    onFoodClick={handleFoodRecommendationClick}
+                  />
+                </div>
+
+                {/* Original Progress Tracker (collapsed) */}
+                <details className="bg-white rounded-lg shadow-lg">
+                  <summary className="px-6 py-4 cursor-pointer font-semibold text-gray-700 hover:bg-gray-50 rounded-lg">
+                    Advanced Progress Tracker
+                  </summary>
+                  <div className="p-6 border-t border-gray-200">
+                    <ProgressTracker
+                      currentProgress={currentProgress}
+                      onLogFood={handleLogFood}
+                      date={selectedDate}
+                      onDateChange={setSelectedDate}
+                      daysWithProgress={daysWithProgress}
+                    />
+                  </div>
+                </details>
+              </>
             )}
-
-
-
-            {/* Quick Tips */}
-            <div className="mt-8 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-700 rounded-lg p-6">
-              <h3 className="font-bold text-blue-900 dark:text-blue-300 mb-3">
-                💡 Tips for Success
-              </h3>
-              <ul className="space-y-2 text-sm text-blue-800 dark:text-blue-400">
-                <li className="flex items-start space-x-2">
-                  <span>•</span>
-                  <span>
-                    <strong>Be consistent:</strong> Try to eat 5 foods from each system daily
-                  </span>
-                </li>
-                <li className="flex items-start space-x-2">
-                  <span>•</span>
-                  <span>
-                    <strong>Variety matters:</strong> Rotate different foods to get diverse nutrients
-                  </span>
-                </li>
-                <li className="flex items-start space-x-2">
-                  <span>•</span>
-                  <span>
-                    <strong>Log regularly:</strong> Make it a habit to track your meals
-                  </span>
-                </li>
-                <li className="flex items-start space-x-2">
-                  <span>•</span>
-                  <span>
-                    <strong>Use recipes:</strong> Find recipes that incorporate multiple defense systems
-                  </span>
-                </li>
-              </ul>
-            </div>
           </div>
         ) : (
           <div>
@@ -147,6 +169,26 @@ export default function ProgressPage() {
           </div>
         )}
       </div>
+
+      {/* Floating Action Button - Outside conditional rendering */}
+      {activeTab === 'today' && (
+        <button
+          onClick={() => setShowFoodLogModal(true)}
+          className="fixed bottom-8 right-8 w-16 h-16 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-2xl flex items-center justify-center transition-all hover:scale-110 z-30 pointer-events-auto"
+          title="Log Food"
+          aria-label="Log Food"
+        >
+          <Plus className="w-8 h-8" />
+        </button>
+      )}
+
+      {/* Food Log Modal - Outside conditional rendering */}
+      <FoodLogModal
+        isOpen={showFoodLogModal}
+        defaultMealTime={selectedMealTime}
+        onClose={() => setShowFoodLogModal(false)}
+        onSuccess={handleFoodLogSuccess}
+      />
 
       {/* Footer */}
       <Footer />

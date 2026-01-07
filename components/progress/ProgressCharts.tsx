@@ -17,6 +17,7 @@ import {
   PolarAngleAxis,
   PolarRadiusAxis,
   Radar,
+  Cell,
 } from 'recharts';
 import { DefenseSystem } from '@/types';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
@@ -97,11 +98,11 @@ export default function ProgressCharts({ weeklyData }: ProgressChartsProps) {
   });
 
   const systemColors = {
-    Angiogenesis: '#ef4444',
-    Regeneration: '#22c55e',
-    Microbiome: '#a855f7',
-    'DNA Protection': '#3b82f6',
-    Immunity: '#eab308',
+    Angiogenesis: '#ef4444',      // Red
+    Regeneration: '#3b82f6',      // Blue
+    Microbiome: '#16a34a',        // Green
+    'DNA Protection': '#9333ea',  // Purple
+    Immunity: '#eab308',          // Yellow
   };
 
   return (
@@ -236,12 +237,15 @@ export default function ProgressCharts({ weeklyData }: ProgressChartsProps) {
                 }}
               />
               <Bar dataKey="percentage" name="Completion %" radius={[8, 8, 0, 0]}>
-                {systemComparisonData.map((entry, index) => (
-                  <rect
-                    key={`cell-${index}`}
-                    fill={Object.values(systemColors)[index]}
-                  />
-                ))}
+                {systemComparisonData.map((entry, index) => {
+                  const systemName = entry.system as keyof typeof systemColors;
+                  return (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={systemColors[systemName] || '#8884d8'}
+                    />
+                  );
+                })}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
