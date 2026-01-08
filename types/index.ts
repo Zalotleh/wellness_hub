@@ -1,5 +1,8 @@
 // Type definitions for the Wellness Hub application
 
+// Re-export tracking types
+export type { Score5x5x5, SystemScore, MealTimeScore, FoodVarietyScore, ScoreInsights, WeeklyScore, MonthlyScore } from '@/lib/tracking/types';
+
 // Base types
 export type Rating = {
   id: string;

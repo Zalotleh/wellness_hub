@@ -1,11 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Info, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { Info, TrendingUp, TrendingDown, Minus, AlertCircle, RefreshCw } from 'lucide-react';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import { format } from 'date-fns';
 import 'react-circular-progressbar/dist/styles.css';
 import type { Score5x5x5 } from '@/lib/tracking/types';
+import { Button } from '@/components/ui/button';
+import { useBreakpoint, getOptimalChartSize, getFontSize, getSpacing } from '@/lib/utils/mobile-responsive';
 
 interface OverallScoreCardProps {
   date: Date;
@@ -17,6 +19,7 @@ export default function OverallScoreCard({ date, onRefresh }: OverallScoreCardPr
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showInfo, setShowInfo] = useState(false);
+  const [retrying, setRetrying] = useState(false);
 
   useEffect(() => {
     fetchScore();
@@ -31,17 +34,28 @@ export default function OverallScoreCard({ date, onRefresh }: OverallScoreCardPr
       const res = await fetch(`/api/progress/score?date=${dateStr}&view=daily`);
       
       if (!res.ok) {
-        throw new Error('Failed to fetch score');
+        throw new Error(`Failed to fetch score: ${res.status}`);
       }
       
       const data = await res.json();
+      
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      
       setScore(data.score);
     } catch (err) {
       console.error('Error fetching score:', err);
       setError(err instanceof Error ? err.message : 'Failed to load score');
     } finally {
       setLoading(false);
+      setRetrying(false);
     }
+  };
+
+  const handleRetry = () => {
+    setRetrying(true);
+    fetchScore();
   };
 
   const getScoreColor = (scoreValue: number) => {
@@ -58,14 +72,19 @@ export default function OverallScoreCard({ date, onRefresh }: OverallScoreCardPr
     return "Let's Improve";
   };
 
+  const breakpoint = useBreakpoint();
+  const chartSize = getOptimalChartSize(breakpoint);
+  const spacing = getSpacing(breakpoint);
+  const fontSize = getFontSize(breakpoint);
+
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
+      <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg ${spacing.card}`}>
         <div className="animate-pulse">
           <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
           <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-8"></div>
           <div className="flex justify-center mb-8">
-            <div className="w-48 h-48 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+            <div className={`bg-gray-200 dark:bg-gray-700 rounded-full`} style={{ width: chartSize, height: chartSize }}></div>
           </div>
           <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-2/3 mx-auto mb-2"></div>
           <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
@@ -76,21 +95,24 @@ export default function OverallScoreCard({ date, onRefresh }: OverallScoreCardPr
 
   if (error || !score) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
+      <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg ${spacing.card} border-2 border-red-200`}>
         <div className="text-center py-12">
-          <div className="text-6xl mb-4">🤔</div>
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-            {error || 'No data available'}
+          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h3 className={`${fontSize.heading} font-semibold text-gray-900 dark:text-white mb-2`}>
+            {error ? 'Error Loading Score' : 'No Data Available'}
           </h3>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
-            Start logging your food intake to see your score!
+          <p className={`${fontSize.body} text-gray-600 dark:text-gray-400 mb-6`}>
+            {error || 'Start logging your food intake to see your score!'}
           </p>
-          <button
-            onClick={fetchScore}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+          <Button
+            onClick={handleRetry}
+            disabled={retrying}
+            variant="outline"
+            className="mx-auto"
           >
-            Retry
-          </button>
+            <RefreshCw className={`w-4 h-4 mr-2 ${retrying ? 'animate-spin' : ''}`} />
+            {retrying ? 'Retrying...' : 'Try Again'}
+          </Button>
         </div>
       </div>
     );
@@ -100,15 +122,15 @@ export default function OverallScoreCard({ date, onRefresh }: OverallScoreCardPr
   const mealsLogged = score.mealTimes.filter(m => m.hasFood).length;
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
+    <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg ${spacing.card}`}>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h2 className={`${fontSize.heading} font-bold text-gray-900 dark:text-white`}>
             Your 5x5x5 Score
           </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            {format(date, 'EEEE, MMMM d, yyyy')}
+          <p className={`${fontSize.body} text-gray-500 dark:text-gray-400`}>
+            {format(date, breakpoint.mobile ? 'MMM d, yyyy' : 'EEEE, MMMM d, yyyy')}
           </p>
         </div>
         <button
@@ -148,12 +170,12 @@ export default function OverallScoreCard({ date, onRefresh }: OverallScoreCardPr
 
       {/* Score Display */}
       <div className="flex items-center justify-center mb-6">
-        <div className="w-48 h-48">
+        <div style={{ width: chartSize, height: chartSize }}>
           <CircularProgressbar
             value={score.overallScore}
             text={`${score.overallScore}`}
             styles={buildStyles({
-              textSize: '24px',
+              textSize: breakpoint.mobile ? '28px' : '24px',
               pathColor: getScoreColor(score.overallScore),
               textColor: getScoreColor(score.overallScore),
               trailColor: '#e5e7eb',
@@ -166,12 +188,12 @@ export default function OverallScoreCard({ date, onRefresh }: OverallScoreCardPr
       {/* Score Label */}
       <div className="text-center mb-6">
         <p
-          className="text-2xl font-bold mb-1"
+          className={`${fontSize.subheading} font-bold mb-1`}
           style={{ color: getScoreColor(score.overallScore) }}
         >
           {getScoreLabel(score.overallScore)}
         </p>
-        <p className="text-sm text-gray-600 dark:text-gray-400">
+        <p className={`${fontSize.body} text-gray-600 dark:text-gray-400`}>
           {score.insights.recommendation}
         </p>
       </div>
@@ -199,22 +221,28 @@ export default function OverallScoreCard({ date, onRefresh }: OverallScoreCardPr
       {/* Quick Stats */}
       <div className="grid grid-cols-3 gap-4 pt-6 border-t border-gray-200 dark:border-gray-700">
         <div className="text-center">
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">
+          <p className={`${fontSize.subheading} font-bold text-gray-900 dark:text-white`}>
             {systemsCovered}/5
           </p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">Systems Covered</p>
+          <p className={`${fontSize.small} text-gray-500 dark:text-gray-400`}>
+            Systems {breakpoint.mobile ? '' : 'Covered'}
+          </p>
         </div>
         <div className="text-center">
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">
+          <p className={`${fontSize.subheading} font-bold text-gray-900 dark:text-white`}>
             {mealsLogged}/4
           </p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">Meals Logged</p>
+          <p className={`${fontSize.small} text-gray-500 dark:text-gray-400`}>
+            Meals {breakpoint.mobile ? '' : 'Logged'}
+          </p>
         </div>
         <div className="text-center">
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">
+          <p className={`${fontSize.subheading} font-bold text-gray-900 dark:text-white`}>
             {score.foodVariety.totalUniqueFoods}
           </p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">Unique Foods</p>
+          <p className={`${fontSize.small} text-gray-500 dark:text-gray-400`}>
+            {breakpoint.mobile ? 'Foods' : 'Unique Foods'}
+          </p>
         </div>
       </div>
 

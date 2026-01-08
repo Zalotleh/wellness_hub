@@ -16,6 +16,7 @@ import { format } from 'date-fns';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
 import { DefenseSystem } from '@/types';
 import type { Score5x5x5 } from '@/lib/tracking/types';
+import { useBreakpoint, getOptimalChartSize, getSpacing } from '@/lib/utils/mobile-responsive';
 
 // Register Chart.js components
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
@@ -30,6 +31,10 @@ export default function DefenseSystemsRadar({ date, onClick }: DefenseSystemsRad
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedSystem, setSelectedSystem] = useState<DefenseSystem | null>(null);
+  
+  const breakpoint = useBreakpoint();
+  const chartSize = getOptimalChartSize(breakpoint);
+  const spacing = getSpacing(breakpoint);
 
   useEffect(() => {
     fetchScore();
@@ -59,10 +64,12 @@ export default function DefenseSystemsRadar({ date, onClick }: DefenseSystemsRad
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+      <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg ${spacing.card}`}>
         <div className="animate-pulse">
           <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-4"></div>
-          <div className="h-96 bg-gray-200 dark:bg-gray-700 rounded"></div>
+          <div className="flex justify-center">
+            <div className="bg-gray-200 dark:bg-gray-700 rounded" style={{ width: chartSize, height: chartSize }}></div>
+          </div>
         </div>
       </div>
     );
@@ -70,7 +77,7 @@ export default function DefenseSystemsRadar({ date, onClick }: DefenseSystemsRad
 
   if (error || !score) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+      <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg ${spacing.card}`}>
         <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
           Defense System Coverage
         </h3>
@@ -127,6 +134,9 @@ export default function DefenseSystemsRadar({ date, onClick }: DefenseSystemsRad
             return value + '%';
           },
           color: 'rgb(107, 114, 128)', // gray-500
+          font: {
+            size: breakpoint.mobile ? 10 : 12,
+          },
         },
         grid: {
           color: 'rgba(156, 163, 175, 0.2)', // gray-400 with opacity
@@ -134,7 +144,7 @@ export default function DefenseSystemsRadar({ date, onClick }: DefenseSystemsRad
         pointLabels: {
           color: 'rgb(31, 41, 55)', // gray-800
           font: {
-            size: 12,
+            size: breakpoint.mobile ? 10 : 12,
             weight: 600,
           },
         },
@@ -142,12 +152,12 @@ export default function DefenseSystemsRadar({ date, onClick }: DefenseSystemsRad
     },
     plugins: {
       legend: {
-        position: 'bottom' as const,
+        position: breakpoint.mobile ? ('top' as const) : ('bottom' as const),
         labels: {
           color: 'rgb(75, 85, 99)', // gray-600
-          padding: 15,
+          padding: breakpoint.mobile ? 10 : 15,
           font: {
-            size: 12,
+            size: breakpoint.mobile ? 10 : 12,
           },
         },
       },
@@ -197,20 +207,22 @@ export default function DefenseSystemsRadar({ date, onClick }: DefenseSystemsRad
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+    <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg ${spacing.card}`}>
       {/* Header */}
       <div className="mb-6">
         <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
           Defense System Coverage
         </h3>
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          Click on a point to see details
+          {breakpoint.mobile ? 'Tap for details' : 'Click on a point to see details'}
         </p>
       </div>
 
       {/* Radar Chart */}
-      <div className="mb-6" style={{ maxHeight: '400px' }}>
-        <Radar data={chartData} options={chartOptions} />
+      <div className="mb-6 flex justify-center">
+        <div style={{ width: chartSize, height: chartSize }}>
+          <Radar data={chartData} options={chartOptions} />
+        </div>
       </div>
 
       {/* System Details Panel */}

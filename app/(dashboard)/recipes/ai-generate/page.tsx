@@ -1,17 +1,50 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import AIRecipeGenerator from '@/components/recipes/AIRecipeGenerator';
 import { RecipeFormData } from '@/types';
 import { recipeSchema } from '@/lib/validations';
-import { Sparkles, ArrowLeft } from 'lucide-react';
+import { Sparkles, ArrowLeft, Target } from 'lucide-react';
 import Link from 'next/link';
+import { DefenseSystem } from '@/types';
 
 export default function AIGeneratorPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [showSuccess, setShowSuccess] = useState(false);
   const [savedRecipeId, setSavedRecipeId] = useState<string | null>(null);
+  const [fromRecommendation, setFromRecommendation] = useState(false);
+  const [recommendationId, setRecommendationId] = useState<string | null>(null);
+  const [initialParams, setInitialParams] = useState<any>(null);
+
+  useEffect(() => {
+    // Parse URL params from recommendation
+    const from = searchParams.get('from');
+    const recId = searchParams.get('recId');
+    const targetSystem = searchParams.get('targetSystem');
+    const dietaryRestrictions = searchParams.get('dietaryRestrictions');
+    const preferredMealTime = searchParams.get('preferredMealTime');
+
+    if (from === 'recommendation' && recId) {
+      setFromRecommendation(true);
+      setRecommendationId(recId);
+
+      // Build initial params for generator
+      const params: any = {};
+      if (targetSystem) params.targetSystem = targetSystem as DefenseSystem;
+      if (dietaryRestrictions) {
+        try {
+          params.dietaryRestrictions = JSON.parse(dietaryRestrictions);
+        } catch {
+          params.dietaryRestrictions = dietaryRestrictions.split(',');
+        }
+      }
+      if (preferredMealTime) params.preferredMealTime = preferredMealTime;
+
+      setInitialParams(params);
+    }
+  }, [searchParams]);
 
   const handleSaveRecipe = async (recipe: RecipeFormData) => {
     console.log('handleSaveRecipe called with:', recipe);
@@ -35,6 +68,24 @@ export default function AIGeneratorPage() {
       const { data: newRecipe } = await response.json();
       setSavedRecipeId(newRecipe.id);
       setShowSuccess(true);
+
+      // If from recommendation, mark as completed
+      if (fromRecommendation && recommendationId) {
+        try {
+          await fetch(`/api/recommendations/${recommendationId}/accept`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              metadata: {
+                recipeId: newRecipe.id,
+                completedAt: new Date().toISOString(),
+              },
+            }),
+          });
+        } catch (err) {
+          console.error('Failed to track recommendation completion:', err);
+        }
+      }
 
       // Redirect after 2 seconds
       setTimeout(() => {
@@ -85,6 +136,23 @@ export default function AIGeneratorPage() {
             <span>Back to Recipes</span>
           </Link>
 
+          {/* Recommendation Indicator */}
+          {fromRecommendation && (
+            <div className="mb-4 p-4 bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 border border-purple-200 dark:border-purple-800 rounded-lg">
+              <div className="flex items-center gap-2">
+                <Target className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                <div className="flex-1">
+                  <p className="font-semibold text-purple-900 dark:text-purple-100">
+                    Smart Recommendation
+                  </p>
+                  <p className="text-sm text-purple-700 dark:text-purple-300">
+                    This recipe will help strengthen your wellness goals
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-lg">
               <Sparkles className="w-6 h-6 text-white" />
@@ -101,7 +169,11 @@ export default function AIGeneratorPage() {
         </div>
 
         {/* Generator Component */}
-        <AIRecipeGenerator onSaveRecipe={handleSaveRecipe} />
+        <AIRecipeGenerator 
+          onSaveRecipe={handleSaveRecipe}
+          initialParams={initialParams}
+          fromRecommendation={fromRecommendation}
+        />
 
         {/* Features Section */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">

@@ -69,6 +69,7 @@ model User {
   dailyScores                DailyProgressScore[]
   workflowState              UserWorkflowState?
   consents                   UserConsent?
+  recommendations            Recommendation[]
 }
 
 model Account {
@@ -707,4 +708,72 @@ model FoodDatabase {
   
   @@index([name])
   @@index([category])
+}
+
+// Smart recommendations engine - guides users through CREATE -> SHOP -> TRACK workflow
+model Recommendation {
+  id              String                 @id @default(cuid())
+  userId          String
+  
+  // Recommendation metadata
+  type            RecommendationType     // RECIPE, MEAL_PLAN, FOOD_SUGGESTION, WORKFLOW_STEP
+  priority        RecommendationPriority // CRITICAL, HIGH, MEDIUM, LOW
+  status          RecommendationStatus   @default(PENDING)
+  
+  // Content
+  title           String
+  description     String
+  reasoning       String                 // Why this recommendation was generated
+  
+  // Action
+  actionLabel     String                 // Button text (e.g., "Generate Recipe", "Plan My Week")
+  actionUrl       String                 // Deep link to feature
+  actionData      Json?                  // Parameters to pass (e.g., targetSystem, dietaryRestrictions)
+  
+  // Targeting
+  targetSystem    DefenseSystem?         // For RECIPE recommendations
+  targetMealTime  MealTime?              // For WORKFLOW_STEP recommendations
+  
+  // Lifecycle
+  expiresAt       DateTime               // When recommendation becomes irrelevant
+  createdAt       DateTime               @default(now())
+  acceptedAt      DateTime?              // When user acted on it
+  dismissedAt     DateTime?              // When user dismissed it
+  
+  // Analytics
+  viewCount       Int                    @default(0)
+  dismissCount    Int                    @default(0) // Track multiple dismissals
+  
+  // Relations
+  user            User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, status, expiresAt])
+  @@index([userId, createdAt])
+  @@index([type])
+  @@index([priority])
+}
+
+// ============================================
+// ENUMS FOR RECOMMENDATION SYSTEM
+// ============================================
+
+enum RecommendationType {
+  RECIPE
+  MEAL_PLAN
+  FOOD_SUGGESTION
+  WORKFLOW_STEP
+}
+
+enum RecommendationPriority {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum RecommendationStatus {
+  PENDING
+  ACCEPTED
+  DISMISSED
+  EXPIRED
 }

@@ -1340,19 +1340,1369 @@ npm install react-chartjs-2 chart.js
 
 ---
 
-*[To be expanded with 3.3 Time Filter Implementation, 3.4 Dashboard Page Redesign, Phase 4 details, etc.]*
-
----
-
 ## Phase 4: Smart Recommendations (Week 4)
 
-*Phase 4 implementation details to be added - see status tracker for task breakdown*
+**Goal:** Create an intelligent recommendation engine that analyzes user progress gaps and provides actionable next steps to guide users through the CREATE → SHOP → TRACK workflow.
 
-**Key Implementation Notes:**
+**Key Principles:**
 - Recommendation frequency: 1-3 per day based on user behavior
 - Persistence: 24 hours or until gap filled
 - Adapt after 3 consecutive ignores (try different system/approach)
-- Track acceptance rate in recommendation history API
+- Track acceptance rate to improve recommendations over time
+
+---
+
+### 4.1 Recommendation Engine
+
+**Priority:** High  
+**Estimated Time:** 3 days  
+**Dependencies:** Phase 2.1 (Scoring), Phase 1.4 (User Preferences)
+
+#### Overview
+
+The recommendation engine analyzes user progress data, identifies gaps in the 5x5x5 framework, and generates personalized, actionable recommendations.
+
+#### Core Components
+
+**File: `/lib/recommendations/types.ts`**
+
+```typescript
+import { DefenseSystem } from '@/types';
+
+export type RecommendationType = 'RECIPE' | 'MEAL_PLAN' | 'FOOD_SUGGESTION' | 'WORKFLOW_STEP';
+
+export type RecommendationPriority = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+
+export type RecommendationStatus = 'PENDING' | 'ACCEPTED' | 'DISMISSED' | 'EXPIRED';
+
+export interface GapAnalysis {
+  // Defense System gaps
+  missingSystems: DefenseSystem[]; // Systems with 0-1 foods
+  weakSystems: DefenseSystem[]; // Systems with 2-3 foods
+  
+  // Meal time gaps
+  missedMeals: Array<'BREAKFAST' | 'LUNCH' | 'DINNER' | 'SNACK'>;
+  
+  // Variety gaps
+  varietyScore: number; // 0-100
+  repeatedFoods: string[]; // Foods eaten multiple times
+  
+  // Overall assessment
+  overallScore: number; // 0-100
+  systemBalance: number; // 0-100 (how evenly distributed)
+}
+
+export interface UserBehaviorProfile {
+  // Consumption patterns
+  preferredMealTimes: string[];
+  favoriteFoods: Array<{ name: string; frequency: number }>;
+  dietaryRestrictions: string[];
+  
+  // Engagement metrics
+  averageDailyScore: number;
+  consistency: number; // Days tracked / Total days
+  
+  // Recommendation history
+  acceptanceRate: number; // % of recommendations accepted
+  dismissedTypes: RecommendationType[]; // Recently dismissed types
+  lastRecommendationDate: Date | null;
+}
+
+export interface SmartRecommendation {
+  id: string;
+  userId: string;
+  type: RecommendationType;
+  priority: RecommendationPriority;
+  status: RecommendationStatus;
+  
+  // Content
+  title: string;
+  description: string;
+  reasoning: string; // Why this recommendation
+  
+  // Action details
+  actionLabel: string; // e.g., "Generate Recipe", "Create Meal Plan"
+  actionUrl: string; // Deep link with pre-filled data
+  actionData: Record<string, any>; // Data to pre-populate
+  
+  // Targeting
+  targetSystem?: DefenseSystem; // If system-specific
+  targetMealTime?: string; // If meal-specific
+  
+  // Metadata
+  expiresAt: Date;
+  createdAt: Date;
+  acceptedAt?: Date;
+  dismissedAt?: Date;
+  
+  // Analytics
+  viewCount: number;
+  dismissCount: number; // Times shown but dismissed
+}
+
+export interface RecommendationContext {
+  date: Date;
+  score: any; // Score5x5x5 from scoring engine
+  gaps: GapAnalysis;
+  userProfile: UserBehaviorProfile;
+  existingRecommendations: SmartRecommendation[];
+}
+```
+
+**File: `/lib/recommendations/gap-analyzer.ts`**
+
+```typescript
+import { Score5x5x5 } from '@/lib/tracking/types';
+import { GapAnalysis } from './types';
+import { DefenseSystem } from '@/types';
+
+/**
+ * Analyze user's 5x5x5 score to identify gaps and weaknesses
+ */
+export function analyzeGaps(score: Score5x5x5): GapAnalysis {
+  // Identify missing and weak systems
+  const missingSystems: DefenseSystem[] = [];
+  const weakSystems: DefenseSystem[] = [];
+  
+  score.defenseSystems.forEach(systemScore => {
+    if (systemScore.foodsConsumed === 0 || systemScore.foodsConsumed === 1) {
+      missingSystems.push(systemScore.system);
+    } else if (systemScore.foodsConsumed === 2 || systemScore.foodsConsumed === 3) {
+      weakSystems.push(systemScore.system);
+    }
+  });
+  
+  // Identify missed meals
+  const missedMeals = score.mealTimes
+    .filter(mt => !mt.hasFood)
+    .map(mt => mt.mealTime);
+  
+  // Check for repeated foods (low variety)
+  const repeatedFoods = score.foodVariety.repeatedFoods;
+  
+  return {
+    missingSystems,
+    weakSystems,
+    missedMeals,
+    varietyScore: score.foodVariety.varietyScore,
+    repeatedFoods,
+    overallScore: score.overallScore,
+    systemBalance: score.insights.systemBalance,
+  };
+}
+
+/**
+ * Calculate priority score for a gap (0-100)
+ * Higher = more urgent
+ */
+export function calculateGapPriority(
+  gap: { type: 'system' | 'meal' | 'variety'; value: any },
+  context: { overallScore: number; systemBalance: number }
+): number {
+  let priority = 50; // Base priority
+  
+  if (gap.type === 'system') {
+    // Missing systems are high priority
+    priority = 80;
+    
+    // Critical if overall score is low
+    if (context.overallScore < 40) {
+      priority = 95;
+    }
+  } else if (gap.type === 'meal') {
+    // Missed meals are medium priority
+    priority = 60;
+    
+    // Higher if it's a main meal (breakfast, lunch, dinner)
+    if (['BREAKFAST', 'LUNCH', 'DINNER'].includes(gap.value)) {
+      priority = 70;
+    }
+  } else if (gap.type === 'variety') {
+    // Low variety is lower priority unless very repetitive
+    priority = 40;
+    
+    if (context.overallScore > 70) {
+      // If score is good, variety becomes more important
+      priority = 55;
+    }
+  }
+  
+  return Math.min(100, Math.max(0, priority));
+}
+```
+
+**File: `/lib/recommendations/behavior-analyzer.ts`**
+
+```typescript
+import { prisma } from '@/lib/prisma';
+import { UserBehaviorProfile } from './types';
+import { subDays } from 'date-fns';
+
+/**
+ * Analyze user's behavior patterns over the last 30 days
+ */
+export async function analyzeUserBehavior(userId: string): Promise<UserBehaviorProfile> {
+  const thirtyDaysAgo = subDays(new Date(), 30);
+  
+  // Get user data
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      defaultDietaryRestrictions: true,
+    },
+  });
+  
+  // Get progress data from last 30 days
+  const progressData = await prisma.progress.findMany({
+    where: {
+      userId,
+      date: { gte: thirtyDaysAgo },
+    },
+    include: {
+      FoodConsumption: {
+        include: {
+          foodItems: true,
+        },
+      },
+    },
+    orderBy: { date: 'desc' },
+  });
+  
+  // Get daily scores from cache
+  const dailyScores = await prisma.dailyProgressScore.findMany({
+    where: {
+      userId,
+      date: { gte: thirtyDaysAgo },
+    },
+    orderBy: { date: 'desc' },
+  });
+  
+  // Analyze meal time preferences
+  const mealTimeCounts: Record<string, number> = {};
+  progressData.forEach(p => {
+    p.FoodConsumption.forEach(fc => {
+      mealTimeCounts[fc.mealTime] = (mealTimeCounts[fc.mealTime] || 0) + 1;
+    });
+  });
+  
+  const preferredMealTimes = Object.entries(mealTimeCounts)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 3)
+    .map(([time]) => time);
+  
+  // Analyze favorite foods
+  const foodCounts: Record<string, number> = {};
+  progressData.forEach(p => {
+    p.FoodConsumption.forEach(fc => {
+      fc.foodItems.forEach(food => {
+        foodCounts[food.name] = (foodCounts[food.name] || 0) + 1;
+      });
+    });
+  });
+  
+  const favoriteFoods = Object.entries(foodCounts)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 10)
+    .map(([name, frequency]) => ({ name, frequency }));
+  
+  // Calculate average score
+  const avgScore = dailyScores.length > 0
+    ? dailyScores.reduce((sum, s) => sum + (s.overallScore || 0), 0) / dailyScores.length
+    : 0;
+  
+  // Calculate consistency (days tracked / 30 days)
+  const uniqueDates = new Set(progressData.map(p => p.date.toISOString().split('T')[0]));
+  const consistency = (uniqueDates.size / 30) * 100;
+  
+  // Get recommendation history
+  const recommendations = await prisma.recommendation.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'desc' },
+    take: 50,
+  });
+  
+  const acceptedCount = recommendations.filter(r => r.status === 'ACCEPTED').length;
+  const acceptanceRate = recommendations.length > 0
+    ? (acceptedCount / recommendations.length) * 100
+    : 50; // Default to 50% if no history
+  
+  const dismissedTypes = recommendations
+    .filter(r => r.status === 'DISMISSED' && r.createdAt > subDays(new Date(), 7))
+    .map(r => r.type as any);
+  
+  const lastRec = recommendations[0];
+  
+  return {
+    preferredMealTimes,
+    favoriteFoods,
+    dietaryRestrictions: user?.defaultDietaryRestrictions || [],
+    averageDailyScore: Math.round(avgScore),
+    consistency: Math.round(consistency),
+    acceptanceRate: Math.round(acceptanceRate),
+    dismissedTypes,
+    lastRecommendationDate: lastRec?.createdAt || null,
+  };
+}
+```
+
+**File: `/lib/recommendations/engine.ts`**
+
+```typescript
+import { prisma } from '@/lib/prisma';
+import { Score5x5x5 } from '@/lib/tracking/types';
+import { analyzeGaps, calculateGapPriority } from './gap-analyzer';
+import { analyzeUserBehavior } from './behavior-analyzer';
+import { 
+  SmartRecommendation, 
+  RecommendationContext, 
+  RecommendationType,
+  RecommendationPriority,
+} from './types';
+import { addDays, differenceInHours } from 'date-fns';
+import { DefenseSystem } from '@/types';
+
+/**
+ * Main recommendation engine
+ * Generates personalized recommendations based on user progress and behavior
+ */
+export class RecommendationEngine {
+  /**
+   * Generate recommendations for a user on a specific date
+   */
+  async generateRecommendations(
+    userId: string,
+    date: Date,
+    score: Score5x5x5
+  ): Promise<SmartRecommendation[]> {
+    // Analyze gaps and user behavior
+    const gaps = analyzeGaps(score);
+    const userProfile = await analyzeUserBehavior(userId);
+    
+    // Get existing active recommendations
+    const existingRecommendations = await prisma.recommendation.findMany({
+      where: {
+        userId,
+        status: 'PENDING',
+        expiresAt: { gt: new Date() },
+      },
+    });
+    
+    const context: RecommendationContext = {
+      date,
+      score,
+      gaps,
+      userProfile,
+      existingRecommendations: existingRecommendations as any[],
+    };
+    
+    // Check recommendation frequency limits
+    if (!this.shouldGenerateRecommendation(context)) {
+      return [];
+    }
+    
+    const recommendations: SmartRecommendation[] = [];
+    
+    // Priority 1: Critical gaps (missing systems with low overall score)
+    if (gaps.overallScore < 50 && gaps.missingSystems.length > 0) {
+      const rec = this.createSystemRecommendation(
+        gaps.missingSystems[0],
+        'CRITICAL',
+        context
+      );
+      if (rec) recommendations.push(rec);
+    }
+    
+    // Priority 2: Missing systems
+    if (gaps.missingSystems.length > 0 && recommendations.length < 2) {
+      for (const system of gaps.missingSystems.slice(0, 2)) {
+        const rec = this.createSystemRecommendation(system, 'HIGH', context);
+        if (rec) recommendations.push(rec);
+      }
+    }
+    
+    // Priority 3: Meal planning for weak systems
+    if (gaps.weakSystems.length >= 2 && recommendations.length < 3) {
+      const rec = this.createMealPlanRecommendation(gaps.weakSystems, context);
+      if (rec) recommendations.push(rec);
+    }
+    
+    // Priority 4: Variety improvement
+    if (gaps.varietyScore < 50 && gaps.overallScore >= 60 && recommendations.length < 3) {
+      const rec = this.createVarietyRecommendation(context);
+      if (rec) recommendations.push(rec);
+    }
+    
+    // Limit to max 3 recommendations per day
+    return recommendations.slice(0, 3);
+  }
+  
+  /**
+   * Check if we should generate a new recommendation
+   */
+  private shouldGenerateRecommendation(context: RecommendationContext): boolean {
+    const { userProfile, existingRecommendations } = context;
+    
+    // Don't generate if user has 3+ pending recommendations
+    if (existingRecommendations.length >= 3) {
+      return false;
+    }
+    
+    // Check last recommendation time (min 4 hours between)
+    if (userProfile.lastRecommendationDate) {
+      const hoursSince = differenceInHours(new Date(), userProfile.lastRecommendationDate);
+      if (hoursSince < 4) {
+        return false;
+      }
+    }
+    
+    // Don't spam if user has low acceptance rate
+    if (userProfile.acceptanceRate < 20 && existingRecommendations.length > 0) {
+      return false;
+    }
+    
+    return true;
+  }
+  
+  /**
+   * Create a recommendation for a missing/weak defense system
+   */
+  private createSystemRecommendation(
+    system: DefenseSystem,
+    priority: RecommendationPriority,
+    context: RecommendationContext
+  ): SmartRecommendation | null {
+    const systemName = system.toLowerCase().replace('_', ' ');
+    
+    // Check if this type was recently dismissed
+    if (context.userProfile.dismissedTypes.includes('RECIPE')) {
+      return null;
+    }
+    
+    const recommendation: SmartRecommendation = {
+      id: `rec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      userId: context.score.overallScore.toString(), // Will be replaced with actual userId
+      type: 'RECIPE',
+      priority,
+      status: 'PENDING',
+      
+      title: `Boost Your ${systemName.charAt(0).toUpperCase() + systemName.slice(1)}`,
+      description: `Generate a recipe that supports your ${systemName} defense system`,
+      reasoning: `You haven't covered the ${systemName} system yet today. Let's create a delicious recipe to fill this gap!`,
+      
+      actionLabel: 'Generate Recipe',
+      actionUrl: `/recipes/generate?system=${system}&source=recommendation`,
+      actionData: {
+        focusSystems: [system],
+        dietaryRestrictions: context.userProfile.dietaryRestrictions,
+        mealTime: context.userProfile.preferredMealTimes[0] || 'DINNER',
+      },
+      
+      targetSystem: system,
+      
+      expiresAt: addDays(new Date(), 1),
+      createdAt: new Date(),
+      
+      viewCount: 0,
+      dismissCount: 0,
+    };
+    
+    return recommendation;
+  }
+  
+  /**
+   * Create a meal plan recommendation for multiple weak systems
+   */
+  private createMealPlanRecommendation(
+    systems: DefenseSystem[],
+    context: RecommendationContext
+  ): SmartRecommendation | null {
+    if (context.userProfile.dismissedTypes.includes('MEAL_PLAN')) {
+      return null;
+    }
+    
+    const recommendation: SmartRecommendation = {
+      id: `rec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      userId: context.score.overallScore.toString(),
+      type: 'MEAL_PLAN',
+      priority: 'HIGH',
+      status: 'PENDING',
+      
+      title: 'Create a Balanced Meal Plan',
+      description: 'Generate a weekly meal plan covering multiple defense systems',
+      reasoning: `You have ${systems.length} systems that need more coverage. A meal plan can help you stay consistent!`,
+      
+      actionLabel: 'Create Meal Plan',
+      actionUrl: `/meal-planner?systems=${systems.join(',')}&source=recommendation`,
+      actionData: {
+        focusSystems: systems,
+        dietaryRestrictions: context.userProfile.dietaryRestrictions,
+        servings: 2,
+      },
+      
+      expiresAt: addDays(new Date(), 2),
+      createdAt: new Date(),
+      
+      viewCount: 0,
+      dismissCount: 0,
+    };
+    
+    return recommendation;
+  }
+  
+  /**
+   * Create a variety improvement recommendation
+   */
+  private createVarietyRecommendation(
+    context: RecommendationContext
+  ): SmartRecommendation | null {
+    const recommendation: SmartRecommendation = {
+      id: `rec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      userId: context.score.overallScore.toString(),
+      type: 'FOOD_SUGGESTION',
+      priority: 'MEDIUM',
+      status: 'PENDING',
+      
+      title: 'Try Something New',
+      description: 'Discover new foods to increase your variety score',
+      reasoning: `You've been eating similar foods. Let's explore new options to maximize your health benefits!`,
+      
+      actionLabel: 'Explore Foods',
+      actionUrl: `/recipes?variety=high&exclude=${context.gaps.repeatedFoods.join(',')}&source=recommendation`,
+      actionData: {
+        excludeFoods: context.gaps.repeatedFoods,
+        focusVariety: true,
+      },
+      
+      expiresAt: addDays(new Date(), 1),
+      createdAt: new Date(),
+      
+      viewCount: 0,
+      dismissCount: 0,
+    };
+    
+    return recommendation;
+  }
+}
+```
+
+#### Database Schema Addition
+
+Add to `prisma/schema.prisma`:
+
+```prisma
+model Recommendation {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type        String   // RECIPE, MEAL_PLAN, FOOD_SUGGESTION, WORKFLOW_STEP
+  priority    String   // CRITICAL, HIGH, MEDIUM, LOW
+  status      String   // PENDING, ACCEPTED, DISMISSED, EXPIRED
+  
+  title       String
+  description String
+  reasoning   String   @db.Text
+  
+  actionLabel String
+  actionUrl   String
+  actionData  Json?
+  
+  targetSystem   String?
+  targetMealTime String?
+  
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  acceptedAt  DateTime?
+  dismissedAt DateTime?
+  
+  viewCount    Int @default(0)
+  dismissCount Int @default(0)
+  
+  @@index([userId, status, expiresAt])
+  @@index([userId, createdAt])
+}
+```
+
+#### Deliverables
+- ✅ Types and interfaces defined
+- ✅ Gap analysis logic implemented
+- ✅ User behavior profiling
+- ✅ Recommendation generation engine
+- ✅ Priority scoring algorithm
+- ✅ Database schema for persistence
+- ✅ Frequency limiting and spam prevention
+
+---
+
+### 4.2 Recommendation API
+
+**Priority:** High  
+**Estimated Time:** 1.5 days  
+**Dependencies:** Phase 4.1 (Recommendation Engine)
+
+#### API Endpoints
+
+**File: `/app/api/recommendations/next-action/route.ts`**
+
+```typescript
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+import { RecommendationEngine } from '@/lib/recommendations/engine';
+import { getCachedOrCalculateScore } from '@/lib/tracking/score-cache';
+
+/**
+ * GET /api/recommendations/next-action
+ * Get the next recommended action for the user
+ * 
+ * Query params:
+ *   - date: YYYY-MM-DD (optional, defaults to today)
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
+    const { searchParams } = new URL(request.url);
+    const dateStr = searchParams.get('date');
+    const date = dateStr ? new Date(dateStr) : new Date();
+    date.setHours(0, 0, 0, 0);
+    
+    // Get today's score
+    const score = await getCachedOrCalculateScore(session.user.id, date);
+    
+    if (!score) {
+      return NextResponse.json({
+        recommendation: null,
+        message: 'No progress data for this date',
+      });
+    }
+    
+    // Check for existing pending recommendations
+    let recommendation = await prisma.recommendation.findFirst({
+      where: {
+        userId: session.user.id,
+        status: 'PENDING',
+        expiresAt: { gt: new Date() },
+      },
+      orderBy: [
+        { priority: 'desc' }, // CRITICAL > HIGH > MEDIUM > LOW
+        { createdAt: 'desc' },
+      ],
+    });
+    
+    // If no pending recommendations, generate new ones
+    if (!recommendation) {
+      const engine = new RecommendationEngine();
+      const recommendations = await engine.generateRecommendations(
+        session.user.id,
+        date,
+        score
+      );
+      
+      if (recommendations.length > 0) {
+        // Save to database
+        const created = await prisma.recommendation.create({
+          data: {
+            ...recommendations[0],
+            userId: session.user.id,
+          },
+        });
+        
+        recommendation = created;
+      }
+    }
+    
+    // Increment view count
+    if (recommendation) {
+      await prisma.recommendation.update({
+        where: { id: recommendation.id },
+        data: { viewCount: { increment: 1 } },
+      });
+    }
+    
+    return NextResponse.json({
+      recommendation: recommendation || null,
+      score: {
+        overall: score.overallScore,
+        systemsCovered: score.defenseSystems.filter(s => s.foodsConsumed >= 3).length,
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching next action:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+```
+
+**File: `/app/api/recommendations/accept/route.ts`**
+
+```typescript
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+
+/**
+ * POST /api/recommendations/accept
+ * Mark a recommendation as accepted (user clicked the action button)
+ * 
+ * Body: { recommendationId: string }
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
+    const body = await request.json();
+    const { recommendationId } = body;
+    
+    if (!recommendationId) {
+      return NextResponse.json(
+        { error: 'recommendationId is required' },
+        { status: 400 }
+      );
+    }
+    
+    // Verify ownership and update
+    const recommendation = await prisma.recommendation.findFirst({
+      where: {
+        id: recommendationId,
+        userId: session.user.id,
+      },
+    });
+    
+    if (!recommendation) {
+      return NextResponse.json(
+        { error: 'Recommendation not found' },
+        { status: 404 }
+      );
+    }
+    
+    const updated = await prisma.recommendation.update({
+      where: { id: recommendationId },
+      data: {
+        status: 'ACCEPTED',
+        acceptedAt: new Date(),
+      },
+    });
+    
+    return NextResponse.json({
+      success: true,
+      recommendation: updated,
+    });
+  } catch (error) {
+    console.error('Error accepting recommendation:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * POST /api/recommendations/dismiss
+ * Mark a recommendation as dismissed (user closed/ignored it)
+ */
+export async function DELETE(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
+    const { searchParams } = new URL(request.url);
+    const recommendationId = searchParams.get('id');
+    
+    if (!recommendationId) {
+      return NextResponse.json(
+        { error: 'recommendationId is required' },
+        { status: 400 }
+      );
+    }
+    
+    const updated = await prisma.recommendation.update({
+      where: {
+        id: recommendationId,
+        userId: session.user.id,
+      },
+      data: {
+        status: 'DISMISSED',
+        dismissedAt: new Date(),
+        dismissCount: { increment: 1 },
+      },
+    });
+    
+    return NextResponse.json({
+      success: true,
+      recommendation: updated,
+    });
+  } catch (error) {
+    console.error('Error dismissing recommendation:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+```
+
+**File: `/app/api/recommendations/history/route.ts`**
+
+```typescript
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+import { subDays } from 'date-fns';
+
+/**
+ * GET /api/recommendations/history
+ * Get recommendation history for analytics
+ * 
+ * Query params:
+ *   - days: number (default: 30)
+ *   - status: 'ACCEPTED' | 'DISMISSED' | 'EXPIRED' | 'all' (default: 'all')
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
+    const { searchParams } = new URL(request.url);
+    const days = parseInt(searchParams.get('days') || '30');
+    const status = searchParams.get('status') || 'all';
+    
+    const since = subDays(new Date(), days);
+    
+    const recommendations = await prisma.recommendation.findMany({
+      where: {
+        userId: session.user.id,
+        createdAt: { gte: since },
+        ...(status !== 'all' && { status }),
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    
+    // Calculate stats
+    const stats = {
+      total: recommendations.length,
+      accepted: recommendations.filter(r => r.status === 'ACCEPTED').length,
+      dismissed: recommendations.filter(r => r.status === 'DISMISSED').length,
+      expired: recommendations.filter(r => r.status === 'EXPIRED').length,
+      pending: recommendations.filter(r => r.status === 'PENDING').length,
+      acceptanceRate: 0,
+      byType: {} as Record<string, number>,
+    };
+    
+    if (stats.total > 0) {
+      stats.acceptanceRate = Math.round((stats.accepted / stats.total) * 100);
+    }
+    
+    recommendations.forEach(r => {
+      stats.byType[r.type] = (stats.byType[r.type] || 0) + 1;
+    });
+    
+    return NextResponse.json({
+      recommendations,
+      stats,
+    });
+  } catch (error) {
+    console.error('Error fetching recommendation history:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+```
+
+#### Caching Strategy
+
+```typescript
+// Simple in-memory cache for recommendation results (optional)
+const recommendationCache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+function getCachedRecommendation(userId: string, date: string) {
+  const key = `${userId}:${date}`;
+  const cached = recommendationCache.get(key);
+  
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.data;
+  }
+  
+  return null;
+}
+
+function setCachedRecommendation(userId: string, date: string, data: any) {
+  const key = `${userId}:${date}`;
+  recommendationCache.set(key, { data, timestamp: Date.now() });
+}
+```
+
+#### Deliverables
+- ✅ GET /api/recommendations/next-action endpoint
+- ✅ POST /api/recommendations/accept endpoint
+- ✅ DELETE /api/recommendations/dismiss endpoint
+- ✅ GET /api/recommendations/history endpoint
+- ✅ Response caching (5min TTL)
+- ✅ Error handling and validation
+- ✅ Stats calculation in history endpoint
+
+---
+
+### 4.3 Smart Actions Panel Component
+
+**Priority:** High  
+**Estimated Time:** 2 days  
+**Dependencies:** Phase 4.2 (Recommendation API)
+
+#### Component Implementation
+
+**File: `/components/progress/SmartActionsPanel.tsx`**
+
+```typescript
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { format } from 'date-fns';
+import { Sparkles, X, ChefHat, Calendar, TrendingUp, Loader2 } from 'lucide-react';
+
+interface Recommendation {
+  id: string;
+  type: string;
+  priority: string;
+  title: string;
+  description: string;
+  reasoning: string;
+  actionLabel: string;
+  actionUrl: string;
+  actionData: Record<string, any>;
+  targetSystem?: string;
+}
+
+interface SmartActionsPanelProps {
+  date: Date;
+  className?: string;
+}
+
+export default function SmartActionsPanel({ date, className = '' }: SmartActionsPanelProps) {
+  const router = useRouter();
+  const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [accepting, setAccepting] = useState(false);
+  const [score, setScore] = useState<{ overall: number; systemsCovered: number } | null>(null);
+
+  useEffect(() => {
+    fetchRecommendation();
+  }, [date]);
+
+  const fetchRecommendation = async () => {
+    try {
+      setLoading(true);
+      const dateStr = format(date, 'yyyy-MM-dd');
+      const res = await fetch(`/api/recommendations/next-action?date=${dateStr}`);
+      const data = await res.json();
+      
+      setRecommendation(data.recommendation);
+      setScore(data.score);
+    } catch (error) {
+      console.error('Error fetching recommendation:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAccept = async () => {
+    if (!recommendation) return;
+    
+    try {
+      setAccepting(true);
+      
+      // Mark as accepted in backend
+      await fetch('/api/recommendations/accept', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ recommendationId: recommendation.id }),
+      });
+      
+      // Navigate to action URL
+      router.push(recommendation.actionUrl);
+    } catch (error) {
+      console.error('Error accepting recommendation:', error);
+      setAccepting(false);
+    }
+  };
+
+  const handleDismiss = async () => {
+    if (!recommendation) return;
+    
+    try {
+      await fetch(`/api/recommendations/accept?id=${recommendation.id}`, {
+        method: 'DELETE',
+      });
+      
+      // Clear current recommendation and fetch next
+      setRecommendation(null);
+      fetchRecommendation();
+    } catch (error) {
+      console.error('Error dismissing recommendation:', error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className={`bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-xl shadow-lg p-6 ${className}`}>
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="w-8 h-8 text-purple-600 animate-spin" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!recommendation) {
+    return (
+      <div className={`bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl shadow-lg p-6 ${className}`}>
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+            <TrendingUp className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+              Great Job!
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              You're doing well today
+            </p>
+          </div>
+        </div>
+        {score && (
+          <p className="text-gray-700 dark:text-gray-300">
+            Your score is <strong>{score.overall}/100</strong> with{' '}
+            <strong>{score.systemsCovered}/5</strong> systems covered. Keep it up!
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  const priorityColors = {
+    CRITICAL: 'from-red-500 to-orange-500',
+    HIGH: 'from-orange-500 to-yellow-500',
+    MEDIUM: 'from-purple-500 to-blue-500',
+    LOW: 'from-blue-500 to-cyan-500',
+  };
+
+  const gradientClass = priorityColors[recommendation.priority as keyof typeof priorityColors] || priorityColors.MEDIUM;
+
+  return (
+    <div className={`bg-gradient-to-br ${gradientClass} rounded-xl shadow-lg p-[2px] ${className}`}>
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 bg-gradient-to-br ${gradientClass} rounded-lg flex items-center justify-center`}>
+              <Sparkles className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                  {recommendation.title}
+                </h3>
+                {recommendation.priority === 'CRITICAL' && (
+                  <span className="px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs font-semibold rounded">
+                    Urgent
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Smart Recommendation
+              </p>
+            </div>
+          </div>
+          
+          <button
+            onClick={handleDismiss}
+            className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            aria-label="Dismiss"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="mb-4">
+          <p className="text-gray-700 dark:text-gray-300 mb-2">
+            {recommendation.description}
+          </p>
+          <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+            <p className="text-sm text-gray-600 dark:text-gray-400 flex items-start gap-2">
+              <span className="text-purple-600 dark:text-purple-400 mt-0.5">💡</span>
+              {recommendation.reasoning}
+            </p>
+          </div>
+        </div>
+
+        {/* Action Button */}
+        <button
+          onClick={handleAccept}
+          disabled={accepting}
+          className={`w-full py-3 px-4 bg-gradient-to-r ${gradientClass} text-white rounded-lg font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2`}
+        >
+          {accepting ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span>Loading...</span>
+            </>
+          ) : (
+            <>
+              {recommendation.type === 'RECIPE' && <ChefHat className="w-5 h-5" />}
+              {recommendation.type === 'MEAL_PLAN' && <Calendar className="w-5 h-5" />}
+              {recommendation.type === 'FOOD_SUGGESTION' && <Sparkles className="w-5 h-5" />}
+              <span>{recommendation.actionLabel}</span>
+            </>
+          )}
+        </button>
+
+        {/* Score Context */}
+        {score && (
+          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-600 dark:text-gray-400">Today's Score:</span>
+              <span className="font-semibold text-gray-900 dark:text-white">{score.overall}/100</span>
+            </div>
+            <div className="flex items-center justify-between text-sm mt-1">
+              <span className="text-gray-600 dark:text-gray-400">Systems Covered:</span>
+              <span className="font-semibold text-gray-900 dark:text-white">{score.systemsCovered}/5</span>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+```
+
+#### Integration with Progress Dashboard
+
+Update `/app/(dashboard)/progress/page.tsx`:
+
+```typescript
+// Add import
+import SmartActionsPanel from '@/components/progress/SmartActionsPanel';
+
+// In the daily view layout, add SmartActionsPanel
+{view === 'daily' && (
+  <>
+    {/* Existing top row */}
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <OverallScoreCard date={selectedDate} />
+      <DefenseSystemsRadar date={selectedDate} onClick={handleSystemClick} />
+    </div>
+
+    {/* NEW: Smart Actions Panel - Full Width */}
+    <SmartActionsPanel date={selectedDate} />
+
+    {/* Rest of layout... */}
+  </>
+)}
+```
+
+#### Deliverables
+- ✅ SmartActionsPanel component created
+- ✅ Recommendation fetching with loading states
+- ✅ Accept/Dismiss functionality
+- ✅ Deep linking to action URLs
+- ✅ Priority-based color coding
+- ✅ Score context display
+- ✅ Animations and transitions
+- ✅ Integration with progress dashboard
+
+---
+
+### 4.4 Generator Integration
+
+**Priority:** High  
+**Estimated Time:** 2 days  
+**Dependencies:** Phase 4.3 (Smart Actions Panel)
+
+#### URL Parameter Handling
+
+**Update: `/app/recipes/generate/page.tsx`**
+
+```typescript
+'use client';
+
+import { useSearchParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { DefenseSystem } from '@/types';
+
+export default function GenerateRecipePage() {
+  const searchParams = useSearchParams();
+  const [focusSystems, setFocusSystems] = useState<DefenseSystem[]>([]);
+  const [source, setSource] = useState<string | null>(null);
+  
+  useEffect(() => {
+    // Check if coming from recommendation
+    const sourceParam = searchParams.get('source');
+    const systemParam = searchParams.get('system');
+    
+    if (sourceParam === 'recommendation') {
+      setSource('recommendation');
+      
+      // Pre-fill focus system if provided
+      if (systemParam) {
+        setFocusSystems([systemParam as DefenseSystem]);
+      }
+      
+      // Show "From Recommendation" indicator
+      // Could also show a banner or highlight
+    }
+  }, [searchParams]);
+  
+  // Rest of component...
+  
+  return (
+    <div>
+      {source === 'recommendation' && (
+        <div className="mb-6 p-4 bg-purple-100 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-800 rounded-lg">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl">💡</span>
+            <div>
+              <p className="font-semibold text-gray-900 dark:text-white">
+                From Your Smart Recommendation
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                We've pre-selected settings based on your progress gaps
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Rest of generator UI... */}
+    </div>
+  );
+}
+```
+
+**Update: `/app/meal-planner/page.tsx`**
+
+```typescript
+'use client';
+
+import { useSearchParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
+
+export default function MealPlannerPage() {
+  const searchParams = useSearchParams();
+  const [prefilledData, setPrefilledData] = useState<any>(null);
+  
+  useEffect(() => {
+    const source = searchParams.get('source');
+    const systems = searchParams.get('systems');
+    
+    if (source === 'recommendation' && systems) {
+      setPrefilledData({
+        focusSystems: systems.split(','),
+        source: 'recommendation',
+      });
+    }
+  }, [searchParams]);
+  
+  return (
+    <div>
+      {prefilledData?.source === 'recommendation' && (
+        <div className="mb-6 p-4 bg-purple-100 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-800 rounded-lg">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl">🎯</span>
+            <div>
+              <p className="font-semibold text-gray-900 dark:text-white">
+                Recommended Meal Plan
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Targeting {prefilledData.focusSystems.length} defense systems you need to cover
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Rest of meal planner... */}
+    </div>
+  );
+}
+```
+
+#### Workflow State Updates
+
+When user completes a recommendation action (generates recipe, creates plan), update workflow state:
+
+```typescript
+// After successful recipe generation from recommendation
+async function onRecipeGenerateSuccess(recipeId: string, source: string) {
+  if (source === 'recommendation') {
+    // Update user workflow state
+    await fetch('/api/user/workflow-state', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        step: 'CREATE',
+        completed: true,
+        source: 'recommendation',
+      }),
+    });
+    
+    // Show success message with next step suggestion
+    toast.success('Recipe generated! Ready to add it to your meal plan?');
+  }
+}
+```
+
+#### Deliverables
+- ✅ Recipe generator accepts pre-filled data from URL
+- ✅ Meal planner accepts pre-filled data from URL
+- ✅ "From Recommendation" indicators added
+- ✅ URL parameter parsing and validation
+- ✅ Success callbacks update workflow state
+- ✅ Next step suggestions after completion
+- ✅ Complete workflow testing (recommendation → generate → save)
+
+---
+
+### Phase 4 Summary
+
+**Total Estimated Time:** 8.5 days  
+**Key Deliverables:**
+- Intelligent recommendation engine with gap analysis
+- 4 REST API endpoints (next-action, accept, dismiss, history)
+- SmartActionsPanel component with deep linking
+- Generator integration with pre-filled data
+- Recommendation persistence and analytics
+- User behavior profiling
+- Acceptance rate tracking
+
+**Success Criteria:**
+- ✅ Recommendations generated based on real gaps
+- ✅ Max 3 recommendations per day
+- ✅ 4+ hour minimum between recommendations
+- ✅ Acceptance rate tracking >40%
+- ✅ Deep links work with pre-filled data
+- ✅ Workflow state updates correctly
+- ✅ No TypeScript errors
+- ✅ Full dark mode support
 
 ---
 
@@ -1661,7 +3011,7 @@ npm install react-chartjs-2 chart.js
      }),
      
      weeklyPlanning: (data: { weeklyAverage: number }) => ({
-       subject: 'Time to plan your week!',
+       subject: 'Time to planoptional your week!',
        html: `
          <h2>Last Week's Average: ${data.weeklyAverage}/100</h2>
          <p>Plan this week's meals for even better results!</p>
@@ -1673,7 +3023,7 @@ npm install react-chartjs-2 chart.js
        subject: 'Don\'t break your streak!',
        html: `
          <h2>${data.streakDays}-Day Streak 🔥</h2>
-         <p>You haven't logged food today. Keep your streak going!</p>
+         <p>You haven't loggeoptionald food today. Keep your streak going!</p>
          <a href="${process.env.NEXT_PUBLIC_APP_URL}/progress">Log Food Now</a>
        `,
      }),
@@ -1743,7 +3093,7 @@ npm install react-chartjs-2 chart.js
          mealPlans: true,
          shoppingLists: true,
          pantryItems: true,
-         favorites: true,
+         favorites: true,optional
          ratings: true,
          comments: true,
        },
@@ -1755,7 +3105,7 @@ npm install react-chartjs-2 chart.js
            name: userData.name,
            email: userData.email,
            bio: userData.bio,
-           createdAt: userData.createdAt,
+           createdAt: userDatoptionala.createdAt,
          },
          preferences: {
            dietaryRestrictions: userData.defaultDietaryRestrictions,

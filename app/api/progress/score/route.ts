@@ -35,12 +35,20 @@ export async function GET(request: NextRequest) {
     const view = searchParams.get('view') || 'daily';
 
     // Parse date or default to today
-    const date = dateStr ? new Date(dateStr) : new Date();
-    
-    // Validate date
-    if (isNaN(date.getTime())) {
+    let date: Date;
+    try {
+      date = dateStr ? new Date(dateStr) : new Date();
+      
+      // Validate date
+      if (isNaN(date.getTime())) {
+        throw new Error('Invalid date');
+      }
+    } catch (err) {
       return NextResponse.json(
-        { error: 'Invalid date format. Use ISO 8601 format (YYYY-MM-DD)' },
+        { 
+          error: 'Invalid date format. Use ISO 8601 format (YYYY-MM-DD)',
+          details: err instanceof Error ? err.message : 'Date parsing failed'
+        },
         { status: 400 }
       );
     }
@@ -48,7 +56,10 @@ export async function GET(request: NextRequest) {
     // Validate view parameter
     if (!['daily', 'weekly', 'monthly'].includes(view)) {
       return NextResponse.json(
-        { error: 'Invalid view parameter. Must be: daily, weekly, or monthly' },
+        { 
+          error: 'Invalid view parameter. Must be: daily, weekly, or monthly',
+          received: view
+        },
         { status: 400 }
       );
     }
@@ -59,50 +70,83 @@ export async function GET(request: NextRequest) {
     if (view === 'daily') {
       const startTime = Date.now();
       
-      // Use cached score if available, otherwise calculate
-      const score = await getCachedOrCalculateScore(userId, date);
-      
-      const duration = Date.now() - startTime;
-      
-      return NextResponse.json({
-        score,
-        meta: {
-          date: startOfDay(date).toISOString(),
-          view: 'daily',
-          calculationTime: `${duration}ms`,
-        },
-      });
+      try {
+        // Use cached score if available, otherwise calculate
+        const score = await getCachedOrCalculateScore(userId, date);
+        
+        const duration = Date.now() - startTime;
+        
+        return NextResponse.json({
+          score,
+          meta: {
+            date: startOfDay(date).toISOString(),
+            view: 'daily',
+            calculationTime: `${duration}ms`,
+            cached: score ? true : false,
+          },
+        });
+      } catch (err: any) {
+        console.error('Daily score calculation error:', err);
+        return NextResponse.json(
+          { 
+            error: 'Failed to calculate daily score',
+            details: err instanceof Error ? err.message : 'Unknown error'
+          },
+          { status: 500 }
+        );
+      }
     } else if (view === 'weekly') {
       const startTime = Date.now();
       
-      const weeklyScore = await calculateWeeklyScores(userId, date);
-      
-      const duration = Date.now() - startTime;
-      
-      return NextResponse.json({
-        score: weeklyScore,
-        meta: {
-          weekStart: weeklyScore.weekStart.toISOString(),
-          weekEnd: weeklyScore.weekEnd.toISOString(),
-          view: 'weekly',
-          calculationTime: `${duration}ms`,
-        },
-      });
+      try {
+        const weeklyScore = await calculateWeeklyScores(userId, date);
+        
+        const duration = Date.now() - startTime;
+        
+        return NextResponse.json({
+          score: weeklyScore,
+          meta: {
+            weekStart: weeklyScore.weekStart.toISOString(),
+            view: 'weekly',
+            calculationTime: `${duration}ms`,
+          },
+        });
+      } catch (err: any) {
+        console.error('Weekly score calculation error:', err);
+        return NextResponse.json(
+          { 
+            error: 'Failed to calculate weekly score',
+            details: err instanceof Error ? err.message : 'Unknown error'
+          },
+          { status: 500 }
+        );
+      }
     } else if (view === 'monthly') {
       const startTime = Date.now();
       
-      const monthlyScore = await calculateMonthlyScores(userId, date);
-      
-      const duration = Date.now() - startTime;
-      
-      return NextResponse.json({
-        score: monthlyScore,
-        meta: {
-          month: monthlyScore.month.toISOString(),
-          view: 'monthly',
-          calculationTime: `${duration}ms`,
-        },
-      });
+      try {
+        const monthlyScore = await calculateMonthlyScores(userId, date);
+        
+        const duration = Date.now() - startTime;
+        
+        return NextResponse.json({
+          score: monthlyScore,
+          meta: {
+            month: monthlyScore.month.toISOString(),
+            view: 'monthly',
+            calculationTime: `${duration}ms`,
+          },
+        });
+      } catch (err: any) {
+        console.error('Monthly score calculation error:', err);
+        return NextResponse.json(
+          { 
+            error: 'Failed to calculate monthly score',
+            details: err instanceof Error ? err.message : 'Unknown error'
+          },
+          { status: 500 }
+        );
+      }
     }
 
     return NextResponse.json(

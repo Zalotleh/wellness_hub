@@ -55,6 +55,12 @@ interface EnhancedMealPlannerProps {
   onPlanSave?: (plan: MealPlan) => void;
   onPlanShare?: (plan: MealPlan) => void;
   initialPlan?: MealPlan;
+  initialParams?: {
+    targetSystems?: DefenseSystem[];
+    dietaryRestrictions?: string[];
+    duration?: number;
+  };
+  fromRecommendation?: boolean;
 }
 
 export default function EnhancedMealPlanner({
@@ -62,6 +68,8 @@ export default function EnhancedMealPlanner({
   onPlanSave,
   onPlanShare,
   initialPlan,
+  initialParams,
+  fromRecommendation = false,
 }: EnhancedMealPlannerProps) {
   const { data: session } = useSession();
   const router = useRouter();
@@ -107,9 +115,9 @@ export default function EnhancedMealPlanner({
     title: initialPlan?.title || '',
     description: initialPlan?.description || '',
     servings: 4,
-    duration: (initialPlan?.duration as 1 | 2 | 3 | 4) || 1,
-    dietaryRestrictions: [],
-    focusSystems: [],
+    duration: (initialPlan?.duration as 1 | 2 | 3 | 4) || (initialParams?.duration as 1 | 2 | 3 | 4) || 1,
+    dietaryRestrictions: initialParams?.dietaryRestrictions || [],
+    focusSystems: initialParams?.targetSystems || [],
     customInstructions: '',
     visibility: initialPlan?.visibility || 'PRIVATE',
     tags: initialPlan?.tags || [],

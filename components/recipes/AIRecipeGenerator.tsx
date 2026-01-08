@@ -17,18 +17,30 @@ import AIGeneratorOnboarding from '@/components/onboarding/AIGeneratorOnboarding
 interface AIRecipeGeneratorProps {
   onRecipeGenerated?: (recipe: RecipeFormData) => void;
   onSaveRecipe?: (recipe: RecipeFormData) => Promise<void>;
+  initialParams?: {
+    targetSystem?: DefenseSystem;
+    dietaryRestrictions?: string[];
+    preferredMealTime?: string;
+  };
+  fromRecommendation?: boolean;
 }
 
 export default function AIRecipeGenerator({
   onRecipeGenerated,
   onSaveRecipe,
+  initialParams,
+  fromRecommendation = false,
 }: AIRecipeGeneratorProps) {
   const [defenseSystem, setDefenseSystem] = useState<DefenseSystem>(
-    DefenseSystem.ANGIOGENESIS
+    initialParams?.targetSystem || DefenseSystem.ANGIOGENESIS
   );
   const [ingredients, setIngredients] = useState<string[]>(['']);
-  const [dietaryRestrictions, setDietaryRestrictions] = useState<string[]>([]);
-  const [mealType, setMealType] = useState('any');
+  const [dietaryRestrictions, setDietaryRestrictions] = useState<string[]>(
+    initialParams?.dietaryRestrictions || []
+  );
+  const [mealType, setMealType] = useState(
+    initialParams?.preferredMealTime?.toLowerCase() || 'any'
+  );
   const [measurementSystem, setMeasurementSystem] = useState<'imperial' | 'metric'>('imperial');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedRecipe, setGeneratedRecipe] = useState<RecipeFormData | null>(null);

@@ -1,8 +1,8 @@
 // app/(dashboard)/meal-planner/page.tsx
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import EnhancedMealPlanner from '@/components/meal-planner/EnhancedMealPlanner';
 import Footer from '@/components/layout/Footer';
 import ErrorBoundary from '@/components/ui/ErrorBoundary';
@@ -39,7 +39,45 @@ function MealPlannerErrorFallback() {
 
 export default function MealPlannerPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toasts, removeToast, success, error } = useToast();
+  const [fromRecommendation, setFromRecommendation] = useState(false);
+  const [recommendationId, setRecommendationId] = useState<string | null>(null);
+  const [initialParams, setInitialParams] = useState<any>(null);
+
+  // Parse URL params from recommendation
+  useEffect(() => {
+    const from = searchParams.get('from');
+    const recId = searchParams.get('recId');
+    const targetSystems = searchParams.get('targetSystems');
+    const dietaryRestrictions = searchParams.get('dietaryRestrictions');
+    const duration = searchParams.get('duration');
+
+    if (from === 'recommendation' && recId) {
+      setFromRecommendation(true);
+      setRecommendationId(recId);
+
+      // Build initial params
+      const params: any = {};
+      if (targetSystems) {
+        try {
+          params.targetSystems = JSON.parse(targetSystems);
+        } catch {
+          params.targetSystems = targetSystems.split(',');
+        }
+      }
+      if (dietaryRestrictions) {
+        try {
+          params.dietaryRestrictions = JSON.parse(dietaryRestrictions);
+        } catch {
+          params.dietaryRestrictions = dietaryRestrictions.split(',');
+        }
+      }
+      if (duration) params.duration = parseInt(duration);
+
+      setInitialParams(params);
+    }
+  }, [searchParams]);
 
   // Dynamic SEO setup for client component
   useEffect(() => {
@@ -65,8 +103,26 @@ export default function MealPlannerPage() {
   }, []);
 
   // Handle meal plan save
-  const handlePlanSave = (plan: any) => {
+  const handlePlanSave = async (plan: any) => {
     success('Meal Plan Saved', 'Your meal plan has been saved successfully!');
+    
+    // If from recommendation, mark as completed
+    if (fromRecommendation && recommendationId) {
+      try {
+        await fetch(`/api/recommendations/${recommendationId}/accept`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            metadata: {
+              mealPlanId: plan.id,
+              completedAt: new Date().toISOString(),
+            },
+          }),
+        });
+      } catch (err) {
+        console.error('Failed to track recommendation completion:', err);
+      }
+    }
     
     // Redirect to the individual meal plan page after creation
     if (plan?.id) {
@@ -91,6 +147,23 @@ export default function MealPlannerPage() {
         <div className="max-w-7xl mx-auto">
           {/* Enhanced Header */}
           <header className="mb-8">
+            {/* Recommendation Indicator */}
+            {fromRecommendation && (
+              <div className="mb-4 p-4 bg-gradient-to-r from-green-100 to-blue-100 dark:from-green-900/30 dark:to-blue-900/30 border border-green-200 dark:border-green-800 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Target className="w-5 h-5 text-green-600 dark:text-green-400" />
+                  <div className="flex-1">
+                    <p className="font-semibold text-green-900 dark:text-green-100">
+                      Smart Recommendation
+                    </p>
+                    <p className="text-sm text-green-700 dark:text-green-300">
+                      This meal plan will help balance multiple defense systems
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="flex items-center space-x-4 mb-6">
               <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-blue-500 rounded-lg flex items-center justify-center">
                 <Calendar className="w-6 h-6 text-white" />
@@ -147,6 +220,8 @@ export default function MealPlannerPage() {
             <EnhancedMealPlanner
               onPlanSave={handlePlanSave}
               onPlanShare={handlePlanShare}
+              initialParams={initialParams}
+              fromRecommendation={fromRecommendation}
               className="mb-8"
             />
           </ErrorBoundary>
