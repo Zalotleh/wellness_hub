@@ -6,10 +6,11 @@ import { useSession } from 'next-auth/react';
 import { useTheme } from 'next-themes';
 import { 
   User, Bell, Lock, CreditCard, Globe, Moon, Sun, 
-  Mail, Save, Check, AlertCircle, Shield, Trash2 
+  Mail, Save, Check, AlertCircle, Shield, Trash2, Heart
 } from 'lucide-react';
 import CountrySelector from '@/components/settings/CountrySelector';
 import TimezoneSelector from '@/components/settings/TimezoneSelector';
+import PreferencesManager from '@/components/settings/PreferencesManager';
 
 export default function SettingsPage() {
   const { data: session, update } = useSession();
@@ -157,8 +158,9 @@ export default function SettingsPage() {
 
   const tabs = [
     { id: 'personal_information', label: 'Personal Information', icon: User },
+    { id: 'wellness_preferences', label: 'Wellness Preferences', icon: Heart },
     { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'preferences', label: 'Preferences', icon: Globe },
+    { id: 'preferences', label: 'App Preferences', icon: Globe },
     { id: 'security', label: 'Security', icon: Lock },
     { id: 'subscription', label: 'Subscription', icon: CreditCard },
   ];
@@ -329,6 +331,20 @@ export default function SettingsPage() {
                       </label>
                     </div>
                   </div>
+                </div>
+              )}
+
+              {/* Wellness Preferences Tab */}
+              {activeTab === 'wellness_preferences' && (
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Wellness Preferences</h2>
+                    <p className="text-sm text-gray-600 dark:text-gray-200 mb-6">
+                      Configure your dietary preferences and health focus areas to personalize your meal plans and recommendations
+                    </p>
+                  </div>
+
+                  <PreferencesManager />
                 </div>
               )}
 
