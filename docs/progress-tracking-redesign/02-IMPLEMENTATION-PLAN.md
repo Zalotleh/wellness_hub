@@ -3,13 +3,20 @@
 **Project:** 5x5x5 Wellness Hub Progress & Tracking System Redesign  
 **Date:** January 8, 2026  
 **Status:** Planning Phase  
-**Version:** 1.0
+**Version:** 1.1  
+**Last Updated:** January 8, 2026 (Incorporated answered questions)
 
 ---
 
 ## Overview
 
 This document provides a detailed, phase-by-phase implementation plan for the Progress Tracking Redesign project. Each phase is designed to deliver incremental value while maintaining system stability.
+
+**Key Decisions Incorporated:**
+- Scoring weights: 50% systems, 30% meal times, 20% variety
+- Notification strategy: Max 3/day, learned timing, all optional
+- Premium tiers: Free (basic tracking), Premium ($9.99), Family ($19.99)
+- GDPR compliance: Full data export, deletion, portability
 
 ---
 
@@ -1333,7 +1340,700 @@ npm install react-chartjs-2 chart.js
 
 ---
 
-*[Continued in next sections with 3.3 Time Filter Implementation, 3.4 Dashboard Page Redesign, Phase 4, Phase 5, etc.]*
+*[To be expanded with 3.3 Time Filter Implementation, 3.4 Dashboard Page Redesign, Phase 4 details, etc.]*
+
+---
+
+## Phase 4: Smart Recommendations (Week 4)
+
+*Phase 4 implementation details to be added - see status tracker for task breakdown*
+
+**Key Implementation Notes:**
+- Recommendation frequency: 1-3 per day based on user behavior
+- Persistence: 24 hours or until gap filled
+- Adapt after 3 consecutive ignores (try different system/approach)
+- Track acceptance rate in recommendation history API
+
+---
+
+## Phase 5: Polish & Integration (Week 5)
+
+### 5.3 Notification System ⚠️
+
+**Priority:** High  
+**Estimated Time:** 3 days (increased from 2 days)
+
+#### Based on Approved Notification Strategy
+
+**Key Requirements:**
+- All notifications OPTIONAL and user-controllable
+- Max 3 notifications per day
+- 2-hour minimum gap between notifications
+- Smart timing based on learned user behavior
+- Do Not Disturb mode (10 PM - 7 AM default)
+
+#### Tasks
+
+1. **Create Notification Preference Schema**
+   ```typescript
+   // Notification preferences stored in User.notificationPreferences JSON field
+   interface NotificationPreferences {
+     enabled: boolean; // Master toggle
+     workflow: {
+       recipeToShoppingList: boolean;
+       shoppingListReminder: boolean;
+       mealLoggingReminder: boolean;
+     };
+     progress: {
+       dailySummary: boolean;
+       dailySummaryTime: string; // "20:00"
+       streakReminders: boolean;
+       weeklyPlanning: boolean;
+       weeklyPlanningDay: string; // "SUNDAY"
+       weeklyPlanningTime: string; // "19:00"
+     };
+     mealReminders: {
+       enabled: boolean;
+       breakfast: boolean;
+       lunch: boolean;
+       dinner: boolean;
+       // Times learned from user behavior
+     };
+     achievements: {
+       enabled: boolean; // Always on by default
+     };
+     doNotDisturb: {
+       enabled: boolean;
+       startTime: string; // "22:00"
+       endTime: string; // "07:00"
+     };
+     maxPerDay: number; // 3 (hardcoded limit)
+     minGapMinutes: number; // 120 (2 hours)
+   }
+   ```
+
+2. **Create Notification Service**
+   ```typescript
+   // File: /lib/notifications/notification-service.ts
+   
+   export class NotificationService {
+     /**
+      * Check if notification can be sent based on preferences and limits
+      */
+     async canSendNotification(
+       userId: string,
+       type: NotificationType
+     ): Promise<boolean> {
+       const user = await getUserWithPreferences(userId);
+       const prefs = user.notificationPreferences as NotificationPreferences;
+       
+       // Check master toggle
+       if (!prefs.enabled) return false;
+       
+       // Check specific notification type
+       if (!this.isTypeEnabled(type, prefs)) return false;
+       
+       // Check DND
+       if (this.isInDoNotDisturb(prefs)) return false;
+       
+       // Check daily limit (3 max)
+       const todayCount = await this.getNotificationCountToday(userId);
+       if (todayCount >= prefs.maxPerDay) return false;
+       
+       // Check minimum gap (2 hours)
+       const lastNotification = await this.getLastNotificationTime(userId);
+       if (lastNotification) {
+         const minutesSince = differenceInMinutes(new Date(), lastNotification);
+         if (minutesSince < prefs.minGapMinutes) return false;
+       }
+       
+       return true;
+     }
+     
+     /**
+      * Learn optimal notification times from user behavior
+      */
+     async learnOptimalTimes(userId: string): Promise<NotificationTimes> {
+       const foodLogs = await getFoodLogHistory(userId, 30); // Last 30 days
+       
+       // Analyze typical meal times
+       const breakfastTimes = foodLogs
+         .filter(log => log.mealTime === 'BREAKFAST')
+         .map(log => format(log.consumedAt, 'HH:mm'));
+       
+       const lunchTimes = foodLogs
+         .filter(log => log.mealTime === 'LUNCH')
+         .map(log => format(log.consumedAt, 'HH:mm'));
+       
+       const dinnerTimes = foodLogs
+         .filter(log => log.mealTime === 'DINNER')
+         .map(log => format(log.consumedAt, 'HH:mm'));
+       
+       // Calculate mode (most common time)
+       const optimalBreakfast = findMostCommon(breakfastTimes);
+       const optimalLunch = findMostCommon(lunchTimes);
+       const optimalDinner = findMostCommon(dinnerTimes);
+       
+       // Set reminder 15 minutes before typical time
+       return {
+         breakfast: subtractMinutes(optimalBreakfast, 15),
+         lunch: subtractMinutes(optimalLunch, 30),
+         dinner: subtractMinutes(optimalDinner, 30),
+       };
+     }
+     
+     /**
+      * Send notification with adaptive frequency
+      */
+     async sendNotification(
+       userId: string,
+       type: NotificationType,
+       data: NotificationData
+     ) {
+       if (!await this.canSendNotification(userId, type)) {
+         console.log(`Notification skipped for user ${userId}: limits/preferences`);
+         return;
+       }
+       
+       // Log notification
+       await this.logNotification(userId, type);
+       
+       // Send via appropriate channel (email only for now)
+       await this.sendEmail(userId, type, data);
+     }
+   }
+   ```
+
+3. **Create Notification Settings UI**
+   ```tsx
+   // File: /components/settings/NotificationSettings.tsx
+   
+   export default function NotificationSettings() {
+     const [preferences, setPreferences] = useState<NotificationPreferences>(defaultPrefs);
+     
+     return (
+       <div className="space-y-6">
+         {/* Master Toggle */}
+         <div className="flex items-center justify-between">
+           <div>
+             <h3 className="font-semibold">Enable Notifications</h3>
+             <p className="text-sm text-gray-600">Master control for all notifications</p>
+           </div>
+           <Toggle
+             checked={preferences.enabled}
+             onChange={(enabled) => setPreferences({ ...preferences, enabled })}
+           />
+         </div>
+         
+         {/* Workflow Notifications */}
+         <div className="border-t pt-4">
+           <h4 className="font-medium mb-3">Workflow Reminders (Optional)</h4>
+           <div className="space-y-3">
+             <Toggle
+               label="Recipe → Shopping List"
+               description="Remind me to add recipe ingredients to shopping list"
+               checked={preferences.workflow.recipeToShoppingList}
+               onChange={(checked) => updateWorkflowPref('recipeToShoppingList', checked)}
+             />
+             <Toggle
+               label="Shopping List Reminder"
+               description="Remind me when it's time to shop"
+               checked={preferences.workflow.shoppingListReminder}
+               onChange={(checked) => updateWorkflowPref('shoppingListReminder', checked)}
+             />
+             <Toggle
+               label="Meal Logging Reminder"
+               description="Remind me to log my meals"
+               checked={preferences.workflow.mealLoggingReminder}
+               onChange={(checked) => updateWorkflowPref('mealLoggingReminder', checked)}
+             />
+           </div>
+         </div>
+         
+         {/* Progress Notifications */}
+         <div className="border-t pt-4">
+           <h4 className="font-medium mb-3">Progress Updates (Optional)</h4>
+           <div className="space-y-3">
+             <div>
+               <Toggle
+                 label="Daily Summary"
+                 description="Daily progress recap"
+                 checked={preferences.progress.dailySummary}
+                 onChange={(checked) => updateProgressPref('dailySummary', checked)}
+               />
+               {preferences.progress.dailySummary && (
+                 <TimeSelector
+                   value={preferences.progress.dailySummaryTime}
+                   onChange={(time) => updateProgressPref('dailySummaryTime', time)}
+                   label="Summary Time"
+                 />
+               )}
+             </div>
+             <Toggle
+               label="Streak Reminders"
+               description="Alert if my streak is at risk"
+               checked={preferences.progress.streakReminders}
+               onChange={(checked) => updateProgressPref('streakReminders', checked)}
+             />
+             <div>
+               <Toggle
+                 label="Weekly Planning Prompt"
+                 description="Remind me to plan my week"
+                 checked={preferences.progress.weeklyPlanning}
+                 onChange={(checked) => updateProgressPref('weeklyPlanning', checked)}
+               />
+               {preferences.progress.weeklyPlanning && (
+                 <>
+                   <DaySelector
+                     value={preferences.progress.weeklyPlanningDay}
+                     onChange={(day) => updateProgressPref('weeklyPlanningDay', day)}
+                   />
+                   <TimeSelector
+                     value={preferences.progress.weeklyPlanningTime}
+                     onChange={(time) => updateProgressPref('weeklyPlanningTime', time)}
+                   />
+                 </>
+               )}
+             </div>
+           </div>
+         </div>
+         
+         {/* Do Not Disturb */}
+         <div className="border-t pt-4">
+           <h4 className="font-medium mb-3">Do Not Disturb</h4>
+           <Toggle
+             label="Quiet Hours"
+             description="No notifications during these times"
+             checked={preferences.doNotDisturb.enabled}
+             onChange={(checked) => updateDNDPref('enabled', checked)}
+           />
+           {preferences.doNotDisturb.enabled && (
+             <div className="mt-3 grid grid-cols-2 gap-4">
+               <TimeSelector
+                 label="Start"
+                 value={preferences.doNotDisturb.startTime}
+                 onChange={(time) => updateDNDPref('startTime', time)}
+               />
+               <TimeSelector
+                 label="End"
+                 value={preferences.doNotDisturb.endTime}
+                 onChange={(time) => updateDNDPref('endTime', time)}
+               />
+             </div>
+           )}
+         </div>
+         
+         {/* Limits Info */}
+         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
+           <p className="font-medium text-blue-900">Notification Limits:</p>
+           <ul className="mt-2 space-y-1 text-blue-800">
+             <li>• Maximum 3 notifications per day</li>
+             <li>• Minimum 2 hours between notifications</li>
+             <li>• No notifications during quiet hours</li>
+           </ul>
+         </div>
+       </div>
+     );
+   }
+   ```
+
+4. **Create Email Templates**
+   ```typescript
+   // File: /lib/notifications/email-templates.ts
+   
+   export const emailTemplates = {
+     dailySummary: (data: { score: number; insights: string }) => ({
+       subject: 'Your Wellness Update',
+       html: `
+         <h2>Today's 5x5x5 Score: ${data.score}/100</h2>
+         <p>${data.insights}</p>
+         <a href="${process.env.NEXT_PUBLIC_APP_URL}/progress">View Full Progress</a>
+       `,
+     }),
+     
+     recipeToShoppingList: (data: { recipeName: string; recipeId: string }) => ({
+       subject: 'Add ingredients to your shopping list?',
+       html: `
+         <p>You created "${data.recipeName}"</p>
+         <p>Would you like to add the ingredients to your shopping list?</p>
+         <a href="${process.env.NEXT_PUBLIC_APP_URL}/recipes/${data.recipeId}">Add to Shopping List</a>
+       `,
+     }),
+     
+     weeklyPlanning: (data: { weeklyAverage: number }) => ({
+       subject: 'Time to plan your week!',
+       html: `
+         <h2>Last Week's Average: ${data.weeklyAverage}/100</h2>
+         <p>Plan this week's meals for even better results!</p>
+         <a href="${process.env.NEXT_PUBLIC_APP_URL}/meal-planner">Create Meal Plan</a>
+       `,
+     }),
+     
+     streakReminder: (data: { streakDays: number }) => ({
+       subject: 'Don\'t break your streak!',
+       html: `
+         <h2>${data.streakDays}-Day Streak 🔥</h2>
+         <p>You haven't logged food today. Keep your streak going!</p>
+         <a href="${process.env.NEXT_PUBLIC_APP_URL}/progress">Log Food Now</a>
+       `,
+     }),
+   };
+   ```
+
+5. **Testing**
+   - Test notification frequency limits
+   - Test DND mode
+   - Test learned timing
+   - Test opt-out functionality
+   - Test email delivery
+
+#### Deliverables
+- ✅ Notification service implemented
+- ✅ Notification settings UI created
+- ✅ Email templates configured
+- ✅ Frequency limits enforced
+- ✅ User behavior learning implemented
+- ✅ All tests passing
+
+---
+
+### 5.6 GDPR Compliance Implementation 🔒
+
+**Priority:** Critical  
+**Estimated Time:** 3 days  
+**New Phase Addition**
+
+#### Based on Approved Privacy Strategy
+
+**Key Requirements:**
+- Full data export (JSON, CSV formats)
+- 30-day account deletion process
+- Data portability
+- Clear consent management
+- 18-month retention for inactive accounts
+
+#### Tasks
+
+1. **Data Export API**
+   ```typescript
+   // File: /app/api/user/data-export/route.ts
+   
+   export async function GET(request: NextRequest) {
+     const session = await getServerSession(authOptions);
+     
+     if (!session?.user?.id) {
+       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+     }
+     
+     const { searchParams } = new URL(request.url);
+     const format = searchParams.get('format') || 'json'; // json, csv, pdf
+     
+     // Fetch all user data
+     const userData = await prisma.user.findUnique({
+       where: { id: session.user.id },
+       include: {
+         foodConsumptions: {
+           include: {
+             foodItem: true,
+           },
+         },
+         dailyScores: true,
+         progress: true,
+         recipes: true,
+         mealPlans: true,
+         shoppingLists: true,
+         pantryItems: true,
+         favorites: true,
+         ratings: true,
+         comments: true,
+       },
+     });
+     
+     if (format === 'json') {
+       return NextResponse.json({
+         profile: {
+           name: userData.name,
+           email: userData.email,
+           bio: userData.bio,
+           createdAt: userData.createdAt,
+         },
+         preferences: {
+           dietaryRestrictions: userData.defaultDietaryRestrictions,
+           focusSystems: userData.defaultFocusSystems,
+           country: userData.country,
+         },
+         progressData: {
+           foodLogs: userData.foodConsumptions,
+           dailyScores: userData.dailyScores,
+           progress: userData.progress,
+         },
+         content: {
+           recipes: userData.recipes,
+           mealPlans: userData.mealPlans,
+           shoppingLists: userData.shoppingLists,
+         },
+         interactions: {
+           favorites: userData.favorites,
+           ratings: userData.ratings,
+           comments: userData.comments,
+         },
+         exportDate: new Date().toISOString(),
+       });
+     }
+     
+     if (format === 'csv') {
+       // Convert to CSV format
+       const csv = convertToCSV(userData);
+       return new Response(csv, {
+         headers: {
+           'Content-Type': 'text/csv',
+           'Content-Disposition': `attachment; filename="wellness-hub-data-${Date.now()}.csv"`,
+         },
+       });
+     }
+     
+     // PDF format would use similar approach
+   }
+   ```
+
+2. **Account Deletion API**
+   ```typescript
+   // File: /app/api/user/delete-account/route.ts
+   
+   export async function POST(request: NextRequest) {
+     const session = await getServerSession(authOptions);
+     
+     if (!session?.user?.id) {
+       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+     }
+     
+     const body = await request.json();
+     const { confirmEmail, reason } = body;
+     
+     // Verify email confirmation
+     if (confirmEmail !== session.user.email) {
+       return NextResponse.json(
+         { error: 'Email confirmation does not match' },
+         { status: 400 }
+       );
+     }
+     
+     // Option 1: Immediate deletion
+     if (body.immediate === true) {
+       await hardDeleteUser(session.user.id, reason);
+       await signOut();
+       return NextResponse.json({ success: true, message: 'Account deleted' });
+     }
+     
+     // Option 2: 30-day grace period (default)
+     await scheduleUserDeletion(session.user.id, reason);
+     return NextResponse.json({
+       success: true,
+       message: 'Account scheduled for deletion in 30 days. You can cancel anytime.',
+       deletionDate: addDays(new Date(), 30),
+     });
+   }
+   
+   async function hardDeleteUser(userId: string, reason?: string) {
+     // Log deletion for compliance
+     await prisma.deletionLog.create({
+       data: {
+         userId,
+         email: '***@***', // Anonymized
+         reason: reason || 'User requested deletion',
+         deletedAt: new Date(),
+       },
+     });
+     
+     // Cascade delete all user data
+     await prisma.user.delete({
+       where: { id: userId },
+     });
+     // Note: Prisma cascade will handle all related records
+   }
+   ```
+
+3. **Consent Management**
+   ```typescript
+   // File: /app/api/user/consent/route.ts
+   
+   export async function PUT(request: NextRequest) {
+     const session = await getServerSession(authOptions);
+     
+     if (!session?.user?.id) {
+       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+     }
+     
+     const body = await request.json();
+     const { consentType, granted } = body;
+     
+     const consents = await prisma.userConsent.upsert({
+       where: { userId: session.user.id },
+       create: {
+         userId: session.user.id,
+         analytics: consentType === 'analytics' ? granted : false,
+         marketing: consentType === 'marketing' ? granted : false,
+         necessary: true, // Always true
+         updatedAt: new Date(),
+       },
+       update: {
+         [consentType]: granted,
+         updatedAt: new Date(),
+       },
+     });
+     
+     return NextResponse.json({ success: true, consents });
+   }
+   ```
+
+4. **Privacy Settings UI**
+   ```tsx
+   // File: /components/settings/PrivacySettings.tsx
+   
+   export default function PrivacySettings() {
+     return (
+       <div className="space-y-6">
+         {/* Data Export */}
+         <div className="border-b pb-6">
+           <h3 className="text-lg font-semibold mb-3">Your Data</h3>
+           <p className="text-sm text-gray-600 mb-4">
+             Download all your data in machine-readable format
+           </p>
+           <div className="flex gap-3">
+             <button
+               onClick={() => downloadData('json')}
+               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+             >
+               Download as JSON
+             </button>
+             <button
+               onClick={() => downloadData('csv')}
+               className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+             >
+               Download as CSV
+             </button>
+           </div>
+         </div>
+         
+         {/* Consent Management */}
+         <div className="border-b pb-6">
+           <h3 className="text-lg font-semibold mb-3">Data Usage Consent</h3>
+           <div className="space-y-3">
+             <Toggle
+               label="Necessary (Required)"
+               description="Essential for app functionality"
+               checked={true}
+               disabled={true}
+             />
+             <Toggle
+               label="Analytics"
+               description="Help us improve the app with usage statistics"
+               checked={consents.analytics}
+               onChange={(checked) => updateConsent('analytics', checked)}
+             />
+             <Toggle
+               label="Marketing"
+               description="Receive product updates and wellness tips"
+               checked={consents.marketing}
+               onChange={(checked) => updateConsent('marketing', checked)}
+             />
+           </div>
+         </div>
+         
+         {/* Data Retention */}
+         <div className="border-b pb-6">
+           <h3 className="text-lg font-semibold mb-3">Data Retention</h3>
+           <div className="text-sm text-gray-700 space-y-2">
+             <p>• <strong>Active accounts:</strong> Data retained indefinitely</p>
+             <p>• <strong>Inactive accounts (1+ year):</strong> Reminder sent, then anonymized after 18 months</p>
+             <p>• <strong>Deleted accounts:</strong> Permanent deletion within 30 days</p>
+           </div>
+         </div>
+         
+         {/* Delete Account */}
+         <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+           <h3 className="text-lg font-semibold text-red-900 mb-3">Delete Account</h3>
+           <p className="text-sm text-red-800 mb-4">
+             This action cannot be undone. All your data will be permanently deleted.
+           </p>
+           <button
+             onClick={() => setShowDeleteModal(true)}
+             className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+           >
+             Delete My Account
+           </button>
+         </div>
+       </div>
+     );
+   }
+   ```
+
+5. **Inactive Account Cleanup Job**
+   ```typescript
+   // File: /scripts/cleanup-inactive-accounts.ts
+   
+   /**
+    * Run monthly to anonymize inactive accounts
+    */
+   export async function cleanupInactiveAccounts() {
+     const eighteenMonthsAgo = subMonths(new Date(), 18);
+     
+     // Find users inactive for 18+ months
+     const inactiveUsers = await prisma.user.findMany({
+       where: {
+         AND: [
+           { lastLoginAt: { lt: eighteenMonthsAgo } },
+           { anonymized: false },
+         ],
+       },
+     });
+     
+     for (const user of inactiveUsers) {
+       // Send final reminder
+       await sendInactiveAccountEmail(user.email);
+       
+       // Wait 30 days, then anonymize
+       setTimeout(async () => {
+         await anonymizeUser(user.id);
+       }, 30 * 24 * 60 * 60 * 1000); // 30 days
+     }
+   }
+   
+   async function anonymizeUser(userId: string) {
+     await prisma.user.update({
+       where: { id: userId },
+       data: {
+         name: 'Anonymous User',
+         email: `deleted-${userId}@anonymized.local`,
+         password: null,
+         image: null,
+         bio: null,
+         anonymized: true,
+       },
+     });
+     
+     // Keep aggregated scores for research (no PII)
+     // Delete personal food logs
+     await prisma.foodConsumption.deleteMany({
+       where: { userId },
+     });
+   }
+   ```
+
+6. **GDPR Documentation**
+   - Update privacy policy page
+   - Add data processing agreement
+   - Document data flows
+   - Create cookie policy
+
+#### Deliverables
+- ✅ Data export API (JSON, CSV formats)
+- ✅ Account deletion with 30-day grace period
+- ✅ Consent management system
+- ✅ Privacy settings UI
+- ✅ Inactive account cleanup job
+- ✅ Privacy policy updated
+- ✅ GDPR compliance verified
 
 ---
 
@@ -1345,7 +2045,7 @@ npm install react-chartjs-2 chart.js
 | 2 | Scoring System | 5x5x5 algorithm, APIs, caching |
 | 3 | Progress Dashboard | New components, time filters, visualizations |
 | 4 | Smart Recommendations | Recommendation engine, workflow integration |
-| 5 | Polish & Integration | Navigation update, notifications, testing |
+| 5 | Polish & Integration | Navigation, notifications, GDPR compliance |
 | 6 | Buffer | Final testing, deployment, documentation |
 
 ---

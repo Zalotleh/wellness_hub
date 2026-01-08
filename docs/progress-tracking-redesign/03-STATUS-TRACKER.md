@@ -622,25 +622,134 @@ None yet
 
 **Status:** ⚪ Not Started  
 **Assigned To:** TBD  
-**Estimated Time:** 2 days
+**Estimated Time:** 3 days (increased from 2 days)
 
 #### Tasks
 
-- [ ] Design notification types (email, in-app)
-- [ ] Create notification templates
-- [ ] Implement notification scheduling
-- [ ] Add notification preferences UI
-- [ ] Test notification delivery
-- [ ] Add opt-out functionality
-- [ ] Test notification frequency limits
+- [ ] Create NotificationPreferences schema in User model
+- [ ] Create NotificationService class
+  - [ ] Implement canSendNotification() with all limit checks
+  - [ ] Implement learnOptimalTimes() for user behavior analysis
+  - [ ] Implement sendNotification() with adaptive frequency
+  - [ ] Implement isInDoNotDisturb() check
+  - [ ] Implement getNotificationCountToday() counter
+  - [ ] Implement getLastNotificationTime() tracker
+- [ ] Create email templates
+  - [ ] Daily summary template
+  - [ ] Recipe → shopping list reminder
+  - [ ] Weekly planning prompt
+  - [ ] Streak reminder template
+- [ ] Create NotificationSettings UI component
+  - [ ] Master toggle for all notifications
+  - [ ] Workflow notifications section (optional)
+  - [ ] Progress notifications section (optional)
+  - [ ] Meal reminder settings
+  - [ ] Achievement notifications (always on by default)
+  - [ ] Do Not Disturb configuration
+  - [ ] Notification limits info display
+- [ ] Implement notification limits enforcement
+  - [ ] Max 3 per day hard limit
+  - [ ] 2-hour minimum gap between notifications
+  - [ ] DND mode (10 PM - 7 AM default)
+  - [ ] Smart suppression when user active
+- [ ] Test notification system
+  - [ ] Test frequency limits (3/day max)
+  - [ ] Test minimum gap (2 hours)
+  - [ ] Test DND mode with custom hours
+  - [ ] Test learned timing algorithm
+  - [ ] Test all opt-out toggles
+  - [ ] Test email delivery
 - [ ] Document notification system
 
 #### Blockers
 - Depends on: SMTP provider setup (external)
-- Depends on: Phase 1.1 (Database Schema)
+- Depends on: Phase 1.1 (Database Schema - User.notificationPreferences)
 
 #### Notes
-May need external SMTP service configuration
+**Key Requirements from User Decisions:**
+- All notifications OPTIONAL and user-controllable
+- Max 3 notifications per day with 2-hour gaps
+- Smart timing learned from user behavior
+- DND mode with custom quiet hours
+- Smart suppression when user actively using app
+
+---
+
+### 5.4 GDPR Compliance Implementation ⚪
+
+**Status:** ⚪ Not Started  
+**Assigned To:** TBD  
+**Estimated Time:** 3 days
+
+#### Tasks
+
+- [ ] Create data export API
+  - [ ] GET /api/user/data-export endpoint
+  - [ ] Support JSON format export
+  - [ ] Support CSV format export
+  - [ ] Include all user data (profile, logs, recipes, etc.)
+  - [ ] Add export timestamp
+- [ ] Create account deletion API
+  - [ ] POST /api/user/delete-account endpoint
+  - [ ] Implement email confirmation check
+  - [ ] Add 30-day grace period option
+  - [ ] Implement immediate deletion option
+  - [ ] Create hardDeleteUser() function
+  - [ ] Create scheduleUserDeletion() function
+  - [ ] Add deletion logging for compliance
+- [ ] Create consent management system
+  - [ ] Create UserConsent model
+  - [ ] PUT /api/user/consent endpoint
+  - [ ] Support analytics consent
+  - [ ] Support marketing consent
+  - [ ] Necessary consent (always true)
+  - [ ] Track consent update timestamps
+- [ ] Create Privacy Settings UI
+  - [ ] Data export section (JSON/CSV download)
+  - [ ] Consent management toggles
+  - [ ] Data retention info display
+  - [ ] Account deletion section with warning
+  - [ ] Deletion confirmation modal
+- [ ] Implement inactive account cleanup
+  - [ ] Create cleanup-inactive-accounts.ts script
+  - [ ] Find users inactive 18+ months
+  - [ ] Send final reminder emails
+  - [ ] Implement anonymizeUser() function
+  - [ ] Keep aggregated scores (no PII)
+  - [ ] Delete personal food logs
+  - [ ] Schedule as monthly cron job
+- [ ] Update privacy documentation
+  - [ ] Update privacy policy page
+  - [ ] Add data processing agreement
+  - [ ] Document data flows
+  - [ ] Create cookie policy
+- [ ] Test GDPR compliance
+  - [ ] Test data export (JSON/CSV)
+  - [ ] Test account deletion flow
+  - [ ] Test 30-day grace period
+  - [ ] Test consent management
+  - [ ] Test inactive account cleanup
+  - [ ] Verify anonymization works
+- [ ] GDPR compliance verification
+
+#### Blockers
+- Depends on: Phase 1.1 (Database Schema - UserConsent model)
+
+#### Notes
+**Key Requirements from User Decisions:**
+- Full data export in JSON/CSV formats
+- 30-day account deletion grace period
+- Data portability
+- Clear consent management
+- 18-month retention for inactive accounts
+- Full GDPR compliance
+
+---
+
+### 5.5 Home Page Redirect ⚪
+
+**Status:** ⚪ Not Started  
+**Assigned To:** TBD
 
 ---
 
@@ -697,15 +806,25 @@ None yet
 
 ### Phase 5 Summary
 
-**Tasks:** 0 / 33 complete (0%)  
+**Tasks:** 0 / 87 complete (0%)  
 **Estimated Completion Date:** TBD  
 **Actual Completion Date:** -  
 **Blockers:** Phase 4 completion, SMTP setup
+
+**Phase 5 Expanded Tasks:**
+- Navigation: 8 tasks
+- Meal Planner UX: 8 tasks  
+- Notification System: 24 tasks (NEW: detailed implementation)
+- GDPR Compliance: 38 tasks (NEW: full compliance suite)
+- Home Page Redirect: 8 tasks
+- Workflow Progress Indicator: 8 tasks
 
 **Sign-off:**
 - [ ] All tasks completed
 - [ ] All tests passing
 - [ ] User testing complete
+- [ ] Notification system verified (limits, DND, opt-outs)
+- [ ] GDPR compliance verified (export, delete, consent)
 - [ ] Code reviewed
 - [ ] Documentation updated
 - [ ] Merged to main branch
