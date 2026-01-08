@@ -13,6 +13,7 @@
     "db:generate": "prisma generate",
     "db:seed-foods": "npx tsx prisma/seed-foods.ts",
     "db:migrate-progress": "npx tsx scripts/migrate-progress.ts",
+    "score:generate": "npx tsx scripts/generate-historical-scores.ts",
     "test:apis": "npx tsx scripts/test-apis.ts",
     "test:types": "npx tsc --noEmit",
     "postinstall": "prisma generate"
