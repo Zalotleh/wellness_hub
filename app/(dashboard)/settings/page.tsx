@@ -8,6 +8,8 @@ import {
   User, Bell, Lock, CreditCard, Globe, Moon, Sun, 
   Mail, Save, Check, AlertCircle, Shield, Trash2 
 } from 'lucide-react';
+import CountrySelector from '@/components/settings/CountrySelector';
+import TimezoneSelector from '@/components/settings/TimezoneSelector';
 
 export default function SettingsPage() {
   const { data: session, update } = useSession();
@@ -33,10 +35,11 @@ export default function SettingsPage() {
 
   const fetchProfile = async () => {
     try {
-      const [profileResponse, measurementResponse, themeResponse] = await Promise.all([
+      const [profileResponse, measurementResponse, themeResponse, preferencesResponse] = await Promise.all([
         fetch('/api/user/profile'),
         fetch('/api/user/measurement-preference'),
         fetch('/api/user/theme'),
+        fetch('/api/user/preferences'),
       ]);
 
       if (profileResponse.ok) {
@@ -61,6 +64,17 @@ export default function SettingsPage() {
         const savedTheme = data.theme || 'system';
         setTheme(savedTheme);
       }
+
+      if (preferencesResponse.ok) {
+        const data = await preferencesResponse.json();
+        if (data.preferences) {
+          setPreferences(prev => ({
+            ...prev,
+            country: data.preferences.country,
+            timezone: data.preferences.timezone || prev.timezone,
+          }));
+        }
+      }
     } catch (error) {
       console.error('Error fetching profile:', error);
     }
@@ -80,6 +94,7 @@ export default function SettingsPage() {
     language: 'en',
     measurementSystem: 'imperial',
     timezone: 'America/New_York',
+    country: null as string | null,
   });
 
   const handleSave = async () => {
@@ -111,6 +126,20 @@ export default function SettingsPage() {
 
       if (!measurementResponse.ok) {
         throw new Error('Failed to save measurement preference');
+      }
+
+      // Save country and timezone preferences
+      const preferencesResponse = await fetch('/api/user/preferences', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          country: preferences.country,
+          timezone: preferences.timezone,
+        }),
+      });
+
+      if (!preferencesResponse.ok) {
+        throw new Error('Failed to save user preferences');
       }
 
       // Update session with new name
@@ -345,6 +374,31 @@ export default function SettingsPage() {
                         <option value="fr">Français</option>
                         <option value="de">Deutsch</option>
                       </select>
+                    </div>
+
+                    <div>
+                      <CountrySelector
+                        value={preferences.country}
+                        onChange={(country) => setPreferences({ ...preferences, country })}
+                        label="Country/Region"
+                        placeholder="Select your country"
+                      />
+                      <p className="text-xs text-gray-500 dark:text-gray-300 mt-1">
+                        Used to personalize recipes and recommendations
+                      </p>
+                    </div>
+
+                    <div>
+                      <TimezoneSelector
+                        value={preferences.timezone}
+                        onChange={(timezone) => setPreferences({ ...preferences, timezone })}
+                        countryCode={preferences.country}
+                        label="Timezone"
+                        showDetect={true}
+                      />
+                      <p className="text-xs text-gray-500 dark:text-gray-300 mt-1">
+                        Used for meal reminders and scheduling
+                      </p>
                     </div>
 
                     <div>
