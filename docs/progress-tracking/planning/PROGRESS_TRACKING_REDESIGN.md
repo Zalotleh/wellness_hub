@@ -971,7 +971,7 @@ export async function autoCategorizIngredients(
       continue;
     }
     
-    // If no match, use AI (optional - can use OpenAI API)
+    // If no match, use AI (optional - can use Anthropic API)
     // For now, mark as unknown
     mapping[ingredient.name] = [];
   }

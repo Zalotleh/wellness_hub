@@ -8,53 +8,67 @@ datasource db {
 }
 
 model User {
-  id                         String               @id @default(cuid())
+  id                         String            @id @default(cuid())
   name                       String?
-  email                      String               @unique
+  email                      String            @unique
   emailVerified              DateTime?
   password                   String?
   image                      String?
   bio                        String?
-  createdAt                  DateTime             @default(now())
-  updatedAt                  DateTime             @updatedAt
-  subscriptionTier           SubscriptionTier     @default(FREE)
+  role                       UserRole          @default(USER)
+  createdAt                  DateTime          @default(now())
+  updatedAt                  DateTime          @updatedAt
+  measurementSystem          String            @default("imperial") // 'imperial' or 'metric'
+  language                   String            @default("en") // 'en', 'es', 'fr', 'de'
+  theme                      String            @default("light") // 'light', 'dark', 'auto'
+  subscriptionTier           SubscriptionTier  @default(FREE)
   subscriptionStatus         String?
-  stripeCustomerId           String?              @unique
-  stripeSubscriptionId       String?              @unique
+  stripeCustomerId           String?           @unique
+  stripeSubscriptionId       String?           @unique
   subscriptionEndsAt         DateTime?
   trialEndsAt                DateTime?
-  mealPlansThisMonth         Int                  @default(0)
-  aiQuestionsThisMonth       Int                  @default(0)
-  lastResetDate              DateTime             @default(now())
-  imageGenerationsThisMonth  Int                  @default(0)
-  pdfExportsThisMonth        Int                  @default(0)
-  recipeGenerationsThisMonth Int                  @default(0)
-  measurementSystem          String               @default("imperial")
-  language                   String               @default("en")
-  privacyAccepted            Boolean              @default(false)
-  privacyAcceptedAt          DateTime?
-  termsAccepted              Boolean              @default(false)
+  mealPlansThisMonth         Int               @default(0)
+  aiQuestionsThisMonth       Int               @default(0)
+  lastResetDate              DateTime          @default(now())
+  imageGenerationsThisMonth  Int               @default(0)
+  pdfExportsThisMonth        Int               @default(0)
+  recipeGenerationsThisMonth Int               @default(0)
+  termsAccepted              Boolean           @default(false)
   termsAcceptedAt            DateTime?
-  theme                      String               @default("light")
-  role                       UserRole             @default(USER)
-  aiGenerationLogs           AIGenerationLog[]
+  privacyAccepted            Boolean           @default(false)
+  privacyAcceptedAt          DateTime?
+  
+  // Progress Tracking Redesign - User Preferences
+  defaultDietaryRestrictions String[]          @default([])
+  defaultFocusSystems        DefenseSystem[]   @default([])
+  defaultServings            Int               @default(2)
+  country                    String?           // ISO country code (e.g., "US", "GB", "DE")
+  timezone                   String?           // IANA timezone (e.g., "America/New_York")
+  notificationPreferences    Json?             // Flexible JSON for notification settings
+  lastLoginAt                DateTime?         // Track for inactive account cleanup
+  anonymized                 Boolean           @default(false) // For GDPR compliance
+  
   accounts                   Account[]
+  aiGenerationLogs           AIGenerationLog[]
   comments                   Comment[]
   favorites                  Favorite[]
-  foodConsumptions           FoodConsumption[]
   generatedRecipes           GeneratedRecipe[]
   mealPlans                  MealPlan[]
   planComments               MealPlanComment[]
   planLikes                  MealPlanLike[]
   planReports                MealPlanReport[]
   pantryItems                PantryItem[]
-  passwordResetTokens        PasswordResetToken[]
   progress                   Progress[]
   ratings                    Rating[]
   recipes                    Recipe[]
   savedPlans                 SavedMealPlan[]
   sessions                   Session[]
   shoppingLists              ShoppingList[]
+  passwordResetTokens        PasswordResetToken[]
+  foodConsumptions           FoodConsumption[]
+  dailyScores                DailyProgressScore[]
+  workflowState              UserWorkflowState?
+  consents                   UserConsent?
 }
 
 model Account {
@@ -92,15 +106,15 @@ model VerificationToken {
 }
 
 model PasswordResetToken {
-  id        String    @id @default(cuid())
+  id        String   @id @default(cuid())
   userId    String
-  token     String    @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
   expires   DateTime
-  used      Boolean   @default(false)
+  used      Boolean  @default(false)
   usedAt    DateTime?
-  createdAt DateTime  @default(now())
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+  createdAt DateTime @default(now())
+  
   @@index([token])
   @@index([userId])
   @@index([expires])
@@ -121,11 +135,11 @@ model Recipe {
   userId              String
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
-  ingredientSystemMap Json?
+  ingredientSystemMap Json?             // Maps each ingredient to defense systems with strength
   comments            Comment[]
   favorites           Favorite[]
-  consumptions        FoodConsumption[]
   ratings             Rating[]
+  consumptions        FoodConsumption[]
   user                User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -181,8 +195,8 @@ model Progress {
   notes         String?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
-  deprecated    Boolean       @default(false)
-  migratedTo    String?
+  deprecated    Boolean       @default(false)  // Mark for migration to new FoodConsumption model
+  migratedTo    String?       // ID of FoodConsumption entry this was migrated to
   user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, date, defenseSystem])
@@ -197,6 +211,7 @@ model MealPlan {
   description         String?
   weekStart           DateTime
   weekEnd             DateTime
+  durationWeeks       Int                @default(1)
   defaultServings     Int                @default(2)
   visibility          MealPlanVisibility @default(PRIVATE)
   status              MealPlanStatus     @default(DRAFT)
@@ -210,12 +225,11 @@ model MealPlan {
   createdAt           DateTime           @default(now())
   updatedAt           DateTime           @updatedAt
   publishedAt         DateTime?
-  durationWeeks       Int                @default(1)
   dailyMenus          DailyMenu[]
-  consumptions        FoodConsumption[]
   user                User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   comments            MealPlanComment[]
   likedBy             MealPlanLike[]
+  consumptions        FoodConsumption[]
   reports             MealPlanReport[]
   savedBy             SavedMealPlan[]
   shoppingLists       ShoppingList[]
@@ -239,26 +253,26 @@ model DailyMenu {
 }
 
 model Meal {
-  id                 String            @id @default(cuid())
+  id                 String              @id @default(cuid())
   dailyMenuId        String
   mealType           String
+  slot               String?             // Where the meal appears (breakfast/lunch/dinner/snack section)
   mealName           String
   servings           Int?
   defenseSystems     String[]
   prepTime           String?
   cookTime           String?
-  position           Int               @default(0)
+  position           Int                 @default(0)
   customInstructions String?
-  recipeGenerated    Boolean           @default(false)
-  recipeId           String?           @unique
-  createdAt          DateTime          @default(now())
-  updatedAt          DateTime          @updatedAt
-  slot               String?
-  consumed           Boolean           @default(false)
+  recipeGenerated    Boolean             @default(false)
+  recipeId           String?             @unique
+  consumed           Boolean             @default(false)
   consumedAt         DateTime?
-  consumptions       FoodConsumption[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
   generatedRecipe    GeneratedRecipe?
-  dailyMenu          DailyMenu         @relation(fields: [dailyMenuId], references: [id], onDelete: Cascade)
+  dailyMenu          DailyMenu           @relation(fields: [dailyMenuId], references: [id], onDelete: Cascade)
+  consumptions       FoodConsumption[]
 
   @@index([dailyMenuId, mealType])
   @@index([consumed])
@@ -309,10 +323,10 @@ model ShoppingList {
   currency       String?   @default("USD")
   pantryFiltered Boolean   @default(false)
   lastExported   DateTime?
+  sourceType     String?   // 'meal-plans' or 'recipes'
+  sourceIds      Json?     // Array of source IDs (meal plan IDs or recipe IDs)
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
-  sourceIds      Json?
-  sourceType     String?
   mealPlan       MealPlan? @relation(fields: [mealPlanId], references: [id], onDelete: Cascade)
   user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -404,95 +418,120 @@ model FeatureFlag {
   updatedAt         DateTime          @updatedAt
 }
 
-model AIGenerationLog {
-  id                     String         @id @default(cuid())
-  userId                 String
-  generationType         String
-  success                Boolean
-  qualityScore           Float?
-  defenseSystem          DefenseSystem?
-  ingredientCount        Int?
-  hasDietaryRestrictions Boolean        @default(false)
-  hasMealType            Boolean        @default(false)
-  validationErrors       String[]
-  inputData              Json?
-  outputData             Json?
-  apiResponseTime        Int?
-  modelUsed              String?
-  tokensUsed             Int?
-  createdAt              DateTime       @default(now())
-  user                   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+// ============================================
+// PROGRESS TRACKING REDESIGN - NEW MODELS
+// ============================================
 
-  @@index([userId])
-  @@index([generationType])
-  @@index([success])
-  @@index([createdAt])
-}
-
-model FoodConsumption {
-  id           String            @id @default(cuid())
-  userId       String
-  date         DateTime          @db.Date
-  mealTime     MealTime
-  timeConsumed DateTime?
-  sourceType   ConsumptionSource
-  recipeId     String?
-  mealId       String?
-  mealPlanId   String?
-  servings     Float             @default(1)
-  notes        String?
-  createdAt    DateTime          @default(now())
-  updatedAt    DateTime          @updatedAt
-  meal         Meal?             @relation(fields: [mealId], references: [id])
-  mealPlan     MealPlan?         @relation(fields: [mealPlanId], references: [id])
-  recipe       Recipe?           @relation(fields: [recipeId], references: [id])
-  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  foodItems    FoodItem[]
-
+// Daily aggregated progress score for dashboard
+model DailyProgressScore {
+  id                    String        @id @default(cuid())
+  userId                String
+  date                  DateTime      @db.Date
+  
+  // Overall score (0-100)
+  overallScore          Float
+  
+  // Component scores (0-100 each)
+  defenseSystemScore    Float         // 50% weight
+  mealTimeScore         Float         // 30% weight
+  foodVarietyScore      Float         // 20% weight
+  
+  // Breakdown by defense system (0-5 foods each)
+  angiogenesisCount     Int           @default(0)
+  regenerationCount     Int           @default(0)
+  microbiomeCount       Int           @default(0)
+  dnaProtectionCount    Int           @default(0)
+  immunityCount         Int           @default(0)
+  
+  // Breakdown by meal time (0-5 systems each)
+  breakfastSystems      Int           @default(0)
+  lunchSystems          Int           @default(0)
+  dinnerSystems         Int           @default(0)
+  snackSystems          Int           @default(0)
+  
+  // Unique food items consumed
+  uniqueFoodsCount      Int           @default(0)
+  totalServings         Float         @default(0)
+  
+  // Insights (JSON)
+  gaps                  Json?         // { system: string, mealTime: string }[]
+  achievements          Json?         // Array of achievement objects
+  
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  
+  user                  User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, date])
   @@index([userId, date])
-  @@index([userId, date, mealTime])
-  @@index([sourceType])
-  @@index([recipeId])
-  @@index([mealId])
+  @@index([date])
 }
 
-model FoodItem {
-  id             String                 @id @default(cuid())
-  consumptionId  String
-  name           String
-  quantity       Float?
-  unit           String?
-  defenseSystems DefenseSystemBenefit[]
-  consumption    FoodConsumption        @relation(fields: [consumptionId], references: [id], onDelete: Cascade)
-
-  @@index([consumptionId])
-  @@index([name])
+// Track user's position in the sequential workflow
+model UserWorkflowState {
+  id                    String        @id @default(cuid())
+  userId                String        @unique
+  
+  // Current workflow step
+  currentStep           WorkflowStep  @default(CREATE)
+  
+  // Progress tracking
+  hasCreatedRecipe      Boolean       @default(false)
+  hasCreatedMealPlan    Boolean       @default(false)
+  hasShoppingList       Boolean       @default(false)
+  hasLoggedFood         Boolean       @default(false)
+  
+  // Last activity timestamps
+  lastRecipeCreated     DateTime?
+  lastMealPlanCreated   DateTime?
+  lastShoppingListUsed  DateTime?
+  lastFoodLogged        DateTime?
+  
+  // Active items in workflow
+  activeRecipeId        String?
+  activeMealPlanId      String?
+  activeShoppingListId  String?
+  
+  // Workflow stats
+  recipesToShoppingList Int           @default(0) // How many times user completed this flow
+  shoppingListToLogged  Int           @default(0) // How many times user logged after shopping
+  completedWorkflows    Int           @default(0) // Full workflows completed
+  
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  
+  user                  User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model DefenseSystemBenefit {
-  id            String          @id @default(cuid())
-  foodItemId    String
-  defenseSystem DefenseSystem
-  strength      BenefitStrength @default(MEDIUM)
-  foodItem      FoodItem        @relation(fields: [foodItemId], references: [id], onDelete: Cascade)
-
-  @@unique([foodItemId, defenseSystem])
-  @@index([defenseSystem])
+// GDPR Compliance - User consent tracking
+model UserConsent {
+  id                    String        @id @default(cuid())
+  userId                String        @unique
+  
+  // Consent types
+  necessary             Boolean       @default(true)  // Always true (required for app functionality)
+  analytics             Boolean       @default(false) // Usage statistics and improvements
+  marketing             Boolean       @default(false) // Product updates and wellness tips
+  
+  // GDPR tracking
+  consentDate           DateTime      @default(now())
+  ipAddress             String?       // IP when consent was given
+  userAgent             String?       // Browser info when consent was given
+  
+  updatedAt             DateTime      @updatedAt
+  
+  user                  User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model FoodDatabase {
-  id             String          @id @default(cuid())
-  name           String          @unique
-  category       String
-  defenseSystems DefenseSystem[]
-  nutrients      String[]
-  description    String?
-  systemBenefits Json
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-
-  @@index([name])
-  @@index([category])
+// Deletion log for GDPR compliance audit trail
+model DeletionLog {
+  id                    String        @id @default(cuid())
+  userId                String
+  email                 String        // Anonymized version
+  reason                String?
+  deletedAt             DateTime      @default(now())
+  
+  @@index([deletedAt])
 }
 
 enum DefenseSystem {
@@ -526,24 +565,146 @@ enum UserRole {
   ADMIN
 }
 
+// New enums for progress tracking redesign
 enum MealTime {
   BREAKFAST
   MORNING_SNACK
   LUNCH
   AFTERNOON_SNACK
   DINNER
-  EVENING_SNACK
-  CUSTOM
+  EVENING_SNACK  // Optional 6th time
+  CUSTOM         // User-defined meal time
 }
 
 enum ConsumptionSource {
-  MANUAL
-  RECIPE
-  MEAL_PLAN
+  MANUAL      // User manually logs individual foods
+  RECIPE      // From marking a recipe as consumed
+  MEAL_PLAN   // From meal plan tracking
 }
 
 enum BenefitStrength {
-  LOW
-  MEDIUM
-  HIGH
+  LOW      // Minor benefit
+  MEDIUM   // Moderate benefit
+  HIGH     // Primary benefit
+}
+
+enum WorkflowStep {
+  CREATE      // Creating recipes or meal plans
+  SHOP        // Shopping list and purchasing
+  TRACK       // Logging food consumption
+  REVIEW      // Reviewing progress
+}
+
+// AI Generation Analytics Model
+model AIGenerationLog {
+  id                   String        @id @default(cuid())
+  userId               String
+  user                 User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  generationType       String        // 'recipe' or 'mealplan'
+  success              Boolean       // Did validation pass?
+  qualityScore         Float?        // Quality score at generation time
+  defenseSystem        DefenseSystem?
+  ingredientCount      Int?
+  hasDietaryRestrictions Boolean     @default(false)
+  hasMealType          Boolean       @default(false)
+  validationErrors     String[]      // Array of validation error messages
+  inputData            Json?         // Store the input parameters
+  outputData           Json?         // Store the generated data (if successful)
+  apiResponseTime      Int?          // Response time in milliseconds
+  modelUsed            String?       // AI model version used
+  tokensUsed           Int?          // Number of tokens consumed
+  createdAt            DateTime      @default(now())
+  
+  @@index([userId])
+  @@index([generationType])
+  @@index([success])
+  @@index([createdAt])
+}
+
+// ============================================
+// NEW MODELS FOR PROGRESS TRACKING REDESIGN
+// ============================================
+
+// Enhanced food consumption entry with meal timing and multi-system tracking
+model FoodConsumption {
+  id           String            @id @default(cuid())
+  userId       String
+  date         DateTime          @db.Date
+  mealTime     MealTime          // When the food was consumed
+  timeConsumed DateTime?         // Actual timestamp when consumed (optional)
+  
+  // Source tracking - where did this entry come from?
+  sourceType   ConsumptionSource
+  recipeId     String?
+  mealId       String?           // From meal plan
+  mealPlanId   String?
+  
+  // Food details
+  servings     Float             @default(1)
+  notes        String?
+  
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  
+  // Relations
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipe       Recipe?           @relation(fields: [recipeId], references: [id], onDelete: SetNull)
+  meal         Meal?             @relation(fields: [mealId], references: [id], onDelete: SetNull)
+  mealPlan     MealPlan?         @relation(fields: [mealPlanId], references: [id], onDelete: SetNull)
+  foodItems    FoodItem[]
+  
+  @@index([userId, date])
+  @@index([userId, date, mealTime])
+  @@index([sourceType])
+  @@index([recipeId])
+  @@index([mealId])
+}
+
+// Individual food item with multi-system associations
+model FoodItem {
+  id             String                  @id @default(cuid())
+  consumptionId  String
+  name           String
+  quantity       Float?
+  unit           String?
+  
+  // Multi-system tracking - one food can benefit multiple systems
+  defenseSystems DefenseSystemBenefit[]
+  consumption    FoodConsumption         @relation(fields: [consumptionId], references: [id], onDelete: Cascade)
+  
+  @@index([consumptionId])
+  @@index([name])
+}
+
+// Junction table for food-defense system relationship with strength
+model DefenseSystemBenefit {
+  id            String          @id @default(cuid())
+  foodItemId    String
+  defenseSystem DefenseSystem
+  strength      BenefitStrength @default(MEDIUM)
+  
+  foodItem      FoodItem        @relation(fields: [foodItemId], references: [id], onDelete: Cascade)
+  
+  @@unique([foodItemId, defenseSystem])
+  @@index([defenseSystem])
+}
+
+// Master food database with pre-categorized foods and multi-system benefits
+model FoodDatabase {
+  id             String          @id @default(cuid())
+  name           String          @unique
+  category       String          // Fruits, Vegetables, Proteins, Grains, Dairy, etc.
+  defenseSystems DefenseSystem[] // Primary systems this food supports
+  nutrients      String[]        // Key nutrients
+  description    String?
+  
+  // Multi-system benefits with strength mapping
+  // Format: { "ANGIOGENESIS": "HIGH", "REGENERATION": "MEDIUM" }
+  systemBenefits Json
+  
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  
+  @@index([name])
+  @@index([category])
 }
