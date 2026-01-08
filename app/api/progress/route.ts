@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { progressSchema } from '@/lib/validations';
 import { startOfDay, endOfDay, startOfWeek, endOfWeek } from 'date-fns';
+import { recalculateScoreAfterFoodLog } from '@/lib/tracking/score-calculator';
 
 // GET /api/progress - Get progress entries
 export async function GET(request: NextRequest) {
@@ -128,6 +129,13 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Recalculate 5x5x5 score for this date in the background
+    // This updates the cached score automatically
+    recalculateScoreAfterFoodLog(session.user.id, progressDate).catch((error) => {
+      console.error('Failed to recalculate score:', error);
+      // Don't fail the request if score calculation fails
+    });
+
     return NextResponse.json({
       data: progress,
       message: 'Progress logged successfully',
@@ -192,6 +200,11 @@ export async function DELETE(request: NextRequest) {
 
     await prisma.progress.delete({
       where: { id },
+    });
+
+    // Recalculate score for the date of the deleted entry
+    recalculateScoreAfterFoodLog(session.user.id, progress.date).catch((error) => {
+      console.error('Failed to recalculate score after deletion:', error);
     });
 
     return NextResponse.json({
