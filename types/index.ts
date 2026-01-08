@@ -407,3 +407,70 @@ export interface SyncMealPlanRequest {
   endDate?: string;
   markAllConsumed?: boolean;
 }
+
+// ============================================
+// PROGRESS TRACKING REDESIGN - NEW TYPES
+// ============================================
+
+// User Preferences
+export interface UserPreferences {
+  defaultDietaryRestrictions: string[];
+  defaultFocusSystems: DefenseSystem[];
+  defaultServings: number;
+  country: string | null;
+  timezone: string | null;
+  notificationPreferences: NotificationPreferences | null;
+}
+
+// Notification Preferences
+export interface NotificationPreferences {
+  enabled: boolean;
+  workflow: {
+    recipeToShoppingList: boolean;
+    shoppingListReminder: boolean;
+    mealLoggingReminder: boolean;
+  };
+  progress: {
+    dailySummary: boolean;
+    dailySummaryTime: string;
+    streakReminders: boolean;
+    weeklyPlanning: boolean;
+    weeklyPlanningDay: string;
+    weeklyPlanningTime: string;
+  };
+  mealReminders: {
+    enabled: boolean;
+    breakfast: boolean;
+    lunch: boolean;
+    dinner: boolean;
+  };
+  achievements: {
+    enabled: boolean;
+  };
+  doNotDisturb: {
+    enabled: boolean;
+    startTime: string;
+    endTime: string;
+  };
+  maxPerDay: number;
+  minGapMinutes: number;
+}
+
+// Update User Preferences Request
+export interface UpdateUserPreferencesRequest {
+  defaultDietaryRestrictions?: string[];
+  defaultFocusSystems?: DefenseSystem[];
+  defaultServings?: number;
+  country?: string;
+  timezone?: string;
+  notificationPreferences?: NotificationPreferences;
+}
+
+// Workflow Step enum
+export enum WorkflowStep {
+  CREATE = 'CREATE',
+  SHOP = 'SHOP',
+  TRACK = 'TRACK',
+  REVIEW = 'REVIEW'
+}
+
