@@ -3403,3 +3403,250 @@ async function onRecipeGenerateSuccess(recipeId: string, source: string) {
 *Document maintained by: Development Team*  
 *Last updated: January 8, 2026*  
 *Related documents: 01-COMPREHENSIVE-ANALYSIS.md, 03-STATUS-TRACKER.md, 04-IMPROVEMENT-SUGGESTIONS.md*
+Implementation Plan
+Created 10 todos
+
+
+
+--------------------------------------
+--------------------------------------
+-----------------------------------
+Detailed Implementation Strategy
+Phase 1: Database & Backend Foundation
+1.1 User Dietary Preferences
+￼
+model User {  // Add new fields to store default preferences  defaultDietaryRestrictions String[]  @default([])  defaultFocusSystems        String[]  @default([])  country                    String?   // For region-specific ingredients  notificationPreferences    Json?     // For workflow notifications}
+1.2 Enhanced Progress Tracking
+￼
+model DailyProgressScore {  id               String   @id @default(cuid())  userId           String  date             DateTime  overallScore     Float    // 0-100 based on 5x5x5 completion  systemScores     Json     // Individual scores per defense system  mealTimesCovered Int      // How many of 5 meal times tracked  foodVariety      Int      // Unique foods consumed  user             User     @relation(fields: [userId], references: [id])    @@unique([userId, date])}model UserWorkflowState {  id                    String   @id @default(cuid())  userId                String  lastProgressCheck     DateTime  pendingRecipeCreation Boolean  @default(false)  pendingShoppingList   Boolean  @default(false)  pendingTracking       Boolean  @default(false)  user                  User     @relation(fields: [userId], references: [id])    @@unique([userId])}
+Phase 2: Smart Scoring Algorithm
+Create /lib/tracking/5x5x5-score.ts:
+
+￼
+interface ScoreMetrics {  overallScore: number; // 0-100  defenseSystems: {    system: DefenseSystem;    foodsConsumed: number; // out of 5    coveragePercent: number;  }[];  mealTimes: {    time: MealTime;    completed: boolean;    foods: number;  }[];  insights: {    strongestSystem: DefenseSystem;    weakestSystem: DefenseSystem;    missedMeals: MealTime[];    foodVarietyScore: number;  };}function calculate5x5x5Score(  date: Date,  userId: string): Promise<ScoreMetrics> {  // Calculate:  // - 5 systems × 5 foods each = 25 unique food combinations  // - 5 meal times coverage  // - System balance (not just one system)  // - Food variety within systems}
+Phase 3: Progress Dashboard Redesign
+Key components for the new /progress page:
+
+Header Section with Overall Score
+￼
+<OverallScoreCard>  - Circular progress: 0-100%  - "Why This Matters" reminder  - Today's achievement vs. weekly average</OverallScoreCard>
+5-System Coverage Radar Chart
+￼
+<DefenseSystemsRadar>  - Visual radar/spider chart  - Click system to see which 5 foods consumed  - Highlight gaps</DefenseSystemsRadar>
+Meal Time Tracker (Enhanced)
+￼
+<MealTimeGrid>  - 5 meal times: Breakfast, Morning Snack, Lunch, Afternoon Snack, Dinner  - Show foods logged per meal  - Quick add button per meal</MealTimeGrid>
+Smart Actions Panel
+￼
+<SmartActionsPanel>  - Based on gaps, show:    • "Missing 3 defense systems - Generate a recipe"    • "Only 2 meals logged - Add afternoon snack"    • "Great progress! Create a shopping list for tomorrow"  - Each action links to generator with pre-filled data</SmartActionsPanel>
+Time Filter Tabs
+￼
+<ViewSelector>  - Daily: Detailed 5x5x5 breakdown  - Weekly: Trends and consistency  - Monthly: Overall patterns and achievements  - Each view has contextual recommendations</ViewSelector>
+Phase 4: Navbar Reorganization
+Proposed new structure:
+
+￼
+1. Progress (home icon) - NEW POSITION2. My Kitchen (dropdown)   - Create Meal Plan   - Browse Recipes   - AI Recipe Generator   - Add Your Recipe3. Meal Plans (renamed from "Meal Planning")   - My Plans   - Saved Plans4. Shopping Lists5. AI Advisor6. Learn7. Community
+Phase 5: Meal Planner Enhancements
+Update configuration step to use dropdowns:
+
+￼
+<ConfigurationForm>  <SelectDropdown    label="Number of Weeks"    options={[1, 2, 3, 4]}    default={1}  />    <SelectDropdown    label="Servings"    options={[1, 2, 3, 4, 5, 6]}    default={userPreferences.defaultServings || 2}  />    <MultiSelectDropdown    label="Dietary Restrictions"    options={restrictionsList}    defaultSelected={user.defaultDietaryRestrictions}    saveAsDefault={true}  />    <MultiSelectDropdown    label="Focus Systems"    options={defenseSystems}    defaultSelected={user.defaultFocusSystems}    intelligentSuggestion={basedOnProgressGaps}  /></ConfigurationForm>
+Phase 6: Integration Flow
+Link everything together:
+
+￼
+Progress Page     ↓[Need Immunity System]     ↓"Generate Recipe" button (pre-selected: Immunity)     ↓Recipe Generator (Immunity pre-checked)     ↓Save Recipe     ↓"Add to Shopping List" prompt     ↓Shopping List Created     ↓"Purchase Reminder" notification     ↓"Log Your Meal" reminder     ↓Back to Progress (updated scores)
+My Improvement Suggestions
+1. Gamification Layer
+Weekly challenges: "Complete all 5 systems 3 days this week"
+Streaks for consecutive tracking days
+Badges for milestones (30-day streak, perfect 5x5x5 day)
+2. Predictive Recommendations
+￼
+// If user typically lacks System X on Mondays// Recommend recipes for System X on Sunday evening
+3. Shopping List Intelligence
+Auto-suggest shopping list creation on Sundays for week ahead
+Learn user's shopping patterns (shops Wednesdays?)
+"You're low on berries (Angiogenesis) - add to shopping list?"
+4. Progress Insights
+￼
+<InsightsCard>  - "You're 40% more consistent this month!"  - "Tuesday is your strongest day"  - "You've tried 47 new foods this month"  - "Your microbiome coverage improved 25%"</InsightsCard>
+5. Family/Group Features
+Family progress dashboard
+Shared meal plans with automatic scaling
+"Your partner completed all 5 systems today!"
+6. Smart Defaults Evolution
+Learn from user's actual meals
+"You love salmon recipes - try this new one"
+Auto-suggest based on seasonal availability
+7. Notification Strategy
+￼
+Morning: "Good morning! Plan today's meals?"Midday: "Don't forget lunch tracking"Evening: "2/5 systems so far - try this dinner recipe"Weekly: "Sunday meal prep time - generate a plan?"
+8. Country-Specific Ingredient Adaptation
+￼
+model User {  country String? // US, UK, FR, etc.}// AI Prompt adjustment:"User is in {country}. Prioritize locally available ingredients common in {country}."
+Recommended Implementation Order
+Week 1: Foundation
+
+Database schema updates
+User dietary preferences API
+Country selection feature
+Week 2: Scoring System
+
+Build 5x5x5 calculation engine
+Create scoring API endpoints
+Test with historical data
+Week 3: Progress Dashboard
+
+Redesign Progress page
+Add time filters (daily/weekly/monthly)
+Implement overall score card
+Add defense systems visualization
+Week 4: Smart Recommendations
+
+Build recommendation engine
+Create action buttons with deep links
+Integrate with generators
+Week 5: Polish & Integration
+
+Reorganize navbar
+Update meal planner with dropdowns
+Add notification system
+Redirect home to /progress
+Testing and refinement
+Technical Considerations
+Performance
+Cache daily scores (recalculate only when new data added)
+Lazy load charts on weekly/monthly views
+Use React Query for data fetching
+Accessibility
+ARIA labels for all score metrics
+Keyboard navigation for action buttons
+Screen reader-friendly chart descriptions
+Mobile Optimization
+Simplified 5x5x5 grid for small screens
+Swipeable time filter tabs
+Bottom sheet for quick food logging
+
+-----------------
+Implementation Plan
+Created 10 todos
+
+Detailed Implementation Strategy
+Phase 1: Database & Backend Foundation
+1.1 User Dietary Preferences
+
+model User {  // Add new fields to store default preferences  defaultDietaryRestrictions String[]  @default([])  defaultFocusSystems        String[]  @default([])  country                    String?   // For region-specific ingredients  notificationPreferences    Json?     // For workflow notifications}
+1.2 Enhanced Progress Tracking
+
+model DailyProgressScore {  id               String   @id @default(cuid())  userId           String  date             DateTime  overallScore     Float    // 0-100 based on 5x5x5 completion  systemScores     Json     // Individual scores per defense system  mealTimesCovered Int      // How many of 5 meal times tracked  foodVariety      Int      // Unique foods consumed  user             User     @relation(fields: [userId], references: [id])    @@unique([userId, date])}model UserWorkflowState {  id                    String   @id @default(cuid())  userId                String  lastProgressCheck     DateTime  pendingRecipeCreation Boolean  @default(false)  pendingShoppingList   Boolean  @default(false)  pendingTracking       Boolean  @default(false)  user                  User     @relation(fields: [userId], references: [id])    @@unique([userId])}
+Phase 2: Smart Scoring Algorithm
+Create /lib/tracking/5x5x5-score.ts:
+
+
+interface ScoreMetrics {  overallScore: number; // 0-100  defenseSystems: {    system: DefenseSystem;    foodsConsumed: number; // out of 5    coveragePercent: number;  }[];  mealTimes: {    time: MealTime;    completed: boolean;    foods: number;  }[];  insights: {    strongestSystem: DefenseSystem;    weakestSystem: DefenseSystem;    missedMeals: MealTime[];    foodVarietyScore: number;  };}function calculate5x5x5Score(  date: Date,  userId: string): Promise<ScoreMetrics> {  // Calculate:  // - 5 systems × 5 foods each = 25 unique food combinations  // - 5 meal times coverage  // - System balance (not just one system)  // - Food variety within systems}
+Phase 3: Progress Dashboard Redesign
+Key components for the new /progress page:
+
+Header Section with Overall Score
+
+<OverallScoreCard>  - Circular progress: 0-100%  - "Why This Matters" reminder  - Today's achievement vs. weekly average</OverallScoreCard>
+5-System Coverage Radar Chart
+
+<DefenseSystemsRadar>  - Visual radar/spider chart  - Click system to see which 5 foods consumed  - Highlight gaps</DefenseSystemsRadar>
+Meal Time Tracker (Enhanced)
+
+<MealTimeGrid>  - 5 meal times: Breakfast, Morning Snack, Lunch, Afternoon Snack, Dinner  - Show foods logged per meal  - Quick add button per meal</MealTimeGrid>
+Smart Actions Panel
+
+<SmartActionsPanel>  - Based on gaps, show:    • "Missing 3 defense systems - Generate a recipe"    • "Only 2 meals logged - Add afternoon snack"    • "Great progress! Create a shopping list for tomorrow"  - Each action links to generator with pre-filled data</SmartActionsPanel>
+Time Filter Tabs
+
+<ViewSelector>  - Daily: Detailed 5x5x5 breakdown  - Weekly: Trends and consistency  - Monthly: Overall patterns and achievements  - Each view has contextual recommendations</ViewSelector>
+Phase 4: Navbar Reorganization
+Proposed new structure:
+
+
+1. Progress (home icon) - NEW POSITION2. My Kitchen (dropdown)   - Create Meal Plan   - Browse Recipes   - AI Recipe Generator   - Add Your Recipe3. Meal Plans (renamed from "Meal Planning")   - My Plans   - Saved Plans4. Shopping Lists5. AI Advisor6. Learn7. Community
+Phase 5: Meal Planner Enhancements
+Update configuration step to use dropdowns:
+
+
+<ConfigurationForm>  <SelectDropdown    label="Number of Weeks"    options={[1, 2, 3, 4]}    default={1}  />    <SelectDropdown    label="Servings"    options={[1, 2, 3, 4, 5, 6]}    default={userPreferences.defaultServings || 2}  />    <MultiSelectDropdown    label="Dietary Restrictions"    options={restrictionsList}    defaultSelected={user.defaultDietaryRestrictions}    saveAsDefault={true}  />    <MultiSelectDropdown    label="Focus Systems"    options={defenseSystems}    defaultSelected={user.defaultFocusSystems}    intelligentSuggestion={basedOnProgressGaps}  /></ConfigurationForm>
+Phase 6: Integration Flow
+Link everything together:
+
+
+Progress Page     ↓[Need Immunity System]     ↓"Generate Recipe" button (pre-selected: Immunity)     ↓Recipe Generator (Immunity pre-checked)     ↓Save Recipe     ↓"Add to Shopping List" prompt     ↓Shopping List Created     ↓"Purchase Reminder" notification     ↓"Log Your Meal" reminder     ↓Back to Progress (updated scores)
+My Improvement Suggestions
+1. Gamification Layer
+Weekly challenges: "Complete all 5 systems 3 days this week"
+Streaks for consecutive tracking days
+Badges for milestones (30-day streak, perfect 5x5x5 day)
+2. Predictive Recommendations
+
+// If user typically lacks System X on Mondays// Recommend recipes for System X on Sunday evening
+3. Shopping List Intelligence
+Auto-suggest shopping list creation on Sundays for week ahead
+Learn user's shopping patterns (shops Wednesdays?)
+"You're low on berries (Angiogenesis) - add to shopping list?"
+4. Progress Insights
+
+<InsightsCard>  - "You're 40% more consistent this month!"  - "Tuesday is your strongest day"  - "You've tried 47 new foods this month"  - "Your microbiome coverage improved 25%"</InsightsCard>
+5. Family/Group Features
+Family progress dashboard
+Shared meal plans with automatic scaling
+"Your partner completed all 5 systems today!"
+6. Smart Defaults Evolution
+Learn from user's actual meals
+"You love salmon recipes - try this new one"
+Auto-suggest based on seasonal availability
+7. Notification Strategy
+
+Morning: "Good morning! Plan today's meals?"Midday: "Don't forget lunch tracking"Evening: "2/5 systems so far - try this dinner recipe"Weekly: "Sunday meal prep time - generate a plan?"
+8. Country-Specific Ingredient Adaptation
+
+model User {  country String? // US, UK, FR, etc.}// AI Prompt adjustment:"User is in {country}. Prioritize locally available ingredients common in {country}."
+Recommended Implementation Order
+Week 1: Foundation
+
+Database schema updates
+User dietary preferences API
+Country selection feature
+Week 2: Scoring System
+
+Build 5x5x5 calculation engine
+Create scoring API endpoints
+Test with historical data
+Week 3: Progress Dashboard
+
+Redesign Progress page
+Add time filters (daily/weekly/monthly)
+Implement overall score card
+Add defense systems visualization
+Week 4: Smart Recommendations
+
+Build recommendation engine
+Create action buttons with deep links
+Integrate with generators
+Week 5: Polish & Integration
+
+Reorganize navbar
+Update meal planner with dropdowns
+Add notification system
+Redirect home to /progress
+Testing and refinement
+Technical Considerations
+Performance
+Cache daily scores (recalculate only when new data added)
+Lazy load charts on weekly/monthly views
+Use React Query for data fetching
+Accessibility
+ARIA labels for all score metrics
+Keyboard navigation for action buttons
+Screen reader-friendly chart descriptions
+Mobile Optimization
+Simplified 5x5x5 grid for small screens
+Swipeable time filter tabs
+Bottom sheet for quick food logging

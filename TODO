@@ -120,12 +120,29 @@ for admin dashboard:
 recipe genetaing Success Rate Tracking: Track how often validation passes
 Admin Dashboard: See ai recipe/meal plan, shopping list generating validation failure patterns
 
-the front page, should be the progress, and from there depending on what you lack you ask the Ai to generate a new meal. recipe, or plan.
-and shows a recommendations based on the actual progress,
-when you click on the home page, the header should be reminder for user why this is important.
-then the tracker, should have a recommendation to create a recipe or plan based on the status, and this should be as a sequesnce of actions. create recipe/plan> create shopping list> purchase> log to track... with notifciations sent if any step hasnt been completed.
-- based on the status, to have smart recommendation system which will take in consideration the user history, current status and recommend a meal plan or a recipe, link the home page with the meal plan generator and the recipe generators.
+- the front page, should be the progress, and from there depending on what you lack then you ask the Ai to generate a new meal. recipe, or plan. or create a recommendations.
+the tracking charts and stats should be redesigned: to have an overall score, then a chart for the 5 defence system coverage, the 5 foods for each system, and the 5 times the calculation should reflect that in away, also the date selection shoud be daily, weekly, and monthly, and smart recommendation or each view.
 
-rearrange the nav bar, meal plannin rename it to more friendly one, move it before the recipes.
-- meal plan, male the options for each step drop down list, with a default selected option for each.
+- the whole tracking page to be redesigned to shows a recommendations based on the actual progress,
+ for example: when you click on the home page, the header should be reminder for user why this is important.
+then the tracker, should have a recommendation to create a recipe or plan based on the status,  the whole flow should be as a sequesnce of actions. create recipe/plan> create shopping list> purchase> log to track... with notifciations sent if any step hasnt been completed.
+- based on the status, the smart recommendation system will take in consideration the user history, current status and recommend to create meal plan or a recipe, the date shoud be send to the geneartor if the user agree, link the home page with the meal plan generator and the recipe generators.
+
+- rearrange the nav bar, meal plannin rename it to more friendly one, move it before the recipes.
+- meal plan, make the options for each step drop down list, with a default selected option for each.
 - have the dietry preference as part of the user preferences, and to be a default for their meal plan and recipe generators
+
+
+npm audit error to fix:
+174 packages are looking for funding
+  run `npm fund` for details
+
+3 vulnerabilities (2 high, 1 critical)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.

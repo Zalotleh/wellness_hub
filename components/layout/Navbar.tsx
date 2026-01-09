@@ -39,8 +39,8 @@ export default function Navbar() {
   const usageStats = useUsageStats();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [showRecipesMenu, setShowRecipesMenu] = useState(false);
-  const [showMealPlannerMenu, setShowMealPlannerMenu] = useState(false);
+  const [showMyKitchenMenu, setShowMyKitchenMenu] = useState(false);
+  const [showMealPlansMenu, setShowMealPlansMenu] = useState(false);
 
   // Debug: Log current tier (remove in production)
   if (process.env.NODE_ENV === 'development' && session?.user) {
@@ -59,34 +59,35 @@ export default function Navbar() {
   // Grouped Navigation Structure
   const navGroups = [
     {
-      label: 'Recipes',
+      label: 'Progress',
+      icon: TrendingUp,
+      href: '/progress',
+      hasDropdown: false,
+    },
+    {
+      label: 'My Kitchen',
       icon: ChefHat,
       hasDropdown: true,
       items: [
+        { href: '/meal-planner', label: 'Create Meal Plan', icon: Calendar },
         { href: '/recipes', label: 'Browse Recipes', icon: ChefHat },
         { href: '/recipes/ai-generate', label: 'AI Recipe Generator', icon: Sparkles },
-        { href: '/recipes/create', label: 'Add Your Own Recipe', icon: PlusCircle },
+        { href: '/recipes/create', label: 'Add Your Recipe', icon: PlusCircle },
       ],
     },
     {
-      label: 'Meal Planning',
+      label: 'Meal Plans',
       icon: Calendar,
       hasDropdown: true,
       items: [
-        { href: '/meal-planner', label: 'Meal Planner', icon: Calendar },
+        { href: '/meal-planner', label: 'My Plans', icon: Calendar },
         { href: '/saved-plans', label: 'Saved Plans', icon: Bookmark },
       ],
     },
     {
-      label: 'Shopping',
+      label: 'Shopping Lists',
       icon: ShoppingCart,
       href: '/shopping-lists',
-      hasDropdown: false,
-    },
-    {
-      label: 'Progress',
-      icon: TrendingUp,
-      href: '/progress',
       hasDropdown: false,
     },
     {
@@ -148,20 +149,20 @@ export default function Navbar() {
               if (group.hasDropdown && group.items) {
                 const isGroupActive = group.items.some(item => isActive(item.href));
                 const showMenu = 
-                  (group.label === 'Recipes' && showRecipesMenu) ||
-                  (group.label === 'Meal Planning' && showMealPlannerMenu);
+                  (group.label === 'My Kitchen' && showMyKitchenMenu) ||
+                  (group.label === 'Meal Plans' && showMealPlansMenu);
                 
                 return (
                   <div 
                     key={group.label} 
                     className="relative"
                     onMouseEnter={() => {
-                      if (group.label === 'Recipes') setShowRecipesMenu(true);
-                      if (group.label === 'Meal Planning') setShowMealPlannerMenu(true);
+                      if (group.label === 'My Kitchen') setShowMyKitchenMenu(true);
+                      if (group.label === 'Meal Plans') setShowMealPlansMenu(true);
                     }}
                     onMouseLeave={() => {
-                      if (group.label === 'Recipes') setShowRecipesMenu(false);
-                      if (group.label === 'Meal Planning') setShowMealPlannerMenu(false);
+                      if (group.label === 'My Kitchen') setShowMyKitchenMenu(false);
+                      if (group.label === 'Meal Plans') setShowMealPlansMenu(false);
                     }}
                   >
                     <button
