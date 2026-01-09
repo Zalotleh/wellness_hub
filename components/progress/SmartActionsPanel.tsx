@@ -106,7 +106,12 @@ export default function SmartActionsPanel({ date, className }: SmartActionsPanel
         // Add action data as query params
         Object.entries(recommendation.actionData).forEach(([key, value]) => {
           if (value !== null && value !== undefined) {
-            url.searchParams.set(key, String(value));
+            // Serialize arrays as JSON for proper parsing
+            if (Array.isArray(value)) {
+              url.searchParams.set(key, JSON.stringify(value));
+            } else {
+              url.searchParams.set(key, String(value));
+            }
           }
         });
       }
