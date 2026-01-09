@@ -59,7 +59,7 @@ export default function Navbar() {
   // Grouped Navigation Structure
   const navGroups = [
     {
-      label: 'Progress',
+      label: 'My Health',
       icon: TrendingUp,
       href: '/progress',
       hasDropdown: false,
@@ -76,12 +76,12 @@ export default function Navbar() {
       ],
     },
     {
-      label: 'Meal Plans',
+      label: 'Meal Planner',
       icon: Calendar,
       hasDropdown: true,
       items: [
-        { href: '/meal-planner', label: 'My Plans', icon: Calendar },
-        { href: '/saved-plans', label: 'Saved Plans', icon: Bookmark },
+        { href: '/meal-planner', label: 'Create Meal Plan', icon: Calendar },
+        { href: '/saved-plans', label: 'My Plans', icon: Bookmark },
       ],
     },
     {
@@ -150,7 +150,7 @@ export default function Navbar() {
                 const isGroupActive = group.items.some(item => isActive(item.href));
                 const showMenu = 
                   (group.label === 'My Kitchen' && showMyKitchenMenu) ||
-                  (group.label === 'Meal Plans' && showMealPlansMenu);
+                  (group.label === 'Meal Planner' && showMealPlansMenu);
                 
                 return (
                   <div 
@@ -158,11 +158,11 @@ export default function Navbar() {
                     className="relative"
                     onMouseEnter={() => {
                       if (group.label === 'My Kitchen') setShowMyKitchenMenu(true);
-                      if (group.label === 'Meal Plans') setShowMealPlansMenu(true);
+                      if (group.label === 'Meal Planner') setShowMealPlansMenu(true);
                     }}
                     onMouseLeave={() => {
                       if (group.label === 'My Kitchen') setShowMyKitchenMenu(false);
-                      if (group.label === 'Meal Plans') setShowMealPlansMenu(false);
+                      if (group.label === 'Meal Planner') setShowMealPlansMenu(false);
                     }}
                   >
                     <button

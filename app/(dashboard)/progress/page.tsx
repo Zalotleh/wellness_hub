@@ -73,7 +73,7 @@ export default function ProgressPage() {
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                  Progress Dashboard
+                  My Progress Dashboard
                 </h1>
                 <p className="text-gray-600 dark:text-gray-400">
                   Track your 5x5x5 wellness journey

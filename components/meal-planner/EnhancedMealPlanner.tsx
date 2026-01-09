@@ -144,15 +144,37 @@ export default function EnhancedMealPlanner({
   const [showMealTypeSelector, setShowMealTypeSelector] = useState(false);
   const [pendingMealAdd, setPendingMealAdd] = useState<{ day: string; slot: string; week?: number } | null>(null);
 
-  // Initialize with existing plan if provided
+  // Load user preferences and initialize plan
   useEffect(() => {
+    const loadUserPreferences = async () => {
+      try {
+        const response = await fetch('/api/user/preferences');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.preferences) {
+            // Only update configuration if not overridden by initialParams or initialPlan
+            setConfiguration(prev => ({
+              ...prev,
+              servings: initialPlan?.defaultServings || data.preferences.defaultServings || 4,
+              dietaryRestrictions: initialParams?.dietaryRestrictions || initialPlan ? prev.dietaryRestrictions : data.preferences.defaultDietaryRestrictions || [],
+              focusSystems: initialParams?.targetSystems || initialPlan ? prev.focusSystems : data.preferences.defaultFocusSystems || [],
+            }));
+          }
+        }
+      } catch (error) {
+        console.error('Error loading preferences:', error);
+      }
+    };
+
+    loadUserPreferences();
+
     if (initialPlan) {
       setCurrentStep('view');
       setMealPlan(initialPlan);
       setConfiguration({
         title: initialPlan.title,
         description: initialPlan.description,
-        servings: 4, // Default since not stored in plan
+        servings: initialPlan.defaultServings || 4,
         duration: (initialPlan.duration as 1 | 2 | 3 | 4) || 1,
         dietaryRestrictions: [], // Could be derived from meals
         focusSystems: [], // Could be derived from meals
@@ -161,7 +183,7 @@ export default function EnhancedMealPlanner({
         tags: initialPlan.tags,
       });
     }
-  }, [initialPlan]);
+  }, [initialPlan, initialParams]);
 
   // Generate meal plan
   const handleGeneratePlan = useCallback(async () => {

@@ -118,8 +118,34 @@ export default function AIRecipeGenerator({
 
   // Get user's measurement preference on mount
   useEffect(() => {
-    const preference = getMeasurementPreference();
-    setMeasurementSystem(preference.system);
+    const loadUserPreferences = async () => {
+      try {
+        const [measurementPref, userPrefs] = await Promise.all([
+          getMeasurementPreference(),
+          fetch('/api/user/preferences').then(res => res.ok ? res.json() : null)
+        ]);
+        
+        // Set measurement system
+        setMeasurementSystem(measurementPref.system);
+
+        // Load user preferences if not overridden by initialParams
+        if (userPrefs?.preferences) {
+          // Only set if not already provided via initialParams
+          if (!initialParams?.dietaryRestrictions && userPrefs.preferences.defaultDietaryRestrictions?.length > 0) {
+            setDietaryRestrictions(userPrefs.preferences.defaultDietaryRestrictions);
+          }
+          if (!initialParams?.targetSystem && userPrefs.preferences.defaultFocusSystems?.length > 0) {
+            setDefenseSystem(userPrefs.preferences.defaultFocusSystems[0] as DefenseSystem);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading preferences:', error);
+        // Fall back to defaults
+        setMeasurementSystem(getMeasurementPreference().system);
+      }
+    };
+
+    loadUserPreferences();
 
     // Check if should show onboarding
     setShowOnboarding(shouldShowOnboarding());
@@ -131,7 +157,7 @@ export default function AIRecipeGenerator({
       // Auto-hide after 5 seconds
       setTimeout(() => setEncouragementMsg(null), 5000);
     }
-  }, []);
+  }, [initialParams]);
 
   // Update ingredient suggestions when inputs change
   useEffect(() => {
