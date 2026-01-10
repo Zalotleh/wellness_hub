@@ -21,10 +21,12 @@ import {
   Target,
   Droplets,
   UtensilsCrossed,
+  Calendar,
 } from 'lucide-react';
 import { RecipeWithRelations, DefenseSystem } from '@/types';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
 import ShareMenu from '@/components/sharing/ShareMenu';
+import { format } from 'date-fns';
 // Using window alerts for notifications
 
 interface Ingredient {
@@ -354,6 +356,12 @@ export default function RecipeDetailView({
                 </span>
               </div>
             )}
+
+            {/* Creation date badge */}
+            <div className="flex items-center gap-2 px-4 py-2 bg-purple-100 text-purple-800 rounded-full" title={format(new Date(recipe.createdAt), 'PPPpp')}>
+              <Calendar className="w-4 h-4" />
+              <span className="font-medium">Created: {format(new Date(recipe.createdAt), 'MMM d, yyyy')}</span>
+            </div>
           </div>
 
           {/* Servings selector */}

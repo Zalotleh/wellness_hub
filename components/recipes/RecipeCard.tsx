@@ -5,7 +5,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { RecipeWithRelations } from '@/types';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
-import { Star, Clock, User, Heart, MessageCircle, ChefHat } from 'lucide-react';
+import { Star, Clock, User, Heart, MessageCircle, ChefHat, Calendar } from 'lucide-react';
+import { format } from 'date-fns';
 
 interface RecipeCardProps {
   recipe: RecipeWithRelations;
@@ -154,14 +155,20 @@ export default function RecipeCard({ recipe, onFavorite, onFilterByCreator }: Re
         </div>
 
         {/* Engagement Stats */}
-        <div className="flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-400 pt-3 border-t dark:border-gray-700">
-          <div className="flex items-center space-x-1">
-            <Heart className="w-3 h-3" />
-            <span>{recipe._count.favorites}</span>
+        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 pt-3 border-t dark:border-gray-700">
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-1">
+              <Heart className="w-3 h-3" />
+              <span>{recipe._count.favorites}</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <MessageCircle className="w-3 h-3" />
+              <span>{recipe._count.comments}</span>
+            </div>
           </div>
-          <div className="flex items-center space-x-1">
-            <MessageCircle className="w-3 h-3" />
-            <span>{recipe._count.comments}</span>
+          <div className="flex items-center space-x-1" title={format(new Date(recipe.createdAt), 'PPP')}>
+            <Calendar className="w-3 h-3" />
+            <span>{format(new Date(recipe.createdAt), 'MMM d, yyyy')}</span>
           </div>
         </div>
 
