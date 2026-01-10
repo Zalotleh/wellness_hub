@@ -14,6 +14,7 @@ import OverallScoreCard from '@/components/progress/OverallScoreCard';
 import DefenseSystemsRadar from '@/components/progress/DefenseSystemsRadar';
 import TimeFilter, { ViewType } from '@/components/progress/TimeFilter';
 import SmartActionsPanel from '@/components/progress/SmartActionsPanel';
+import WorkflowProgressBar from '@/components/workflow/WorkflowProgressBar';
 import { ProgressErrorBoundary } from '@/components/progress/ProgressErrorBoundary';
 import { addDays, subDays, isToday, format } from 'date-fns';
 import { CalendarDays, ChevronLeft, ChevronRight, RefreshCw, Plus, Info } from 'lucide-react';
@@ -137,6 +138,11 @@ export default function ProgressPage() {
               {/* Smart Actions Panel */}
               <ProgressErrorBoundary>
                 <SmartActionsPanel date={selectedDate} />
+              </ProgressErrorBoundary>
+
+              {/* Workflow Progress Bar */}
+              <ProgressErrorBoundary>
+                <WorkflowProgressBar />
               </ProgressErrorBoundary>
 
               {/* Top Row: Overall Score + Defense Systems Radar */}
