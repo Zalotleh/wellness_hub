@@ -83,6 +83,33 @@ export async function POST(
       }
     }
 
+    // Check if this recipe is linked to a recommendation and mark it COMPLETED
+    try {
+      const linkedRecommendation = await prisma.recommendation.findFirst({
+        where: {
+          userId: session.user.id,
+          linkedRecipeId: recipeId,
+          status: {
+            in: ['ACTED_ON', 'SHOPPED'], // Can complete from either state
+          },
+        },
+      });
+
+      if (linkedRecommendation && progressEntries.length > 0) {
+        await prisma.recommendation.update({
+          where: { id: linkedRecommendation.id },
+          data: {
+            status: 'COMPLETED',
+            completedAt: new Date(),
+            linkedMealLogId: progressEntries[0].id,
+          },
+        });
+      }
+    } catch (error) {
+      console.error('Error updating recommendation status:', error);
+      // Don't fail the request if recommendation update fails
+    }
+
     return NextResponse.json({
       success: true,
       message: `Recipe logged to ${mealTime.toLowerCase()}`,

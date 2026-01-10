@@ -133,13 +133,50 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { title, mealPlanId, items = [] } = body;
+    const { title, name, mealPlanId, recipeId, items = [] } = body;
 
-    if (!title) {
+    const listTitle = title || name || 'Shopping List';
+
+    if (!listTitle) {
       return NextResponse.json(
         { error: 'Shopping list title is required' },
         { status: 400 }
       );
+    }
+
+    // If recipeId is provided, get ingredients from recipe
+    let listItems = items;
+    let sourceIds = [];
+    let sourceType = 'MANUAL';
+
+    if (recipeId) {
+      const recipe = await prisma.recipe.findUnique({
+        where: { id: recipeId },
+      });
+
+      if (!recipe) {
+        return NextResponse.json(
+          { error: 'Recipe not found' },
+          { status: 404 }
+        );
+      }
+
+      // Parse ingredients from recipe
+      const ingredients = Array.isArray(recipe.ingredients)
+        ? recipe.ingredients
+        : JSON.parse(recipe.ingredients as string);
+
+      listItems = ingredients.map((ing: any, idx: number) => ({
+        id: `item-${idx}`,
+        name: typeof ing === 'string' ? ing : ing.name || ing.item,
+        quantity: typeof ing === 'string' ? '1' : ing.amount || ing.quantity || '1',
+        unit: typeof ing === 'string' ? '' : ing.unit || '',
+        category: typeof ing === 'string' ? 'Other' : ing.category || 'Other',
+        checked: false,
+      }));
+
+      sourceIds = [recipeId];
+      sourceType = 'RECIPE';
     }
 
     // If mealPlanId is provided, verify it belongs to the user
@@ -164,9 +201,11 @@ export async function POST(request: NextRequest) {
       data: {
         userId: session.user.id,
         mealPlanId: mealPlanId || '', // Use empty string if no meal plan
-        title,
-        items: JSON.stringify(items),
-        totalItems: items.length,
+        title: listTitle,
+        sourceType,
+        sourceIds: JSON.stringify(sourceIds),
+        items: JSON.stringify(listItems),
+        totalItems: listItems.length,
         pantryFiltered: false,
       },
       include: {
