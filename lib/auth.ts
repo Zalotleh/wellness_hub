@@ -100,6 +100,12 @@ export const authOptions: NextAuthOptions = {
             },
           });
           
+          if (!userData) {
+            // User was deleted - clear the session
+            console.error('User not found in database, session will be invalidated:', token.id);
+            return null;
+          }
+          
           if (userData) {
             // Add subscription data and role to session
             (session.user as any).role = userData.role;
@@ -112,6 +118,8 @@ export const authOptions: NextAuthOptions = {
           }
         } catch (error) {
           console.error('Error fetching user subscription data:', error);
+          // If we can't fetch user data, invalidate the session
+          return null;
         }
       }
       return session;

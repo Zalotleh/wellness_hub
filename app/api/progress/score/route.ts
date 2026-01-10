@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 import { getCachedOrCalculateScore } from '@/lib/tracking/score-cache';
 import { calculateWeeklyScores, calculateMonthlyScores } from '@/lib/tracking/score-calculator';
 import { startOfDay } from 'date-fns';
@@ -65,6 +66,20 @@ export async function GET(request: NextRequest) {
     }
 
     const userId = session.user.id;
+
+    // Verify user exists in database
+    const userExists = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true }
+    });
+
+    if (!userExists) {
+      console.error('User not found in database:', userId);
+      return NextResponse.json(
+        { error: 'User not found in database. Please sign out and sign in again.' },
+        { status: 404 }
+      );
+    }
 
     // Calculate score based on view
     if (view === 'daily') {

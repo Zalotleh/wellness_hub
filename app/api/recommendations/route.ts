@@ -14,6 +14,20 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Verify user exists in database
+    const userExists = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { id: true }
+    });
+
+    if (!userExists) {
+      console.error('User not found in database:', session.user.id);
+      return NextResponse.json(
+        { error: 'User not found in database. Please sign out and sign in again.' },
+        { status: 404 }
+      );
+    }
+
     // Get active recommendations (PENDING, ACTED_ON, SHOPPED)
     const recommendations = await prisma.recommendation.findMany({
       where: {
