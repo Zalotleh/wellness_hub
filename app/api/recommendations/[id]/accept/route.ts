@@ -52,7 +52,7 @@ export async function POST(
       );
     }
 
-    // Check if already accepted or dismissed
+    // Check if already acted on or dismissed
     if (recommendation.status !== 'PENDING') {
       return NextResponse.json(
         { error: `Recommendation already ${recommendation.status.toLowerCase()}` },
@@ -60,12 +60,12 @@ export async function POST(
       );
     }
 
-    // Update recommendation to ACCEPTED
+    // Update recommendation to ACTED_ON (user clicked and is taking action)
     const updated = await prisma.recommendation.update({
       where: { id },
       data: {
-        status: 'ACCEPTED',
-        acceptedAt: new Date(),
+        status: 'ACTED_ON' as any,
+        actedAt: new Date(),
         actionData: {
           ...(recommendation.actionData as object),
           ...metadata,
@@ -78,7 +78,7 @@ export async function POST(
       recommendation: {
         id: updated.id,
         status: updated.status,
-        acceptedAt: updated.acceptedAt,
+        actedAt: updated.actedAt,
       },
     });
   } catch (error) {

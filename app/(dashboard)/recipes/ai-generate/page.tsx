@@ -188,13 +188,13 @@ export default function AIGeneratorPage() {
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-          <Link
-            href="/recipes"
-            className="inline-flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white mb-4"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back to Recipes</span>
-          </Link>
+            <Link
+              href="/recipes"
+              className="inline-flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white mb-4"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back to Recipes</span>
+            </Link>
 
           {/* Recommendation Indicator */}
           {fromRecommendation && (
