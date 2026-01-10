@@ -126,18 +126,25 @@ export default function AIRecipeGenerator({
           fetch('/api/user/preferences').then(res => res.ok ? res.json() : null)
         ]);
         
+        console.log('🔍 AIRecipeGenerator - Loaded user preferences:', userPrefs);
+        console.log('🔍 AIRecipeGenerator - initialParams:', initialParams);
+        console.log('🔍 AIRecipeGenerator - preferencesLoaded:', preferencesLoaded);
+        
         // Set measurement system
         setMeasurementSystem(measurementPref.system);
 
         // Load user preferences if not overridden by initialParams
         if (userPrefs?.preferences && !preferencesLoaded) {
+          console.log('✅ Loading preferences from API...');
           // Only set if not already provided via initialParams
           if (!initialParams?.dietaryRestrictions || initialParams.dietaryRestrictions.length === 0) {
             if (userPrefs.preferences.defaultDietaryRestrictions?.length > 0) {
+              console.log('✅ Setting dietary restrictions:', userPrefs.preferences.defaultDietaryRestrictions);
               setDietaryRestrictions(userPrefs.preferences.defaultDietaryRestrictions);
             }
           }
           if (!initialParams?.targetSystem && userPrefs.preferences.defaultFocusSystems?.length > 0) {
+            console.log('✅ Setting defense system:', userPrefs.preferences.defaultFocusSystems[0]);
             setDefenseSystem(userPrefs.preferences.defaultFocusSystems[0] as DefenseSystem);
           }
           setPreferencesLoaded(true);
