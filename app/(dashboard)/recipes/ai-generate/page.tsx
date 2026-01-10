@@ -3,17 +3,20 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import AIRecipeGenerator from '@/components/recipes/AIRecipeGenerator';
+import { RecipeSuccessModal } from '@/components/recipes/RecipeSuccessModal';
 import { RecipeFormData } from '@/types';
 import { recipeSchema } from '@/lib/validations';
 import { Sparkles, ArrowLeft, Target } from 'lucide-react';
 import Link from 'next/link';
 import { DefenseSystem } from '@/types';
+import { toast } from 'react-hot-toast';
 
 export default function AIGeneratorPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [savedRecipeId, setSavedRecipeId] = useState<string | null>(null);
+  const [savedRecipeName, setSavedRecipeName] = useState<string>('');
   const [fromRecommendation, setFromRecommendation] = useState(false);
   const [recommendationId, setRecommendationId] = useState<string | null>(null);
   const [initialParams, setInitialParams] = useState<any>(null);
@@ -67,46 +70,26 @@ export default function AIGeneratorPage() {
 
       const { data: newRecipe } = await response.json();
       setSavedRecipeId(newRecipe.id);
-      setShowSuccess(true);
+      setSavedRecipeName(newRecipe.title || newRecipe.name || 'Your Recipe');
 
-      // Update workflow state (recipe created)
-      try {
-        await fetch('/api/user/workflow-state', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'RECIPE_CREATED',
-            metadata: {
-              recipeId: newRecipe.id,
-            },
-          }),
-        });
-      } catch (err) {
-        console.error('Failed to update workflow state:', err);
-      }
-
-      // If from recommendation, mark as completed
+      // Update recommendation status to ACTED_ON (user created recipe)
       if (fromRecommendation && recommendationId) {
         try {
-          await fetch(`/api/recommendations/${recommendationId}/accept`, {
+          await fetch(`/api/recommendations/${recommendationId}/update-status`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              metadata: {
-                recipeId: newRecipe.id,
-                completedAt: new Date().toISOString(),
-              },
+              status: 'ACTED_ON',
+              linkedRecipeId: newRecipe.id,
             }),
           });
         } catch (err) {
-          console.error('Failed to track recommendation completion:', err);
+          console.error('Failed to update recommendation status:', err);
         }
       }
 
-      // Redirect after 2 seconds
-      setTimeout(() => {
-        router.push(`/recipes/${newRecipe.id}`);
-      }, 2000);
+      // Show success modal instead of redirecting
+      setShowSuccessModal(true);
     } catch (err: any) {
       if (err.name === 'ZodError') {
         // Transform Zod validation errors into user-friendly messages
@@ -119,31 +102,94 @@ export default function AIGeneratorPage() {
     }
   };
 
-  if (showSuccess) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl dark:border dark:border-gray-700 p-8 max-w-md text-center">
-          <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Sparkles className="w-8 h-8 text-white" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
-            Recipe Saved Successfully!
-          </h2>
-          <p className="text-gray-600 dark:text-gray-200 mb-4">
-            Your AI-generated recipe has been added to your collection.
-          </p>
-          <div className="animate-spin w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full mx-auto"></div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">Redirecting...</p>
-        </div>
-      </div>
-    );
-  }
+  const handleCreateShoppingList = async () => {
+    if (!savedRecipeId) return;
+    
+    try {
+      const response = await fetch('/api/shopping-lists', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipeId: savedRecipeId,
+          name: `Shopping list for ${savedRecipeName}`,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to create shopping list');
+
+      const { data: shoppingList } = await response.json();
+
+      // Update recommendation to SHOPPED status
+      if (recommendationId) {
+        await fetch(`/api/recommendations/${recommendationId}/update-status`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            status: 'SHOPPED',
+            linkedShoppingListId: shoppingList.id,
+          }),
+        });
+      }
+
+      toast.success('Shopping list created!');
+      router.push(`/shopping-lists/${shoppingList.id}`);
+    } catch (error) {
+      console.error('Error creating shopping list:', error);
+      toast.error('Failed to create shopping list');
+    }
+  };
+
+  const handleLogToMealPlanner = async () => {
+    if (!savedRecipeId) return;
+
+    try {
+      // Log the recipe to today's progress
+      const response = await fetch(`/api/recipes/${savedRecipeId}/log-meal`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mealTime: 'LUNCH', // Default to lunch, user can specify
+          date: new Date().toISOString(),
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to log meal');
+
+      const result = await response.json();
+
+      toast.success(`Meal logged! Tracked ${result.systemsTracked.length} defense systems`);
+      router.push('/progress');
+    } catch (error) {
+      console.error('Error logging meal:', error);
+      toast.error('Failed to log meal');
+    }
+  };
+
+  const handleViewRecipe = () => {
+    if (savedRecipeId) {
+      router.push(`/recipes/${savedRecipeId}`);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-900 dark:to-gray-800 py-8 px-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
+    <>
+      {/* Success Modal */}
+      {savedRecipeId && (
+        <RecipeSuccessModal
+          isOpen={showSuccessModal}
+          onClose={() => setShowSuccessModal(false)}
+          recipeId={savedRecipeId}
+          recipeName={savedRecipeName}
+          onCreateShoppingList={handleCreateShoppingList}
+          onLogToMealPlanner={handleLogToMealPlanner}
+          onViewRecipe={handleViewRecipe}
+        />
+      )}
+
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-900 dark:to-gray-800 py-8 px-4">
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="mb-8">
           <Link
             href="/recipes"
             className="inline-flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white mb-4"
@@ -261,6 +307,6 @@ export default function AIGeneratorPage() {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

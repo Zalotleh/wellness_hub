@@ -739,6 +739,14 @@ model Recommendation {
   createdAt       DateTime               @default(now())
   acceptedAt      DateTime?              // When user acted on it
   dismissedAt     DateTime?              // When user dismissed it
+  actedAt         DateTime?              // When user created recipe/plan
+  shoppedAt       DateTime?              // When user created shopping list
+  completedAt     DateTime?              // When user logged the meal
+  
+  // Linked entities for tracking progress
+  linkedRecipeId       String?
+  linkedShoppingListId String?
+  linkedMealLogId      String?
   
   // Analytics
   viewCount       Int                    @default(0)
@@ -772,8 +780,10 @@ enum RecommendationPriority {
 }
 
 enum RecommendationStatus {
-  PENDING
-  ACCEPTED
-  DISMISSED
-  EXPIRED
+  PENDING      // User sees recommendation
+  ACTED_ON     // User clicked and created recipe/plan
+  SHOPPED      // User created shopping list
+  COMPLETED    // User logged the meal
+  DISMISSED    // User dismissed
+  EXPIRED      // Recommendation expired
 }
