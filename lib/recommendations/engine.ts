@@ -232,8 +232,12 @@ export class RecommendationEngine {
     if (hasRecentlyDismissedType(context.userProfile, 'FOOD_SUGGESTION')) {
       return null;
     }
-    
-    const repeatedFoodsList = context.gaps.repeatedFoods.slice(0, 3).join(', ');
+        // Only suggest variety if user has logged at least 3 unique foods
+    // Otherwise, they need to log food first, not improve variety
+    if (context.score.foodVariety.totalUniqueFoods < 3) {
+      return null;
+    }
+        const repeatedFoodsList = context.gaps.repeatedFoods.slice(0, 3).join(', ');
     
     return {
       id: crypto.randomUUID(),
