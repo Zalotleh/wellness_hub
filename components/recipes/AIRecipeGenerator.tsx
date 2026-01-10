@@ -453,8 +453,8 @@ export default function AIRecipeGenerator({
         : [],
       instructions: generatedRecipe.instructions || '',
       defenseSystems: generatedRecipe.defenseSystems || [defenseSystem],
-      // Optional fields
-      description: generatedRecipe.description,
+      // Optional fields - truncate description to max 500 chars
+      description: generatedRecipe.description?.substring(0, 500),
       prepTime: generatedRecipe.prepTime,
       cookTime: generatedRecipe.cookTime,
       servings: typeof generatedRecipe.servings === 'number' ? generatedRecipe.servings : undefined,

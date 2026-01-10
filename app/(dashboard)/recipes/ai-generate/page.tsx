@@ -65,10 +65,12 @@ export default function AIGeneratorPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('API error:', errorData);
         throw new Error(errorData.error || 'Failed to save recipe');
       }
 
       const { data: newRecipe } = await response.json();
+      console.log('Recipe saved successfully:', newRecipe);
       setSavedRecipeId(newRecipe.id);
       setSavedRecipeName(newRecipe.title || newRecipe.name || 'Your Recipe');
 
@@ -91,12 +93,13 @@ export default function AIGeneratorPage() {
       // Show success modal instead of redirecting
       setShowSuccessModal(true);
     } catch (err: any) {
+      console.error('Save recipe error:', err);
       if (err.name === 'ZodError') {
         // Transform Zod validation errors into user-friendly messages
         const firstError = err.errors[0];
-        throw new Error(
-          firstError?.message || 'Please check all required recipe fields'
-        );
+        const errorMessage = firstError?.message || 'Please check all required recipe fields';
+        console.error('Validation error:', errorMessage, 'Path:', firstError?.path);
+        throw new Error(errorMessage);
       }
       throw err;
     }
@@ -139,9 +142,13 @@ export default function AIGeneratorPage() {
   };
 
   const handleLogToMealPlanner = async () => {
-    if (!savedRecipeId) return;
+    if (!savedRecipeId) {
+      console.error('No savedRecipeId available');
+      return;
+    }
 
     try {
+      console.log('Logging recipe to meal planner:', savedRecipeId);
       // Log the recipe to today's progress
       const response = await fetch(`/api/recipes/${savedRecipeId}/log-meal`, {
         method: 'POST',
@@ -152,14 +159,23 @@ export default function AIGeneratorPage() {
         }),
       });
 
-      if (!response.ok) throw new Error('Failed to log meal');
+      console.log('Log meal response status:', response.status);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Log meal error response:', errorData);
+        throw new Error(errorData.error || 'Failed to log meal');
+      }
 
       const result = await response.json();
+      console.log('Log meal success:', result);
 
-      router.push('/progress');
+      // Refresh and navigate to progress page with timestamp to force data refetch
+      router.refresh();
+      router.push(`/progress?updated=${Date.now()}`);
     } catch (error) {
       console.error('Error logging meal:', error);
-      alert('Failed to log meal');
+      alert(`Failed to log meal: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -192,7 +208,7 @@ export default function AIGeneratorPage() {
               href="/recipes"
               className="inline-flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white mb-4"
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowLeft className="w-4 h-4progress" />
               <span>Back to Recipes</span>
             </Link>
 

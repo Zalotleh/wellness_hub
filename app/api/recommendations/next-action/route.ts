@@ -4,7 +4,6 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { recommendationEngine } from '@/lib/recommendations/engine';
 import { calculate5x5x5Score } from '@/lib/tracking/5x5x5-score';
-import { startOfDay } from 'date-fns';
 
 /**
  * GET /api/recommendations/next-action
@@ -31,10 +30,15 @@ export async function GET(request: NextRequest) {
     // Parse and validate date
     let date: Date;
     try {
-      date = dateParam ? new Date(dateParam) : new Date();
-      if (isNaN(date.getTime())) {
+      const rawDate = dateParam ? new Date(dateParam) : new Date();
+      if (isNaN(rawDate.getTime())) {
         throw new Error('Invalid date');
       }
+      // Normalize to UTC date at noon to prevent timezone shifting
+      const year = rawDate.getUTCFullYear();
+      const month = rawDate.getUTCMonth();
+      const day = rawDate.getUTCDate();
+      date = new Date(Date.UTC(year, month, day, 12, 0, 0));
     } catch (err) {
       return NextResponse.json(
         { 
@@ -45,7 +49,7 @@ export async function GET(request: NextRequest) {
       );
     }
     
-    const dateKey = startOfDay(date);
+    const dateKey = date;
 
     // Check for existing active recommendations first (cache check)
     const existingRec = await prisma.recommendation.findFirst({

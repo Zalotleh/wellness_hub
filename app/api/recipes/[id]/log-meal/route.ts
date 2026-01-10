@@ -12,8 +12,10 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
+    console.log('=== LOG MEAL ENDPOINT CALLED ===');
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
+      console.error('Unauthorized: No session');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -21,9 +23,12 @@ export async function POST(
     const body = await request.json();
     const { mealTime, date } = body;
 
+    console.log('Log meal request:', { userId: session.user.id, recipeId, mealTime, date });
+
     // Validate mealTime
     const validMealTimes = ['BREAKFAST', 'LUNCH', 'DINNER', 'SNACK'];
     if (!validMealTimes.includes(mealTime)) {
+      console.error('Invalid meal time:', mealTime);
       return NextResponse.json(
         { error: 'Invalid meal time. Must be BREAKFAST, LUNCH, DINNER, or SNACK' },
         { status: 400 }
@@ -36,8 +41,11 @@ export async function POST(
     });
 
     if (!recipe) {
+      console.error('Recipe not found:', recipeId);
       return NextResponse.json({ error: 'Recipe not found' }, { status: 404 });
     }
+
+    console.log('Recipe found:', recipe.title);
 
     // Parse defense systems and ingredients from recipe
     const defenseSystems = Array.isArray(recipe.defenseSystems)
@@ -53,35 +61,58 @@ export async function POST(
       typeof ing === 'string' ? ing : ing.name || ing.item || ''
     ).filter((name: string) => name.length > 0);
 
-    // Use the target date or default to today
-    const targetDate = date ? new Date(date) : new Date();
-
-    // Log to progress for each defense system
-    const progressEntries = [];
-    for (const system of defenseSystems) {
-      try {
-        const response = await fetch(`${request.nextUrl.origin}/api/progress`, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Cookie': request.headers.get('cookie') || '',
-          },
-          body: JSON.stringify({
-            defenseSystem: system,
-            mealTime,
-            foodsConsumed: foodItems,
-            date: targetDate.toISOString(),
-          }),
-        });
-
-        if (response.ok) {
-          const { data } = await response.json();
-          progressEntries.push(data);
-        }
-      } catch (error) {
-        console.error(`Error logging ${system} for recipe ${recipeId}:`, error);
-      }
+    // Parse the date properly - create at noon UTC to avoid timezone shifting
+    let targetDate: Date;
+    if (date) {
+      // Parse the ISO string and extract just the date part
+      const dateObj = new Date(date);
+      // Create at noon UTC to ensure date doesn't shift when stored in DB
+      targetDate = new Date(Date.UTC(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate(), 12, 0, 0));
+    } else {
+      // Use current date at noon UTC
+      const now = new Date();
+      targetDate = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0));
     }
+    
+    console.log('Target date for logging:', targetDate.toISOString());
+    console.log('Target date (date part only):', targetDate.toISOString().split('T')[0]);
+
+    // Create a single FoodConsumption entry for this recipe
+    const consumption = await prisma.foodConsumption.create({
+      data: {
+        userId: session.user.id,
+        date: targetDate,
+        mealTime,
+        timeConsumed: new Date(),
+        sourceType: 'RECIPE',
+        recipeId: recipeId,
+        servings: 1,
+        foodItems: {
+          create: foodItems.map((foodName: string) => ({
+            name: foodName,
+            quantity: 1,
+            unit: 'serving',
+            defenseSystems: {
+              create: defenseSystems.map((system: string) => ({
+                defenseSystem: system,
+                strength: 'MEDIUM',
+              })),
+            },
+          })),
+        },
+      },
+      include: {
+        foodItems: {
+          include: {
+            defenseSystems: true,
+          },
+        },
+      },
+    });
+
+    console.log(`✅ Logged recipe ${recipeId} as ${mealTime}:`, consumption.id);
+    console.log(`   - Systems: ${defenseSystems.join(', ')}`);
+    console.log(`   - Foods: ${foodItems.length} items`);
 
     // Check if this recipe is linked to a recommendation and mark it COMPLETED
     try {
@@ -96,13 +127,13 @@ export async function POST(
         } as any,
       });
 
-      if (linkedRecommendation && progressEntries.length > 0) {
+      if (linkedRecommendation) {
         await prisma.recommendation.update({
           where: { id: linkedRecommendation.id },
           data: {
             status: 'COMPLETED' as any,
             completedAt: new Date(),
-            linkedMealLogId: progressEntries[0].id,
+            linkedMealLogId: consumption.id,
           } as any,
         });
       }
@@ -114,11 +145,11 @@ export async function POST(
     return NextResponse.json({
       success: true,
       message: `Recipe logged to ${mealTime.toLowerCase()}`,
-      progressEntries: progressEntries.map(entry => ({
-        id: entry.id,
-        defenseSystem: entry.defenseSystem,
-        mealTime: entry.mealTime,
-      })),
+      consumption: {
+        id: consumption.id,
+        mealTime: consumption.mealTime,
+        foodCount: consumption.foodItems?.length || 0,
+      },
       systemsTracked: defenseSystems,
       foodsLogged: foodItems.length,
     });

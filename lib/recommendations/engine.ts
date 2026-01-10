@@ -57,26 +57,39 @@ export class RecommendationEngine {
     // Prioritize gaps
     const prioritizedGaps = prioritizeGaps(gaps);
     const recommendations: SmartRecommendation[] = [];
+    const usedSystems = new Set<string>(); // Track which systems we've already recommended
     
     // Generate recommendations based on priority
     // Priority 1: Critical gaps (overall < 50 + missing systems)
     if (gaps.overallScore < 50 && gaps.missingSystems.length > 0) {
+      const system = gaps.missingSystems[0];
       const systemRec = this.createSystemRecommendation(
-        gaps.missingSystems[0],
+        system,
         'CRITICAL',
         context
       );
-      if (systemRec) recommendations.push(systemRec);
+      if (systemRec) {
+        recommendations.push(systemRec);
+        usedSystems.add(system);
+      }
     }
     
-    // Priority 2: Missing defense systems
+    // Priority 2: Additional missing defense systems (skip already recommended)
     if (recommendations.length < 3 && gaps.missingSystems.length > 0) {
-      const systemRec = this.createSystemRecommendation(
-        gaps.missingSystems[0],
-        'HIGH',
-        context
-      );
-      if (systemRec) recommendations.push(systemRec);
+      for (const system of gaps.missingSystems) {
+        if (recommendations.length >= 3) break;
+        if (usedSystems.has(system)) continue; // Skip already recommended systems
+        
+        const systemRec = this.createSystemRecommendation(
+          system,
+          'HIGH',
+          context
+        );
+        if (systemRec) {
+          recommendations.push(systemRec);
+          usedSystems.add(system);
+        }
+      }
     }
     
     // Priority 3: Multiple weak systems → meal plan

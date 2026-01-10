@@ -47,7 +47,7 @@ export default function FoodSelector({
     setLoading(true);
     try {
       const response = await fetch(
-        `/api/progress/food-database?search=${encodeURIComponent(searchQuery)}`
+        `/api/progress/food-database?query=${encodeURIComponent(searchQuery)}`
       );
 
       if (!response.ok) {
@@ -68,14 +68,18 @@ export default function FoodSelector({
 
   // Debounced search
   useEffect(() => {
+    if (!query.trim()) {
+      setFoods([]);
+      setIsOpen(false);
+      return;
+    }
+
     const timer = setTimeout(() => {
-      if (query.trim() || isOpen) {
-        searchFoods(query);
-      }
+      searchFoods(query);
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [query, isOpen]);
+  }, [query]);
 
   // Auto-focus on mount (but don't load foods yet)
   useEffect(() => {
@@ -163,10 +167,10 @@ export default function FoodSelector({
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           onFocus={() => {
-            if (foods.length === 0 && !loading) {
-              searchFoods(query);
-            } else {
+            if (query.trim() && foods.length > 0) {
               setIsOpen(true);
+            } else if (query.trim() && foods.length === 0 && !loading) {
+              searchFoods(query);
             }
           }}
           placeholder={placeholder}

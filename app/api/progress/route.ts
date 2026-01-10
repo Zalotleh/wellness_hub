@@ -26,45 +26,99 @@ export async function GET(request: NextRequest) {
     let startDate: Date;
     let endDate: Date;
 
-    // Helper function to parse dates consistently
+    // Helper function to parse dates consistently using UTC
     const parseAndNormalizeDate = (dateString?: string | null) => {
-      if (!dateString) return new Date();
+      if (!dateString) {
+        const now = new Date();
+        return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 12, 0, 0));
+      }
       const date = new Date(dateString);
-      return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 12, 0, 0));
     };
 
     if (startDateParam && endDateParam) {
-      // If specific dates are provided, use those
-      const parsedStartDate = parseAndNormalizeDate(startDateParam);
-      const parsedEndDate = parseAndNormalizeDate(endDateParam);
-      startDate = startOfDay(parsedStartDate);
-      endDate = endOfDay(parsedEndDate);
+      // If specific dates are provided, use those (already normalized to noon UTC)
+      startDate = parseAndNormalizeDate(startDateParam);
+      endDate = parseAndNormalizeDate(endDateParam);
     } else if (range === 'week') {
+      // For week range, we need to calculate start and end dates
       const today = parseAndNormalizeDate();
-      startDate = startOfWeek(today, { weekStartsOn: 1 }); // Monday
-      endDate = endOfWeek(today, { weekStartsOn: 1 });
+      // Calculate week start/end in UTC
+      const dayOfWeek = today.getUTCDay();
+      const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+      const daysToSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
+      startDate = new Date(Date.UTC(
+        today.getUTCFullYear(),
+        today.getUTCMonth(),
+        today.getUTCDate() - daysToMonday,
+        12, 0, 0
+      ));
+      endDate = new Date(Date.UTC(
+        today.getUTCFullYear(),
+        today.getUTCMonth(),
+        today.getUTCDate() + daysToSunday,
+        12, 0, 0
+      ));
     } else {
-      // Default to today
+      // Default to today (already normalized to noon UTC)
       const today = parseAndNormalizeDate();
-      startDate = startOfDay(today);
-      endDate = endOfDay(today);
+      startDate = today;
+      endDate = today;
     }
 
-    const progress = await prisma.progress.findMany({
+    const progress = await prisma.foodConsumption.findMany({
       where: {
         userId: session.user.id,
-        date: {
-          gte: startDate,
-          lte: endDate,
+        date: startDate.getTime() === endDate.getTime() 
+          ? startDate  // Single date query
+          : {          // Date range query
+              gte: startDate,
+              lte: endDate,
+            },
+      },
+      include: {
+        foodItems: {
+          include: {
+            defenseSystems: true,
+          },
         },
       },
       orderBy: [
         { date: 'desc' },
-        { defenseSystem: 'asc' },
+        { mealTime: 'asc' },
       ],
     });
 
-    return NextResponse.json({ data: progress });
+    // Transform FoodConsumption data to match old Progress format for backward compatibility
+    const transformedProgress = progress.flatMap(consumption => {
+      // Group food items by defense system
+      const systemGroups = new Map<string, string[]>();
+      
+      consumption.foodItems.forEach(foodItem => {
+        foodItem.defenseSystems.forEach(sysBenefit => {
+          const system = sysBenefit.defenseSystem;
+          if (!systemGroups.has(system)) {
+            systemGroups.set(system, []);
+          }
+          systemGroups.get(system)!.push(foodItem.name);
+        });
+      });
+      
+      // Create a progress entry for each defense system
+      return Array.from(systemGroups.entries()).map(([system, foods]) => ({
+        id: `${consumption.id}-${system}`,
+        userId: consumption.userId,
+        date: consumption.date,
+        defenseSystem: system,
+        foodsConsumed: foods,
+        count: foods.length,
+        notes: consumption.notes,
+        createdAt: consumption.createdAt,
+        updatedAt: consumption.updatedAt,
+      }));
+    });
+
+    return NextResponse.json({ data: transformedProgress });
   } catch (error) {
     console.error('Error fetching progress:', error);
     return NextResponse.json(

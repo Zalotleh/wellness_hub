@@ -1,6 +1,7 @@
 import { DefenseSystem } from '@/types';
 import { prisma } from '@/lib/prisma';
 import { startOfDay, endOfDay } from 'date-fns';
+import { transformFoodConsumptionToProgress } from '@/lib/utils/food-consumption-transformer';
 import type {
   Score5x5x5,
   SystemScore,
@@ -26,14 +27,29 @@ export async function calculate5x5x5Score(
   userId: string,
   date: Date
 ): Promise<Score5x5x5> {
-  // Fetch all progress entries for the date
-  const progressEntries = await prisma.progress.findMany({
+  // Normalize to UTC date at noon to prevent timezone shifting
+  const year = date.getUTCFullYear();
+  const month = date.getUTCMonth();
+  const day = date.getUTCDate();
+  const normalizedDate = new Date(Date.UTC(year, month, day, 12, 0, 0));
+
+  // Fetch all food consumptions for the date from new table
+  const foodConsumptions = await prisma.foodConsumption.findMany({
     where: {
       userId,
-      date: startOfDay(date),
-      deprecated: false,
+      date: normalizedDate,
+    },
+    include: {
+      foodItems: {
+        include: {
+          defenseSystems: true,
+        },
+      },
     },
   });
+
+  // Transform to old Progress format for backward compatibility
+  const progressEntries = transformFoodConsumptionToProgress(foodConsumptions);
 
   // Calculate defense system scores
   const systemScores = calculateSystemScores(progressEntries);

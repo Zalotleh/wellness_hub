@@ -18,7 +18,11 @@ export async function cacheDailyScore(
   date: Date,
   score: Score5x5x5
 ): Promise<void> {
-  const dateOnly = startOfDay(date);
+  // Normalize to UTC date at noon
+  const year = date.getUTCFullYear();
+  const month = date.getUTCMonth();
+  const day = date.getUTCDate();
+  const dateOnly = new Date(Date.UTC(year, month, day, 12, 0, 0));
 
   // Extract system counts
   const systemCounts: Record<string, number> = {};
@@ -92,7 +96,11 @@ export async function getCachedOrCalculateScore(
   userId: string,
   date: Date
 ): Promise<Score5x5x5> {
-  const dateOnly = startOfDay(date);
+  // Normalize to UTC date at noon
+  const year = date.getUTCFullYear();
+  const month = date.getUTCMonth();
+  const day = date.getUTCDate();
+  const dateOnly = new Date(Date.UTC(year, month, day, 12, 0, 0));
 
   // Try to get cached score
   const cached = await prisma.dailyProgressScore.findUnique({

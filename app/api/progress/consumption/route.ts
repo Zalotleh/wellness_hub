@@ -37,9 +37,21 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = foodConsumptionSchema.parse(body);
 
-    const consumptionDate = validatedData.date
-      ? new Date(validatedData.date)
-      : new Date();
+    // Normalize date to UTC noon to prevent timezone shifting
+    let consumptionDate: Date;
+    if (validatedData.date) {
+      const rawDate = new Date(validatedData.date);
+      const year = rawDate.getUTCFullYear();
+      const month = rawDate.getUTCMonth();
+      const day = rawDate.getUTCDate();
+      consumptionDate = new Date(Date.UTC(year, month, day, 12, 0, 0));
+    } else {
+      const now = new Date();
+      const year = now.getUTCFullYear();
+      const month = now.getUTCMonth();
+      const day = now.getUTCDate();
+      consumptionDate = new Date(Date.UTC(year, month, day, 12, 0, 0));
+    }
 
     // Load food database once for all matching
     const foodDatabase = await prisma.foodDatabase.findMany();

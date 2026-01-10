@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { startOfWeek, endOfWeek, eachDayOfInterval, format } from 'date-fns';
 import { DefenseSystem } from '@/types';
+import { transformFoodConsumptionToProgress } from '@/lib/utils/food-consumption-transformer';
 
 interface ProgressEntry {
   id: string;
@@ -54,13 +55,31 @@ export async function GET(request: NextRequest) {
     const dateParam = searchParams.get('date');
     const range = searchParams.get('range') || 'week'; // 'week' or 'month'
 
-    // Calculate date range based on provided date or current date
+    // Calculate date range based on provided date or current date using UTC
     const baseDate = dateParam ? new Date(dateParam) : new Date();
-    const startDate = startOfWeek(baseDate, { weekStartsOn: 1 });
-    const endDate = endOfWeek(baseDate, { weekStartsOn: 1 });
+    const baseDateUTC = new Date(Date.UTC(baseDate.getUTCFullYear(), baseDate.getUTCMonth(), baseDate.getUTCDate(), 12, 0, 0));
+    
+    // Calculate week start/end in UTC
+    const dayOfWeek = baseDateUTC.getUTCDay();
+    const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    const daysToSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
+    
+    const startDate = new Date(Date.UTC(
+      baseDateUTC.getUTCFullYear(),
+      baseDateUTC.getUTCMonth(),
+      baseDateUTC.getUTCDate() - daysToMonday,
+      12, 0, 0
+    ));
+    
+    const endDate = new Date(Date.UTC(
+      baseDateUTC.getUTCFullYear(),
+      baseDateUTC.getUTCMonth(),
+      baseDateUTC.getUTCDate() + daysToSunday,
+      12, 0, 0
+    ));
 
-    // Fetch all progress for the range
-    const progressEntries = await prisma.progress.findMany({
+    // Fetch all progress for the range from FoodConsumption table
+    const foodConsumptions = await prisma.foodConsumption.findMany({
       where: {
         userId: session.user.id,
         date: {
@@ -68,8 +87,18 @@ export async function GET(request: NextRequest) {
           lte: endDate,
         },
       },
+      include: {
+        foodItems: {
+          include: {
+            defenseSystems: true,
+          },
+        },
+      },
       orderBy: { date: 'asc' },
-    }) as ProgressEntry[];
+    });
+
+    // Transform to old Progress format for backward compatibility
+    const progressEntries = transformFoodConsumptionToProgress(foodConsumptions) as ProgressEntry[];
 
     // Calculate daily progress for each day
     const daysInRange = eachDayOfInterval({ start: startDate, end: endDate });

@@ -59,7 +59,67 @@ export function getUnitLabel(unit: string): string {
 
 // Helper function to validate if a unit is valid
 export function isValidUnit(unit: string): boolean {
-  return ALL_UNITS.some(u => u.value === unit);
+  // Normalize the unit (lowercase, trim)
+  const normalized = unit.toLowerCase().trim();
+  
+  // Check exact matches
+  if (ALL_UNITS.some(u => u.value.toLowerCase() === normalized)) {
+    return true;
+  }
+  
+  // Common variations and aliases
+  const unitAliases: Record<string, boolean> = {
+    // Volume
+    'teaspoon': true,
+    'teaspoons': true,
+    'tablespoon': true,
+    'tablespoons': true,
+    'ounce': true,
+    'ounces': true,
+    'cups': true,
+    'pints': true,
+    'quarts': true,
+    'gallons': true,
+    'milliliter': true,
+    'milliliters': true,
+    'liters': true,
+    'l': true,
+    // Weight
+    'gram': true,
+    'grams': true,
+    'kilogram': true,
+    'kilograms': true,
+    'pound': true,
+    'pounds': true,
+    // Count
+    'pieces': true,
+    'cloves': true,
+    'slices': true,
+    'cans': true,
+    'packages': true,
+    'bunches': true,
+    // Special
+    'pinches': true,
+    'dashes': true,
+    // Additional common units
+    'small': true,
+    'medium': true,
+    'large': true,
+    'stick': true,
+    'sticks': true,
+    'head': true,
+    'heads': true,
+    'sprig': true,
+    'sprigs': true,
+    'leaf': true,
+    'leaves': true,
+    'stalk': true,
+    'stalks': true,
+    'bulb': true,
+    'bulbs': true,
+  };
+  
+  return !!unitAliases[normalized];
 }
 
 // Get units by system preference

@@ -243,11 +243,6 @@ export default function TimeFilter({
           <div className="text-lg font-semibold text-gray-900 dark:text-white">
             {getDateRangeText()}
           </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            {view === 'daily' && 'Single day view'}
-            {view === 'weekly' && '7-day summary'}
-            {view === 'monthly' && '30-day overview'}
-          </div>
         </div>
 
         <button
@@ -274,34 +269,6 @@ export default function TimeFilter({
             />
           </svg>
         </button>
-      </div>
-
-      {/* View-specific Info */}
-      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-        {view === 'daily' && (
-          <div className="text-sm text-gray-600 dark:text-gray-400">
-            <p className="flex items-center gap-2">
-              <span className="text-purple-600 dark:text-purple-400">💡</span>
-              Track your 5x5x5 progress for this specific day. See which defense systems you covered and meals logged.
-            </p>
-          </div>
-        )}
-        {view === 'weekly' && (
-          <div className="text-sm text-gray-600 dark:text-gray-400">
-            <p className="flex items-center gap-2">
-              <span className="text-purple-600 dark:text-purple-400">📊</span>
-              View your weekly trends and average score. Identify patterns and areas for improvement.
-            </p>
-          </div>
-        )}
-        {view === 'monthly' && (
-          <div className="text-sm text-gray-600 dark:text-gray-400">
-            <p className="flex items-center gap-2">
-              <span className="text-purple-600 dark:text-purple-400">📈</span>
-              See your long-term progress over the month. Track consistency and celebrate achievements.
-            </p>
-          </div>
-        )}
       </div>
     </div>
   );

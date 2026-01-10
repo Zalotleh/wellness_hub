@@ -25,6 +25,7 @@ interface SelectedFood {
 interface FoodLogModalProps {
   isOpen: boolean;
   defaultMealTime?: MealTime;
+  date?: Date;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -40,6 +41,7 @@ const mealTimeOptions: { value: MealTime; label: string; icon: string }[] = [
 export default function FoodLogModal({
   isOpen,
   defaultMealTime = 'BREAKFAST',
+  date,
   onClose,
   onSuccess,
 }: FoodLogModalProps) {
@@ -110,6 +112,7 @@ export default function FoodLogModal({
           mealTime,
           foodItems,
           notes: notes || undefined,
+          date: date?.toISOString(),
         }),
       });
 

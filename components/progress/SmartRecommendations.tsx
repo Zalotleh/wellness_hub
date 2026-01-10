@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
-import { Sparkles, TrendingUp, Clock, Target, RefreshCw, ChevronRight } from 'lucide-react';
+import { Sparkles, RefreshCw, ChevronRight } from 'lucide-react';
 import MultiSystemBadge from '@/components/ui/MultiSystemBadge';
 import { DefenseSystem } from '@/types';
 
@@ -149,10 +149,7 @@ export default function SmartRecommendations({
     );
   }
 
-  const missingSystems = recommendations.gaps.systems;
-  const missingMealTimes = recommendations.gaps.mealTimes;
   const superfoodHighlights = recommendations.recommendations.multiSystemFoods;
-  const currentProgress = recommendations.currentProgress;
   
   // Get suggested foods from system recommendations
   const suggestedFoods = recommendations.recommendations.bySystem.flatMap(
@@ -165,8 +162,6 @@ export default function SmartRecommendations({
     }))
   );
 
-  const isComplete = missingSystems.length === 0 && missingMealTimes.length === 0;
-
   return (
     <div className={`bg-gradient-to-br from-white to-purple-50 rounded-lg shadow-lg p-6 ${className}`}>
       {/* Header */}
@@ -176,8 +171,8 @@ export default function SmartRecommendations({
             <Sparkles className="w-6 h-6 text-purple-600" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Smart Recommendations</h2>
-            <p className="text-sm text-gray-600">AI-powered suggestions for optimal nutrition</p>
+            <h2 className="text-2xl font-bold text-gray-900">Food Suggestions</h2>
+            <p className="text-sm text-gray-600">Smart picks to optimize your nutrition</p>
           </div>
         </div>
         <button
@@ -188,95 +183,6 @@ export default function SmartRecommendations({
           <RefreshCw className="w-5 h-5 text-purple-600" />
         </button>
       </div>
-
-      {/* Perfect Day Achievement */}
-      {isComplete && (
-        <div className="mb-6 p-6 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-lg">
-          <div className="flex items-center gap-4">
-            <div className="text-5xl">🎉</div>
-            <div className="flex-1">
-              <h3 className="text-xl font-bold text-green-900 mb-1">
-                Perfect 5×5×5 Day!
-              </h3>
-              <p className="text-green-700">
-                You've covered all 5 defense systems across all 5 meal times. Outstanding work!
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Progress Summary */}
-      {!isComplete && (
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="p-4 bg-white rounded-lg border border-gray-200">
-            <div className="flex items-center gap-2 mb-1">
-              <Target className="w-4 h-4 text-red-500" />
-              <span className="text-xs font-semibold text-gray-600">Systems</span>
-            </div>
-            <div className="text-2xl font-bold text-gray-900">
-              {currentProgress.systemsCovered}<span className="text-lg text-gray-500">/{currentProgress.totalSystems}</span>
-            </div>
-          </div>
-          <div className="p-4 bg-white rounded-lg border border-gray-200">
-            <div className="flex items-center gap-2 mb-1">
-              <TrendingUp className="w-4 h-4 text-green-500" />
-              <span className="text-xs font-semibold text-gray-600">Foods</span>
-            </div>
-            <div className="text-2xl font-bold text-gray-900">
-              {currentProgress.foodsConsumed}
-            </div>
-          </div>
-          <div className="p-4 bg-white rounded-lg border border-gray-200">
-            <div className="flex items-center gap-2 mb-1">
-              <Clock className="w-4 h-4 text-blue-500" />
-              <span className="text-xs font-semibold text-gray-600">Meals</span>
-            </div>
-            <div className="text-2xl font-bold text-gray-900">
-              {currentProgress.mealTimesCovered}<span className="text-lg text-gray-500">/{currentProgress.totalMealTimes}</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Missing Systems */}
-      {missingSystems.length > 0 && (
-        <div className="mb-6">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-            <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-            Missing Defense Systems ({missingSystems.length})
-          </h3>
-          <MultiSystemBadge
-            systems={missingSystems.map((system) => ({ system }))}
-            size="md"
-            variant="full"
-          />
-        </div>
-      )}
-
-      {/* Missing Meal Times */}
-      {missingMealTimes.length > 0 && (
-        <div className="mb-6">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-            <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-            Missing Meal Times ({missingMealTimes.length})
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {missingMealTimes.map((mealTime) => {
-              const mealInfo = mealTimeLabels[mealTime];
-              return (
-                <div
-                  key={mealTime}
-                  className="inline-flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-sm"
-                >
-                  <span className="text-lg">{mealInfo.icon}</span>
-                  <span className="font-medium text-blue-700">{mealInfo.label}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
       {/* Superfood Highlights */}
       {superfoodHighlights.length > 0 && (
@@ -327,12 +233,12 @@ export default function SmartRecommendations({
         </div>
       )}
 
-      {/* Suggested Foods */}
-      {suggestedFoods.length > 0 && missingSystems.length > 0 && (
-        <div>
+      {/* Suggested Foods for Missing Systems */}
+      {suggestedFoods.length > 0 && (
+        <div className="mb-6">
           <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-purple-500" />
-            Suggested Foods to Complete Missing Systems
+            Recommended Foods
           </h3>
           <div className="space-y-2">
             {suggestedFoods.slice(0, 5).map((food) => (
@@ -368,7 +274,7 @@ export default function SmartRecommendations({
       )}
 
       {/* Empty State */}
-      {suggestedFoods.length === 0 && superfoodHighlights.length === 0 && !isComplete && (
+      {suggestedFoods.length === 0 && superfoodHighlights.length === 0 && (
         <div className="text-center py-8">
           <div className="text-4xl mb-3">🎯</div>
           <p className="text-gray-600">

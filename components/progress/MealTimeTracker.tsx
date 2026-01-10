@@ -83,6 +83,50 @@ export default function MealTimeTracker({
   onMealClick,
   className = '',
 }: MealTimeTrackerProps) {
+  const [localConsumptions, setLocalConsumptions] = useState<FoodConsumption[]>(consumptions);
+  const [loading, setLoading] = useState(false);
+
+  // Fetch consumptions for the selected date
+  useEffect(() => {
+    const fetchConsumptions = async () => {
+      setLoading(true);
+      try {
+        const dateStr = format(date, 'yyyy-MM-dd');
+        const response = await fetch(`/api/progress/consumption?startDate=${dateStr}&endDate=${dateStr}`);
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch consumptions');
+        }
+        
+        const data = await response.json();
+        
+        // Transform the API response to match our FoodConsumption interface
+        const transformed: FoodConsumption[] = data.consumptions.flatMap((consumption: any) =>
+          consumption.foodItems.map((item: any) => ({
+            id: item.id,
+            foodName: item.name,
+            mealTime: consumption.mealTime,
+            consumedAt: new Date(consumption.date),
+            quantity: item.quantity,
+            unit: item.unit,
+            systemBenefits: item.defenseSystems.map((ds: any) => ({
+              system: ds.defenseSystem,
+              strength: ds.strength,
+            })),
+          }))
+        );
+        
+        setLocalConsumptions(transformed);
+      } catch (error) {
+        console.error('Error fetching consumptions:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchConsumptions();
+  }, [date]);
+
   // Use useMemo to calculate stats without causing re-renders
   const mealStats = useMemo(() => {
     const stats: Record<MealTime, { count: number; foods: string[] }> = {
@@ -106,14 +150,56 @@ export default function MealTimeTracker({
     return stats;
   }, [consumptions]);
 
+  // Update stats when local consumptions change
+  const mealStatsLocal = useMemo(() => {
+    const stats: Record<MealTime, { count: number; foods: string[] }> = {
+      BREAKFAST: { count: 0, foods: [] },
+      MORNING_SNACK: { count: 0, foods: [] },
+      LUNCH: { count: 0, foods: [] },
+      AFTERNOON_SNACK: { count: 0, foods: [] },
+      DINNER: { count: 0, foods: [] },
+    };
+
+    localConsumptions.forEach((consumption) => {
+      const mealTime = consumption.mealTime as MealTime;
+      if (stats[mealTime]) {
+        stats[mealTime].count++;
+        if (!stats[mealTime].foods.includes(consumption.foodName)) {
+          stats[mealTime].foods.push(consumption.foodName);
+        }
+      }
+    });
+
+    return stats;
+  }, [localConsumptions]);
+
+  // Use whichever stats are available
+  const activeStats = localConsumptions.length > 0 ? mealStatsLocal : mealStats;
+
   const handleMealClick = (mealTime: MealTime) => {
     onMealClick?.(mealTime);
   };
 
   const completedMeals = mealTimeOrder.filter(
-    (mealTime) => mealStats[mealTime].count > 0
+    (mealTime) => activeStats[mealTime].count > 0
   ).length;
   const completionPercentage = (completedMeals / mealTimeOrder.length) * 100;
+
+  if (loading && localConsumptions.length === 0) {
+    return (
+      <div className={`bg-white rounded-lg shadow-lg p-6 ${className}`}>
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
+          <div className="h-2 bg-gray-200 rounded mb-6"></div>
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="h-32 bg-gray-200 rounded-lg"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`bg-white rounded-lg shadow-lg p-6 ${className}`}>
@@ -147,7 +233,7 @@ export default function MealTimeTracker({
       <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
         {mealTimeOrder.map((mealTime, index) => {
           const config = mealTimeConfig[mealTime];
-          const stats = mealStats[mealTime];
+          const stats = activeStats[mealTime];
           const isCompleted = stats.count > 0;
           const isClickable = !!onMealClick;
 

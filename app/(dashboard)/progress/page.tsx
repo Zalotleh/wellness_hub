@@ -3,19 +3,16 @@
 import { useState, useEffect } from 'react';
 import { useProgress, useProgressStats } from '@/hooks/useProgress';
 import { useProgressDays } from '@/hooks/useProgressDays';
-import ProgressTracker from '@/components/progress/ProgressTracker';
-import ProgressCharts from '@/components/progress/ProgressCharts';
-import ScoreCard5x5x5 from '@/components/progress/ScoreCard5x5x5';
 import MealTimeTracker from '@/components/progress/MealTimeTracker';
 import SystemProgressChart from '@/components/progress/SystemProgressChart';
 import SmartRecommendations from '@/components/progress/SmartRecommendations';
 import FoodLogModal from '@/components/progress/FoodLogModal';
 import OverallScoreCard from '@/components/progress/OverallScoreCard';
-import DefenseSystemsRadar from '@/components/progress/DefenseSystemsRadar';
 import TimeFilter, { ViewType } from '@/components/progress/TimeFilter';
 import SmartActionsPanel from '@/components/progress/SmartActionsPanel';
 import { RecommendationCards } from '@/components/progress/RecommendationCards';
 import { ProgressErrorBoundary } from '@/components/progress/ProgressErrorBoundary';
+import EmptyStateWelcome from '@/components/progress/EmptyStateWelcome';
 import { addDays, subDays, isToday, format } from 'date-fns';
 import { CalendarDays, ChevronLeft, ChevronRight, RefreshCw, Plus, Info } from 'lucide-react';
 import { TrendingUp, Calendar, BarChart3 } from 'lucide-react';
@@ -33,7 +30,7 @@ export default function ProgressPage() {
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [loadingRecs, setLoadingRecs] = useState(true);
 
-  const { progress, dailyProgress, loading: progressLoading, logFood } = useProgress(selectedDate);
+  const { progress, dailyProgress, loading: progressLoading, logFood, refetch: refetchProgress } = useProgress(selectedDate);
   const { stats, loading: statsLoading, refetch: refetchStats } = useProgressStats('week');
   const { daysWithProgress } = useProgressDays();
 
@@ -41,6 +38,17 @@ export default function ProgressPage() {
   useEffect(() => {
     fetchRecommendations();
   }, [selectedDate]);
+
+  // Refetch data when arriving from another page with updates
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('updated')) {
+      refetchProgress();
+      fetchRecommendations();
+      // Clean up the URL
+      window.history.replaceState({}, '', '/progress');
+    }
+  }, []);
 
   const fetchRecommendations = async () => {
     setLoadingRecs(true);
@@ -66,9 +74,10 @@ export default function ProgressPage() {
     setShowFoodLogModal(true);
   };
 
-  const handleFoodLogSuccess = () => {
+  const handleFoodLogSuccess = async () => {
     // Refresh progress data after successful food log
-    window.location.reload();
+    await refetchProgress();
+    await fetchRecommendations();
   };
 
   const handleFoodRecommendationClick = (food: any) => {
@@ -81,8 +90,8 @@ export default function ProgressPage() {
     // Could scroll to system details or open a modal
   };
 
-  // Convert progress data to the format expected by ProgressTracker
-  const currentProgress = dailyProgress?.systems || {};
+  // Check if user has any progress data by checking if any defense system has foods logged
+  const hasAnyProgress = dailyProgress && Object.values(dailyProgress.systems).some(system => system.count > 0);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-green-50 dark:from-gray-900 dark:to-gray-800 py-8 px-4">
@@ -96,7 +105,7 @@ export default function ProgressPage() {
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                  My Progress Dashboard
+                  My Health Dashboard
                 </h1>
                 <p className="text-gray-600 dark:text-gray-400">
                   Track your 5x5x5 wellness journey
@@ -152,41 +161,59 @@ export default function ProgressPage() {
           onDateChange={setSelectedDate}
         />
 
+        {/* Overall Score Card - Horizontal Layout */}
+        {view === 'daily' && (hasAnyProgress || !isToday(selectedDate)) && (
+          <ProgressErrorBoundary>
+            <OverallScoreCard date={selectedDate} className="horizontal" />
+          </ProgressErrorBoundary>
+        )}
+
         {/* Content */}
         <div className="space-y-6 mt-6">
           {/* Daily View */}
           {view === 'daily' && (
             <>
-              {/* Smart Actions Panel */}
+              {/* Show Welcome Screen for New Users */}
+              {!progressLoading && !hasAnyProgress && isToday(selectedDate) && (
+                <EmptyStateWelcome />
+              )}
+
+              {/* Show Normal Progress Dashboard for Users with Data */}
+              {(hasAnyProgress || !isToday(selectedDate)) && (
+                <>
+                  {/* Smart Actions Panel */}
+                  <ProgressErrorBoundary>
+                    <SmartActionsPanel date={selectedDate} />
+                  </ProgressErrorBoundary>
+
+                  {/* Recommendation Cards (replaces WorkflowProgressBar) */}
+                  <ProgressErrorBoundary>
+                    {!loadingRecs && (
+                      <RecommendationCards 
+                        recommendations={recommendations}
+                        onRefresh={fetchRecommendations}
+                      />
+                    )}
+                    {loadingRecs && (
+                      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-8 text-center">
+                        <div className="animate-spin w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full mx-auto"></div>
+                        <p className="text-gray-600 dark:text-gray-300 mt-4">Loading recommendations...</p>
+                      </div>
+                    )}
+                  </ProgressErrorBoundary>
+
+              {/* Defense Systems Progress */}
               <ProgressErrorBoundary>
-                <SmartActionsPanel date={selectedDate} />
+                <SystemProgressChart date={selectedDate} />
               </ProgressErrorBoundary>
 
-              {/* Recommendation Cards (replaces WorkflowProgressBar) */}
+              {/* Food Suggestions - Full Width */}
               <ProgressErrorBoundary>
-                {!loadingRecs && (
-                  <RecommendationCards 
-                    recommendations={recommendations}
-                    onRefresh={fetchRecommendations}
-                  />
-                )}
-                {loadingRecs && (
-                  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-8 text-center">
-                    <div className="animate-spin w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full mx-auto"></div>
-                    <p className="text-gray-600 dark:text-gray-300 mt-4">Loading recommendations...</p>
-                  </div>
-                )}
+                <SmartRecommendations 
+                  date={selectedDate}
+                  onFoodClick={handleFoodRecommendationClick}
+                />
               </ProgressErrorBoundary>
-
-              {/* Top Row: Overall Score + Defense Systems Radar */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <ProgressErrorBoundary>
-                  <OverallScoreCard date={selectedDate} />
-                </ProgressErrorBoundary>
-                <ProgressErrorBoundary>
-                  <DefenseSystemsRadar date={selectedDate} onClick={handleSystemClick} />
-                </ProgressErrorBoundary>
-              </div>
 
               {/* Meal Time Tracker */}
               <ProgressErrorBoundary>
@@ -195,44 +222,8 @@ export default function ProgressPage() {
                   onMealClick={handleMealTimeClick}
                 />
               </ProgressErrorBoundary>
-
-              {/* Second Row: System Chart + Recommendations */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <SystemProgressChart date={selectedDate} />
-                <SmartRecommendations 
-                  date={selectedDate}
-                  onFoodClick={handleFoodRecommendationClick}
-                />
-              </div>
-
-              {/* Legacy Components (Collapsed) */}
-              <details className="bg-white dark:bg-gray-800 rounded-xl shadow-lg">
-                <summary className="px-6 py-4 cursor-pointer font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl transition-colors">
-                  📋 Advanced Details & Legacy Tracker
-                </summary>
-                <div className="p-6 border-t border-gray-200 dark:border-gray-700 space-y-6">
-                  {/* Old Score Card */}
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">Legacy Score Card</h3>
-                    <ScoreCard5x5x5 
-                      date={selectedDate} 
-                      onRefresh={() => window.location.reload()}
-                    />
-                  </div>
-
-                  {/* Original Progress Tracker */}
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">Original Progress Tracker</h3>
-                    <ProgressTracker
-                      currentProgress={currentProgress}
-                      onLogFood={handleLogFood}
-                      date={selectedDate}
-                      onDateChange={setSelectedDate}
-                      daysWithProgress={daysWithProgress}
-                    />
-                  </div>
-                </div>
-              </details>
+                </>
+              )}
             </>
           )}
 
@@ -256,7 +247,11 @@ export default function ProgressPage() {
                   <div className="animate-spin w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full"></div>
                 </div>
               ) : (
-                <ProgressCharts weeklyData={stats} />
+                <div className="text-center py-20">
+                  <div className="text-6xl mb-4">📊</div>
+                  <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">Weekly Charts</h3>
+                  <p className="text-gray-500 dark:text-gray-400">Coming soon - Weekly progress visualization</p>
+                </div>
               )}
             </div>
           )}
@@ -297,6 +292,7 @@ export default function ProgressPage() {
       <FoodLogModal
         isOpen={showFoodLogModal}
         defaultMealTime={selectedMealTime}
+        date={selectedDate}
         onClose={() => setShowFoodLogModal(false)}
         onSuccess={handleFoodLogSuccess}
       />

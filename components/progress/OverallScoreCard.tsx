@@ -12,14 +12,17 @@ import { useBreakpoint, getOptimalChartSize, getFontSize, getSpacing } from '@/l
 interface OverallScoreCardProps {
   date: Date;
   onRefresh?: () => void;
+  className?: string;
 }
 
-export default function OverallScoreCard({ date, onRefresh }: OverallScoreCardProps) {
+export default function OverallScoreCard({ date, onRefresh, className }: OverallScoreCardProps) {
   const [score, setScore] = useState<Score5x5x5 | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showInfo, setShowInfo] = useState(false);
   const [retrying, setRetrying] = useState(false);
+
+  const isHorizontal = className?.includes('horizontal');
 
   useEffect(() => {
     fetchScore();
@@ -121,6 +124,112 @@ export default function OverallScoreCard({ date, onRefresh }: OverallScoreCardPr
   const systemsCovered = score.defenseSystems.filter(s => s.foodsConsumed > 0).length;
   const mealsLogged = score.mealTimes.filter(m => m.hasFood).length;
 
+  // Horizontal layout for placement under tabs
+  if (isHorizontal) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
+        <div className="flex items-center gap-8">
+          {/* Score Circle - Smaller for horizontal layout */}
+          <div className="flex-shrink-0">
+            <div style={{ width: 120, height: 120 }}>
+              <CircularProgressbar
+                value={score.overallScore}
+                text={`${score.overallScore}`}
+                styles={buildStyles({
+                  textSize: '28px',
+                  pathColor: getScoreColor(score.overallScore),
+                  textColor: getScoreColor(score.overallScore),
+                  trailColor: '#e5e7eb',
+                  pathTransitionDuration: 0.5,
+                })}
+              />
+            </div>
+          </div>
+
+          {/* Score Info */}
+          <div className="flex-1">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
+              Your 5x5x5 Score
+            </h2>
+            <p
+              className="text-lg font-semibold mb-2"
+              style={{ color: getScoreColor(score.overallScore) }}
+            >
+              {getScoreLabel(score.overallScore)}
+            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              {score.insights.recommendation}
+            </p>
+          </div>
+
+          {/* Quick Stats - Horizontal */}
+          <div className="flex gap-6 pr-4">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {systemsCovered}/5
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Systems
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {mealsLogged}/4
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Meals
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {score.foodVariety.totalUniqueFoods}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Foods
+              </p>
+            </div>
+          </div>
+
+          {/* Info Button */}
+          <button
+            onClick={() => setShowInfo(!showInfo)}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors flex-shrink-0"
+            aria-label="Toggle information"
+          >
+            <Info className={`w-5 h-5 ${showInfo ? 'text-purple-600' : 'text-gray-600 dark:text-gray-400'}`} />
+          </button>
+        </div>
+
+        {/* Info Panel */}
+        {showInfo && (
+          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-sm">
+            <h3 className="font-semibold text-blue-900 dark:text-blue-200 mb-2">
+              Why This Matters
+            </h3>
+            <p className="text-gray-700 dark:text-gray-300 mb-2">
+              Your 5x5x5 score reflects how well you&apos;re following Dr. William Li&apos;s framework:
+            </p>
+            <ul className="list-disc pl-5 space-y-1 text-gray-600 dark:text-gray-400">
+              <li>
+                <strong className="text-gray-900 dark:text-gray-200">5 Defense Systems:</strong> Coverage of all health defense mechanisms
+              </li>
+              <li>
+                <strong className="text-gray-900 dark:text-gray-200">5 Foods per System:</strong> Variety within each defense system
+              </li>
+              <li>
+                <strong className="text-gray-900 dark:text-gray-200">5 Meal Times:</strong> Spreading nutrition throughout the day
+              </li>
+            </ul>
+            <p className="mt-2 text-gray-700 dark:text-gray-300 font-medium">
+              Aim for 80+ for optimal health benefits! 🎯
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Original vertical layout
   return (
     <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg ${spacing.card}`}>
       {/* Header */}

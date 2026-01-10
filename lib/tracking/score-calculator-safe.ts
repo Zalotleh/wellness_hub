@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { startOfDay } from 'date-fns';
+import { transformFoodConsumptionToProgress } from '@/lib/utils/food-consumption-transformer';
 import type { Score5x5x5 } from './types';
 
 /**
@@ -59,19 +60,7 @@ export async function calculateScoreSafe(
       };
     }
 
-    // Fetch progress data (old model - deprecated)
-    const progressData = await prisma.progress.findMany({
-      where: {
-        userId,
-        date: dateKey,
-        deprecated: false,
-      },
-    }).catch((err) => {
-      console.error('Error fetching progress data:', err);
-      throw new Error('Failed to fetch progress data');
-    });
-
-    // Fetch new food consumption data
+    // Fetch new food consumption data (this is now the primary source)
     const foodConsumptions = await prisma.foodConsumption.findMany({
       where: {
         userId,
@@ -88,6 +77,9 @@ export async function calculateScoreSafe(
       console.error('Error fetching food consumption data:', err);
       throw new Error('Failed to fetch food consumption data');
     });
+
+    // Transform to progress format
+    const progressData = transformFoodConsumptionToProgress(foodConsumptions);
 
     // No data for this date - return zero score
     if (!foodConsumptions || foodConsumptions.length === 0) {

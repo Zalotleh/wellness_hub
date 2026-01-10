@@ -133,6 +133,93 @@ then the tracker, should have a recommendation to create a recipe or plan based 
 - have the dietry preference as part of the user preferences, and to be a default for their meal plan and recipe generators
 
 
+Issues:
+
+in the progress page welcome state there is a card for Get Started in 3 Easy Steps
+1
+Log Your First Meal
+Click "Add Food" on any meal time below to start tracking what you eat. We'll automatically categorize foods by their health benefits.
+
+Log Your First Meal
+
+the Log your First Meal shows the following only:
+
+Log Food
+
+Logging for
+🌅
+Breakfast
+Click foods below to add to this meal
+Foods
+Search for a food...
+Notes (Optional)
+
+so only breakfast shows, and also the search doesnt work.
+
+
+- in wellness preferences, there are Save Preferences and Save Changes buttons
+
+Dietary Restrictions (optional)
+vegetarian
+vegan
+gluten-free
+dairy-free
+nut-free
+low-carb
+
+while in Wellness Preferences in settings there are way more Dietary Restrictions 
+
+
+- the ingredients in the ai generated recipe shows like that:
+
+Ingredients
+g
+sweet potato, peeled and cubed
+g
+shiitake mushrooms, sliced
+g
+cremini mushrooms, quartered
+g
+oyster mushrooms, torn into pieces
+g
+kale, stems removed and chopped
+g
+Brussels sprouts, halved
+piece
+red bell peppers, diced
+piece
+medium onion, diced
+clove
+garlic, minced
+g
+fresh ginger, grated
+g
+fresh turmeric root, grated (or 5 g ground turmeric)
+ml
+olive oil
+liter
+vegetable broth
+ml
+coconut milk
+ml
+white miso paste
+ml
+lemon juice
+g
+cherry tomatoes, halved
+piece
+scallions, sliced
+g
+cumin seeds
+g
+black pepper
+g
+sea salt
+g
+red pepper flakes
+ml
+sesame oil
+
 npm audit error to fix:
 174 packages are looking for funding
   run `npm fund` for details
