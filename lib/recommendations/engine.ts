@@ -104,6 +104,12 @@ export class RecommendationEngine {
    * Check if we should generate a new recommendation
    */
   private shouldGenerateRecommendation(context: RecommendationContext): boolean {
+    // ALWAYS generate for new users or zero-activity days
+    // This ensures "All Caught Up!" doesn't show when user has done nothing
+    if (context.gaps.overallScore === 0 || context.gaps.missingSystems.length === 5) {
+      return true;
+    }
+    
     // Don't generate if too many pending
     if (context.existingRecommendations.length >= MAX_PENDING_RECOMMENDATIONS) {
       return false;
