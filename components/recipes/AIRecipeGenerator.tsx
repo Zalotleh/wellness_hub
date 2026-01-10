@@ -38,6 +38,7 @@ export default function AIRecipeGenerator({
   const [dietaryRestrictions, setDietaryRestrictions] = useState<string[]>(
     initialParams?.dietaryRestrictions || []
   );
+  const [preferencesLoaded, setPreferencesLoaded] = useState(false);
   const [mealType, setMealType] = useState(
     initialParams?.preferredMealTime?.toLowerCase() || 'any'
   );
@@ -129,14 +130,17 @@ export default function AIRecipeGenerator({
         setMeasurementSystem(measurementPref.system);
 
         // Load user preferences if not overridden by initialParams
-        if (userPrefs?.preferences) {
+        if (userPrefs?.preferences && !preferencesLoaded) {
           // Only set if not already provided via initialParams
-          if (!initialParams?.dietaryRestrictions && userPrefs.preferences.defaultDietaryRestrictions?.length > 0) {
-            setDietaryRestrictions(userPrefs.preferences.defaultDietaryRestrictions);
+          if (!initialParams?.dietaryRestrictions || initialParams.dietaryRestrictions.length === 0) {
+            if (userPrefs.preferences.defaultDietaryRestrictions?.length > 0) {
+              setDietaryRestrictions(userPrefs.preferences.defaultDietaryRestrictions);
+            }
           }
           if (!initialParams?.targetSystem && userPrefs.preferences.defaultFocusSystems?.length > 0) {
             setDefenseSystem(userPrefs.preferences.defaultFocusSystems[0] as DefenseSystem);
           }
+          setPreferencesLoaded(true);
         }
       } catch (error) {
         console.error('Error loading preferences:', error);

@@ -162,7 +162,7 @@ export class RecommendationEngine {
       description,
       reasoning,
       actionLabel: 'Generate Recipe',
-      actionUrl: '/recipes',
+      actionUrl: '/recipes/ai-generate',
       actionData: {
         targetSystem: system,
         dietaryRestrictions: context.userProfile.dietaryRestrictions,

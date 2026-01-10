@@ -69,6 +69,22 @@ export default function AIGeneratorPage() {
       setSavedRecipeId(newRecipe.id);
       setShowSuccess(true);
 
+      // Update workflow state (recipe created)
+      try {
+        await fetch('/api/user/workflow-state', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'RECIPE_CREATED',
+            metadata: {
+              recipeId: newRecipe.id,
+            },
+          }),
+        });
+      } catch (err) {
+        console.error('Failed to update workflow state:', err);
+      }
+
       // If from recommendation, mark as completed
       if (fromRecommendation && recommendationId) {
         try {
