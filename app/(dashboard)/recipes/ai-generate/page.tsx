@@ -9,7 +9,7 @@ import { recipeSchema } from '@/lib/validations';
 import { Sparkles, ArrowLeft, Target } from 'lucide-react';
 import Link from 'next/link';
 import { DefenseSystem } from '@/types';
-import { toast } from 'react-hot-toast';
+// Using window alerts for notifications
 
 export default function AIGeneratorPage() {
   const router = useRouter();
@@ -131,11 +131,10 @@ export default function AIGeneratorPage() {
         });
       }
 
-      toast.success('Shopping list created!');
       router.push(`/shopping-lists/${shoppingList.id}`);
     } catch (error) {
       console.error('Error creating shopping list:', error);
-      toast.error('Failed to create shopping list');
+      alert('Failed to create shopping list');
     }
   };
 
@@ -157,11 +156,10 @@ export default function AIGeneratorPage() {
 
       const result = await response.json();
 
-      toast.success(`Meal logged! Tracked ${result.systemsTracked.length} defense systems`);
       router.push('/progress');
     } catch (error) {
       console.error('Error logging meal:', error);
-      toast.error('Failed to log meal');
+      alert('Failed to log meal');
     }
   };
 

@@ -20,10 +20,12 @@ import {
   Activity,
   Target,
   Droplets,
+  UtensilsCrossed,
 } from 'lucide-react';
 import { RecipeWithRelations, DefenseSystem } from '@/types';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
 import ShareMenu from '@/components/sharing/ShareMenu';
+// Using window alerts for notifications
 
 interface Ingredient {
   name: string;
@@ -133,6 +135,7 @@ export default function RecipeDetailView({
   const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(new Set());
   const [activeInstruction, setActiveInstruction] = useState<number | null>(null);
   const [userRating, setUserRating] = useState<number>(0);
+  const [loggingMeal, setLoggingMeal] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
 
   const originalServings = recipe.servings || 4;
@@ -162,6 +165,32 @@ export default function RecipeDetailView({
   const handleRate = (rating: number) => {
     setUserRating(rating);
     onRate?.(recipe.id, rating);
+  };
+
+  // Handle Log This Meal
+  const handleLogMeal = async () => {
+    setLoggingMeal(true);
+    try {
+      const response = await fetch(`/api/recipes/${recipe.id}/log-meal`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mealTime: 'LUNCH', // Default to lunch
+          date: new Date().toISOString(),
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to log meal');
+
+      const result = await response.json();
+      
+      alert(`✅ Meal logged! Tracked ${result.systemsTracked.length} defense systems`);
+    } catch (error) {
+      console.error('Error logging meal:', error);
+      alert('Failed to log meal');
+    } finally {
+      setLoggingMeal(false);
+    }
   };
 
   // Handle print
@@ -257,6 +286,18 @@ export default function RecipeDetailView({
 
           {/* Action buttons */}
           <div className="absolute top-4 right-4 flex gap-2 no-print">
+            <button
+              onClick={handleLogMeal}
+              disabled={loggingMeal}
+              className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-full shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label="Log this meal to progress"
+            >
+              <UtensilsCrossed className="w-5 h-5" />
+              <span className="font-medium">
+                {loggingMeal ? 'Logging...' : 'Log This Meal'}
+              </span>
+            </button>
+            
             <button
               onClick={() => onFavorite?.(recipe.id)}
               className="p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-colors"

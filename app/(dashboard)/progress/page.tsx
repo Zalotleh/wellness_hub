@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useProgress, useProgressStats } from '@/hooks/useProgress';
 import { useProgressDays } from '@/hooks/useProgressDays';
 import ProgressTracker from '@/components/progress/ProgressTracker';
@@ -14,7 +14,7 @@ import OverallScoreCard from '@/components/progress/OverallScoreCard';
 import DefenseSystemsRadar from '@/components/progress/DefenseSystemsRadar';
 import TimeFilter, { ViewType } from '@/components/progress/TimeFilter';
 import SmartActionsPanel from '@/components/progress/SmartActionsPanel';
-import WorkflowProgressBar from '@/components/workflow/WorkflowProgressBar';
+import { RecommendationCards } from '@/components/progress/RecommendationCards';
 import { ProgressErrorBoundary } from '@/components/progress/ProgressErrorBoundary';
 import { addDays, subDays, isToday, format } from 'date-fns';
 import { CalendarDays, ChevronLeft, ChevronRight, RefreshCw, Plus, Info } from 'lucide-react';
@@ -30,10 +30,32 @@ export default function ProgressPage() {
   const [selectedMealTime, setSelectedMealTime] = useState<MealTime>('BREAKFAST');
   const [selectedSystem, setSelectedSystem] = useState<DefenseSystem | null>(null);
   const [showInfo, setShowInfo] = useState(false);
+  const [recommendations, setRecommendations] = useState<any[]>([]);
+  const [loadingRecs, setLoadingRecs] = useState(true);
 
   const { progress, dailyProgress, loading: progressLoading, logFood } = useProgress(selectedDate);
   const { stats, loading: statsLoading, refetch: refetchStats } = useProgressStats('week');
   const { daysWithProgress } = useProgressDays();
+
+  // Fetch recommendations
+  useEffect(() => {
+    fetchRecommendations();
+  }, [selectedDate]);
+
+  const fetchRecommendations = async () => {
+    setLoadingRecs(true);
+    try {
+      const response = await fetch('/api/recommendations');
+      if (response.ok) {
+        const { data } = await response.json();
+        setRecommendations(data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching recommendations:', error);
+    } finally {
+      setLoadingRecs(false);
+    }
+  };
 
   const handleLogFood = async (system: any, foods: string[], notes?: string) => {
     await logFood(system, foods, notes);
@@ -140,9 +162,20 @@ export default function ProgressPage() {
                 <SmartActionsPanel date={selectedDate} />
               </ProgressErrorBoundary>
 
-              {/* Workflow Progress Bar */}
+              {/* Recommendation Cards (replaces WorkflowProgressBar) */}
               <ProgressErrorBoundary>
-                <WorkflowProgressBar />
+                {!loadingRecs && (
+                  <RecommendationCards 
+                    recommendations={recommendations}
+                    onRefresh={fetchRecommendations}
+                  />
+                )}
+                {loadingRecs && (
+                  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-8 text-center">
+                    <div className="animate-spin w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full mx-auto"></div>
+                    <p className="text-gray-600 dark:text-gray-300 mt-4">Loading recommendations...</p>
+                  </div>
+                )}
               </ProgressErrorBoundary>
 
               {/* Top Row: Overall Score + Defense Systems Radar */}
