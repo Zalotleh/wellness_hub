@@ -207,8 +207,12 @@ export default function AIRecipeGenerator({
   };
 
   const toggleRestriction = (restriction: string) => {
-    if (dietaryRestrictions.includes(restriction)) {
-      setDietaryRestrictions(dietaryRestrictions.filter((r) => r !== restriction));
+    // Normalize to lowercase for comparison
+    const normalizedRestriction = restriction.toLowerCase();
+    const hasRestriction = dietaryRestrictions.some(r => r.toLowerCase() === normalizedRestriction);
+    
+    if (hasRestriction) {
+      setDietaryRestrictions(dietaryRestrictions.filter((r) => r.toLowerCase() !== normalizedRestriction));
     } else {
       setDietaryRestrictions([...dietaryRestrictions, restriction]);
     }
@@ -949,7 +953,7 @@ export default function AIRecipeGenerator({
                   onClick={() => toggleRestriction(restriction)}
                   disabled={isGenerating || isSaving}
                   className={`px-4 py-2 rounded-lg font-medium capitalize transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                    dietaryRestrictions.includes(restriction)
+                    dietaryRestrictions.some(r => r.toLowerCase() === restriction.toLowerCase())
                       ? 'bg-purple-500 text-white'
                       : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
                   }`}
