@@ -89,20 +89,21 @@ export async function POST(
         where: {
           userId: session.user.id,
           linkedRecipeId: recipeId,
-          status: {
-            in: ['ACTED_ON', 'SHOPPED'], // Can complete from either state
-          },
-        },
+          OR: [
+            { status: 'ACTED_ON' as any },
+            { status: 'SHOPPED' as any },
+          ],
+        } as any,
       });
 
       if (linkedRecommendation && progressEntries.length > 0) {
         await prisma.recommendation.update({
           where: { id: linkedRecommendation.id },
           data: {
-            status: 'COMPLETED',
+            status: 'COMPLETED' as any,
             completedAt: new Date(),
             linkedMealLogId: progressEntries[0].id,
-          },
+          } as any,
         });
       }
     } catch (error) {

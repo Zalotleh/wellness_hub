@@ -154,6 +154,5 @@ export function RecipeSuccessModal({
           </div>
         </div>
       </div>
-    </div>
   );
 }
