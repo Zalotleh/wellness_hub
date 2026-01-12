@@ -358,8 +358,7 @@ export default function Navbar() {
             {/* User Menu */}
             {status === 'authenticated' && session?.user ? (
               <div 
-                className="relative"
-                onMouseLeave={() => setShowUserMenu(false)}
+                className="relative z-50"
               >
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
@@ -378,10 +377,10 @@ export default function Navbar() {
                 {showUserMenu && (
                   <>
                     <div
-                      className="fixed inset-0 z-10"
+                      className="fixed inset-0 z-40"
                       onClick={() => setShowUserMenu(false)}
                     />
-                    <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 py-1 z-20">
+                    <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 py-1 z-50">
                       <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                         <div className="flex items-center justify-between">
                           <div>

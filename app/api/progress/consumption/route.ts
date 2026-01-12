@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { foodConsumptionSchema } from '@/lib/validations';
 import { matchIngredientToFood } from '@/lib/utils/food-matcher';
 import { ConsumptionSource, DefenseSystem } from '@prisma/client';
+import { invalidateScoreCache } from '@/lib/tracking/score-cache';
 
 /**
  * POST /api/progress/consumption
@@ -98,6 +99,25 @@ export async function POST(request: NextRequest) {
             defenseSystems: true,
           },
         },
+      },
+    });
+
+    // Invalidate the score cache for this date to ensure fresh calculations
+    await invalidateScoreCache(user.id, consumptionDate);
+
+    // Mark existing pending recommendations as potentially stale
+    // This encourages regeneration based on new data
+    await prisma.recommendation.updateMany({
+      where: {
+        userId: user.id,
+        status: 'PENDING',
+        createdAt: {
+          lt: new Date(Date.now() - 5 * 60 * 1000), // Older than 5 minutes
+        },
+      },
+      data: {
+        // Don't dismiss, just mark as viewed so they get lower priority
+        viewCount: { increment: 10 }, // High view count = lower priority in some systems
       },
     });
 

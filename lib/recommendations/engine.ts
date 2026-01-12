@@ -60,7 +60,7 @@ export class RecommendationEngine {
     const usedSystems = new Set<string>(); // Track which systems we've already recommended
     
     // Generate recommendations based on priority
-    // Priority 1: Critical gaps (overall < 50 + missing systems)
+    // Priority 1: Critical gaps (overall < 50 + missing systems with 0 foods)
     if (gaps.overallScore < 50 && gaps.missingSystems.length > 0) {
       const system = gaps.missingSystems[0];
       const systemRec = this.createSystemRecommendation(
@@ -74,7 +74,7 @@ export class RecommendationEngine {
       }
     }
     
-    // Priority 2: Additional missing defense systems (skip already recommended)
+    // Priority 2: Additional missing defense systems (0 foods - skip already recommended)
     if (recommendations.length < 3 && gaps.missingSystems.length > 0) {
       for (const system of gaps.missingSystems) {
         if (recommendations.length >= 3) break;
@@ -92,7 +92,25 @@ export class RecommendationEngine {
       }
     }
     
-    // Priority 3: Multiple weak systems → meal plan
+    // Priority 3: Weak systems (1-4 foods - needs strengthening)
+    if (recommendations.length < 3 && gaps.weakSystems.length > 0) {
+      for (const system of gaps.weakSystems) {
+        if (recommendations.length >= 3) break;
+        if (usedSystems.has(system)) continue; // Skip already recommended systems
+        
+        const systemRec = this.createSystemRecommendation(
+          system,
+          'MEDIUM', // Weak systems are MEDIUM priority (not HIGH)
+          context
+        );
+        if (systemRec) {
+          recommendations.push(systemRec);
+          usedSystems.add(system);
+        }
+      }
+    }
+    
+    // Priority 4: Multiple weak systems → meal plan
     if (recommendations.length < 3 && gaps.weakSystems.length >= 2) {
       const mealPlanRec = this.createMealPlanRecommendation(gaps.weakSystems, context);
       if (mealPlanRec) recommendations.push(mealPlanRec);
@@ -159,17 +177,21 @@ export class RecommendationEngine {
     }
     
     const isMissing = context.gaps.missingSystems.includes(system as DefenseSystem);
+    const systemScore = context.score.defenseSystems.find((d: SystemScore) => d.system === system);
+    const foodsConsumed = systemScore?.foodsConsumed || 0;
+    
+    // Create context-aware titles with progress
     const title = isMissing
-      ? `Add ${system} to Your Diet`
-      : `Strengthen Your ${system}`;
+      ? `Start Your ${system} Journey`
+      : `Strengthen Your ${system} (${foodsConsumed}/5 foods)`;
     
     const description = isMissing
-      ? `You haven't logged any ${system.toLowerCase()} foods yet. These are crucial for your wellness.`
-      : `Your ${system.toLowerCase()} intake is low. Let's boost it with a delicious recipe.`;
+      ? `You haven't logged any ${system.toLowerCase().replace(/_/g, ' ')} foods yet. These are crucial for your wellness.`
+      : `You've logged ${foodsConsumed} ${system.toLowerCase().replace(/_/g, ' ')} food${foodsConsumed === 1 ? '' : 's'}. Add ${5 - foodsConsumed} more to complete this system!`;
     
     const reasoning = isMissing
-      ? `Missing defense system detected. ${system} foods are essential for optimal health.`
-      : `Weak defense system detected. Only ${context.score.defenseSystems.find((d: SystemScore) => d.system === system)?.uniqueFoods.length || 0} ${system.toLowerCase()} foods logged today.`;
+      ? `Missing defense system detected. ${system.replace(/_/g, ' ')} foods are essential for optimal health.`
+      : `Weak defense system detected. Only ${foodsConsumed}/5 ${system.toLowerCase().replace(/_/g, ' ')} foods logged today.`;
     
     return {
       id: crypto.randomUUID(),

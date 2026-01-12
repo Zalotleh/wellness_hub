@@ -11,6 +11,38 @@ import { DefenseSystem } from '@/types';
 const CACHE_TTL_MINUTES = 60;
 
 /**
+ * Invalidate (delete) cached score for a specific date
+ * Call this after logging new food to force fresh calculation
+ */
+export async function invalidateScoreCache(
+  userId: string,
+  date: Date
+): Promise<void> {
+  // Normalize to UTC date at noon
+  const year = date.getUTCFullYear();
+  const month = date.getUTCMonth();
+  const day = date.getUTCDate();
+  const dateOnly = new Date(Date.UTC(year, month, day, 12, 0, 0));
+
+  try {
+    await prisma.dailyProgressScore.delete({
+      where: {
+        userId_date: {
+          userId,
+          date: dateOnly,
+        },
+      },
+    });
+    console.log(`✅ Cache invalidated for user ${userId} on ${dateOnly.toISOString()}`);
+  } catch (error) {
+    // It's okay if cache doesn't exist - just means it wasn't cached yet
+    if (error instanceof Error && !error.message.includes('Record to delete does not exist')) {
+      console.error('Error invalidating cache:', error);
+    }
+  }
+}
+
+/**
  * Save calculated score to database for caching
  */
 export async function cacheDailyScore(
@@ -236,21 +268,6 @@ function reconstructScoreFromCache(cached: any): Score5x5x5 {
       nextSteps: [],
     },
   };
-}
-
-/**
- * Invalidate cache for a specific date
- * Use this when progress data is updated
- */
-export async function invalidateScoreCache(userId: string, date: Date): Promise<void> {
-  const dateOnly = startOfDay(date);
-  
-  await prisma.dailyProgressScore.deleteMany({
-    where: {
-      userId,
-      date: dateOnly,
-    },
-  });
 }
 
 /**

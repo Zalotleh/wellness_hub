@@ -29,6 +29,7 @@ export default function ProgressPage() {
   const [showInfo, setShowInfo] = useState(false);
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [loadingRecs, setLoadingRecs] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0); // Force component refresh
 
   const { progress, dailyProgress, loading: progressLoading, logFood, refetch: refetchProgress } = useProgress(selectedDate);
   const { stats, loading: statsLoading, refetch: refetchStats } = useProgressStats('week');
@@ -53,7 +54,8 @@ export default function ProgressPage() {
   const fetchRecommendations = async () => {
     setLoadingRecs(true);
     try {
-      const response = await fetch('/api/recommendations');
+      // Add timestamp to bust cache and get fresh data
+      const response = await fetch(`/api/recommendations?t=${Date.now()}`);
       if (response.ok) {
         const { data } = await response.json();
         setRecommendations(data || []);
@@ -78,6 +80,8 @@ export default function ProgressPage() {
     // Refresh progress data after successful food log
     await refetchProgress();
     await fetchRecommendations();
+    // Force all components to refresh by updating key
+    setRefreshKey(prev => prev + 1);
   };
 
   const handleFoodRecommendationClick = (food: any) => {
@@ -164,7 +168,11 @@ export default function ProgressPage() {
         {/* Overall Score Card - Horizontal Layout */}
         {view === 'daily' && (hasAnyProgress || !isToday(selectedDate)) && (
           <ProgressErrorBoundary>
-            <OverallScoreCard date={selectedDate} className="horizontal" />
+            <OverallScoreCard 
+              date={selectedDate} 
+              className="horizontal"
+              key={`score-${refreshKey}`}
+            />
           </ProgressErrorBoundary>
         )}
 
@@ -204,7 +212,10 @@ export default function ProgressPage() {
 
               {/* Defense Systems Progress */}
               <ProgressErrorBoundary>
-                <SystemProgressChart date={selectedDate} />
+                <SystemProgressChart 
+                  date={selectedDate}
+                  key={`systems-${refreshKey}`}
+                />
               </ProgressErrorBoundary>
 
               {/* Food Suggestions - Full Width */}
@@ -212,6 +223,7 @@ export default function ProgressPage() {
                 <SmartRecommendations 
                   date={selectedDate}
                   onFoodClick={handleFoodRecommendationClick}
+                  key={`recommendations-${refreshKey}`}
                 />
               </ProgressErrorBoundary>
 
@@ -220,6 +232,7 @@ export default function ProgressPage() {
                 <MealTimeTracker
                   date={selectedDate}
                   onMealClick={handleMealTimeClick}
+                  key={`meals-${refreshKey}`}
                 />
               </ProgressErrorBoundary>
                 </>

@@ -11,11 +11,14 @@ export function analyzeGaps(score: Score5x5x5): GapAnalysis {
   const weakSystems: DefenseSystem[] = [];
   
   score.defenseSystems.forEach(systemScore => {
-    if (systemScore.foodsConsumed === 0 || systemScore.foodsConsumed === 1) {
+    if (systemScore.foodsConsumed === 0) {
+      // 0 foods = truly missing (CRITICAL)
       missingSystems.push(systemScore.system);
-    } else if (systemScore.foodsConsumed === 2 || systemScore.foodsConsumed === 3) {
+    } else if (systemScore.foodsConsumed >= 1 && systemScore.foodsConsumed < 5) {
+      // 1-4 foods = weak/needs strengthening (HIGH/MEDIUM)
       weakSystems.push(systemScore.system);
     }
+    // 5+ foods = complete, no recommendation needed
   });
   
   // Identify missed meals

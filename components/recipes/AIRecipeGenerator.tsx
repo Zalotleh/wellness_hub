@@ -31,8 +31,8 @@ export default function AIRecipeGenerator({
   initialParams,
   fromRecommendation = false,
 }: AIRecipeGeneratorProps) {
-  const [defenseSystem, setDefenseSystem] = useState<DefenseSystem>(
-    initialParams?.targetSystem || DefenseSystem.ANGIOGENESIS
+  const [defenseSystems, setDefenseSystems] = useState<DefenseSystem[]>(
+    initialParams?.targetSystem ? [initialParams.targetSystem] : [DefenseSystem.ANGIOGENESIS]
   );
   const [ingredients, setIngredients] = useState<string[]>(['']);
   const [dietaryRestrictions, setDietaryRestrictions] = useState<string[]>(
@@ -48,7 +48,7 @@ export default function AIRecipeGenerator({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastRequest, setLastRequest] = useState<{
-    defenseSystem: DefenseSystem;
+    defenseSystems: DefenseSystem[];
     ingredients: string[];
     dietaryRestrictions: string[];
     mealType: string;
@@ -136,17 +136,24 @@ export default function AIRecipeGenerator({
         // Load user preferences if not overridden by initialParams
         if (userPrefs?.preferences && !preferencesLoaded) {
           console.log('✅ Loading preferences from API...');
-          // Only set if not already provided via initialParams
+          
+          // Dietary restrictions: Only set if not provided via initialParams
           if (!initialParams?.dietaryRestrictions || initialParams.dietaryRestrictions.length === 0) {
             if (userPrefs.preferences.defaultDietaryRestrictions?.length > 0) {
               console.log('✅ Setting dietary restrictions:', userPrefs.preferences.defaultDietaryRestrictions);
               setDietaryRestrictions(userPrefs.preferences.defaultDietaryRestrictions);
             }
           }
-          if (!initialParams?.targetSystem && userPrefs.preferences.defaultFocusSystems?.length > 0) {
-            console.log('✅ Setting defense system:', userPrefs.preferences.defaultFocusSystems[0]);
-            setDefenseSystem(userPrefs.preferences.defaultFocusSystems[0] as DefenseSystem);
+          
+          // Defense Systems: Recommendation ALWAYS overrides user settings
+          if (initialParams?.targetSystem) {
+            console.log('🎯 Using recommended defense system (overriding user settings):', initialParams.targetSystem);
+            setDefenseSystems([initialParams.targetSystem]);
+          } else if (userPrefs.preferences.defaultFocusSystems?.length > 0) {
+            console.log('✅ Setting defense systems from user preferences:', userPrefs.preferences.defaultFocusSystems);
+            setDefenseSystems(userPrefs.preferences.defaultFocusSystems as DefenseSystem[]);
           }
+          
           setPreferencesLoaded(true);
         }
       } catch (error) {
@@ -174,13 +181,13 @@ export default function AIRecipeGenerator({
   useEffect(() => {
     const validIngredients = ingredients.filter((ing) => ing.trim() !== '');
     const suggestions = getSmartSuggestions(
-      defenseSystem,
+      defenseSystems[0],
       mealType,
       dietaryRestrictions,
       validIngredients
     );
     setIngredientSuggestions(suggestions.slice(0, 8)); // Limit to 8 suggestions
-  }, [defenseSystem, mealType, dietaryRestrictions, ingredients]);
+  }, [defenseSystems, mealType, dietaryRestrictions, ingredients]);
 
   const mealTypes = ['any', 'breakfast', 'lunch', 'dinner', 'snack', 'dessert'];
   const commonRestrictions = [
@@ -228,7 +235,7 @@ export default function AIRecipeGenerator({
 
       // Save the current request parameters for potential retry
       const requestParams = {
-        defenseSystem,
+        defenseSystems,
         ingredients: validIngredients,
         dietaryRestrictions,
         mealType,
@@ -274,7 +281,7 @@ export default function AIRecipeGenerator({
         hasIngredients: !!recipe.ingredients,
         ingredientsCount: recipe.ingredients?.length,
         hasInstructions: !!recipe.instructions,
-        hasDefenseSystem: !!recipe.defenseSystem,
+        hasDefenseSystems: !!recipe.defenseSystems && recipe.defenseSystems.length > 0,
       });
       
       // Ensure the recipe has required fields
@@ -285,7 +292,7 @@ export default function AIRecipeGenerator({
         description: recipe.description || 'A delicious and healthy recipe.',
         ingredients: Array.isArray(recipe.ingredients) ? recipe.ingredients : [],
         instructions: recipe.instructions || 'Instructions not available.',
-        defenseSystem: recipe.defenseSystem || defenseSystem,
+        defenseSystems: recipe.defenseSystems || defenseSystems,
       };
       
       console.log('✅ Validated recipe:', validatedRecipe);
@@ -386,7 +393,7 @@ export default function AIRecipeGenerator({
         description: recipe.description || 'A delicious and healthy recipe.',
         ingredients: Array.isArray(recipe.ingredients) ? recipe.ingredients : [],
         instructions: recipe.instructions || 'Instructions not available.',
-        defenseSystem: recipe.defenseSystem || lastRequest.defenseSystem,
+        defenseSystems: recipe.defenseSystems || lastRequest.defenseSystems,
       };
       
       console.log('✅ Validated recipe:', validatedRecipe);
@@ -420,7 +427,9 @@ export default function AIRecipeGenerator({
     let recipeTitle = generatedRecipe.title;
     if (!recipeTitle) {
       // Fallback title based on defense system
-      recipeTitle = `${DEFENSE_SYSTEMS[defenseSystem].displayName} Recipe`;
+      recipeTitle = defenseSystems.length > 1 
+        ? `Multi-System Superfood Recipe`
+        : `${DEFENSE_SYSTEMS[defenseSystems[0]].displayName} Recipe`;
     }
 
     const recipeData: RecipeFormData = {
@@ -452,7 +461,7 @@ export default function AIRecipeGenerator({
           })
         : [],
       instructions: generatedRecipe.instructions || '',
-      defenseSystems: generatedRecipe.defenseSystems || [defenseSystem],
+      defenseSystems: generatedRecipe.defenseSystems || defenseSystems,
       // Optional fields - truncate description to max 500 chars
       description: generatedRecipe.description?.substring(0, 500),
       prepTime: generatedRecipe.prepTime,
@@ -502,12 +511,11 @@ export default function AIRecipeGenerator({
     }
   };
 
-  const systemInfo = DEFENSE_SYSTEMS[defenseSystem];
-
   const handleOnboardingComplete = (selectedSystem?: DefenseSystem) => {
     if (selectedSystem) {
-      setDefenseSystem(selectedSystem);
+      setDefenseSystems([selectedSystem]);
     }
+    setShowOnboarding(false);
   };
 
   return (
@@ -572,7 +580,7 @@ export default function AIRecipeGenerator({
                 Generating Your Recipe
               </h3>
               <p className="text-gray-600 dark:text-gray-200 mb-4">
-                AI is crafting a personalized {DEFENSE_SYSTEMS[defenseSystem].displayName} recipe...
+                AI is crafting a personalized {defenseSystems.length > 1 ? 'multi-system superfood' : DEFENSE_SYSTEMS[defenseSystems[0]].displayName} recipe...
               </p>
               
               {/* Progress indicators */}
@@ -736,18 +744,27 @@ export default function AIRecipeGenerator({
           {/* Defense System Selection */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">
-              Which defense system would you like to support?
+              Which defense systems would you like to support? {fromRecommendation && <span className="text-xs text-purple-600 dark:text-purple-400">(Pre-selected from recommendation, add more if you'd like)</span>}
             </label>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {Object.values(DefenseSystem).map((system) => {
                 const info = DEFENSE_SYSTEMS[system];
-                const isSelected = defenseSystem === system;
+                const isSelected = defenseSystems.includes(system);
 
                 return (
                   <button
                     key={system}
                     type="button"
-                    onClick={() => setDefenseSystem(system)}
+                    onClick={() => {
+                      if (isSelected) {
+                        // Prevent deselecting if it's the only one
+                        if (defenseSystems.length > 1) {
+                          setDefenseSystems(defenseSystems.filter(s => s !== system));
+                        }
+                      } else {
+                        setDefenseSystems([...defenseSystems, system]);
+                      }
+                    }}
                     disabled={isGenerating || isSaving}
                     className={`relative p-4 border-2 rounded-lg text-left transition-all transform hover:scale-102 ${
                       isSelected
@@ -782,40 +799,50 @@ export default function AIRecipeGenerator({
                 );
               })}
             </div>
+            {defenseSystems.length > 1 && (
+              <p className="mt-2 text-xs text-gray-600 dark:text-gray-400">
+                💡 Selected {defenseSystems.length} systems - AI will create a multi-system superfood recipe!
+              </p>
+            )}
           </div>
 
           {/* System Info */}
-          <div className={`p-4 rounded-lg ${systemInfo.bgColor} dark:opacity-90`}>
-            <h4 className="font-bold text-sm mb-2 text-gray-900 dark:text-white">
-              💡 Key Foods for {systemInfo.displayName}:
-            </h4>
-            <p className="text-xs text-gray-700 dark:text-gray-800 mb-3">
-              Click any food to add it to your ingredients
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {systemInfo.keyFoods.map((food) => (
-                <button
-                  key={food}
-                  type="button"
-                  onClick={() => {
-                    // Find first empty slot or add new
-                    const emptyIndex = ingredients.findIndex(i => !i.trim());
-                    if (emptyIndex >= 0) {
-                      handleIngredientChange(emptyIndex, food);
-                    } else {
-                      setIngredients([...ingredients, food]);
-                    }
-                  }}
-                  disabled={isGenerating || isSaving}
-                  className="text-xs bg-white dark:bg-white/90 dark:text-gray-900 px-3 py-1.5 rounded-full hover:bg-green-50 dark:hover:bg-green-100 hover:ring-2 hover:ring-green-500 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 font-medium"
-                  title={`Click to add ${food} to ingredients`}
-                >
-                  <Plus className="w-3 h-3" />
-                  {food}
-                </button>
-              ))}
-            </div>
-          </div>
+          {defenseSystems.map((system) => {
+            const systemInfo = DEFENSE_SYSTEMS[system];
+            return (
+              <div key={system} className={`p-4 rounded-lg ${systemInfo.bgColor} dark:opacity-90`}>
+                <h4 className="font-bold text-sm mb-2 text-gray-900 dark:text-white">
+                  💡 Key Foods for {systemInfo.displayName}:
+                </h4>
+                <p className="text-xs text-gray-700 dark:text-gray-800 mb-3">
+                  Click any food to add it to your ingredients
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {systemInfo.keyFoods.map((food) => (
+                    <button
+                      key={food}
+                      type="button"
+                      onClick={() => {
+                        // Find first empty slot or add new
+                        const emptyIndex = ingredients.findIndex(i => !i.trim());
+                        if (emptyIndex >= 0) {
+                          handleIngredientChange(emptyIndex, food);
+                        } else {
+                          setIngredients([...ingredients, food]);
+                        }
+                      }}
+                      disabled={isGenerating || isSaving}
+                      className="text-xs bg-white dark:bg-white/90 dark:text-gray-900 px-3 py-1.5 rounded-full hover:bg-green-50 dark:hover:bg-green-100 hover:ring-2 hover:ring-green-500 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 font-medium"
+                      title={`Click to add ${food} to ingredients`}
+                    >
+                      <Plus className="w-3 h-3" />
+                      {food}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
 
           {/* Ingredients Input */}
           <div>
@@ -883,7 +910,7 @@ export default function AIRecipeGenerator({
                 <div className="flex items-center gap-2 mb-3">
                   <Wand2 className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                   <h4 className="text-sm font-semibold text-purple-900 dark:text-purple-200">
-                    Smart Suggestions for {DEFENSE_SYSTEMS[defenseSystem].displayName}
+                    Smart Suggestions for {defenseSystems.length > 1 ? 'Multi-System Recipe' : DEFENSE_SYSTEMS[defenseSystems[0]].displayName}
                     {mealType !== 'any' && ` ${mealType.charAt(0).toUpperCase() + mealType.slice(1)}`}
                   </h4>
                 </div>
@@ -999,10 +1026,14 @@ export default function AIRecipeGenerator({
                             <p className="text-xs font-semibold text-amber-900 dark:text-amber-300 mb-2">Retry will use these settings:</p>
                             <div className="space-y-1 text-xs text-amber-800 dark:text-amber-300">
                               <div className="flex items-center space-x-2">
-                                <span className="font-medium">Defense System:</span>
-                                <span className={`px-2 py-0.5 rounded-full text-xs ${DEFENSE_SYSTEMS[lastRequest.defenseSystem].bgColor} ${DEFENSE_SYSTEMS[lastRequest.defenseSystem].textColor}`}>
-                                  {DEFENSE_SYSTEMS[lastRequest.defenseSystem].displayName}
-                                </span>
+                                <span className="font-medium">Defense Systems:</span>
+                                <div className="flex flex-wrap gap-1">
+                                  {lastRequest.defenseSystems.map(system => (
+                                    <span key={system} className={`px-2 py-0.5 rounded-full text-xs ${DEFENSE_SYSTEMS[system].bgColor} ${DEFENSE_SYSTEMS[system].textColor}`}>
+                                      {DEFENSE_SYSTEMS[system].displayName}
+                                    </span>
+                                  ))}
+                                </div>
                               </div>
                               {lastRequest.mealType !== 'any' && (
                                 <div className="flex items-center space-x-2">

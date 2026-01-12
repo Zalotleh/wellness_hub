@@ -1,3 +1,18 @@
+/**
+ * GET /api/progress/recommendations
+ * 
+ * Legacy endpoint that provides gap analysis and food suggestions.
+ * Currently used by: SmartRecommendations component (Food Suggestions UI)
+ * 
+ * Note: This endpoint provides different data structure than /api/recommendations:
+ * - Returns gap analysis (missing systems, meal times)
+ * - Returns suggested foods grouped by system
+ * - Returns multi-system superfoods
+ * 
+ * Consider: Extend /api/recommendations to include gap analysis data
+ * so SmartRecommendations can be migrated to unified endpoint.
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';

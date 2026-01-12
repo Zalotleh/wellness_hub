@@ -243,3 +243,42 @@ Update available 5.22.0 -> 7.2.0                       │
 │  Run the following to update                            │
 │    npm i --save-dev prisma@latest                       │
 │    npm i @prisma/client@latest    
+
+
+- when user click on start cooking or generate recipe from the recommendation, I need to give them the option to select multiple systems, beside the ones preselected.
+-so i did the following, John Davis user, had the welcome state page so no metrics, i created a Lunch recipe for DNA protection system, with 18 foods, and i logged the recipe so in the progress page the 18 foods showed under DNA protection, now i went to the Daily Meal Timeline section and i selected the Breakfast meal and added 3 more foods: Blackberries, Walnuts, Green Tea, these 3 foods are serving multiple systems so they should be tracked as such among all the graphs and progress page cards and features, now the issue  is that:
+- the progress page should refresh automatically to show the data after logging the foods.
+- in section: Your 5x5x5 Score the logged foods are not reflected here.:
+32
+Your 5x5x5 Score
+Let's Improve
+
+View full score for detailed insights
+
+1/5
+
+Systems
+
+1/4
+
+Meals
+
+18
+
+Foods
+
+
+
+- in the Recommendation section: the Angiogensis is still considered critical even though it has 3 food logged, and there are Microbiom system with 1 food logged only, and immunity system with 2 food logged only.
+- in the Defense systems Progress the new logged food are not counted here,even though in System Details section i can see the number of foods are reflecting the new logged foods.the graph in this section doesnt reflect them. the highlighted data are not accurate: total Foods should be replaced with Missing food (calculate how many foods in total are missing to have 100% completion). the Complete metric is good, but check why it doesnt take into consideration the new logged food and fix that, the Average metric is useless, remove it or replace with another one more usefull for the users.
+- i still do not understand the  Food Suggestions section, what it doesn, and based on what data or metric it suggests the foods, and what
+
+
+the recommendations are sometimes repetitives and redundant, like in the main recommendation card i can see Add ANGIOGENESIS to Your Diet
+CRITICAL You haven't logged any angiogenesis foods yet. These are crucial for your wellness. 
+and in the Your Action Items:
+Add ANGIOGENESIS to Your Diet
+You haven't logged any angiogenesis foods yet. These are crucial for your wellness.
+
+ANGIOGENESIS
+----------

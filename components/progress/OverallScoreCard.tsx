@@ -34,7 +34,8 @@ export default function OverallScoreCard({ date, onRefresh, className }: Overall
       setError(null);
       
       const dateStr = format(date, 'yyyy-MM-dd');
-      const res = await fetch(`/api/progress/score?date=${dateStr}&view=daily`);
+      // Add timestamp to bust cache and get fresh data
+      const res = await fetch(`/api/progress/score?date=${dateStr}&view=daily&t=${Date.now()}`);
       
       if (!res.ok) {
         throw new Error(`Failed to fetch score: ${res.status}`);
@@ -121,7 +122,9 @@ export default function OverallScoreCard({ date, onRefresh, className }: Overall
     );
   }
 
+  // Calculate metrics
   const systemsCovered = score.defenseSystems.filter(s => s.foodsConsumed > 0).length;
+  const systemsComplete = score.defenseSystems.filter(s => s.foodsConsumed >= 5).length;
   const mealsLogged = score.mealTimes.filter(m => m.hasFood).length;
 
   // Horizontal layout for placement under tabs
@@ -166,18 +169,24 @@ export default function OverallScoreCard({ date, onRefresh, className }: Overall
           <div className="flex gap-6 pr-4">
             <div className="text-center">
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {systemsCovered}/5
+                {systemsComplete}/5
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Systems
+                Complete
+              </p>
+              <p className="text-[10px] text-gray-400 dark:text-gray-500">
+                ({systemsCovered} covered)
               </p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {mealsLogged}/4
+                {mealsLogged}/5
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 Meals
+              </p>
+              <p className="text-[10px] text-gray-400 dark:text-gray-500">
+                logged
               </p>
             </div>
             <div className="text-center">
@@ -186,6 +195,9 @@ export default function OverallScoreCard({ date, onRefresh, className }: Overall
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 Foods
+              </p>
+              <p className="text-[10px] text-gray-400 dark:text-gray-500">
+                total
               </p>
             </div>
           </div>
@@ -204,24 +216,40 @@ export default function OverallScoreCard({ date, onRefresh, className }: Overall
         {showInfo && (
           <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-sm">
             <h3 className="font-semibold text-blue-900 dark:text-blue-200 mb-2">
-              Why This Matters
+              📊 How Your Score is Calculated
             </h3>
-            <p className="text-gray-700 dark:text-gray-300 mb-2">
-              Your 5x5x5 score reflects how well you&apos;re following Dr. William Li&apos;s framework:
-            </p>
+            <div className="bg-white dark:bg-gray-800 p-3 rounded-lg mb-3">
+              <p className="font-mono text-xs text-gray-700 dark:text-gray-300 mb-2">
+                Score = (Defense Systems × 50%) + (Meal Coverage × 30%) + (Food Variety × 20%)
+              </p>
+              <div className="space-y-1 text-xs">
+                <p className="text-gray-600 dark:text-gray-400">
+                  • <strong>Defense Systems (50%):</strong> Based on unique foods per system (goal: 5 foods each)
+                </p>
+                <p className="text-gray-600 dark:text-gray-400">
+                  • <strong>Meal Coverage (30%):</strong> Distribution across 5 meal times daily
+                </p>
+                <p className="text-gray-600 dark:text-gray-400">
+                  • <strong>Food Variety (20%):</strong> Diversity and uniqueness of foods consumed
+                </p>
+              </div>
+            </div>
+            <h3 className="font-semibold text-blue-900 dark:text-blue-200 mb-2 mt-3">
+              🎯 Understanding Your Metrics
+            </h3>
             <ul className="list-disc pl-5 space-y-1 text-gray-600 dark:text-gray-400">
               <li>
-                <strong className="text-gray-900 dark:text-gray-200">5 Defense Systems:</strong> Coverage of all health defense mechanisms
+                <strong className="text-gray-900 dark:text-gray-200">Complete Systems:</strong> Systems with 5+ unique foods (fully optimized)
               </li>
               <li>
-                <strong className="text-gray-900 dark:text-gray-200">5 Foods per System:</strong> Variety within each defense system
+                <strong className="text-gray-900 dark:text-gray-200">Covered Systems:</strong> Systems with at least 1 food (in progress)
               </li>
               <li>
-                <strong className="text-gray-900 dark:text-gray-200">5 Meal Times:</strong> Spreading nutrition throughout the day
+                <strong className="text-gray-900 dark:text-gray-200">Meals Logged:</strong> Unique meal times tracked today
               </li>
             </ul>
-            <p className="mt-2 text-gray-700 dark:text-gray-300 font-medium">
-              Aim for 80+ for optimal health benefits! 🎯
+            <p className="mt-3 text-gray-700 dark:text-gray-300 font-medium">
+              🌟 Aim for 80+ for optimal health benefits!
             </p>
           </div>
         )}
@@ -255,24 +283,40 @@ export default function OverallScoreCard({ date, onRefresh, className }: Overall
       {showInfo && (
         <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-sm">
           <h3 className="font-semibold text-blue-900 dark:text-blue-200 mb-2">
-            Why This Matters
+            📊 How Your Score is Calculated
           </h3>
-          <p className="text-gray-700 dark:text-gray-300 mb-2">
-            Your 5x5x5 score reflects how well you&apos;re following Dr. William Li&apos;s framework:
-          </p>
+          <div className="bg-white dark:bg-gray-800 p-3 rounded-lg mb-3">
+            <p className="font-mono text-xs text-gray-700 dark:text-gray-300 mb-2">
+              Score = (Defense Systems × 50%) + (Meal Coverage × 30%) + (Food Variety × 20%)
+            </p>
+            <div className="space-y-1 text-xs">
+              <p className="text-gray-600 dark:text-gray-400">
+                • <strong>Defense Systems (50%):</strong> Based on unique foods per system (goal: 5 foods each)
+              </p>
+              <p className="text-gray-600 dark:text-gray-400">
+                • <strong>Meal Coverage (30%):</strong> Distribution across 5 meal times daily
+              </p>
+              <p className="text-gray-600 dark:text-gray-400">
+                • <strong>Food Variety (20%):</strong> Diversity and uniqueness of foods consumed
+              </p>
+            </div>
+          </div>
+          <h3 className="font-semibold text-blue-900 dark:text-blue-200 mb-2 mt-3">
+            🎯 Understanding Your Metrics
+          </h3>
           <ul className="list-disc pl-5 space-y-1 text-gray-600 dark:text-gray-400">
             <li>
-              <strong className="text-gray-900 dark:text-gray-200">5 Defense Systems:</strong> Coverage of all health defense mechanisms
+              <strong className="text-gray-900 dark:text-gray-200">Complete Systems:</strong> Systems with 5+ unique foods (fully optimized)
             </li>
             <li>
-              <strong className="text-gray-900 dark:text-gray-200">5 Foods per System:</strong> Variety within each defense system
+              <strong className="text-gray-900 dark:text-gray-200">Covered Systems:</strong> Systems with at least 1 food (in progress)
             </li>
             <li>
-              <strong className="text-gray-900 dark:text-gray-200">5 Meal Times:</strong> Spreading nutrition throughout the day
+              <strong className="text-gray-900 dark:text-gray-200">Meals Logged:</strong> Unique meal times tracked today
             </li>
           </ul>
-          <p className="mt-2 text-gray-700 dark:text-gray-300 font-medium">
-            Aim for 80+ for optimal health benefits! 🎯
+          <p className="mt-3 text-gray-700 dark:text-gray-300 font-medium">
+            🌟 Aim for 80+ for optimal health benefits!
           </p>
         </div>
       )}
@@ -331,18 +375,24 @@ export default function OverallScoreCard({ date, onRefresh, className }: Overall
       <div className="grid grid-cols-3 gap-4 pt-6 border-t border-gray-200 dark:border-gray-700">
         <div className="text-center">
           <p className={`${fontSize.subheading} font-bold text-gray-900 dark:text-white`}>
-            {systemsCovered}/5
+            {systemsComplete}/5
           </p>
           <p className={`${fontSize.small} text-gray-500 dark:text-gray-400`}>
-            Systems {breakpoint.mobile ? '' : 'Covered'}
+            Complete
+          </p>
+          <p className={`${fontSize.small} text-gray-400 dark:text-gray-500`} style={{ fontSize: '10px' }}>
+            ({systemsCovered} covered)
           </p>
         </div>
         <div className="text-center">
           <p className={`${fontSize.subheading} font-bold text-gray-900 dark:text-white`}>
-            {mealsLogged}/4
+            {mealsLogged}/5
           </p>
           <p className={`${fontSize.small} text-gray-500 dark:text-gray-400`}>
-            Meals {breakpoint.mobile ? '' : 'Logged'}
+            Meals
+          </p>
+          <p className={`${fontSize.small} text-gray-400 dark:text-gray-500`} style={{ fontSize: '10px' }}>
+            logged
           </p>
         </div>
         <div className="text-center">
@@ -350,7 +400,10 @@ export default function OverallScoreCard({ date, onRefresh, className }: Overall
             {score.foodVariety.totalUniqueFoods}
           </p>
           <p className={`${fontSize.small} text-gray-500 dark:text-gray-400`}>
-            {breakpoint.mobile ? 'Foods' : 'Unique Foods'}
+            Foods
+          </p>
+          <p className={`${fontSize.small} text-gray-400 dark:text-gray-500`} style={{ fontSize: '10px' }}>
+            total
           </p>
         </div>
       </div>

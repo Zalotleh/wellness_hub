@@ -97,7 +97,8 @@ export default function SmartRecommendations({
 
     try {
       const dateStr = format(date, 'yyyy-MM-dd');
-      const response = await fetch(`/api/progress/recommendations?date=${dateStr}`);
+      // Use the gap-analysis endpoint (deprecated but works correctly for food suggestions)
+      const response = await fetch(`/api/progress/recommendations?date=${dateStr}&t=${Date.now()}`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch recommendations');

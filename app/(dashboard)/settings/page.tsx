@@ -601,7 +601,8 @@ export default function SettingsPage() {
                 </div>
               )}
 
-              {/* Save Button */}
+              {/* Save Button - Hide on wellness_preferences tab as it has its own save */}
+              {activeTab !== 'wellness_preferences' && (
               <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
                 <button
                   onClick={handleSave}
@@ -628,6 +629,7 @@ export default function SettingsPage() {
                   </div>
                 )}
               </div>
+              )}
             </div>
           </div>
         </div>

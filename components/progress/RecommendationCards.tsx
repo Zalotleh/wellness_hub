@@ -42,9 +42,21 @@ export function RecommendationCards({ recommendations, onRefresh }: Recommendati
   const router = useRouter();
   const [dismissingId, setDismissingId] = useState<string | null>(null);
 
+  // Deduplicate recommendations by system + type to prevent redundancy
+  const uniqueRecommendations = recommendations.reduce<Recommendation[]>((acc, rec) => {
+    const isDuplicate = acc.some(existing => 
+      existing.targetSystem === rec.targetSystem &&
+      existing.type === rec.type
+    );
+    if (!isDuplicate) {
+      acc.push(rec);
+    }
+    return acc;
+  }, []);
+
   // Separate recommendations by status
-  const pendingRecs = recommendations.filter(r => r.status === 'PENDING');
-  const inProgressRecs = recommendations.filter(r => 
+  const pendingRecs = uniqueRecommendations.filter(r => r.status === 'PENDING');
+  const inProgressRecs = uniqueRecommendations.filter(r => 
     ['ACTED_ON', 'SHOPPED'].includes(r.status)
   );
 

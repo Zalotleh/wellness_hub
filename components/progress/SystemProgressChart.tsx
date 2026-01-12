@@ -54,7 +54,8 @@ export default function SystemProgressChart({
 
     try {
       const dateStr = format(date, 'yyyy-MM-dd');
-      const response = await fetch(`/api/progress/daily-summary?date=${dateStr}`);
+      // Add timestamp to bust cache and get fresh data
+      const response = await fetch(`/api/progress/daily-summary?date=${dateStr}&t=${Date.now()}`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch progress data');
@@ -127,9 +128,11 @@ export default function SystemProgressChart({
 
   // Calculate statistics
   const totalFoods = chartData.reduce((sum, item) => sum + item.current, 0);
-  const averagePerSystem = totalFoods / chartData.length;
+  const targetTotal = TARGET * chartData.length; // 5 foods * 5 systems = 25 total
+  const missingFoods = targetTotal - totalFoods;
   const systemsComplete = chartData.filter((item) => item.current >= TARGET).length;
   const completionPercentage = Math.round((systemsComplete / chartData.length) * 100);
+  const overallCoverage = Math.round((totalFoods / targetTotal) * 100);
 
   // Custom tooltip
   const CustomTooltip = ({ active, payload }: any) => {
@@ -169,29 +172,33 @@ export default function SystemProgressChart({
 
       {/* Statistics */}
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
+        <div className="p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg">
           <div className="flex items-center gap-2 mb-1">
-            <TrendingUp className="w-4 h-4 text-blue-600" />
-            <span className="text-xs font-semibold text-blue-700">Total Foods</span>
+            <TrendingUp className="w-4 h-4 text-orange-600" />
+            <span className="text-xs font-semibold text-orange-700">Missing Foods</span>
           </div>
-          <div className="text-2xl font-bold text-blue-900">{totalFoods}</div>
+          <div className="text-2xl font-bold text-orange-900">{missingFoods}</div>
+          <div className="text-xs text-orange-600 mt-1">to reach 100%</div>
         </div>
         <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg">
           <div className="flex items-center gap-2 mb-1">
             <Award className="w-4 h-4 text-purple-600" />
-            <span className="text-xs font-semibold text-purple-700">Complete</span>
+            <span className="text-xs font-semibold text-purple-700">Complete Systems</span>
           </div>
           <div className="text-2xl font-bold text-purple-900">
             {systemsComplete}<span className="text-lg text-purple-600">/5</span>
           </div>
+          <div className="text-xs text-purple-600 mt-1">{completionPercentage}%</div>
         </div>
         <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-semibold text-green-700">Average</span>
+            <TrendingUp className="w-4 h-4 text-green-600" />
+            <span className="text-xs font-semibold text-green-700">Overall Coverage</span>
           </div>
           <div className="text-2xl font-bold text-green-900">
-            {averagePerSystem.toFixed(1)}
+            {overallCoverage}%
           </div>
+          <div className="text-xs text-green-600 mt-1">{totalFoods} of {targetTotal} foods</div>
         </div>
       </div>
 
