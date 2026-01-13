@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { format } from 'date-fns';
 import { Plus, Check, Clock } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export type MealTime = 'BREAKFAST' | 'MORNING_SNACK' | 'LUNCH' | 'AFTERNOON_SNACK' | 'DINNER';
 
@@ -83,6 +84,7 @@ export default function MealTimeTracker({
   onMealClick,
   className = '',
 }: MealTimeTrackerProps) {
+  const router = useRouter();
   const [localConsumptions, setLocalConsumptions] = useState<FoodConsumption[]>(consumptions);
   const [loading, setLoading] = useState(false);
 
@@ -176,8 +178,15 @@ export default function MealTimeTracker({
   // Use whichever stats are available
   const activeStats = localConsumptions.length > 0 ? mealStatsLocal : mealStats;
 
-  const handleMealClick = (mealTime: MealTime) => {
-    onMealClick?.(mealTime);
+  const handleMealClick = (mealTime: MealTime, isCompleted: boolean) => {
+    // Don't allow clicking on completed meals
+    if (isCompleted) {
+      return;
+    }
+    
+    // Navigate to recipe generator with meal type pre-selected
+    const mealTypeForUrl = mealTime.toLowerCase().replace('_', '-');
+    router.push(`/recipes/ai-generate?preferredMealTime=${mealTime}&from=meal-timeline`);
   };
 
   const completedMeals = mealTimeOrder.filter(
@@ -240,14 +249,14 @@ export default function MealTimeTracker({
           return (
             <button
               key={mealTime}
-              onClick={() => handleMealClick(mealTime)}
-              disabled={!isClickable}
+              onClick={() => handleMealClick(mealTime, isCompleted)}
+              disabled={isCompleted}
               className={`
                 relative p-4 rounded-lg border-2 transition-all duration-200
                 ${isCompleted ? config.activeColor : config.color}
-                ${isClickable && !isCompleted ? config.hoverColor : ''}
-                ${isClickable ? 'cursor-pointer' : 'cursor-default'}
-                ${isClickable ? 'transform hover:scale-105' : ''}
+                ${!isCompleted ? config.hoverColor : ''}
+                ${!isCompleted ? 'cursor-pointer' : 'cursor-not-allowed opacity-75'}
+                ${!isCompleted ? 'transform hover:scale-105' : ''}
                 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
               `}
             >

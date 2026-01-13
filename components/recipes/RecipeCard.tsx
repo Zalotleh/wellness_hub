@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { RecipeWithRelations } from '@/types';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
-import { Star, Clock, User, Heart, MessageCircle, ChefHat, Calendar } from 'lucide-react';
+import { Star, Clock, User, Heart, MessageCircle, ChefHat, Calendar, UtensilsCrossed, Leaf } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface RecipeCardProps {
@@ -87,6 +87,12 @@ export default function RecipeCard({ recipe, onFavorite, onFilterByCreator }: Re
         {/* Meta Info */}
         <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-300 mb-3">
           <div className="flex items-center space-x-3">
+            {recipe.mealType && (
+              <div className="flex items-center space-x-1">
+                <UtensilsCrossed className="w-4 h-4" />
+                <span className="capitalize">{recipe.mealType}</span>
+              </div>
+            )}
             {recipe.prepTime && (
               <div className="flex items-center space-x-1">
                 <Clock className="w-4 h-4" />
@@ -139,6 +145,27 @@ export default function RecipeCard({ recipe, onFavorite, onFilterByCreator }: Re
 
         {/* Ingredients Preview */}
         <div className="flex flex-wrap gap-1 mb-3">
+          {/* Dietary Restrictions */}
+          {recipe.dietaryRestrictions && recipe.dietaryRestrictions.length > 0 && (
+            <>
+              {recipe.dietaryRestrictions.slice(0, 2).map((restriction, idx) => (
+                <span
+                  key={`restriction-${idx}`}
+                  className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-1 rounded flex items-center gap-1"
+                >
+                  <Leaf className="w-3 h-3" />
+                  {restriction}
+                </span>
+              ))}
+              {recipe.dietaryRestrictions.length > 2 && (
+                <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-1 rounded">
+                  +{recipe.dietaryRestrictions.length - 2} more
+                </span>
+              )}
+            </>
+          )}
+          
+          {/* Ingredients */}
           {ingredients.slice(0, 3).map((ing, idx) => (
             <span
               key={idx}

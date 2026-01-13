@@ -70,7 +70,9 @@ export default function SmartActionsPanel({ date, className }: SmartActionsPanel
         params.set('date', date.toISOString());
       }
 
-      const response = await fetch(`/api/recommendations/next-action?${params}`);
+      const response = await fetch(`/api/recommendations/next-action?${params}`, {
+        cache: 'no-store',
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch recommendation');
       }
@@ -90,15 +92,9 @@ export default function SmartActionsPanel({ date, className }: SmartActionsPanel
     try {
       setActioning(true);
 
-      const response = await fetch(`/api/recommendations/${recommendation.id}/accept`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to accept recommendation');
-      }
-
+      // Don't mark as ACTED_ON yet - wait until user actually completes the action
+      // Just navigate to the action URL with tracking params
+      
       // Build action URL with query params
       const url = new URL(recommendation.actionUrl, window.location.origin);
       
@@ -123,7 +119,7 @@ export default function SmartActionsPanel({ date, className }: SmartActionsPanel
       // Navigate to the action URL
       router.push(url.pathname + url.search);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to accept');
+      setError(err instanceof Error ? err.message : 'Failed to navigate');
     } finally {
       setActioning(false);
     }

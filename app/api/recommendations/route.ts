@@ -45,11 +45,18 @@ export async function GET(request: NextRequest) {
       ],
     });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       data: recommendations,
       count: recommendations.length,
     });
+
+    // Prevent caching to ensure fresh data
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+
+    return response;
 
   } catch (error) {
     console.error('Error fetching recommendations:', error);

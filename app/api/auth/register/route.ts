@@ -33,6 +33,7 @@ export async function POST(request: NextRequest) {
         password: hashedPassword,
         measurementSystem: validatedData.measurementSystem,
         language: validatedData.language,
+        timezone: body.timezone || 'UTC', // Save detected timezone (validation schema may not include it yet)
         termsAccepted: validatedData.termsAccepted || false,
         termsAcceptedAt: validatedData.termsAccepted ? new Date() : null,
         privacyAccepted: validatedData.termsAccepted || false,
@@ -44,6 +45,7 @@ export async function POST(request: NextRequest) {
         email: true,
         measurementSystem: true,
         language: true,
+        timezone: true,
         termsAccepted: true,
         termsAcceptedAt: true,
         createdAt: true,

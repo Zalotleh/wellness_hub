@@ -91,15 +91,24 @@ export async function GET(request: NextRequest) {
         
         const duration = Date.now() - startTime;
         
-        return NextResponse.json({
+        const response = NextResponse.json({
           score,
           meta: {
             date: startOfDay(date).toISOString(),
             view: 'daily',
             calculationTime: `${duration}ms`,
             cached: score ? true : false,
+            timestamp: Date.now(), // Cache-busting timestamp
           },
         });
+
+        // Prevent caching - very aggressive
+        response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+        response.headers.set('Pragma', 'no-cache');
+        response.headers.set('Expires', '0');
+        response.headers.set('Surrogate-Control', 'no-store');
+
+        return response;
       } catch (err: any) {
         console.error('Daily score calculation error:', err);
         return NextResponse.json(
@@ -118,7 +127,7 @@ export async function GET(request: NextRequest) {
         
         const duration = Date.now() - startTime;
         
-        return NextResponse.json({
+        const response = NextResponse.json({
           score: weeklyScore,
           meta: {
             weekStart: weeklyScore.weekStart.toISOString(),
@@ -126,6 +135,12 @@ export async function GET(request: NextRequest) {
             calculationTime: `${duration}ms`,
           },
         });
+
+        response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        response.headers.set('Pragma', 'no-cache');
+        response.headers.set('Expires', '0');
+
+        return response;
       } catch (err: any) {
         console.error('Weekly score calculation error:', err);
         return NextResponse.json(
@@ -144,7 +159,7 @@ export async function GET(request: NextRequest) {
         
         const duration = Date.now() - startTime;
         
-        return NextResponse.json({
+        const response = NextResponse.json({
           score: monthlyScore,
           meta: {
             month: monthlyScore.month.toISOString(),
@@ -152,6 +167,12 @@ export async function GET(request: NextRequest) {
             calculationTime: `${duration}ms`,
           },
         });
+
+        response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        response.headers.set('Pragma', 'no-cache');
+        response.headers.set('Expires', '0');
+
+        return response;
       } catch (err: any) {
         console.error('Monthly score calculation error:', err);
         return NextResponse.json(

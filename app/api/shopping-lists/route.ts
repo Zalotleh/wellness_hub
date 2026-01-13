@@ -83,6 +83,7 @@ export async function GET() {
         totalItems: items.length, // Use actual items count instead of stored value
         checkedItems: checkedItems.length,
         pendingItems: pendingItems.length,
+        completionPercentage: items.length > 0 ? Math.round((checkedItems.length / items.length) * 100) : 0,
         totalCost: list.totalCost,
         currency: list.currency,
         pantryFiltered: list.pantryFiltered,

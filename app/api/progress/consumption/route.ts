@@ -6,6 +6,7 @@ import { foodConsumptionSchema } from '@/lib/validations';
 import { matchIngredientToFood } from '@/lib/utils/food-matcher';
 import { ConsumptionSource, DefenseSystem } from '@prisma/client';
 import { invalidateScoreCache } from '@/lib/tracking/score-cache';
+import { getUserLocalDateNoonUTC, getUserDayRangeUTC } from '@/lib/utils/timezone';
 
 /**
  * POST /api/progress/consumption
@@ -38,21 +39,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = foodConsumptionSchema.parse(body);
 
-    // Normalize date to UTC noon to prevent timezone shifting
-    let consumptionDate: Date;
-    if (validatedData.date) {
-      const rawDate = new Date(validatedData.date);
-      const year = rawDate.getUTCFullYear();
-      const month = rawDate.getUTCMonth();
-      const day = rawDate.getUTCDate();
-      consumptionDate = new Date(Date.UTC(year, month, day, 12, 0, 0));
-    } else {
-      const now = new Date();
-      const year = now.getUTCFullYear();
-      const month = now.getUTCMonth();
-      const day = now.getUTCDate();
-      consumptionDate = new Date(Date.UTC(year, month, day, 12, 0, 0));
-    }
+    // Get user's timezone (default to UTC if not set)
+    const userTimezone = user.timezone || 'UTC';
+
+    // Use timezone-aware date handling
+    // Converts user's local date to noon UTC to prevent timezone shifting
+    const consumptionDate = validatedData.date
+      ? getUserLocalDateNoonUTC(userTimezone, new Date(validatedData.date))
+      : getUserLocalDateNoonUTC(userTimezone);
 
     // Load food database once for all matching
     const foodDatabase = await prisma.foodDatabase.findMany();
@@ -105,21 +99,57 @@ export async function POST(request: NextRequest) {
     // Invalidate the score cache for this date to ensure fresh calculations
     await invalidateScoreCache(user.id, consumptionDate);
 
-    // Mark existing pending recommendations as potentially stale
-    // This encourages regeneration based on new data
-    await prisma.recommendation.updateMany({
+    // Clean up stale or invalid recommendations
+    // Dismiss recommendations for systems that are now complete
+    const dayRange = getUserDayRangeUTC(userTimezone, consumptionDate);
+    const todayProgress = await prisma.foodConsumption.findMany({
       where: {
         userId: user.id,
-        status: 'PENDING',
-        createdAt: {
-          lt: new Date(Date.now() - 5 * 60 * 1000), // Older than 5 minutes
+        date: {
+          gte: dayRange.startOfDay,
+          lte: dayRange.endOfDay,
         },
       },
-      data: {
-        // Don't dismiss, just mark as viewed so they get lower priority
-        viewCount: { increment: 10 }, // High view count = lower priority in some systems
+      include: {
+        foodItems: {
+          include: {
+            defenseSystems: true,
+          },
+        },
       },
     });
+
+    // Count foods per system for today
+    const systemCounts: Record<string, Set<string>> = {};
+    todayProgress.forEach(consumption => {
+      consumption.foodItems.forEach(item => {
+        item.defenseSystems.forEach(ds => {
+          if (!systemCounts[ds.defenseSystem]) {
+            systemCounts[ds.defenseSystem] = new Set();
+          }
+          systemCounts[ds.defenseSystem].add(item.name.toLowerCase());
+        });
+      });
+    });
+
+    // Dismiss recommendations for systems that now have 5+ foods
+    const completedSystems = Object.entries(systemCounts)
+      .filter(([_, foods]) => foods.size >= 5)
+      .map(([system]) => system);
+
+    if (completedSystems.length > 0) {
+      await prisma.recommendation.updateMany({
+        where: {
+          userId: user.id,
+          status: 'PENDING',
+          targetSystem: { in: completedSystems },
+        },
+        data: {
+          status: 'COMPLETED',
+          completedAt: new Date(),
+        },
+      });
+    }
 
     return NextResponse.json(
       {
@@ -178,15 +208,25 @@ export async function GET(request: NextRequest) {
     const mealTime = searchParams.get('mealTime');
     const limit = parseInt(searchParams.get('limit') || '50');
 
+    // Get user's timezone (default to UTC if not set)
+    const userTimezone = user.timezone || 'UTC';
+
     // Build where clause
     const where: any = {
       userId: user.id,
     };
 
+    // Use timezone-aware date ranges
     if (startDate || endDate) {
       where.date = {};
-      if (startDate) where.date.gte = new Date(startDate);
-      if (endDate) where.date.lte = new Date(endDate);
+      if (startDate) {
+        const startDateObj = getUserLocalDateNoonUTC(userTimezone, new Date(startDate));
+        where.date.gte = startDateObj;
+      }
+      if (endDate) {
+        const endDateObj = getUserLocalDateNoonUTC(userTimezone, new Date(endDate));
+        where.date.lte = endDateObj;
+      }
     }
 
     if (mealTime) {
@@ -221,10 +261,17 @@ export async function GET(request: NextRequest) {
       take: limit,
     });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       consumptions,
       count: consumptions.length,
     });
+
+    // Prevent caching
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+
+    return response;
   } catch (error: any) {
     console.error('Error fetching consumption history:', error);
 

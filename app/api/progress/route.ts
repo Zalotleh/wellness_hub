@@ -118,7 +118,14 @@ export async function GET(request: NextRequest) {
       }));
     });
 
-    return NextResponse.json({ data: transformedProgress });
+    const response = NextResponse.json({ data: transformedProgress });
+    
+    // Prevent caching
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+
+    return response;
   } catch (error) {
     console.error('Error fetching progress:', error);
     return NextResponse.json(

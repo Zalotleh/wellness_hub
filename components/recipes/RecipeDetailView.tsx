@@ -22,6 +22,7 @@ import {
   Droplets,
   UtensilsCrossed,
   Calendar,
+  Leaf,
 } from 'lucide-react';
 import { RecipeWithRelations, DefenseSystem } from '@/types';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
@@ -138,6 +139,15 @@ export default function RecipeDetailView({
   const [activeInstruction, setActiveInstruction] = useState<number | null>(null);
   const [userRating, setUserRating] = useState<number>(0);
   const [loggingMeal, setLoggingMeal] = useState(false);
+  const [showMealTimeModal, setShowMealTimeModal] = useState(false);
+  const [selectedMealTime, setSelectedMealTime] = useState<string>(() => {
+    // Use recipe's mealType if available, otherwise default to LUNCH
+    if (recipe.mealType) {
+      // Convert lowercase mealType to uppercase enum value (e.g., 'breakfast' -> 'BREAKFAST')
+      return recipe.mealType.toUpperCase();
+    }
+    return 'LUNCH';
+  });
   const printRef = useRef<HTMLDivElement>(null);
 
   const originalServings = recipe.servings || 4;
@@ -169,15 +179,21 @@ export default function RecipeDetailView({
     onRate?.(recipe.id, rating);
   };
 
-  // Handle Log This Meal
+  // Show meal time selection modal
+  const handleLogMealClick = () => {
+    setShowMealTimeModal(true);
+  };
+
+  // Handle Log This Meal (after meal time selection)
   const handleLogMeal = async () => {
+    setShowMealTimeModal(false);
     setLoggingMeal(true);
     try {
       const response = await fetch(`/api/recipes/${recipe.id}/log-meal`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          mealTime: 'LUNCH', // Default to lunch
+          mealTime: selectedMealTime,
           date: new Date().toISOString(),
         }),
       });
@@ -283,7 +299,7 @@ export default function RecipeDetailView({
               {recipe.description && (
                 <p className="text-lg opacity-90 max-w-2xl">{recipe.description}</p>
               )}
-            </div>
+            </div>Click
           </div>
 
           {/* Action buttons */}
@@ -362,6 +378,22 @@ export default function RecipeDetailView({
               <Calendar className="w-4 h-4" />
               <span className="font-medium">Created: {format(new Date(recipe.createdAt), 'MMM d, yyyy')}</span>
             </div>
+
+            {/* Meal Type badge */}
+            {recipe.mealType && (
+              <div className="flex items-center gap-2 px-4 py-2 bg-amber-100 text-amber-800 rounded-full">
+                <UtensilsCrossed className="w-4 h-4" />
+                <span className="font-medium capitalize">{recipe.mealType}</span>
+              </div>
+            )}
+
+            {/* Dietary Restrictions badges */}
+            {recipe.dietaryRestrictions && recipe.dietaryRestrictions.length > 0 && recipe.dietaryRestrictions.map((restriction) => (
+              <div key={restriction} className="flex items-center gap-2 px-4 py-2 bg-green-100 text-green-800 rounded-full">
+                <Leaf className="w-4 h-4" />
+                <span className="font-medium capitalize">{restriction}</span>
+              </div>
+            ))}
           </div>
 
           {/* Servings selector */}
@@ -633,6 +665,62 @@ export default function RecipeDetailView({
           </div>
         </div>
       </div>
+
+      {/* Meal Time Selection Modal */}
+      {showMealTimeModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">
+            <h3 className="text-2xl font-bold text-gray-900 mb-4">Select Meal Time</h3>
+            <p className="text-gray-600 mb-6">When did you eat this meal?</p>
+            
+            <div className="space-y-3 mb-6">
+              {[
+                { value: 'BREAKFAST', label: 'Breakfast', icon: '🌅' },
+                { value: 'MORNING_SNACK', label: 'Morning Snack', icon: '☕' },
+                { value: 'LUNCH', label: 'Lunch', icon: '🌞' },
+                { value: 'AFTERNOON_SNACK', label: 'Afternoon Snack', icon: '🍎' },
+                { value: 'DINNER', label: 'Dinner', icon: '🌙' },
+              ].map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => setSelectedMealTime(option.value)}
+                  className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${
+                    selectedMealTime === option.value
+                      ? 'border-green-500 bg-green-50 shadow-md'
+                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  <span className="text-2xl">{option.icon}</span>
+                  <span className={`font-medium ${
+                    selectedMealTime === option.value ? 'text-green-700' : 'text-gray-700'
+                  }`}>
+                    {option.label}
+                  </span>
+                  {selectedMealTime === option.value && (
+                    <Check className="w-5 h-5 text-green-600 ml-auto" />
+                  )}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowMealTimeModal(false)}
+                className="flex-1 px-4 py-3 border-2 border-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleLogMeal}
+                disabled={loggingMeal}
+                className="flex-1 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-medium rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loggingMeal ? 'Logging...' : 'Log Meal'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

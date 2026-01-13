@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { calculate5x5x5Score } from './5x5x5-score';
 import { startOfDay, differenceInMinutes } from 'date-fns';
+import { normalizeToNoonUTC } from '@/lib/utils/timezone';
 import type { Score5x5x5, SystemScore } from './types';
 import { DefenseSystem } from '@/types';
 
@@ -19,10 +20,7 @@ export async function invalidateScoreCache(
   date: Date
 ): Promise<void> {
   // Normalize to UTC date at noon
-  const year = date.getUTCFullYear();
-  const month = date.getUTCMonth();
-  const day = date.getUTCDate();
-  const dateOnly = new Date(Date.UTC(year, month, day, 12, 0, 0));
+  const dateOnly = normalizeToNoonUTC(date);
 
   try {
     await prisma.dailyProgressScore.delete({
@@ -51,10 +49,7 @@ export async function cacheDailyScore(
   score: Score5x5x5
 ): Promise<void> {
   // Normalize to UTC date at noon
-  const year = date.getUTCFullYear();
-  const month = date.getUTCMonth();
-  const day = date.getUTCDate();
-  const dateOnly = new Date(Date.UTC(year, month, day, 12, 0, 0));
+  const dateOnly = normalizeToNoonUTC(date);
 
   // Extract system counts
   const systemCounts: Record<string, number> = {};
@@ -129,10 +124,7 @@ export async function getCachedOrCalculateScore(
   date: Date
 ): Promise<Score5x5x5> {
   // Normalize to UTC date at noon
-  const year = date.getUTCFullYear();
-  const month = date.getUTCMonth();
-  const day = date.getUTCDate();
-  const dateOnly = new Date(Date.UTC(year, month, day, 12, 0, 0));
+  const dateOnly = normalizeToNoonUTC(date);
 
   // Try to get cached score
   const cached = await prisma.dailyProgressScore.findUnique({
@@ -150,7 +142,7 @@ export async function getCachedOrCalculateScore(
     return reconstructScoreFromCache(cached);
   }
 
-  // Otherwise, calculate fresh
+  // Otherwise, calculate fresh (timezone will be fetched from user in calculate function)
   const score = await calculate5x5x5Score(userId, date);
   await cacheDailyScore(userId, date, score);
   return score;

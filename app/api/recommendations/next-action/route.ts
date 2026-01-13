@@ -5,6 +5,8 @@ import { prisma } from '@/lib/prisma';
 import { recommendationEngine } from '@/lib/recommendations/engine';
 import { calculate5x5x5Score } from '@/lib/tracking/5x5x5-score';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/recommendations/next-action
  * Get the next recommended action for the user

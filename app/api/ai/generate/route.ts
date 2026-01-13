@@ -81,24 +81,40 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { defenseSystem, ingredients, dietaryRestrictions, mealType, measurementSystem } = body;
+    const { defenseSystem, defenseSystems, ingredients, dietaryRestrictions, mealType, measurementSystem } = body;
 
-    console.log('📝 Request body:', { defenseSystem, ingredients, dietaryRestrictions, mealType, measurementSystem });
+    // Support both single (legacy) and multiple defense systems
+    const systemsArray = defenseSystems || (defenseSystem ? [defenseSystem] : []);
 
-    // Validate input
-    if (!defenseSystem || !Object.values(DefenseSystem).includes(defenseSystem)) {
+    console.log('📝 Request body:', { defenseSystems: systemsArray, ingredients, dietaryRestrictions, mealType, measurementSystem });
+
+    // Validate input - at least one defense system required
+    if (!systemsArray || systemsArray.length === 0) {
       return NextResponse.json(
-        { error: 'Valid defense system is required' },
+        { error: 'At least one defense system is required' },
         { status: 400 }
       );
     }
 
-    const systemInfo = DEFENSE_SYSTEMS[defenseSystem as DefenseSystem];
+    // Validate all systems are valid
+    const invalidSystems = systemsArray.filter((sys: string) => !Object.values(DefenseSystem).includes(sys as DefenseSystem));
+    if (invalidSystems.length > 0) {
+      return NextResponse.json(
+        { error: `Invalid defense systems: ${invalidSystems.join(', ')}` },
+        { status: 400 }
+      );
+    }
+
+    // Get info for all systems
+    const systemInfos = systemsArray.map((sys: DefenseSystem) => ({
+      system: sys,
+      info: DEFENSE_SYSTEMS[sys]
+    }));
 
     // Build the AI prompt
     const prompt = buildRecipePrompt({
-      defenseSystem,
-      systemInfo,
+      defenseSystems: systemsArray,
+      systemInfos,
       ingredients: ingredients || [],
       dietaryRestrictions: dietaryRestrictions || [],
       mealType: mealType || 'any',
@@ -113,7 +129,7 @@ export async function POST(request: NextRequest) {
     if (!anthropicApiKey) {
       console.log('⚠️ No API key found, returning mock recipe');
       return NextResponse.json({
-        data: generateMockRecipe(defenseSystem, systemInfo, ingredients),
+        data: generateMockRecipe(systemsArray, systemInfos, ingredients),
         message: 'Mock recipe generated (Anthropic API key not configured)',
       });
     }
@@ -154,11 +170,11 @@ export async function POST(request: NextRequest) {
     console.log('📖 First 200 chars:', recipeText.substring(0, 200));
 
     // Parse the AI response into structured data
-    const parsedRecipe = parseAIRecipe(recipeText, defenseSystem);
+    const parsedRecipe = parseAIRecipe(recipeText, systemsArray);
     console.log('🍳 Parsed recipe:', JSON.stringify(parsedRecipe, null, 2));
 
     // Validate recipe quality before counting it as a successful generation
-    const isValidRecipe = validateRecipeQuality(parsedRecipe, defenseSystem);
+    const isValidRecipe = validateRecipeQuality(parsedRecipe, systemsArray);
     
     if (!isValidRecipe.valid) {
       console.error('⚠️ Recipe failed quality validation:', isValidRecipe.reasons);
@@ -168,12 +184,12 @@ export async function POST(request: NextRequest) {
         userId: session.user.id,
         generationType: 'recipe',
         success: false,
-        defenseSystem: defenseSystem,
+        defenseSystem: systemsArray[0], // Primary system for backwards compatibility
         ingredientCount: ingredients?.length || 0,
         hasDietaryRestrictions: dietaryRestrictions?.length > 0,
         hasMealType: mealType && mealType !== 'any',
         validationErrors: isValidRecipe.reasons,
-        inputData: { defenseSystem, ingredients, dietaryRestrictions, mealType },
+        inputData: { defenseSystems: systemsArray, ingredients, dietaryRestrictions, mealType },
         outputData: parsedRecipe,
         modelUsed: 'claude-sonnet-4-5-20250929',
         tokensUsed: anthropicData.usage?.output_tokens || 0,
@@ -207,12 +223,12 @@ export async function POST(request: NextRequest) {
       userId: session.user.id,
       generationType: 'recipe',
       success: true,
-      defenseSystem: defenseSystem,
+      defenseSystem: systemsArray[0], // Primary system for backwards compatibility
       ingredientCount: ingredients?.length || 0,
       hasDietaryRestrictions: dietaryRestrictions?.length > 0,
       hasMealType: mealType && mealType !== 'any',
       validationErrors: [],
-      inputData: { defenseSystem, ingredients, dietaryRestrictions, mealType },
+      inputData: { defenseSystems: systemsArray, ingredients, dietaryRestrictions, mealType },
       outputData: parsedRecipe,
       modelUsed: 'claude-sonnet-4-5-20250929',
       tokensUsed: anthropicData.usage?.output_tokens || 0,
@@ -234,8 +250,8 @@ export async function POST(request: NextRequest) {
 
 // Build the prompt for AI
 function buildRecipePrompt({
-  defenseSystem,
-  systemInfo,
+  defenseSystems,
+  systemInfos,
   ingredients,
   dietaryRestrictions,
   mealType,
@@ -263,22 +279,78 @@ function buildRecipePrompt({
   
   const systemName = measurementSystem === 'metric' ? 'Metric' : 'Imperial';
 
-  // Get a representative sample of foods (first 30) to keep prompt manageable but comprehensive
-  const foodSample = systemInfo.keyFoods.slice(0, 30).join(', ');
-  const additionalFoodsCount = systemInfo.keyFoods.length - 30;
-  const additionalFoodsText = additionalFoodsCount > 0 
-    ? ` (and ${additionalFoodsCount} more options available)` 
-    : '';
+  // Build multi-system context
+  const isMultiSystem = systemInfos.length > 1;
+  const systemNames = systemInfos.map((si: any) => si.info.displayName).join(', ');
+  
+  let systemContext = '';
+  let nutrientsText = '';
+  let ingredientGuidance = '';
+  let titleGuidance = '';
+  
+  if (isMultiSystem) {
+    // Collect all nutrients from all systems
+    const allNutrients = new Set<string>();
+    systemInfos.forEach((si: any) => {
+      si.info.nutrients.forEach((n: string) => allNutrients.add(n));
+    });
+    nutrientsText = Array.from(allNutrients).join(', ');
+    
+    systemContext = `
+Create a detailed, healthy recipe that supports MULTIPLE defense systems: ${systemNames}, based on Dr. William Li's "Eat to Beat Disease" research.
 
-  return `
-Create a detailed, healthy recipe that supports the ${systemInfo.displayName} defense system based on Dr. William Li's "Eat to Beat Disease" research.
+🎯 MULTI-SYSTEM APPROACH:
+This recipe should incorporate ingredients that support the following defense systems. You can use ingredients that support multiple systems (like berries, green tea, or tomatoes), OR you can combine different ingredients where each supports different systems.
 
-${systemInfo.displayName} System Focus:
-${systemInfo.description}
+Be creative! Don't limit yourself to only "superfoods" - create varied, delicious recipes using any combination of the foods listed below.
+
+`;
+    
+    // Add each system's info
+    systemInfos.forEach((si: any, index: number) => {
+      const foodSample = si.info.keyFoods.slice(0, 20).join(', ');
+      systemContext += `${index + 1}. ${si.info.displayName} System:
+${si.info.description}
+Key foods: ${foodSample}
+
+`;
+    });
+    
+    ingredientGuidance = `INGREDIENT SELECTION: Create a balanced recipe using foods from the systems above. You can:
+- Use multi-system foods (foods that appear in multiple lists) for efficiency
+- OR combine different foods where each supports a specific system
+- OR use a mix of both approaches
+Be creative and varied - don't always use the same ingredients!`;
+    
+    titleGuidance = systemNames;
+  } else {
+    const si = systemInfos[0];
+    const foodSample = si.info.keyFoods.slice(0, 30).join(', ');
+    const additionalFoodsCount = si.info.keyFoods.length - 30;
+    const additionalFoodsText = additionalFoodsCount > 0 
+      ? ` (and ${additionalFoodsCount} more options available)` 
+      : '';
+    
+    nutrientsText = si.info.nutrients.join(', ');
+    
+    systemContext = `
+Create a detailed, healthy recipe that supports the ${si.info.displayName} defense system based on Dr. William Li's "Eat to Beat Disease" research.
+
+${si.info.displayName} System Focus:
+${si.info.description}
 
 Key foods for this system: ${foodSample}${additionalFoodsText}
 
-Important nutrients to incorporate: ${systemInfo.nutrients.join(', ')}
+`;
+    
+    ingredientGuidance = `INGREDIENT SELECTION: Choose from the comprehensive list of foods above that support ${si.info.displayName}. Aim to include multiple foods from this system in the recipe for maximum health benefits.`;
+    
+    titleGuidance = si.info.displayName;
+  }
+
+  return systemContext + `
+
+Important nutrients to incorporate: ${nutrientsText}
 
 ${ingredientsText}
 ${restrictionsText}
@@ -286,9 +358,9 @@ ${mealTypeText}
 
 MEASUREMENT SYSTEM: Use ${systemName} measurements (${measurementSystem === 'metric' ? 'grams, ml, liters' : 'cups, ounces, pounds'})
 
-INGREDIENT SELECTION: Choose from the comprehensive list of foods above that support ${systemInfo.displayName}. Aim to include multiple foods from this system in the recipe for maximum health benefits.
+${ingredientGuidance}
 
-IMPORTANT: The recipe title MUST be specific and descriptive. DO NOT use generic titles like "${systemInfo.displayName} Recipe" or "Healthy Recipe". 
+IMPORTANT: The recipe title MUST be specific and descriptive. DO NOT use generic titles like "${titleGuidance} Recipe" or "Healthy Recipe". 
 Instead, create a creative, appetizing name based on the main ingredients and cooking method.
 
 GOOD EXAMPLES:
@@ -298,9 +370,10 @@ GOOD EXAMPLES:
 - "Creamy Tomato Basil Soup with Whole Grain Crackers"
 
 BAD EXAMPLES:
-- "${systemInfo.displayName} Recipe"
+- "${titleGuidance} Recipe"
 - "Healthy Dinner"
 - "Immunity Boost Meal"
+- "Superfood Bowl"
 
 CRITICAL FORMAT INSTRUCTIONS:
 1. DO NOT use markdown headers (# or ##) in your response
@@ -312,7 +385,7 @@ Please provide the recipe in the following EXACT format:
 
 TITLE: [A specific, creative recipe name that describes the dish - NOT the defense system]
 
-DESCRIPTION: [2-3 sentences about the recipe and its health benefits for the ${systemInfo.displayName} system]
+DESCRIPTION: [2-3 sentences about the recipe and its health benefits for the ${isMultiSystem ? 'targeted defense systems' : titleGuidance + ' system'}]
 
 PREP_TIME: [e.g., "15 min"]
 
@@ -362,7 +435,7 @@ Make the recipe practical, delicious, and easy to follow!
 }
 
 // Validate recipe quality to ensure it has minimum required data
-function validateRecipeQuality(recipe: any, defenseSystem?: string): { valid: boolean; reasons: string[] } {
+function validateRecipeQuality(recipe: any, defenseSystems?: string[]): { valid: boolean; reasons: string[] } {
   const reasons: string[] = [];
 
   // Check for title (should exist and not be a fallback)
@@ -396,11 +469,13 @@ function validateRecipeQuality(recipe: any, defenseSystem?: string): { valid: bo
     }
     
     // Check if title is literally just the defense system name + "Recipe"
-    if (defenseSystem) {
-      const systemName = DEFENSE_SYSTEMS[defenseSystem as DefenseSystem]?.displayName || '';
-      if (titleLower.includes(systemName.toLowerCase()) && titleLower.includes('recipe')) {
-        reasons.push(`Title is too generic: "${recipe.title}". Should describe the actual dish, not the defense system`);
-      }
+    if (defenseSystems && defenseSystems.length > 0) {
+      defenseSystems.forEach((sys: string) => {
+        const systemName = DEFENSE_SYSTEMS[sys as DefenseSystem]?.displayName || '';
+        if (titleLower.includes(systemName.toLowerCase()) && titleLower.includes('recipe')) {
+          reasons.push(`Title is too generic: "${recipe.title}". Should describe the actual dish, not the defense system`);
+        }
+      });
     }
   }
 
@@ -445,12 +520,14 @@ function validateRecipeQuality(recipe: any, defenseSystem?: string): { valid: bo
 }
 
 // Parse AI response into structured format
-function parseAIRecipe(recipeText: string, defenseSystem: DefenseSystem): any {
+function parseAIRecipe(recipeText: string, defenseSystems: DefenseSystem[]): any {
   console.log('🔍 Parsing recipe text...');
   const lines = recipeText.split('\n').filter((line) => line.trim());
 
   const recipe: any = {
-    defenseSystem,
+    defenseSystems: defenseSystems,
+    // Keep singular for backwards compatibility
+    defenseSystem: defenseSystems[0],
     ingredients: [],
     nutrients: {},
   };
@@ -591,7 +668,7 @@ function parseAIRecipe(recipeText: string, defenseSystem: DefenseSystem): any {
 
   // Add fallback description if not found
   if (!recipe.description) {
-    recipe.description = `A healthy recipe designed to support ${DEFENSE_SYSTEMS[defenseSystem].displayName}.`;
+    recipe.description = `A healthy recipe designed to support ${DEFENSE_SYSTEMS[defenseSystem as DefenseSystem]?.displayName || 'your health'}.`;
     console.log('⚠️ No description found, using fallback');
   }
 

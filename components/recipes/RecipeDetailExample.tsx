@@ -38,6 +38,8 @@ const sampleRecipe: RecipeWithRelations = {
   prepTime: '20',
   cookTime: '15',
   servings: 4,
+  mealType: 'lunch',
+  dietaryRestrictions: ['vegetarian'],
   defenseSystems: [
     DefenseSystem.ANGIOGENESIS,
     DefenseSystem.REGENERATION,
@@ -116,6 +118,8 @@ const alternativeRecipe: RecipeWithRelations = {
   prepTime: '15',
   cookTime: '25',
   servings: 4,
+  mealType: 'dinner',
+  dietaryRestrictions: [],
   defenseSystems: [DefenseSystem.REGENERATION, DefenseSystem.DNA_PROTECTION],
   nutrients: {
     calories: '420',

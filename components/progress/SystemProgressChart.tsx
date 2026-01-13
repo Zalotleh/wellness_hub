@@ -3,16 +3,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
 import { RefreshCw, TrendingUp, Award } from 'lucide-react';
-import {
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  Radar,
-  ResponsiveContainer,
-  Tooltip,
-  Legend,
-} from 'recharts';
 import { DefenseSystem } from '@/types';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
 import { getSystemColor } from '@/components/ui/MultiSystemBadge';
@@ -133,23 +123,11 @@ export default function SystemProgressChart({
   const systemsComplete = chartData.filter((item) => item.current >= TARGET).length;
   const completionPercentage = Math.round((systemsComplete / chartData.length) * 100);
   const overallCoverage = Math.round((totalFoods / targetTotal) * 100);
-
-  // Custom tooltip
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      return (
-        <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
-          <p className="font-semibold text-gray-900 mb-1">{data.fullName}</p>
-          <p className="text-sm text-gray-700">
-            <span className="font-semibold">{data.current}</span> / {data.target} foods
-          </p>
-          <p className="text-sm text-gray-600">{data.percentage}% complete</p>
-        </div>
-      );
-    }
-    return null;
-  };
+  
+  // Find best covered system
+  const bestSystem = chartData.reduce((best, current) => 
+    current.current > best.current ? current : best
+  , chartData[0]);
 
   return (
     <div className={`bg-white rounded-lg shadow-lg p-6 ${className}`}>
@@ -172,13 +150,13 @@ export default function SystemProgressChart({
 
       {/* Statistics */}
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg">
+        <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
           <div className="flex items-center gap-2 mb-1">
-            <TrendingUp className="w-4 h-4 text-orange-600" />
-            <span className="text-xs font-semibold text-orange-700">Missing Foods</span>
+            <Award className="w-4 h-4 text-blue-600" />
+            <span className="text-xs font-semibold text-blue-700">Best Covered</span>
           </div>
-          <div className="text-2xl font-bold text-orange-900">{missingFoods}</div>
-          <div className="text-xs text-orange-600 mt-1">to reach 100%</div>
+          <div className="text-lg font-bold text-blue-900">{bestSystem.fullName}</div>
+          <div className="text-xs text-blue-600 mt-1">{bestSystem.current} of {bestSystem.target} foods</div>
         </div>
         <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg">
           <div className="flex items-center gap-2 mb-1">
@@ -200,54 +178,6 @@ export default function SystemProgressChart({
           </div>
           <div className="text-xs text-green-600 mt-1">{totalFoods} of {targetTotal} foods</div>
         </div>
-      </div>
-
-      {/* Radar Chart */}
-      <div className="mb-6">
-        <ResponsiveContainer width="100%" height={350}>
-          <RadarChart data={chartData}>
-            <PolarGrid stroke="#e5e7eb" />
-            <PolarAngleAxis
-              dataKey="system"
-              tick={{ fill: '#6b7280', fontSize: 14, fontWeight: 600 }}
-            />
-            <PolarRadiusAxis
-              angle={90}
-              domain={[0, TARGET]}
-              tick={{ fill: '#9ca3af', fontSize: 12 }}
-              tickCount={6}
-            />
-            
-            {/* Target line (5 foods) */}
-            <Radar
-              name="Target (5 foods)"
-              dataKey="target"
-              stroke="#d1d5db"
-              fill="#f3f4f6"
-              fillOpacity={0.3}
-              strokeWidth={2}
-              strokeDasharray="5 5"
-            />
-            
-            {/* Current progress */}
-            <Radar
-              name="Current Progress"
-              dataKey="current"
-              stroke="#3b82f6"
-              fill="#3b82f6"
-              fillOpacity={0.6}
-              strokeWidth={3}
-            />
-            
-            <Tooltip content={<CustomTooltip />} />
-            <Legend
-              wrapperStyle={{
-                paddingTop: '20px',
-                fontSize: '14px',
-              }}
-            />
-          </RadarChart>
-        </ResponsiveContainer>
       </div>
 
       {/* System Breakdown */}

@@ -69,6 +69,8 @@ export type RecipeWithRelations = {
   prepTime: string | null;
   cookTime: string | null;
   servings: number | null;
+  mealType: string | null;
+  dietaryRestrictions: string[];
   defenseSystems: DefenseSystem[];
   nutrients: any;
   imageUrl: string | null;
@@ -117,6 +119,8 @@ export interface RecipeFormData {
   prepTime?: string;
   cookTime?: string;
   servings?: number;
+  mealType?: string;
+  dietaryRestrictions?: string[];
   defenseSystems: DefenseSystem[];
   nutrients?: Record<string, string>;
   imageUrl?: string;

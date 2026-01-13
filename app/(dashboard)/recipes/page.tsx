@@ -14,6 +14,8 @@ export default function RecipesPage() {
   const { data: session } = useSession();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSystem, setSelectedSystem] = useState<DefenseSystem | null>(null);
+  const [selectedMealType, setSelectedMealType] = useState<string | null>(null);
+  const [selectedDietaryRestriction, setSelectedDietaryRestriction] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'recent' | 'popular' | 'rating'>('recent');
   const [showFilters, setShowFilters] = useState(false);
   const [filterByUser, setFilterByUser] = useState<string | null>(null);
@@ -32,6 +34,17 @@ export default function RecipesPage() {
     userId: filterByUser || undefined,
   });
 
+  // Apply client-side filtering for meal type and dietary restrictions
+  const filteredRecipes = recipes.filter((recipe) => {
+    if (selectedMealType && recipe.mealType !== selectedMealType) {
+      return false;
+    }
+    if (selectedDietaryRestriction && (!recipe.dietaryRestrictions || !recipe.dietaryRestrictions.includes(selectedDietaryRestriction))) {
+      return false;
+    }
+    return true;
+  });
+
   const handleSearch = (value: string) => {
     setSearchQuery(value);
   };
@@ -39,6 +52,8 @@ export default function RecipesPage() {
   const clearFilters = () => {
     setSearchQuery('');
     setSelectedSystem(null);
+    setSelectedMealType(null);
+    setSelectedDietaryRestriction(null);
     setSortBy('recent');
     setFilterByUser(null);
   };
@@ -59,6 +74,8 @@ export default function RecipesPage() {
   const activeFiltersCount = [
     searchQuery,
     selectedSystem,
+    selectedMealType,
+    selectedDietaryRestriction,
     sortBy !== 'recent',
     filterByUser,
   ].filter(Boolean).length;
@@ -205,7 +222,65 @@ export default function RecipesPage() {
                     );
                   })}
                 </div>
+                {/* Meal Type Filter */}
+                <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <h3 className="font-semibold text-gray-800 dark:text-white mb-3">Filter by Meal Type</h3>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => setSelectedMealType(null)}
+                      className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                        selectedMealType === null
+                          ? 'bg-green-500 text-white'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      }`}
+                    >
+                      All
+                    </button>
+                    {['breakfast', 'lunch', 'dinner', 'snack', 'dessert'].map((mealType) => (
+                      <button
+                        key={mealType}
+                        onClick={() => setSelectedMealType(selectedMealType === mealType ? null : mealType)}
+                        className={`px-4 py-2 rounded-lg font-medium transition-colors capitalize ${
+                          selectedMealType === mealType
+                            ? 'bg-amber-500 text-white'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
+                        }`}
+                      >
+                        {mealType}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
+                {/* Dietary Restrictions Filter */}
+                <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <h3 className="font-semibold text-gray-800 dark:text-white mb-3">Filter by Dietary Restriction</h3>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => setSelectedDietaryRestriction(null)}
+                      className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                        selectedDietaryRestriction === null
+                          ? 'bg-green-500 text-white'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      }`}
+                    >
+                      All
+                    </button>
+                    {['vegetarian', 'vegan', 'gluten-free', 'dairy-free', 'nut-free', 'low-carb', 'keto', 'paleo'].map((restriction) => (
+                      <button
+                        key={restriction}
+                        onClick={() => setSelectedDietaryRestriction(selectedDietaryRestriction === restriction ? null : restriction)}
+                        className={`px-4 py-2 rounded-lg font-medium transition-colors capitalize ${
+                          selectedDietaryRestriction === restriction
+                            ? 'bg-green-500 text-white'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
+                        }`}
+                      >
+                        {restriction}
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 {/* Creator Filter */}
                 <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
                   <h3 className="font-semibold text-gray-800 dark:text-white mb-3">Filter by Creator</h3>
@@ -295,7 +370,7 @@ export default function RecipesPage() {
               'Loading recipes...'
             ) : (
               <>
-                Showing <span className="font-semibold">{recipes.length}</span> of{' '}
+                Showing <span className="font-semibold">{filteredRecipes.length}</span> of{' '}
                 <span className="font-semibold">{pagination.total}</span> recipes
                 {searchQuery && (
                   <span> matching "{searchQuery}"</span>
@@ -324,17 +399,17 @@ export default function RecipesPage() {
               <p className="text-gray-600 dark:text-gray-200">Loading delicious recipes...</p>
             </div>
           </div>
-        ) : recipes.length === 0 ? (
+        ) : filteredRecipes.length === 0 ? (
           <div className="text-center py-20">
             <ChefHat className="w-16 h-16 text-gray-400 dark:text-gray-300 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">No recipes found</h3>
             <p className="text-gray-600 dark:text-gray-200 mb-6">
-              {searchQuery || selectedSystem
+              {searchQuery || selectedSystem || selectedMealType || selectedDietaryRestriction
                 ? 'Try adjusting your filters or search query'
                 : 'Be the first to create a recipe!'}
             </p>
             <div className="flex items-center justify-center space-x-3">
-              {(searchQuery || selectedSystem) && (
+              {(searchQuery || selectedSystem || selectedMealType || selectedDietaryRestriction) && (
                 <button
                   onClick={clearFilters}
                   className="px-6 py-3 border-2 border-gray-300 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:bg-gray-700 transition-colors font-medium"
@@ -353,7 +428,7 @@ export default function RecipesPage() {
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {recipes.map((recipe) => (
+              {filteredRecipes.map((recipe) => (
                 <RecipeCard 
                   key={recipe.id} 
                   recipe={recipe}

@@ -2,6 +2,7 @@ import { DefenseSystem } from '@/types';
 import { prisma } from '@/lib/prisma';
 import { startOfDay, endOfDay } from 'date-fns';
 import { transformFoodConsumptionToProgress } from '@/lib/utils/food-consumption-transformer';
+import { getUserDayRangeUTC, normalizeToNoonUTC } from '@/lib/utils/timezone';
 import type {
   Score5x5x5,
   SystemScore,
@@ -22,22 +23,40 @@ import type {
  * - Defense Systems: 50%
  * - Meal Time Coverage: 30%
  * - Food Variety: 20%
+ * 
+ * @param userId - User ID
+ * @param date - Date to calculate score for (will be normalized to noon UTC)
+ * @param userTimezone - Optional IANA timezone (e.g., 'America/New_York'). If not provided, defaults to UTC
  */
 export async function calculate5x5x5Score(
   userId: string,
-  date: Date
+  date: Date,
+  userTimezone?: string
 ): Promise<Score5x5x5> {
   // Normalize to UTC date at noon to prevent timezone shifting
-  const year = date.getUTCFullYear();
-  const month = date.getUTCMonth();
-  const day = date.getUTCDate();
-  const normalizedDate = new Date(Date.UTC(year, month, day, 12, 0, 0));
+  const normalizedDate = normalizeToNoonUTC(date);
+
+  // Fetch user if timezone not provided
+  if (!userTimezone) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { timezone: true },
+    });
+    userTimezone = user?.timezone || 'UTC';
+  }
+
+  // Get the day range for querying (start/end of user's day in UTC)
+  const { start, end } = getUserDayRangeUTC(userTimezone, date);
 
   // Fetch all food consumptions for the date from new table
+  // Query using user's day range to catch all entries for their local day
   const foodConsumptions = await prisma.foodConsumption.findMany({
     where: {
       userId,
-      date: normalizedDate,
+      date: {
+        gte: start,
+        lt: end,
+      },
     },
     include: {
       foodItems: {
@@ -54,8 +73,8 @@ export async function calculate5x5x5Score(
   // Calculate defense system scores
   const systemScores = calculateSystemScores(progressEntries);
 
-  // Calculate meal time coverage (estimated from data)
-  const mealTimeScores = calculateMealTimeScores(progressEntries);
+  // Calculate meal time coverage using actual FoodConsumption data
+  const mealTimeScores = calculateMealTimeScores(progressEntries, foodConsumptions);
 
   // Calculate food variety
   const foodVariety = calculateFoodVariety(progressEntries);
@@ -145,21 +164,66 @@ function calculateSystemScores(progressEntries: any[]): SystemScore[] {
  * Calculate meal time coverage scores
  * Goal: Eat foods across 5 meal times throughout the day
  * 
- * Note: Current Progress model doesn't have mealTime field,
- * so we estimate based on time of day or distribute evenly
+ * Now uses actual FoodConsumption data with real mealTime information
  */
-function calculateMealTimeScores(progressEntries: any[]): MealTimeScore[] {
-  // For now, we'll estimate meal time distribution
-  // In future, this will use actual mealTime data from entries
-  
-  const mealTimes: Array<'BREAKFAST' | 'LUNCH' | 'DINNER' | 'SNACK'> = [
+function calculateMealTimeScores(progressEntries: any[], foodConsumptions?: any[]): MealTimeScore[] {
+  const mealTimes: Array<'BREAKFAST' | 'MORNING_SNACK' | 'LUNCH' | 'AFTERNOON_SNACK' | 'DINNER'> = [
     'BREAKFAST',
+    'MORNING_SNACK',
     'LUNCH', 
+    'AFTERNOON_SNACK',
     'DINNER',
-    'SNACK',
   ];
 
-  // Simple heuristic: if we have progress entries, assume at least 3 meal times covered
+  // If we have actual FoodConsumption data, use it for accurate counts
+  if (foodConsumptions && foodConsumptions.length > 0) {
+    // Group consumptions by meal time
+    const consumptionsByMeal = new Map<string, any[]>();
+    foodConsumptions.forEach((consumption) => {
+      const mealTime = consumption.mealTime;
+      if (!consumptionsByMeal.has(mealTime)) {
+        consumptionsByMeal.set(mealTime, []);
+      }
+      consumptionsByMeal.get(mealTime)!.push(consumption);
+    });
+
+    return mealTimes.map((mealTime) => {
+      const consumptions = consumptionsByMeal.get(mealTime) || [];
+      const hasFood = consumptions.length > 0;
+      
+      // Count unique foods for this meal time
+      const foodsSet = new Set<string>();
+      consumptions.forEach((consumption) => {
+        consumption.foodItems?.forEach((item: any) => {
+          foodsSet.add(item.name);
+        });
+      });
+      const foodCount = foodsSet.size;
+
+      // Get unique systems covered at this meal
+      const systemsSet = new Set<DefenseSystem>();
+      consumptions.forEach((consumption) => {
+        consumption.foodItems?.forEach((item: any) => {
+          item.defenseSystems?.forEach((ds: any) => {
+            systemsSet.add(ds.defenseSystem);
+          });
+        });
+      });
+      const systemsCovered = Array.from(systemsSet);
+
+      const score = hasFood ? 100 : 0;
+
+      return {
+        mealTime,
+        hasFood,
+        foodCount,
+        systemsCovered,
+        score,
+      };
+    });
+  }
+
+  // Fallback: Use old estimation method if no FoodConsumption data
   const hasAnyFood = progressEntries.length > 0;
   const estimatedMealsCovered = hasAnyFood ? Math.min(3, Math.ceil(progressEntries.length / 2)) : 0;
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { getUserLocalDateNoonUTC } from '@/lib/utils/timezone';
 
 /**
  * POST /api/recipes/[id]/log-meal
@@ -24,6 +25,14 @@ export async function POST(
     const { mealTime, date } = body;
 
     console.log('Log meal request:', { userId: session.user.id, recipeId, mealTime, date });
+
+    // Get user to access timezone
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { timezone: true },
+    });
+
+    const userTimezone = user?.timezone || 'UTC';
 
     // Validate mealTime
     const validMealTimes = ['BREAKFAST', 'LUNCH', 'DINNER', 'SNACK'];
@@ -61,18 +70,11 @@ export async function POST(
       typeof ing === 'string' ? ing : ing.name || ing.item || ''
     ).filter((name: string) => name.length > 0);
 
-    // Parse the date properly - create at noon UTC to avoid timezone shifting
-    let targetDate: Date;
-    if (date) {
-      // Parse the ISO string and extract just the date part
-      const dateObj = new Date(date);
-      // Create at noon UTC to ensure date doesn't shift when stored in DB
-      targetDate = new Date(Date.UTC(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate(), 12, 0, 0));
-    } else {
-      // Use current date at noon UTC
-      const now = new Date();
-      targetDate = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0));
-    }
+    // Use timezone-aware date handling
+    // Converts user's local date to noon UTC to prevent timezone shifting
+    const targetDate = date
+      ? getUserLocalDateNoonUTC(userTimezone, new Date(date))
+      : getUserLocalDateNoonUTC(userTimezone);
     
     console.log('Target date for logging:', targetDate.toISOString());
     console.log('Target date (date part only):', targetDate.toISOString().split('T')[0]);

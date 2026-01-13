@@ -17,35 +17,62 @@ export default function AIGeneratorPage() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [savedRecipeId, setSavedRecipeId] = useState<string | null>(null);
   const [savedRecipeName, setSavedRecipeName] = useState<string>('');
+  const [savedRecipeMealType, setSavedRecipeMealType] = useState<string | null>(null);
   const [fromRecommendation, setFromRecommendation] = useState(false);
   const [recommendationId, setRecommendationId] = useState<string | null>(null);
   const [initialParams, setInitialParams] = useState<any>(null);
 
   useEffect(() => {
+    console.log('🔷 AI-GENERATE PAGE - useEffect running');
+    console.log('🔷 searchParams:', Object.fromEntries(searchParams.entries()));
+    
     // Parse URL params from recommendation
     const from = searchParams.get('from');
     const recId = searchParams.get('recId');
     const targetSystem = searchParams.get('targetSystem');
     const dietaryRestrictions = searchParams.get('dietaryRestrictions');
     const preferredMealTime = searchParams.get('preferredMealTime');
+    const avoidIngredients = searchParams.get('avoidIngredients');
 
-    if (from === 'recommendation' && recId) {
+    console.log('🔷 Parsed params:', { from, recId, targetSystem, dietaryRestrictions, preferredMealTime, avoidIngredients });
+
+    if ((from === 'recommendation' || from === 'variety' || from === 'missed-meal') && recId) {
+      console.log('🔷 ✅ This is from a recommendation!');
       setFromRecommendation(true);
       setRecommendationId(recId);
 
       // Build initial params for generator
-      const params: any = {};
-      if (targetSystem) params.targetSystem = targetSystem as DefenseSystem;
+      const params: any = { from };
+      
+      if (targetSystem) {
+        params.targetSystem = targetSystem as DefenseSystem;
+        console.log('🔷 ✅ Setting targetSystem in params:', targetSystem);
+      }
       if (dietaryRestrictions) {
         try {
           params.dietaryRestrictions = JSON.parse(dietaryRestrictions);
         } catch {
           params.dietaryRestrictions = dietaryRestrictions.split(',');
         }
+        console.log('🔷 Setting dietaryRestrictions in params:', params.dietaryRestrictions);
       }
-      if (preferredMealTime) params.preferredMealTime = preferredMealTime;
+      if (preferredMealTime) {
+        params.preferredMealTime = preferredMealTime;
+        console.log('🔷 Setting preferredMealTime in params:', preferredMealTime);
+      }
+      if (avoidIngredients) {
+        try {
+          params.avoidIngredients = JSON.parse(avoidIngredients);
+        } catch {
+          params.avoidIngredients = avoidIngredients.split(',');
+        }
+        console.log('🔷 Setting avoidIngredients in params:', params.avoidIngredients);
+      }
 
+      console.log('🔷 Final initialParams being set:', params);
       setInitialParams(params);
+    } else {
+      console.log('🔷 ❌ Not from recommendation or missing recId');
     }
   }, [searchParams]);
 
@@ -73,6 +100,8 @@ export default function AIGeneratorPage() {
       console.log('Recipe saved successfully:', newRecipe);
       setSavedRecipeId(newRecipe.id);
       setSavedRecipeName(newRecipe.title || newRecipe.name || 'Your Recipe');
+      setSavedRecipeMealType(newRecipe.mealType || null);
+      console.log('✅ Saved recipe mealType:', newRecipe.mealType);
 
       // Update recommendation status to ACTED_ON (user created recipe)
       if (fromRecommendation && recommendationId) {
@@ -149,12 +178,25 @@ export default function AIGeneratorPage() {
 
     try {
       console.log('Logging recipe to meal planner:', savedRecipeId);
+      
+      // Determine meal time to use
+      // Priority: 1) Recipe's mealType, 2) Default to LUNCH
+      let mealTimeToUse = 'LUNCH'; // Default fallback
+      
+      if (savedRecipeMealType) {
+        // Convert mealType to uppercase enum (e.g., 'breakfast' -> 'BREAKFAST')
+        mealTimeToUse = savedRecipeMealType.toUpperCase();
+        console.log('✅ Using recipe mealType:', mealTimeToUse);
+      } else {
+        console.log('⚠️ No mealType in recipe, defaulting to LUNCH');
+      }
+      
       // Log the recipe to today's progress
       const response = await fetch(`/api/recipes/${savedRecipeId}/log-meal`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          mealTime: 'LUNCH', // Default to lunch, user can specify
+          mealTime: mealTimeToUse,
           date: new Date().toISOString(),
         }),
       });

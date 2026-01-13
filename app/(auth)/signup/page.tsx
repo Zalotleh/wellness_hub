@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Heart, Mail, Lock, User, Loader2, AlertCircle, CheckCircle2, Ruler, Globe } from 'lucide-react';
+import { detectUserTimezone } from '@/lib/utils/timezone';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -14,11 +15,21 @@ export default function SignupPage() {
     confirmPassword: '',
     measurementSystem: 'imperial' as 'imperial' | 'metric',
     language: 'en',
+    timezone: 'UTC', // Will be auto-detected
     termsAccepted: false,
   });
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [passwordStrength, setPasswordStrength] = useState(0);
+
+  // Auto-detect user's timezone on mount
+  useEffect(() => {
+    const detectedTimezone = detectUserTimezone();
+    setFormData((prev) => ({
+      ...prev,
+      timezone: detectedTimezone,
+    }));
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -113,6 +124,7 @@ export default function SignupPage() {
           confirmPassword: formData.confirmPassword,
           measurementSystem: formData.measurementSystem,
           language: formData.language,
+          timezone: formData.timezone, // Include detected timezone
           termsAccepted: formData.termsAccepted,
         }),
       });

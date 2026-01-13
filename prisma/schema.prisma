@@ -130,6 +130,8 @@ model Recipe {
   prepTime            String?
   cookTime            String?
   servings            Int?
+  mealType            String?           // breakfast, lunch, dinner, snack, dessert, etc.
+  dietaryRestrictions String[]          @default([]) // vegetarian, vegan, gluten-free, dairy-free, etc.
   defenseSystems      DefenseSystem[]
   nutrients           Json?
   imageUrl            String?

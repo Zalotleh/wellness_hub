@@ -106,13 +106,14 @@ export default function TimeFilter({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
-      {/* View Selector Tabs */}
-      <div className="flex items-center justify-between mb-6">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 mb-6">
+      {/* Combined View Selector and Date Navigation */}
+      <div className="flex items-center justify-between gap-4">
+        {/* View Selector Tabs */}
         <div className="flex items-center gap-2">
           <button
             onClick={() => onViewChange('daily')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`px-3 py-2 rounded-lg font-medium transition-colors text-sm ${
               view === 'daily'
                 ? 'bg-purple-600 text-white'
                 : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
@@ -122,7 +123,7 @@ export default function TimeFilter({
           </button>
           <button
             onClick={() => onViewChange('weekly')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`px-3 py-2 rounded-lg font-medium transition-colors text-sm ${
               view === 'weekly'
                 ? 'bg-purple-600 text-white'
                 : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
@@ -132,7 +133,7 @@ export default function TimeFilter({
           </button>
           <button
             onClick={() => onViewChange('monthly')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`px-3 py-2 rounded-lg font-medium transition-colors text-sm ${
               view === 'monthly'
                 ? 'bg-purple-600 text-white'
                 : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
@@ -142,13 +143,67 @@ export default function TimeFilter({
           </button>
         </div>
 
+        {/* Date Navigation */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handlePrevious}
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300"
+            aria-label="Previous"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+          </button>
+
+          <div className="text-center min-w-[200px]">
+            <div className="text-base font-semibold text-gray-900 dark:text-white">
+              {getDateRangeText()}
+            </div>
+          </div>
+
+          <button
+            onClick={handleNext}
+            disabled={isNextDisabled()}
+            className={`p-2 rounded-lg transition-colors ${
+              isNextDisabled()
+                ? 'opacity-40 cursor-not-allowed text-gray-400'
+                : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+            }`}
+            aria-label="Next"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </button>
+        </div>
+
         {/* Quick Actions */}
         <div className="relative">
           <button
             onClick={() => setShowDatePicker(!showDatePicker)}
-            className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-2"
+            className="px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-2 text-sm whitespace-nowrap"
           >
-            📅 Quick Select
+            📅 Quick
           </button>
           
           {/* Dropdown Menu */}
@@ -215,60 +270,6 @@ export default function TimeFilter({
             </div>
           )}
         </div>
-      </div>
-
-      {/* Date Navigation */}
-      <div className="flex items-center justify-between">
-        <button
-          onClick={handlePrevious}
-          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300"
-          aria-label="Previous"
-        >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-        </button>
-
-        <div className="text-center">
-          <div className="text-lg font-semibold text-gray-900 dark:text-white">
-            {getDateRangeText()}
-          </div>
-        </div>
-
-        <button
-          onClick={handleNext}
-          disabled={isNextDisabled()}
-          className={`p-2 rounded-lg transition-colors ${
-            isNextDisabled()
-              ? 'opacity-40 cursor-not-allowed text-gray-400'
-              : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
-          }`}
-          aria-label="Next"
-        >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
-        </button>
       </div>
     </div>
   );

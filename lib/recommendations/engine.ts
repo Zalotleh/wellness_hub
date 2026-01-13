@@ -39,6 +39,9 @@ export class RecommendationEngine {
     // Get existing recommendations
     const existingRecommendations = await this.getActiveRecommendations(userId);
     
+    // Auto-dismiss outdated recommendations
+    await this.dismissOutdatedRecommendations(userId, score, existingRecommendations);
+    
     // Build context
     const context: RecommendationContext = {
       userId,
@@ -110,22 +113,52 @@ export class RecommendationEngine {
       }
     }
     
-    // Priority 4: Multiple weak systems → meal plan
+    // Priority 4: Main meals first (BREAKFAST, LUNCH, DINNER)
+    if (recommendations.length < 3 && gaps.missedMeals.length > 0) {
+      const mainMeals = gaps.missedMeals.filter(mt => 
+        mt === 'BREAKFAST' || mt === 'LUNCH' || mt === 'DINNER'
+      );
+      for (const mealTime of mainMeals) {
+        if (recommendations.length >= 3) break;
+        const mealRec = this.createMissedMealRecommendation(mealTime, context);
+        if (mealRec) recommendations.push(mealRec);
+      }
+    }
+    
+    // Priority 5: Snacks (only after main meals are covered)
+    if (recommendations.length < 3 && gaps.missedMeals.length > 0) {
+      const snacks = gaps.missedMeals.filter(mt => 
+        mt === 'MORNING_SNACK' || mt === 'AFTERNOON_SNACK'
+      );
+      // Only recommend snacks if all main meals are logged
+      const mainMeals = ['BREAKFAST', 'LUNCH', 'DINNER'];
+      const loggedMainMeals = context.score.mealTimes
+        .filter(mt => mainMeals.includes(mt.mealTime) && mt.hasFood)
+        .length;
+      
+      if (loggedMainMeals === 3) { // All main meals logged
+        for (const mealTime of snacks) {
+          if (recommendations.length >= 3) break;
+          const mealRec = this.createMissedMealRecommendation(mealTime, context);
+          if (mealRec) recommendations.push(mealRec);
+        }
+      }
+    }
+    
+    // Priority 6: Multiple weak systems → meal plan
     if (recommendations.length < 3 && gaps.weakSystems.length >= 2) {
       const mealPlanRec = this.createMealPlanRecommendation(gaps.weakSystems, context);
       if (mealPlanRec) recommendations.push(mealPlanRec);
     }
     
-    // Priority 4: Variety improvement
+    // Priority 7: Variety improvement (only after meals are covered)
     if (recommendations.length < 3 && gaps.varietyScore < 60) {
-      const varietyRec = this.createVarietyRecommendation(context);
-      if (varietyRec) recommendations.push(varietyRec);
-    }
-    
-    // Priority 5: Missed meals
-    if (recommendations.length < 3 && gaps.missedMeals.length > 0) {
-      const mealRec = this.createMissedMealRecommendation(gaps.missedMeals[0], context);
-      if (mealRec) recommendations.push(mealRec);
+      // Only recommend variety if user has logged at least 2 meals
+      const mealsLogged = context.score.mealTimes.filter(mt => mt.hasFood).length;
+      if (mealsLogged >= 2) {
+        const varietyRec = this.createVarietyRecommendation(context);
+        if (varietyRec) recommendations.push(varietyRec);
+      }
     }
     
     return recommendations.slice(0, 3); // Max 3 per day
@@ -146,8 +179,9 @@ export class RecommendationEngine {
       return false;
     }
     
-    // Check time since last recommendation
-    if (context.userProfile.lastRecommendationDate) {
+    // Check time since last recommendation ONLY if there are pending recommendations
+    // If all previous recommendations are completed, allow immediate new generation
+    if (context.existingRecommendations.length > 0 && context.userProfile.lastRecommendationDate) {
       const hoursSince = (Date.now() - context.userProfile.lastRecommendationDate.getTime()) / (1000 * 60 * 60);
       if (hoursSince < MIN_HOURS_BETWEEN_RECOMMENDATIONS) {
         return false;
@@ -283,10 +317,11 @@ export class RecommendationEngine {
       title: 'Add More Variety',
       description: `You're eating similar foods (${repeatedFoodsList}). Let's diversify!`,
       reasoning: `Low variety score (${context.gaps.varietyScore}/100). Eating diverse foods maximizes nutrient intake.`,
-      actionLabel: 'Discover New Foods',
-      actionUrl: '/recipes?sort=variety',
+      actionLabel: 'Create New Recipe',
+      actionUrl: '/recipes/ai-generate',
       actionData: {
-        avoidFoods: context.gaps.repeatedFoods,
+        from: 'variety',
+        avoidIngredients: context.gaps.repeatedFoods,
         dietaryRestrictions: context.userProfile.dietaryRestrictions,
       },
       targetSystem: undefined,
@@ -310,19 +345,23 @@ export class RecommendationEngine {
       return null;
     }
     
+    const mealTimeLower = mealTime.toLowerCase();
+    
     return {
       id: crypto.randomUUID(),
       userId: context.userProfile.userId,
       type: 'WORKFLOW_STEP',
       priority: 'MEDIUM',
       status: 'PENDING',
-      title: `Log Your ${mealTime}`,
-      description: `${mealTime} not logged yet. Track it to maintain your streak!`,
-      reasoning: `Missed meal detected. Consistent tracking improves accuracy and insights.`,
-      actionLabel: 'Track Now',
-      actionUrl: '/progress',
+      title: `Plan Your ${mealTime}`,
+      description: `${mealTime} not logged yet. Create a healthy ${mealTimeLower} recipe!`,
+      reasoning: `Missed meal detected. Planning ahead makes healthy eating easier.`,
+      actionLabel: 'Create Recipe',
+      actionUrl: '/recipes/ai-generate',
       actionData: {
-        targetMealTime: mealTime,
+        from: 'missed-meal',
+        preferredMealTime: mealTime,
+        dietaryRestrictions: context.userProfile.dietaryRestrictions,
       },
       targetSystem: undefined,
       targetMealTime: mealTime,
@@ -369,6 +408,45 @@ export class RecommendationEngine {
     } catch (error) {
       // Handle case where table doesn't exist yet
       return [];
+    }
+  }
+
+  /**
+   * Auto-dismiss recommendations that are no longer relevant
+   */
+  private async dismissOutdatedRecommendations(
+    userId: string,
+    score: Score5x5x5,
+    recommendations: SmartRecommendation[]
+  ): Promise<void> {
+    const systemCompletionMap = new Map<DefenseSystem, number>();
+    score.defenseSystems.forEach(sys => {
+      systemCompletionMap.set(sys.system, sys.foodsConsumed);
+    });
+
+    for (const rec of recommendations) {
+      let shouldDismiss = false;
+      let dismissReason = '';
+
+      // Check if recommendation is for a system that's now complete
+      if (rec.type === 'RECIPE' && rec.targetSystem) {
+        const foodsConsumed = systemCompletionMap.get(rec.targetSystem) || 0;
+        if (foodsConsumed >= 5) {
+          shouldDismiss = true;
+          dismissReason = 'System goal achieved (5/5 foods)';
+        }
+      }
+
+      if (shouldDismiss) {
+        await prisma.recommendation.update({
+          where: { id: rec.id },
+          data: { 
+            status: 'DISMISSED',
+            dismissedAt: new Date(),
+          },
+        });
+        console.log(`✅ Auto-dismissed recommendation "${rec.title}" - ${dismissReason}`);
+      }
     }
   }
 }

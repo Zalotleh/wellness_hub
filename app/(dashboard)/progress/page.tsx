@@ -5,8 +5,7 @@ import { useProgress, useProgressStats } from '@/hooks/useProgress';
 import { useProgressDays } from '@/hooks/useProgressDays';
 import MealTimeTracker from '@/components/progress/MealTimeTracker';
 import SystemProgressChart from '@/components/progress/SystemProgressChart';
-import SmartRecommendations from '@/components/progress/SmartRecommendations';
-import FoodLogModal from '@/components/progress/FoodLogModal';
+import ShoppingListsSummary from '@/components/progress/ShoppingListsSummary';
 import OverallScoreCard from '@/components/progress/OverallScoreCard';
 import TimeFilter, { ViewType } from '@/components/progress/TimeFilter';
 import SmartActionsPanel from '@/components/progress/SmartActionsPanel';
@@ -23,9 +22,6 @@ import type { DefenseSystem } from '@/types';
 export default function ProgressPage() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [view, setView] = useState<ViewType>('daily');
-  const [showFoodLogModal, setShowFoodLogModal] = useState(false);
-  const [selectedMealTime, setSelectedMealTime] = useState<MealTime>('BREAKFAST');
-  const [selectedSystem, setSelectedSystem] = useState<DefenseSystem | null>(null);
   const [showInfo, setShowInfo] = useState(false);
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [loadingRecs, setLoadingRecs] = useState(true);
@@ -71,27 +67,12 @@ export default function ProgressPage() {
     await logFood(system, foods, notes);
   };
 
-  const handleMealTimeClick = (mealTime: MealTime) => {
-    setSelectedMealTime(mealTime);
-    setShowFoodLogModal(true);
-  };
-
   const handleFoodLogSuccess = async () => {
     // Refresh progress data after successful food log
     await refetchProgress();
     await fetchRecommendations();
     // Force all components to refresh by updating key
     setRefreshKey(prev => prev + 1);
-  };
-
-  const handleFoodRecommendationClick = (food: any) => {
-    // Open food log modal with the selected food pre-populated
-    setShowFoodLogModal(true);
-  };
-
-  const handleSystemClick = (system: DefenseSystem) => {
-    setSelectedSystem(system);
-    // Could scroll to system details or open a modal
   };
 
   // Check if user has any progress data by checking if any defense system has foods logged
@@ -210,6 +191,14 @@ export default function ProgressPage() {
                     )}
                   </ProgressErrorBoundary>
 
+                  {/* Meal Time Tracker */}
+                  <ProgressErrorBoundary>
+                    <MealTimeTracker
+                      date={selectedDate}
+                      key={`meals-${refreshKey}`}
+                    />
+                  </ProgressErrorBoundary>
+
               {/* Defense Systems Progress */}
               <ProgressErrorBoundary>
                 <SystemProgressChart 
@@ -218,21 +207,10 @@ export default function ProgressPage() {
                 />
               </ProgressErrorBoundary>
 
-              {/* Food Suggestions - Full Width */}
+              {/* Shopping Lists Summary */}
               <ProgressErrorBoundary>
-                <SmartRecommendations 
-                  date={selectedDate}
-                  onFoodClick={handleFoodRecommendationClick}
-                  key={`recommendations-${refreshKey}`}
-                />
-              </ProgressErrorBoundary>
-
-              {/* Meal Time Tracker */}
-              <ProgressErrorBoundary>
-                <MealTimeTracker
-                  date={selectedDate}
-                  onMealClick={handleMealTimeClick}
-                  key={`meals-${refreshKey}`}
+                <ShoppingListsSummary 
+                  key={`shopping-${refreshKey}`}
                 />
               </ProgressErrorBoundary>
                 </>
@@ -288,27 +266,6 @@ export default function ProgressPage() {
           )}
         </div>
       </div>
-
-      {/* Floating Action Button */}
-      {view === 'daily' && (
-        <button
-          onClick={() => setShowFoodLogModal(true)}
-          className="fixed bottom-8 right-8 w-16 h-16 bg-purple-600 hover:bg-purple-700 text-white rounded-full shadow-2xl flex items-center justify-center transition-all hover:scale-110 z-30 pointer-events-auto"
-          title="Log Food"
-          aria-label="Log Food"
-        >
-          <Plus className="w-8 h-8" />
-        </button>
-      )}
-
-      {/* Food Log Modal */}
-      <FoodLogModal
-        isOpen={showFoodLogModal}
-        defaultMealTime={selectedMealTime}
-        date={selectedDate}
-        onClose={() => setShowFoodLogModal(false)}
-        onSuccess={handleFoodLogSuccess}
-      />
 
       {/* Footer */}
       <Footer />

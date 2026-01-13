@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { DefenseSystem, RecipeFormData } from '@/types';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
-import { Sparkles, Loader2, Plus, X, Wand2, Info } from 'lucide-react';
+import { Sparkles, Loader2, Plus, X, Wand2, Info, ChevronDown } from 'lucide-react';
 import { getMeasurementPreference } from '@/lib/shopping/measurement-system';
 import { getSmartSuggestions } from '@/lib/suggestions/ingredient-suggestions';
 import {
@@ -18,9 +18,11 @@ interface AIRecipeGeneratorProps {
   onRecipeGenerated?: (recipe: RecipeFormData) => void;
   onSaveRecipe?: (recipe: RecipeFormData) => Promise<void>;
   initialParams?: {
+    from?: string;
     targetSystem?: DefenseSystem;
     dietaryRestrictions?: string[];
     preferredMealTime?: string;
+    avoidIngredients?: string[];
   };
   fromRecommendation?: boolean;
 }
@@ -59,6 +61,7 @@ export default function AIRecipeGenerator({
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [encouragementMsg, setEncouragementMsg] = useState<string | null>(null);
   const [ingredientSuggestions, setIngredientSuggestions] = useState<string[]>([]);
+  const [expandedSystems, setExpandedSystems] = useState<Record<string, boolean>>({});
 
   // Quality Score Calculator
   const calculateQualityScore = () => {
@@ -116,6 +119,15 @@ export default function AIRecipeGenerator({
     qualityPercentage >= 80 ? 'bg-green-500' :
     qualityPercentage >= 60 ? 'bg-yellow-500' :
     'bg-orange-500';
+
+  // Update meal type when initialParams changes (for missed-meal recommendations)
+  useEffect(() => {
+    if (initialParams?.preferredMealTime) {
+      const mealTimeLower = initialParams.preferredMealTime.toLowerCase();
+      console.log('🎯 Setting meal type from recommendation:', mealTimeLower);
+      setMealType(mealTimeLower);
+    }
+  }, [initialParams?.preferredMealTime]);
 
   // Get user's measurement preference on mount
   useEffect(() => {
@@ -467,6 +479,8 @@ export default function AIRecipeGenerator({
       prepTime: generatedRecipe.prepTime,
       cookTime: generatedRecipe.cookTime,
       servings: typeof generatedRecipe.servings === 'number' ? generatedRecipe.servings : undefined,
+      mealType: mealType !== 'any' ? mealType : undefined,
+      dietaryRestrictions: dietaryRestrictions.length > 0 ? dietaryRestrictions : [],
       nutrients: generatedRecipe.nutrients,
     };
     
@@ -545,6 +559,35 @@ export default function AIRecipeGenerator({
         </div>
       )}
 
+      {/* Context Banner for Recommendations */}
+      {initialParams?.from === 'variety' && (
+        <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-4 rounded-lg shadow-lg">
+          <div className="flex items-start gap-3">
+            <Sparkles className="w-5 h-5 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="font-semibold mb-1">Let's Add More Variety! 🌈</p>
+              <p className="text-sm text-white/90">
+                Try new ingredients you haven't used before. The AI will suggest creative recipes with diverse foods.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {initialParams?.from === 'missed-meal' && initialParams?.preferredMealTime && (
+        <div className="bg-gradient-to-r from-orange-500 to-yellow-500 text-white px-6 py-4 rounded-lg shadow-lg">
+          <div className="flex items-start gap-3">
+            <Info className="w-5 h-5 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="font-semibold mb-1">Plan Your {initialParams.preferredMealTime}! 🍳</p>
+              <p className="text-sm text-white/90">
+                Create a healthy {initialParams.preferredMealTime.toLowerCase()} recipe to keep your nutrition on track.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Personalized Tips (from history) */}
       {!showOnboarding && getPersonalizedTips().length > 0 && (
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
@@ -580,7 +623,7 @@ export default function AIRecipeGenerator({
                 Generating Your Recipe
               </h3>
               <p className="text-gray-600 dark:text-gray-200 mb-4">
-                AI is crafting a personalized {defenseSystems.length > 1 ? 'multi-system superfood' : DEFENSE_SYSTEMS[defenseSystems[0]].displayName} recipe...
+                AI is crafting a personalized {defenseSystems.length > 1 ? `multi-system superfood (${defenseSystems.map(s => DEFENSE_SYSTEMS[s].displayName).join(' + ')})` : DEFENSE_SYSTEMS[defenseSystems[0]].displayName} recipe...
               </p>
               
               {/* Progress indicators */}
@@ -766,16 +809,16 @@ export default function AIRecipeGenerator({
                       }
                     }}
                     disabled={isGenerating || isSaving}
-                    className={`relative p-4 border-2 rounded-lg text-left transition-all transform hover:scale-102 ${
+                    className={`relative p-4 border-2 rounded-lg text-left transition-all ${
                       isSelected
-                        ? `${info.borderColor} ${info.bgColor} scale-105 shadow-lg ring-2 ring-offset-2`
+                        ? 'bg-gradient-to-r from-purple-500 to-blue-500 border-purple-400 shadow-lg ring-2 ring-purple-400'
                         : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 hover:shadow-md'
                     } ${isGenerating || isSaving ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     {/* Selected Indicator */}
                     {isSelected && (
                       <div className="absolute top-2 right-2">
-                        <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                        <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
                           <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                           </svg>
@@ -785,16 +828,11 @@ export default function AIRecipeGenerator({
                     
                     <div className="flex items-center space-x-2 mb-2">
                       <span className="text-2xl">{info.icon}</span>
-                      <span className={`font-bold text-sm ${isSelected ? info.textColor : 'text-gray-800 dark:text-gray-200'}`}>
+                      <span className={`font-bold text-sm ${isSelected ? 'text-white' : 'text-gray-800 dark:text-gray-200'}`}>
                         {info.displayName}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">{info.description}</p>
-                    
-                    {/* Active Glow Effect */}
-                    {isSelected && (
-                      <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-purple-500/10 to-pink-500/10 animate-pulse"></div>
-                    )}
+                    <p className={`text-xs line-clamp-2 ${isSelected ? 'text-white/90' : 'text-gray-600 dark:text-gray-400'}`}>{info.description}</p>
                   </button>
                 );
               })}
@@ -806,40 +844,165 @@ export default function AIRecipeGenerator({
             )}
           </div>
 
-          {/* System Info */}
+          {/* Meal Type & Dietary Restrictions */}
+          <div className="space-y-6">
+            {/* Meal Type */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                Meal Type
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {mealTypes.map((type) => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => setMealType(type)}
+                    disabled={isGenerating || isSaving}
+                    className={`px-4 py-2 rounded-lg font-medium capitalize transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                      mealType === type
+                        ? 'bg-purple-500 text-white'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    {type}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Dietary Restrictions */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                Dietary Restrictions (optional)
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {commonRestrictions.map((restriction) => (
+                  <button
+                    key={restriction}
+                    type="button"
+                    onClick={() => toggleRestriction(restriction)}
+                    disabled={isGenerating || isSaving}
+                    className={`px-4 py-2 rounded-lg font-medium capitalize transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                      dietaryRestrictions.some(r => r.toLowerCase() === restriction.toLowerCase())
+                        ? 'bg-purple-500 text-white'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    {restriction}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Ingredient Selection Instructions */}
+          <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <Info className="w-5 h-5 text-purple-600 dark:text-purple-400 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-purple-900 dark:text-purple-200 mb-1">
+                  Choose Your Ingredients or Let AI Surprise You! 🎨
+                </p>
+                <p className="text-xs text-purple-700 dark:text-purple-300">
+                  Click the sections below to explore recommended foods for each defense system and add them to your recipe, or skip this step and trust our AI's creativity to craft something amazing for you!
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* System Info - Collapsible */}
           {defenseSystems.map((system) => {
             const systemInfo = DEFENSE_SYSTEMS[system];
+            const isExpanded = expandedSystems[system] || false;
+            const sortedFoods = [...systemInfo.keyFoods].sort((a, b) => a.localeCompare(b));
+            
             return (
-              <div key={system} className={`p-4 rounded-lg ${systemInfo.bgColor} dark:opacity-90`}>
-                <h4 className="font-bold text-sm mb-2 text-gray-900 dark:text-white">
-                  💡 Key Foods for {systemInfo.displayName}:
-                </h4>
-                <p className="text-xs text-gray-700 dark:text-gray-800 mb-3">
-                  Click any food to add it to your ingredients
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {systemInfo.keyFoods.map((food) => (
-                    <button
-                      key={food}
-                      type="button"
-                      onClick={() => {
-                        // Find first empty slot or add new
-                        const emptyIndex = ingredients.findIndex(i => !i.trim());
-                        if (emptyIndex >= 0) {
-                          handleIngredientChange(emptyIndex, food);
-                        } else {
-                          setIngredients([...ingredients, food]);
-                        }
-                      }}
-                      disabled={isGenerating || isSaving}
-                      className="text-xs bg-white dark:bg-white/90 dark:text-gray-900 px-3 py-1.5 rounded-full hover:bg-green-50 dark:hover:bg-green-100 hover:ring-2 hover:ring-green-500 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 font-medium"
-                      title={`Click to add ${food} to ingredients`}
-                    >
-                      <Plus className="w-3 h-3" />
-                      {food}
-                    </button>
-                  ))}
-                </div>
+              <div key={system} className={`border-2 rounded-lg overflow-hidden ${systemInfo.borderColor} dark:opacity-95`}>
+                <button
+                  type="button"
+                  onClick={() => setExpandedSystems({ ...expandedSystems, [system]: !isExpanded })}
+                  className={`w-full p-4 ${systemInfo.bgColor} flex items-center justify-between transition-all hover:opacity-90`}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{systemInfo.icon}</span>
+                    <div className="text-left">
+                      <h4 className="font-bold text-sm text-gray-900 dark:text-white">
+                        Key Foods for {systemInfo.displayName}
+                      </h4>
+                      <p className="text-xs text-gray-700 dark:text-gray-800">
+                        {sortedFoods.length} ingredients available
+                      </p>
+                    </div>
+                  </div>
+                  <ChevronDown className={`w-5 h-5 text-gray-700 dark:text-gray-800 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {isExpanded && (
+                  <div className="p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
+                      Click any food below to add it to your ingredients list
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {sortedFoods.map((food) => {
+                        const isSelected = ingredients.some(ing => ing.trim().toLowerCase() === food.toLowerCase());
+                        
+                        return (
+                          <div key={food} className="relative group">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (!isSelected) {
+                                  // Add ingredient
+                                  const emptyIndex = ingredients.findIndex(i => !i.trim());
+                                  if (emptyIndex >= 0) {
+                                    handleIngredientChange(emptyIndex, food);
+                                  } else {
+                                    setIngredients([...ingredients, food]);
+                                  }
+                                }
+                              }}
+                              disabled={isGenerating || isSaving}
+                              className={`text-xs px-3 py-1.5 rounded-full transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 font-medium ${
+                                isSelected
+                                  ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white ring-2 ring-purple-400 shadow-md'
+                                  : 'bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 border border-green-200 dark:border-green-700 text-gray-900 dark:text-gray-100 hover:from-green-100 hover:to-emerald-100 dark:hover:from-green-800/40 dark:hover:to-emerald-800/40 hover:ring-2 hover:ring-green-500'
+                              }`}
+                              title={isSelected ? `${food} is in your ingredients` : `Click to add ${food} to ingredients`}
+                            >
+                              {!isSelected && <Plus className="w-3 h-3" />}
+                              {food}
+                            </button>
+                            
+                            {/* Remove button for selected items */}
+                            {isSelected && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  // Remove ingredient
+                                  const index = ingredients.findIndex(ing => ing.trim().toLowerCase() === food.toLowerCase());
+                                  if (index >= 0) {
+                                    const newIngredients = [...ingredients];
+                                    newIngredients.splice(index, 1);
+                                    if (newIngredients.length === 0) {
+                                      setIngredients(['']);
+                                    } else {
+                                      setIngredients(newIngredients);
+                                    }
+                                  }
+                                }}
+                                disabled={isGenerating || isSaving}
+                                className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                                title={`Remove ${food} from ingredients`}
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}
@@ -941,54 +1104,6 @@ export default function AIRecipeGenerator({
                 </p>
               </div>
             )}
-          </div>
-
-          {/* Meal Type */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">
-              Meal Type
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {mealTypes.map((type) => (
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() => setMealType(type)}
-                  disabled={isGenerating || isSaving}
-                  className={`px-4 py-2 rounded-lg font-medium capitalize transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                    mealType === type
-                      ? 'bg-purple-500 text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
-                  }`}
-                >
-                  {type}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Dietary Restrictions */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">
-              Dietary Restrictions (optional)
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {commonRestrictions.map((restriction) => (
-                <button
-                  key={restriction}
-                  type="button"
-                  onClick={() => toggleRestriction(restriction)}
-                  disabled={isGenerating || isSaving}
-                  className={`px-4 py-2 rounded-lg font-medium capitalize transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                    dietaryRestrictions.some(r => r.toLowerCase() === restriction.toLowerCase())
-                      ? 'bg-purple-500 text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
-                  }`}
-                >
-                  {restriction}
-                </button>
-              ))}
-            </div>
           </div>
 
           {/* Error Message */}
@@ -1127,12 +1242,26 @@ export default function AIRecipeGenerator({
               <h4 className="text-xl font-bold text-gray-800 dark:text-white">
                 {generatedRecipe.title}
               </h4>
-              <div
-                className={`inline-flex items-center space-x-2 mt-2 px-3 py-1 rounded-full text-sm font-medium ${systemInfo.bgColor} ${systemInfo.textColor}`}
-              >
-                <span>{systemInfo.icon}</span>
-                <span>{systemInfo.displayName}</span>
-              </div>
+              {/* Defense System Badge - use defenseSystems from recipe or fallback */}
+              {(() => {
+                const recipeSystems = generatedRecipe.defenseSystems || defenseSystems;
+                return recipeSystems && recipeSystems.length > 0 ? (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {recipeSystems.map((system: DefenseSystem) => {
+                      const systemInfo = DEFENSE_SYSTEMS[system];
+                      return systemInfo ? (
+                        <div
+                          key={system}
+                          className={`inline-flex items-center space-x-2 px-3 py-1 rounded-full text-sm font-medium ${systemInfo.bgColor} ${systemInfo.textColor}`}
+                        >
+                          <span>{systemInfo.icon}</span>
+                          <span>{systemInfo.displayName}</span>
+                        </div>
+                      ) : null;
+                    })}
+                  </div>
+                ) : null;
+              })()}
             </div>
 
             {generatedRecipe.description && (
@@ -1155,10 +1284,19 @@ export default function AIRecipeGenerator({
               <h5 className="font-bold text-gray-800 dark:text-white mb-2">Ingredients</h5>
               <ul className="space-y-1">
                 {generatedRecipe.ingredients.map((ing, index) => (
-                  <li key={index} className="flex items-center space-x-2 text-sm text-gray-700 dark:text-gray-200">
-                    <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
-                    <span className="font-medium">{ing.quantity} {ing.unit}</span>
-                    <span>{ing.name}</span>
+                  <li key={index} className="flex items-start space-x-2 text-sm text-gray-700 dark:text-gray-200">
+                    <span className="w-2 h-2 bg-purple-500 rounded-full mt-1.5 flex-shrink-0"></span>
+                    <span>
+                      {ing.quantity && ing.unit ? (
+                        <>
+                          <span className="font-medium">{ing.quantity} {ing.unit}</span>
+                          {' '}
+                          <span>{ing.name}</span>
+                        </>
+                      ) : (
+                        <span>{ing.name}</span>
+                      )}
+                    </span>
                   </li>
                 ))}
               </ul>
