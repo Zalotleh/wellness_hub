@@ -9,6 +9,7 @@ import {
   getMissedMealTimes,
 } from '@/lib/utils/progress-calculator';
 import { recommendFoods } from '@/lib/utils/food-matcher';
+import { getUserLocalDateNoonUTC } from '@/lib/utils/timezone';
 
 /**
  * GET /api/progress/daily-summary
@@ -42,14 +43,20 @@ export async function GET(request: NextRequest) {
     const dateParam = searchParams.get('date');
     const includeRecommendations = searchParams.get('includeRecommendations') === 'true';
 
-    const targetDate = dateParam ? new Date(dateParam) : new Date();
+    // Get user's timezone (default to UTC if not set)
+    const userTimezone = user.timezone || 'UTC';
+
+    // Use timezone-aware date handling to prevent date shifting
+    const targetDate = dateParam 
+      ? getUserLocalDateNoonUTC(userTimezone, new Date(dateParam))
+      : getUserLocalDateNoonUTC(userTimezone);
     
-    // Set to start and end of day
+    // Set to start and end of day in UTC (since getUserLocalDateNoonUTC returns noon UTC)
     const startOfDay = new Date(targetDate);
-    startOfDay.setHours(0, 0, 0, 0);
+    startOfDay.setUTCHours(0, 0, 0, 0);
     
     const endOfDay = new Date(targetDate);
-    endOfDay.setHours(23, 59, 59, 999);
+    endOfDay.setUTCHours(23, 59, 59, 999);
 
     // Fetch all consumptions for the day
     const consumptions = await prisma.foodConsumption.findMany({
@@ -172,7 +179,14 @@ export async function GET(request: NextRequest) {
       recommendations: recommendations || undefined,
     };
 
-    return NextResponse.json(summary);
+    const response = NextResponse.json(summary);
+    
+    // Prevent caching to ensure fresh data for each date
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+
+    return response;
   } catch (error: any) {
     console.error('Error fetching daily summary:', error);
 

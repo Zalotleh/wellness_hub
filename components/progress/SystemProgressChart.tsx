@@ -61,10 +61,9 @@ export default function SystemProgressChart({
   }, [date]);
 
   useEffect(() => {
-    if (!propData) {
-      fetchData();
-    }
-  }, [propData, fetchData]);
+    // Always fetch data when date changes, ignore propData
+    fetchData();
+  }, [fetchData]);
 
   if (loading) {
     return (

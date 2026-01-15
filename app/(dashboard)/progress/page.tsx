@@ -12,6 +12,7 @@ import SmartActionsPanel from '@/components/progress/SmartActionsPanel';
 import { RecommendationCards } from '@/components/progress/RecommendationCards';
 import { ProgressErrorBoundary } from '@/components/progress/ProgressErrorBoundary';
 import EmptyStateWelcome from '@/components/progress/EmptyStateWelcome';
+import WeeklyProgressView from '@/components/progress/WeeklyProgressView';
 import { addDays, subDays, isToday, format } from 'date-fns';
 import { CalendarDays, ChevronLeft, ChevronRight, RefreshCw, Plus, Info } from 'lucide-react';
 import { TrendingUp, Calendar, BarChart3 } from 'lucide-react';
@@ -31,9 +32,15 @@ export default function ProgressPage() {
   const { stats, loading: statsLoading, refetch: refetchStats } = useProgressStats('week');
   const { daysWithProgress } = useProgressDays();
 
-  // Fetch recommendations
+  // Fetch recommendations only for today
   useEffect(() => {
-    fetchRecommendations();
+    if (isToday(selectedDate)) {
+      fetchRecommendations();
+    } else {
+      // Clear recommendations when viewing past dates
+      setRecommendations([]);
+      setLoadingRecs(false);
+    }
   }, [selectedDate]);
 
   // Refetch data when arriving from another page with updates
@@ -75,8 +82,14 @@ export default function ProgressPage() {
     setRefreshKey(prev => prev + 1);
   };
 
-  // Check if user has any progress data by checking if any defense system has foods logged
+  // Check if user has any progress data by checking if any defense system has foods logged TODAY
   const hasAnyProgress = dailyProgress && Object.values(dailyProgress.systems).some(system => system.count > 0);
+  
+  // Check if user has ANY historical progress (not just today)
+  const hasHistoricalProgress = daysWithProgress && daysWithProgress.length > 0;
+  
+  // Show welcome state only for truly new users (no historical data at all)
+  const shouldShowWelcome = !progressLoading && !hasAnyProgress && isToday(selectedDate) && !hasHistoricalProgress;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-green-50 dark:from-gray-900 dark:to-gray-800 py-8 px-4">
@@ -163,33 +176,37 @@ export default function ProgressPage() {
           {view === 'daily' && (
             <>
               {/* Show Welcome Screen for New Users */}
-              {!progressLoading && !hasAnyProgress && isToday(selectedDate) && (
+              {shouldShowWelcome && (
                 <EmptyStateWelcome />
               )}
 
               {/* Show Normal Progress Dashboard for Users with Data */}
-              {(hasAnyProgress || !isToday(selectedDate)) && (
+              {(hasAnyProgress || !isToday(selectedDate) || hasHistoricalProgress) && (
                 <>
-                  {/* Smart Actions Panel */}
-                  <ProgressErrorBoundary>
-                    <SmartActionsPanel date={selectedDate} />
-                  </ProgressErrorBoundary>
+                  {/* Smart Actions Panel - Only show for today */}
+                  {isToday(selectedDate) && (
+                    <ProgressErrorBoundary>
+                      <SmartActionsPanel date={selectedDate} />
+                    </ProgressErrorBoundary>
+                  )}
 
-                  {/* Recommendation Cards (replaces WorkflowProgressBar) */}
-                  <ProgressErrorBoundary>
-                    {!loadingRecs && (
-                      <RecommendationCards 
-                        recommendations={recommendations}
-                        onRefresh={fetchRecommendations}
-                      />
-                    )}
-                    {loadingRecs && (
-                      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-8 text-center">
-                        <div className="animate-spin w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full mx-auto"></div>
-                        <p className="text-gray-600 dark:text-gray-300 mt-4">Loading recommendations...</p>
-                      </div>
-                    )}
-                  </ProgressErrorBoundary>
+                  {/* Recommendation Cards - Only show for today */}
+                  {isToday(selectedDate) && (
+                    <ProgressErrorBoundary>
+                      {!loadingRecs && (
+                        <RecommendationCards 
+                          recommendations={recommendations}
+                          onRefresh={fetchRecommendations}
+                        />
+                      )}
+                      {loadingRecs && (
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-8 text-center">
+                          <div className="animate-spin w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full mx-auto"></div>
+                          <p className="text-gray-600 dark:text-gray-300 mt-4">Loading recommendations...</p>
+                        </div>
+                      )}
+                    </ProgressErrorBoundary>
+                  )}
 
                   {/* Meal Time Tracker */}
                   <ProgressErrorBoundary>
@@ -220,31 +237,12 @@ export default function ProgressPage() {
 
           {/* Weekly View */}
           {view === 'weekly' && (
-            <div>
-              {/* Refresh Button */}
-              <div className="mb-4 flex justify-end">
-                <button
-                  onClick={() => refetchStats()}
-                  className="flex items-center space-x-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300"
-                  disabled={statsLoading}
-                >
-                  <RefreshCw className={`w-4 h-4 ${statsLoading ? 'animate-spin' : ''}`} />
-                  <span>Refresh Data</span>
-                </button>
-              </div>
-
-              {statsLoading || !stats ? (
-                <div className="flex items-center justify-center py-20">
-                  <div className="animate-spin w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full"></div>
-                </div>
-              ) : (
-                <div className="text-center py-20">
-                  <div className="text-6xl mb-4">📊</div>
-                  <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">Weekly Charts</h3>
-                  <p className="text-gray-500 dark:text-gray-400">Coming soon - Weekly progress visualization</p>
-                </div>
-              )}
-            </div>
+            <ProgressErrorBoundary>
+              <WeeklyProgressView 
+                selectedWeek={selectedDate}
+                onWeekChange={setSelectedDate}
+              />
+            </ProgressErrorBoundary>
           )}
 
           {/* Monthly View */}
