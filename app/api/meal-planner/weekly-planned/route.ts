@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { getUserLocalDateNoonUTC } from '@/lib/utils/timezone';
-import { eachDayOfInterval } from 'date-fns';
+import { eachDayOfInterval, format } from 'date-fns';
 
 /**
  * GET /api/meal-planner/weekly-planned
@@ -104,12 +104,15 @@ export async function GET(request: NextRequest) {
     mealPlans.forEach((plan: any) => {
       plan.dailyMenus.forEach((menu: any) => {
         menu.meals.forEach((meal: any) => {
-          // Check if this meal has been logged
-          const isLogged = consumptions.some(
-            c => c.mealId === meal.id && 
-                 c.mealTime === meal.mealTime &&
-                 new Date(c.date).toDateString() === new Date(menu.date).toDateString()
-          );
+          const menuDateString = format(new Date(menu.date), 'yyyy-MM-dd');
+          
+          // Check if this meal has been logged using date string comparison
+          const isLogged = consumptions.some(c => {
+            const consumptionDateString = format(new Date(c.date), 'yyyy-MM-dd');
+            return c.mealId === meal.id && 
+                   c.mealTime === meal.mealType &&
+                   consumptionDateString === menuDateString;
+          });
 
           plannedMeals.push({
             id: meal.id,

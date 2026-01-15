@@ -1,0 +1,1911 @@
+{
+  "timestamp": "2026-01-15T15:58:30.267Z",
+  "userId": "cmk8sltuv00026lmf3ui32pge",
+  "foodConsumptions": [
+    {
+      "id": "cmkcoj3c1000dtbxs701ianl2",
+      "userId": "cmk8sltuv00026lmf3ui32pge",
+      "date": "2026-01-13T00:00:00.000Z",
+      "mealTime": "LUNCH",
+      "timeConsumed": "2026-01-13T14:20:52.506Z",
+      "sourceType": "RECIPE",
+      "recipeId": "cmkcoj1qh000btbxsihabjgsl",
+      "mealId": null,
+      "mealPlanId": null,
+      "servings": 1,
+      "notes": null,
+      "createdAt": "2026-01-13T14:20:52.510Z",
+      "updatedAt": "2026-01-13T14:20:52.510Z",
+      "foodItems": [
+        {
+          "id": "cmkfm768s0000ys2gha4yog3o",
+          "consumptionId": "cmkcoj3c1000dtbxs701ianl2",
+          "name": "rolled oats",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3l300006rjw8i9daiq2",
+              "foodItemId": "cmkfm768s0000ys2gha4yog3o",
+              "defenseSystem": "MICROBIOME",
+              "strength": "HIGH"
+            },
+            {
+              "id": "cmkfmu3l400016rjwkrf9pvje",
+              "foodItemId": "cmkfm768s0000ys2gha4yog3o",
+              "defenseSystem": "DNA_PROTECTION",
+              "strength": "MEDIUM"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm768s0001ys2gnaxzf9dg",
+          "consumptionId": "cmkcoj3c1000dtbxs701ianl2",
+          "name": "plain kefir",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3oe00026rjwl3t51zrh",
+              "foodItemId": "cmkfm768s0001ys2gnaxzf9dg",
+              "defenseSystem": "MICROBIOME",
+              "strength": "HIGH"
+            },
+            {
+              "id": "cmkfmu3oe00036rjwnylqirp0",
+              "foodItemId": "cmkfm768s0001ys2gnaxzf9dg",
+              "defenseSystem": "IMMUNITY",
+              "strength": "HIGH"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm768s0002ys2gal2ht1mn",
+          "consumptionId": "cmkcoj3c1000dtbxs701ianl2",
+          "name": "fresh blueberries",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3om00046rjw2ldn9gyv",
+              "foodItemId": "cmkfm768s0002ys2gal2ht1mn",
+              "defenseSystem": "ANGIOGENESIS",
+              "strength": "HIGH"
+            },
+            {
+              "id": "cmkfmu3om00056rjwpm010fvo",
+              "foodItemId": "cmkfm768s0002ys2gal2ht1mn",
+              "defenseSystem": "DNA_PROTECTION",
+              "strength": "HIGH"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm768s0003ys2gz2xqjmqh",
+          "consumptionId": "cmkcoj3c1000dtbxs701ianl2",
+          "name": "walnuts, chopped",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3ov00066rjw7wfybj9a",
+              "foodItemId": "cmkfm768s0003ys2gz2xqjmqh",
+              "defenseSystem": "DNA_PROTECTION",
+              "strength": "HIGH"
+            },
+            {
+              "id": "cmkfmu3ov00076rjwj41doti1",
+              "foodItemId": "cmkfm768s0003ys2gz2xqjmqh",
+              "defenseSystem": "ANGIOGENESIS",
+              "strength": "MEDIUM"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm768s0004ys2gvhdj30pj",
+          "consumptionId": "cmkcoj3c1000dtbxs701ianl2",
+          "name": "chia seeds",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmmrd300003m98mhc6qlvf",
+              "foodItemId": "cmkfm768s0004ys2gvhdj30pj",
+              "defenseSystem": "MICROBIOME",
+              "strength": "HIGH"
+            },
+            {
+              "id": "cmkfmmrd300013m981p9fqut8",
+              "foodItemId": "cmkfm768s0004ys2gvhdj30pj",
+              "defenseSystem": "ANGIOGENESIS",
+              "strength": "MEDIUM"
+            },
+            {
+              "id": "cmkfmmrd300023m98mf1npdrf",
+              "foodItemId": "cmkfm768s0004ys2gvhdj30pj",
+              "defenseSystem": "REGENERATION",
+              "strength": "MEDIUM"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm768s0005ys2gv7w6ypg0",
+          "consumptionId": "cmkcoj3c1000dtbxs701ianl2",
+          "name": "pure maple syrup",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3p400086rjw1tf7tnwd",
+              "foodItemId": "cmkfm768s0005ys2gv7w6ypg0",
+              "defenseSystem": "MICROBIOME",
+              "strength": "LOW"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm768s0006ys2g67bpjpsc",
+          "consumptionId": "cmkcoj3c1000dtbxs701ianl2",
+          "name": "ground cinnamon",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3pb00096rjwybjgwykf",
+              "foodItemId": "cmkfm768s0006ys2g67bpjpsc",
+              "defenseSystem": "DNA_PROTECTION",
+              "strength": "MEDIUM"
+            },
+            {
+              "id": "cmkfmu3pb000a6rjwlfe8mzi4",
+              "foodItemId": "cmkfm768s0006ys2g67bpjpsc",
+              "defenseSystem": "MICROBIOME",
+              "strength": "MEDIUM"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm768s0007ys2gxy89zozz",
+          "consumptionId": "cmkcoj3c1000dtbxs701ianl2",
+          "name": "vanilla extract",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3pg000b6rjw6690xaq6",
+              "foodItemId": "cmkfm768s0007ys2gxy89zozz",
+              "defenseSystem": "DNA_PROTECTION",
+              "strength": "LOW"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm768s0008ys2g713ds3e8",
+          "consumptionId": "cmkcoj3c1000dtbxs701ianl2",
+          "name": "plain Greek yogurt",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3pm000c6rjwyj5lwj1k",
+              "foodItemId": "cmkfm768s0008ys2g713ds3e8",
+              "defenseSystem": "MICROBIOME",
+              "strength": "HIGH"
+            },
+            {
+              "id": "cmkfmu3pm000d6rjw0xfizi3p",
+              "foodItemId": "cmkfm768s0008ys2g713ds3e8",
+              "defenseSystem": "IMMUNITY",
+              "strength": "MEDIUM"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm768s0009ys2gt7wrs2f5",
+          "consumptionId": "cmkcoj3c1000dtbxs701ianl2",
+          "name": "pomegranate seeds",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3pt000e6rjw88nsr1th",
+              "foodItemId": "cmkfm768s0009ys2gt7wrs2f5",
+              "defenseSystem": "ANGIOGENESIS",
+              "strength": "HIGH"
+            },
+            {
+              "id": "cmkfmu3pt000f6rjw2i6vvjjn",
+              "foodItemId": "cmkfm768s0009ys2gt7wrs2f5",
+              "defenseSystem": "DNA_PROTECTION",
+              "strength": "HIGH"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm768s000ays2gw7l4m1ib",
+          "consumptionId": "cmkcoj3c1000dtbxs701ianl2",
+          "name": "raw almonds, sliced",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3q1000g6rjwg96yiolj",
+              "foodItemId": "cmkfm768s000ays2gw7l4m1ib",
+              "defenseSystem": "DNA_PROTECTION",
+              "strength": "MEDIUM"
+            },
+            {
+              "id": "cmkfmu3q1000h6rjwn96brap6",
+              "foodItemId": "cmkfm768s000ays2gw7l4m1ib",
+              "defenseSystem": "ANGIOGENESIS",
+              "strength": "MEDIUM"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm768s000bys2gcfys0bxg",
+          "consumptionId": "cmkcoj3c1000dtbxs701ianl2",
+          "name": "ground flaxseeds",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3q6000i6rjwtg4d8xsi",
+              "foodItemId": "cmkfm768s000bys2gcfys0bxg",
+              "defenseSystem": "DNA_PROTECTION",
+              "strength": "HIGH"
+            },
+            {
+              "id": "cmkfmu3q6000j6rjwd67ypz08",
+              "foodItemId": "cmkfm768s000bys2gcfys0bxg",
+              "defenseSystem": "MICROBIOME",
+              "strength": "HIGH"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm768s000cys2g72fe6zr2",
+          "consumptionId": "cmkcoj3c1000dtbxs701ianl2",
+          "name": "sea salt",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": []
+        },
+        {
+          "id": "cmkfm768s000dys2gi3wv0arz",
+          "consumptionId": "cmkcoj3c1000dtbxs701ianl2",
+          "name": "fresh strawberries, sliced",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3q8000k6rjwhhdlp3xp",
+              "foodItemId": "cmkfm768s000dys2gi3wv0arz",
+              "defenseSystem": "ANGIOGENESIS",
+              "strength": "MEDIUM"
+            },
+            {
+              "id": "cmkfmu3q8000l6rjwjdw4w0ak",
+              "foodItemId": "cmkfm768s000dys2gi3wv0arz",
+              "defenseSystem": "DNA_PROTECTION",
+              "strength": "MEDIUM"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cmkcti0ye000hry18nauuoz45",
+      "userId": "cmk8sltuv00026lmf3ui32pge",
+      "date": "2026-01-13T00:00:00.000Z",
+      "mealTime": "DINNER",
+      "timeConsumed": "2026-01-13T16:40:00.851Z",
+      "sourceType": "RECIPE",
+      "recipeId": "cmkcthyhg000fry18sg295381",
+      "mealId": null,
+      "mealPlanId": null,
+      "servings": 1,
+      "notes": null,
+      "createdAt": "2026-01-13T16:40:00.854Z",
+      "updatedAt": "2026-01-13T16:40:00.854Z",
+      "foodItems": [
+        {
+          "id": "cmkfm7696000eys2ggehqalq8",
+          "consumptionId": "cmkcti0ye000hry18nauuoz45",
+          "name": "quinoa, uncooked",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3qc000m6rjwp5wgh3ar",
+              "foodItemId": "cmkfm7696000eys2ggehqalq8",
+              "defenseSystem": "DNA_PROTECTION",
+              "strength": "MEDIUM"
+            },
+            {
+              "id": "cmkfmu3qc000n6rjwrejkw0at",
+              "foodItemId": "cmkfm7696000eys2ggehqalq8",
+              "defenseSystem": "MICROBIOME",
+              "strength": "MEDIUM"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm7696000fys2g93cl5h1v",
+          "consumptionId": "cmkcti0ye000hry18nauuoz45",
+          "name": "vegetable broth",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": []
+        },
+        {
+          "id": "cmkfm7696000gys2gqtq2wtpy",
+          "consumptionId": "cmkcti0ye000hry18nauuoz45",
+          "name": "chickpeas, cooked or canned, drained and rinsed",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3qf000o6rjw1x1hyu8c",
+              "foodItemId": "cmkfm7696000gys2gqtq2wtpy",
+              "defenseSystem": "MICROBIOME",
+              "strength": "HIGH"
+            },
+            {
+              "id": "cmkfmu3qf000p6rjwf7635m2g",
+              "foodItemId": "cmkfm7696000gys2gqtq2wtpy",
+              "defenseSystem": "DNA_PROTECTION",
+              "strength": "MEDIUM"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm7696000hys2g6mgzm6u8",
+          "consumptionId": "cmkcti0ye000hry18nauuoz45",
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3qj000q6rjw4um8b7gj",
+              "foodItemId": "cmkfm7696000hys2g6mgzm6u8",
+              "defenseSystem": "ANGIOGENESIS",
+              "strength": "HIGH"
+            },
+            {
+              "id": "cmkfmu3qj000r6rjwbc1jf3az",
+              "foodItemId": "cmkfm7696000hys2g6mgzm6u8",
+              "defenseSystem": "DNA_PROTECTION",
+              "strength": "MEDIUM"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm7696000iys2g9uq13rv3",
+          "consumptionId": "cmkcti0ye000hry18nauuoz45",
+          "name": "smoked paprika",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3qm000s6rjw29loi7kt",
+              "foodItemId": "cmkfm7696000iys2g9uq13rv3",
+              "defenseSystem": "ANGIOGENESIS",
+              "strength": "LOW"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm7696000jys2g1z9b8say",
+          "consumptionId": "cmkcti0ye000hry18nauuoz45",
+          "name": "ground cumin",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3qq000t6rjww4h0zagg",
+              "foodItemId": "cmkfm7696000jys2g1z9b8say",
+              "defenseSystem": "MICROBIOME",
+              "strength": "MEDIUM"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm7696000kys2gu3a0xio1",
+          "consumptionId": "cmkcti0ye000hry18nauuoz45",
+          "name": "sea salt",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": []
+        },
+        {
+          "id": "cmkfm7696000lys2gph9d13qt",
+          "consumptionId": "cmkcti0ye000hry18nauuoz45",
+          "name": "black pepper",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": []
+        },
+        {
+          "id": "cmkfm7696000mys2g348n9cws",
+          "consumptionId": "cmkcti0ye000hry18nauuoz45",
+          "name": "sauerkraut, drained",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3qt000u6rjwjsuusoqb",
+              "foodItemId": "cmkfm7696000mys2g348n9cws",
+              "defenseSystem": "MICROBIOME",
+              "strength": "HIGH"
+            },
+            {
+              "id": "cmkfmu3qt000v6rjwdzoj9o3p",
+              "foodItemId": "cmkfm7696000mys2g348n9cws",
+              "defenseSystem": "IMMUNITY",
+              "strength": "HIGH"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm7696000nys2g9oofarsu",
+          "consumptionId": "cmkcti0ye000hry18nauuoz45",
+          "name": "kimchi",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmmre900033m98rmpnx6fd",
+              "foodItemId": "cmkfm7696000nys2g9oofarsu",
+              "defenseSystem": "IMMUNITY",
+              "strength": "HIGH"
+            },
+            {
+              "id": "cmkfmmre900043m98q0ub20wn",
+              "foodItemId": "cmkfm7696000nys2g9oofarsu",
+              "defenseSystem": "MICROBIOME",
+              "strength": "HIGH"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm7696000oys2g0jtl35c6",
+          "consumptionId": "cmkcti0ye000hry18nauuoz45",
+          "name": "cucumber, sliced",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3qz000w6rjwmlkj80lx",
+              "foodItemId": "cmkfm7696000oys2g0jtl35c6",
+              "defenseSystem": "MICROBIOME",
+              "strength": "LOW"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm7696000pys2gom88jafl",
+          "consumptionId": "cmkcti0ye000hry18nauuoz45",
+          "name": "cherry tomatoes, halved",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3r6000x6rjwqqlnm4ob",
+              "foodItemId": "cmkfm7696000pys2gom88jafl",
+              "defenseSystem": "ANGIOGENESIS",
+              "strength": "MEDIUM"
+            },
+            {
+              "id": "cmkfmu3r6000y6rjwd258ulaw",
+              "foodItemId": "cmkfm7696000pys2gom88jafl",
+              "defenseSystem": "DNA_PROTECTION",
+              "strength": "MEDIUM"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm7696000qys2ghyzi3id5",
+          "consumptionId": "cmkcti0ye000hry18nauuoz45",
+          "name": "dandelion greens or mixed greens",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3r9000z6rjwrqypqqox",
+              "foodItemId": "cmkfm7696000qys2ghyzi3id5",
+              "defenseSystem": "DNA_PROTECTION",
+              "strength": "MEDIUM"
+            },
+            {
+              "id": "cmkfmu3r900106rjwuw859324",
+              "foodItemId": "cmkfm7696000qys2ghyzi3id5",
+              "defenseSystem": "MICROBIOME",
+              "strength": "MEDIUM"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm7696000rys2giu0qv2u4",
+          "consumptionId": "cmkcti0ye000hry18nauuoz45",
+          "name": "avocados, sliced",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3rc00116rjw5w4b0mei",
+              "foodItemId": "cmkfm7696000rys2giu0qv2u4",
+              "defenseSystem": "DNA_PROTECTION",
+              "strength": "MEDIUM"
+            },
+            {
+              "id": "cmkfmu3rc00126rjw9b8dfjze",
+              "foodItemId": "cmkfm7696000rys2giu0qv2u4",
+              "defenseSystem": "ANGIOGENESIS",
+              "strength": "MEDIUM"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm7696000sys2gob640b74",
+          "consumptionId": "cmkcti0ye000hry18nauuoz45",
+          "name": "flaxseeds",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmmrei00053m987tge6bwp",
+              "foodItemId": "cmkfm7696000sys2gob640b74",
+              "defenseSystem": "MICROBIOME",
+              "strength": "HIGH"
+            },
+            {
+              "id": "cmkfmmrei00063m984tru7b3x",
+              "foodItemId": "cmkfm7696000sys2gob640b74",
+              "defenseSystem": "ANGIOGENESIS",
+              "strength": "MEDIUM"
+            },
+            {
+              "id": "cmkfmmrei00073m98v9lkit45",
+              "foodItemId": "cmkfm7696000sys2gob640b74",
+              "defenseSystem": "REGENERATION",
+              "strength": "MEDIUM"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm7696000tys2g945wsun0",
+          "consumptionId": "cmkcti0ye000hry18nauuoz45",
+          "name": "garlic, minced",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3rg00136rjwjwpdjgk5",
+              "foodItemId": "cmkfm7696000tys2g945wsun0",
+              "defenseSystem": "IMMUNITY",
+              "strength": "HIGH"
+            },
+            {
+              "id": "cmkfmu3rg00146rjw30z6eir8",
+              "foodItemId": "cmkfm7696000tys2g945wsun0",
+              "defenseSystem": "ANGIOGENESIS",
+              "strength": "MEDIUM"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm7696000uys2gprwrampw",
+          "consumptionId": "cmkcti0ye000hry18nauuoz45",
+          "name": "lemon, juiced",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3rj00156rjw35zlhot1",
+              "foodItemId": "cmkfm7696000uys2gprwrampw",
+              "defenseSystem": "DNA_PROTECTION",
+              "strength": "MEDIUM"
+            },
+            {
+              "id": "cmkfmu3rj00166rjwmfp632xy",
+              "foodItemId": "cmkfm7696000uys2gprwrampw",
+              "defenseSystem": "IMMUNITY",
+              "strength": "MEDIUM"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm7696000vys2g8v68m9wl",
+          "consumptionId": "cmkcti0ye000hry18nauuoz45",
+          "name": "tahini",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3rn00176rjwosxfc2q5",
+              "foodItemId": "cmkfm7696000vys2g8v68m9wl",
+              "defenseSystem": "DNA_PROTECTION",
+              "strength": "MEDIUM"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm7696000wys2gdwqhieex",
+          "consumptionId": "cmkcti0ye000hry18nauuoz45",
+          "name": "white miso paste",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3rq00186rjw0wqybzun",
+              "foodItemId": "cmkfm7696000wys2gdwqhieex",
+              "defenseSystem": "MICROBIOME",
+              "strength": "HIGH"
+            },
+            {
+              "id": "cmkfmu3rq00196rjwdsjsp2gp",
+              "foodItemId": "cmkfm7696000wys2gdwqhieex",
+              "defenseSystem": "IMMUNITY",
+              "strength": "MEDIUM"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm7696000xys2ggtx3e17i",
+          "consumptionId": "cmkcti0ye000hry18nauuoz45",
+          "name": "apple cider vinegar",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": []
+        },
+        {
+          "id": "cmkfm7696000yys2g7vmbrd74",
+          "consumptionId": "cmkcti0ye000hry18nauuoz45",
+          "name": "water",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": []
+        },
+        {
+          "id": "cmkfm7696000zys2gxnh9vttp",
+          "consumptionId": "cmkcti0ye000hry18nauuoz45",
+          "name": "spring onions, sliced",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3rv001a6rjw5cjyz6re",
+              "foodItemId": "cmkfm7696000zys2gxnh9vttp",
+              "defenseSystem": "IMMUNITY",
+              "strength": "MEDIUM"
+            },
+            {
+              "id": "cmkfmu3rv001b6rjwkmg6ruwv",
+              "foodItemId": "cmkfm7696000zys2gxnh9vttp",
+              "defenseSystem": "MICROBIOME",
+              "strength": "MEDIUM"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm76960010ys2g1g3ygrp4",
+          "consumptionId": "cmkcti0ye000hry18nauuoz45",
+          "name": "aged cheddar cheese, crumbled",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3s1001c6rjwlmqdvuur",
+              "foodItemId": "cmkfm76960010ys2g1g3ygrp4",
+              "defenseSystem": "MICROBIOME",
+              "strength": "MEDIUM"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm76960011ys2gzw6xf6zc",
+          "consumptionId": "cmkcti0ye000hry18nauuoz45",
+          "name": "extra virgin olive oil for drizzling",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3s7001d6rjwlgr6986e",
+              "foodItemId": "cmkfm76960011ys2gzw6xf6zc",
+              "defenseSystem": "ANGIOGENESIS",
+              "strength": "HIGH"
+            },
+            {
+              "id": "cmkfmu3s7001e6rjwch4hc9a6",
+              "foodItemId": "cmkfm76960011ys2gzw6xf6zc",
+              "defenseSystem": "DNA_PROTECTION",
+              "strength": "MEDIUM"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cmkctlnjy0023ry18ekfx3sdp",
+      "userId": "cmk8sltuv00026lmf3ui32pge",
+      "date": "2026-01-13T00:00:00.000Z",
+      "mealTime": "BREAKFAST",
+      "timeConsumed": "2026-01-13T16:42:50.108Z",
+      "sourceType": "RECIPE",
+      "recipeId": "cmkctlko00021ry189s6ijomz",
+      "mealId": null,
+      "mealPlanId": null,
+      "servings": 1,
+      "notes": null,
+      "createdAt": "2026-01-13T16:42:50.110Z",
+      "updatedAt": "2026-01-13T16:42:50.110Z",
+      "foodItems": [
+        {
+          "id": "cmkfm769l0012ys2g6ecwj209",
+          "consumptionId": "cmkctlnjy0023ry18ekfx3sdp",
+          "name": "sourdough bread",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3sc001f6rjw218h788n",
+              "foodItemId": "cmkfm769l0012ys2g6ecwj209",
+              "defenseSystem": "MICROBIOME",
+              "strength": "MEDIUM"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm769l0013ys2gj4mv859a",
+          "consumptionId": "cmkctlnjy0023ry18ekfx3sdp",
+          "name": "mixed mushrooms (shiitake, oyster, and cremini)",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3sl001g6rjw8f0ug8p3",
+              "foodItemId": "cmkfm769l0013ys2gj4mv859a",
+              "defenseSystem": "IMMUNITY",
+              "strength": "HIGH"
+            },
+            {
+              "id": "cmkfmu3sl001h6rjwn1bhdvpj",
+              "foodItemId": "cmkfm769l0013ys2gj4mv859a",
+              "defenseSystem": "ANGIOGENESIS",
+              "strength": "MEDIUM"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm769l0014ys2gdufiv3qo",
+          "consumptionId": "cmkctlnjy0023ry18ekfx3sdp",
+          "name": "white miso paste",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3sq001i6rjw7zbjh1tn",
+              "foodItemId": "cmkfm769l0014ys2gdufiv3qo",
+              "defenseSystem": "MICROBIOME",
+              "strength": "HIGH"
+            },
+            {
+              "id": "cmkfmu3sq001j6rjw3dtq1aas",
+              "foodItemId": "cmkfm769l0014ys2gdufiv3qo",
+              "defenseSystem": "IMMUNITY",
+              "strength": "MEDIUM"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm769l0015ys2g03fo8u0h",
+          "consumptionId": "cmkctlnjy0023ry18ekfx3sdp",
+          "name": "garlic, minced",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3st001k6rjwvupygile",
+              "foodItemId": "cmkfm769l0015ys2g03fo8u0h",
+              "defenseSystem": "IMMUNITY",
+              "strength": "HIGH"
+            },
+            {
+              "id": "cmkfmu3st001l6rjwoigkmjfp",
+              "foodItemId": "cmkfm769l0015ys2g03fo8u0h",
+              "defenseSystem": "ANGIOGENESIS",
+              "strength": "MEDIUM"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm769l0016ys2gy4pvtr8k",
+          "consumptionId": "cmkctlnjy0023ry18ekfx3sdp",
+          "name": "olive oil",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3sx001m6rjwfup9akda",
+              "foodItemId": "cmkfm769l0016ys2gy4pvtr8k",
+              "defenseSystem": "ANGIOGENESIS",
+              "strength": "HIGH"
+            },
+            {
+              "id": "cmkfmu3sx001n6rjw54oz6zys",
+              "foodItemId": "cmkfm769l0016ys2gy4pvtr8k",
+              "defenseSystem": "DNA_PROTECTION",
+              "strength": "MEDIUM"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm769l0017ys2gyoz5oos5",
+          "consumptionId": "cmkctlnjy0023ry18ekfx3sdp",
+          "name": "sauerkraut, drained",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3t0001o6rjw0hhzcxat",
+              "foodItemId": "cmkfm769l0017ys2gyoz5oos5",
+              "defenseSystem": "MICROBIOME",
+              "strength": "HIGH"
+            },
+            {
+              "id": "cmkfmu3t0001p6rjw6fcm9g5i",
+              "foodItemId": "cmkfm769l0017ys2gyoz5oos5",
+              "defenseSystem": "IMMUNITY",
+              "strength": "HIGH"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm769l0018ys2g9o3dviin",
+          "consumptionId": "cmkctlnjy0023ry18ekfx3sdp",
+          "name": "kimchi, chopped",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3t3001q6rjw2m8sl24h",
+              "foodItemId": "cmkfm769l0018ys2g9o3dviin",
+              "defenseSystem": "MICROBIOME",
+              "strength": "HIGH"
+            },
+            {
+              "id": "cmkfmu3t3001r6rjwan5kv5ri",
+              "foodItemId": "cmkfm769l0018ys2g9o3dviin",
+              "defenseSystem": "IMMUNITY",
+              "strength": "HIGH"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm769l0019ys2gieykigii",
+          "consumptionId": "cmkctlnjy0023ry18ekfx3sdp",
+          "name": "banana, sliced",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3t8001s6rjwpei3j2gb",
+              "foodItemId": "cmkfm769l0019ys2gieykigii",
+              "defenseSystem": "MICROBIOME",
+              "strength": "MEDIUM"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm769l001ays2gi5npvuso",
+          "consumptionId": "cmkctlnjy0023ry18ekfx3sdp",
+          "name": "plain Greek yogurt",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3tb001t6rjwdd2chhq8",
+              "foodItemId": "cmkfm769l001ays2gi5npvuso",
+              "defenseSystem": "MICROBIOME",
+              "strength": "HIGH"
+            },
+            {
+              "id": "cmkfmu3tb001u6rjwjldbvsfk",
+              "foodItemId": "cmkfm769l001ays2gi5npvuso",
+              "defenseSystem": "IMMUNITY",
+              "strength": "MEDIUM"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm769m001bys2g76m6df3u",
+          "consumptionId": "cmkctlnjy0023ry18ekfx3sdp",
+          "name": "honey",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3tg001v6rjw2h1quwnb",
+              "foodItemId": "cmkfm769m001bys2g76m6df3u",
+              "defenseSystem": "IMMUNITY",
+              "strength": "MEDIUM"
+            },
+            {
+              "id": "cmkfmu3tg001w6rjw1edpg83a",
+              "foodItemId": "cmkfm769m001bys2g76m6df3u",
+              "defenseSystem": "MICROBIOME",
+              "strength": "LOW"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm769m001cys2g3d35stc5",
+          "consumptionId": "cmkctlnjy0023ry18ekfx3sdp",
+          "name": "fresh lemon juice",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3tj001x6rjwqhz7zxpr",
+              "foodItemId": "cmkfm769m001cys2g3d35stc5",
+              "defenseSystem": "DNA_PROTECTION",
+              "strength": "MEDIUM"
+            },
+            {
+              "id": "cmkfmu3tj001y6rjw5786xuc4",
+              "foodItemId": "cmkfm769m001cys2g3d35stc5",
+              "defenseSystem": "IMMUNITY",
+              "strength": "MEDIUM"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm769m001dys2grwxh00a6",
+          "consumptionId": "cmkctlnjy0023ry18ekfx3sdp",
+          "name": "scallion, thinly sliced",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3tn001z6rjwyuf6197l",
+              "foodItemId": "cmkfm769m001dys2grwxh00a6",
+              "defenseSystem": "IMMUNITY",
+              "strength": "MEDIUM"
+            },
+            {
+              "id": "cmkfmu3tn00206rjwzrd22d5z",
+              "foodItemId": "cmkfm769m001dys2grwxh00a6",
+              "defenseSystem": "MICROBIOME",
+              "strength": "MEDIUM"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm769m001eys2gvmgpoznu",
+          "consumptionId": "cmkctlnjy0023ry18ekfx3sdp",
+          "name": "fresh chives, chopped",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": []
+        },
+        {
+          "id": "cmkfm769m001fys2gdb0c637k",
+          "consumptionId": "cmkctlnjy0023ry18ekfx3sdp",
+          "name": "black sesame seeds",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": [
+            {
+              "id": "cmkfmu3tq00216rjwwryifs6s",
+              "foodItemId": "cmkfm769m001fys2gdb0c637k",
+              "defenseSystem": "DNA_PROTECTION",
+              "strength": "MEDIUM"
+            },
+            {
+              "id": "cmkfmu3tq00226rjw39lk4g4a",
+              "foodItemId": "cmkfm769m001fys2gdb0c637k",
+              "defenseSystem": "REGENERATION",
+              "strength": "MEDIUM"
+            }
+          ]
+        },
+        {
+          "id": "cmkfm769m001gys2gyuphpvm2",
+          "consumptionId": "cmkctlnjy0023ry18ekfx3sdp",
+          "name": "pinch sea salt",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": []
+        },
+        {
+          "id": "cmkfm769m001hys2gd98r65w5",
+          "consumptionId": "cmkctlnjy0023ry18ekfx3sdp",
+          "name": "pinch black pepper",
+          "quantity": 1,
+          "unit": "serving",
+          "defenseSystems": []
+        }
+      ]
+    }
+  ],
+  "mealPlans": [],
+  "dailyProgressScores": [
+    {
+      "id": "cmkf7okic0005ebm95m1x85nu",
+      "userId": "cmk8sltuv00026lmf3ui32pge",
+      "date": "2026-01-12T00:00:00.000Z",
+      "overallScore": 0,
+      "defenseSystemScore": 0,
+      "mealTimeScore": 0,
+      "foodVarietyScore": 0,
+      "angiogenesisCount": 0,
+      "regenerationCount": 0,
+      "microbiomeCount": 0,
+      "dnaProtectionCount": 0,
+      "immunityCount": 0,
+      "breakfastSystems": 0,
+      "lunchSystems": 0,
+      "dinnerSystems": 0,
+      "snackSystems": 0,
+      "uniqueFoodsCount": 0,
+      "totalServings": 0,
+      "gaps": {
+        "missedSystems": [
+          "ANGIOGENESIS",
+          "REGENERATION",
+          "MICROBIOME",
+          "DNA_PROTECTION",
+          "IMMUNITY"
+        ],
+        "missedMealTimes": [
+          "BREAKFAST",
+          "MORNING_SNACK",
+          "LUNCH",
+          "AFTERNOON_SNACK",
+          "DINNER"
+        ]
+      },
+      "achievements": [],
+      "createdAt": "2026-01-15T08:52:33.108Z",
+      "updatedAt": "2026-01-15T15:40:01.560Z"
+    },
+    {
+      "id": "cmkf6uo4n000116efur6jxphx",
+      "userId": "cmk8sltuv00026lmf3ui32pge",
+      "date": "2026-01-14T00:00:00.000Z",
+      "overallScore": 0,
+      "defenseSystemScore": 0,
+      "mealTimeScore": 0,
+      "foodVarietyScore": 0,
+      "angiogenesisCount": 0,
+      "regenerationCount": 0,
+      "microbiomeCount": 0,
+      "dnaProtectionCount": 0,
+      "immunityCount": 0,
+      "breakfastSystems": 0,
+      "lunchSystems": 0,
+      "dinnerSystems": 0,
+      "snackSystems": 0,
+      "uniqueFoodsCount": 0,
+      "totalServings": 0,
+      "gaps": {
+        "missedSystems": [
+          "ANGIOGENESIS",
+          "REGENERATION",
+          "MICROBIOME",
+          "DNA_PROTECTION",
+          "IMMUNITY"
+        ],
+        "missedMealTimes": [
+          "BREAKFAST",
+          "MORNING_SNACK",
+          "LUNCH",
+          "AFTERNOON_SNACK",
+          "DINNER"
+        ]
+      },
+      "achievements": [],
+      "createdAt": "2026-01-15T08:29:18.119Z",
+      "updatedAt": "2026-01-15T15:40:25.301Z"
+    },
+    {
+      "id": "cmkcoj50y002rtbxsz150v9ru",
+      "userId": "cmk8sltuv00026lmf3ui32pge",
+      "date": "2026-01-13T00:00:00.000Z",
+      "overallScore": 18,
+      "defenseSystemScore": 0,
+      "mealTimeScore": 60,
+      "foodVarietyScore": 0,
+      "angiogenesisCount": 0,
+      "regenerationCount": 0,
+      "microbiomeCount": 0,
+      "dnaProtectionCount": 0,
+      "immunityCount": 0,
+      "breakfastSystems": 0,
+      "lunchSystems": 0,
+      "dinnerSystems": 0,
+      "snackSystems": 0,
+      "uniqueFoodsCount": 0,
+      "totalServings": 0,
+      "gaps": {
+        "missedSystems": [
+          "ANGIOGENESIS",
+          "REGENERATION",
+          "MICROBIOME",
+          "DNA_PROTECTION",
+          "IMMUNITY"
+        ],
+        "missedMealTimes": [
+          "MORNING_SNACK",
+          "AFTERNOON_SNACK"
+        ]
+      },
+      "achievements": [],
+      "createdAt": "2026-01-13T14:20:54.706Z",
+      "updatedAt": "2026-01-15T15:41:44.181Z"
+    }
+  ],
+  "pantryItems": [],
+  "shoppingLists": [
+    {
+      "id": "cmkcywj1w0009zij3u4u29qfm",
+      "userId": "cmk8sltuv00026lmf3ui32pge",
+      "mealPlanId": null,
+      "title": "Shopping List - Savory Miso Mushroom Sourdough Toast with Fermented Vegetable Salad",
+      "items": "[{\"ingredient\":\"olive oil\",\"quantity\":15,\"unit\":\"ml\",\"category\":\"Condiments & Spices\",\"checked\":false,\"estimatedCost\":0,\"retailQuantity\":1,\"retailUnit\":\"package\",\"retailDescription\":\"1 × 8 fl oz container\"},{\"ingredient\":\"pinch sea salt\",\"quantity\":1,\"unit\":\"as needed\",\"category\":\"Condiments & Spices\",\"checked\":false,\"estimatedCost\":0,\"retailQuantity\":1,\"retailUnit\":\"oz\",\"retailDescription\":\"1 oz\"},{\"ingredient\":\"plain Greek yogurt\",\"quantity\":150,\"unit\":\"g\",\"category\":\"Dairy & Eggs\",\"checked\":false,\"estimatedCost\":0,\"retailQuantity\":5.29,\"retailUnit\":\"oz\",\"retailDescription\":\"5.29 oz\"},{\"ingredient\":\"banana, sliced\",\"quantity\":1,\"unit\":\"piece\",\"category\":\"Fruits\",\"checked\":false,\"estimatedCost\":0,\"retailQuantity\":1,\"retailUnit\":\"count\",\"retailDescription\":\"1 banana, sliced\"},{\"ingredient\":\"fresh lemon juice\",\"quantity\":30,\"unit\":\"ml\",\"category\":\"Fruits\",\"checked\":false,\"estimatedCost\":0,\"retailQuantity\":1,\"retailUnit\":\"package\",\"retailDescription\":\"1 × 12 fl oz container\"},{\"ingredient\":\"sourdough bread\",\"quantity\":4,\"unit\":\"slice\",\"category\":\"Grains & Bakery\",\"checked\":false,\"estimatedCost\":0,\"retailQuantity\":4,\"retailUnit\":\"slice\",\"retailDescription\":\"4 slice\"},{\"ingredient\":\"black sesame seeds\",\"quantity\":2,\"unit\":\"g\",\"category\":\"Other\",\"checked\":false,\"estimatedCost\":0,\"retailQuantity\":0.07,\"retailUnit\":\"oz\",\"retailDescription\":\"0.07 oz\"},{\"ingredient\":\"fresh chives, chopped\",\"quantity\":5,\"unit\":\"g\",\"category\":\"Other\",\"checked\":false,\"estimatedCost\":0,\"retailQuantity\":0.18,\"retailUnit\":\"oz\",\"retailDescription\":\"0.18 oz\"},{\"ingredient\":\"garlic, minced\",\"quantity\":2,\"unit\":\"clove\",\"category\":\"Other\",\"checked\":false,\"estimatedCost\":0,\"retailQuantity\":2,\"retailUnit\":\"count\",\"retailDescription\":\"2 garlic, minced\"},{\"ingredient\":\"honey\",\"quantity\":15,\"unit\":\"ml\",\"category\":\"Other\",\"checked\":false,\"estimatedCost\":0,\"retailQuantity\":1,\"retailUnit\":\"fl oz\",\"retailDescription\":\"1 fl oz\"},{\"ingredient\":\"kimchi, chopped\",\"quantity\":80,\"unit\":\"g\",\"category\":\"Other\",\"checked\":false,\"estimatedCost\":0,\"retailQuantity\":2.82,\"retailUnit\":\"oz\",\"retailDescription\":\"2.82 oz\"},{\"ingredient\":\"mixed mushrooms (shiitake, oyster, and cremini)\",\"quantity\":200,\"unit\":\"g\",\"category\":\"Other\",\"checked\":false,\"estimatedCost\":0,\"retailQuantity\":7.05,\"retailUnit\":\"oz\",\"retailDescription\":\"7.05 oz\"},{\"ingredient\":\"sauerkraut, drained\",\"quantity\":100,\"unit\":\"g\",\"category\":\"Other\",\"checked\":false,\"estimatedCost\":0,\"retailQuantity\":3.53,\"retailUnit\":\"oz\",\"retailDescription\":\"3.53 oz\"},{\"ingredient\":\"scallion, thinly sliced\",\"quantity\":1,\"unit\":\"piece\",\"category\":\"Other\",\"checked\":false,\"estimatedCost\":0,\"retailQuantity\":1,\"retailUnit\":\"piece\",\"retailDescription\":\"1 piece\"},{\"ingredient\":\"white miso paste\",\"quantity\":30,\"unit\":\"ml\",\"category\":\"Other\",\"checked\":false,\"estimatedCost\":0,\"retailQuantity\":1.01,\"retailUnit\":\"fl oz\",\"retailDescription\":\"1.01 fl oz\"},{\"ingredient\":\"pinch black pepper\",\"quantity\":1,\"unit\":\"as needed\",\"category\":\"Vegetables\",\"checked\":false,\"estimatedCost\":0,\"retailQuantity\":1,\"retailUnit\":\"count\",\"retailDescription\":\"1 pinch black pepper\"}]",
+      "totalItems": 16,
+      "totalCost": null,
+      "currency": "USD",
+      "pantryFiltered": false,
+      "lastExported": null,
+      "sourceType": "recipes",
+      "sourceIds": "[\"cmkctlko00021ry189s6ijomz\"]",
+      "createdAt": "2026-01-13T19:11:15.573Z",
+      "updatedAt": "2026-01-13T19:11:15.573Z"
+    }
+  ],
+  "recommendations": [
+    {
+      "id": "cmkctqqjk0007b0bjn8k55r2y",
+      "userId": "cmk8sltuv00026lmf3ui32pge",
+      "type": "WORKFLOW_STEP",
+      "priority": "MEDIUM",
+      "status": "PENDING",
+      "title": "Plan Your MORNING_SNACK",
+      "description": "MORNING_SNACK not logged yet. Create a healthy morning_snack recipe!",
+      "reasoning": "Missed meal detected. Planning ahead makes healthy eating easier.",
+      "actionLabel": "Create Recipe",
+      "actionUrl": "/recipes/ai-generate",
+      "actionData": {
+        "from": "missed-meal",
+        "preferredMealTime": "MORNING_SNACK",
+        "dietaryRestrictions": [
+          "Vegetarian"
+        ]
+      },
+      "targetSystem": null,
+      "targetMealTime": "MORNING_SNACK",
+      "expiresAt": "2026-01-14T00:00:00.000Z",
+      "createdAt": "2026-01-13T16:46:47.263Z",
+      "acceptedAt": null,
+      "dismissedAt": null,
+      "actedAt": null,
+      "shoppedAt": null,
+      "completedAt": null,
+      "linkedRecipeId": null,
+      "linkedShoppingListId": null,
+      "linkedMealLogId": null,
+      "viewCount": 22,
+      "dismissCount": 0
+    },
+    {
+      "id": "cmkf6uo5z000516efxmrigk45",
+      "userId": "cmk8sltuv00026lmf3ui32pge",
+      "type": "RECIPE",
+      "priority": "CRITICAL",
+      "status": "PENDING",
+      "title": "Start Your ANGIOGENESIS Journey",
+      "description": "You haven't logged any angiogenesis foods yet. These are crucial for your wellness.",
+      "reasoning": "Missing defense system detected. ANGIOGENESIS foods are essential for optimal health.",
+      "actionLabel": "Generate Recipe",
+      "actionUrl": "/recipes/ai-generate",
+      "actionData": {
+        "targetSystem": "ANGIOGENESIS",
+        "preferredMealTime": "DINNER",
+        "dietaryRestrictions": [
+          "Vegetarian"
+        ]
+      },
+      "targetSystem": "ANGIOGENESIS",
+      "targetMealTime": null,
+      "expiresAt": "2026-01-17T12:00:00.000Z",
+      "createdAt": "2026-01-15T08:29:18.167Z",
+      "acceptedAt": null,
+      "dismissedAt": null,
+      "actedAt": null,
+      "shoppedAt": null,
+      "completedAt": null,
+      "linkedRecipeId": null,
+      "linkedShoppingListId": null,
+      "linkedMealLogId": null,
+      "viewCount": 54,
+      "dismissCount": 0
+    },
+    {
+      "id": "cmkctqqjh0005b0bjlcxg0arg",
+      "userId": "cmk8sltuv00026lmf3ui32pge",
+      "type": "WORKFLOW_STEP",
+      "priority": "MEDIUM",
+      "status": "PENDING",
+      "title": "Plan Your AFTERNOON_SNACK",
+      "description": "AFTERNOON_SNACK not logged yet. Create a healthy afternoon_snack recipe!",
+      "reasoning": "Missed meal detected. Planning ahead makes healthy eating easier.",
+      "actionLabel": "Create Recipe",
+      "actionUrl": "/recipes/ai-generate",
+      "actionData": {
+        "from": "missed-meal",
+        "preferredMealTime": "AFTERNOON_SNACK",
+        "dietaryRestrictions": [
+          "Vegetarian"
+        ]
+      },
+      "targetSystem": null,
+      "targetMealTime": "AFTERNOON_SNACK",
+      "expiresAt": "2026-01-14T00:00:00.000Z",
+      "createdAt": "2026-01-13T16:46:47.262Z",
+      "acceptedAt": null,
+      "dismissedAt": null,
+      "actedAt": null,
+      "shoppedAt": null,
+      "completedAt": null,
+      "linkedRecipeId": null,
+      "linkedShoppingListId": null,
+      "linkedMealLogId": null,
+      "viewCount": 1,
+      "dismissCount": 0
+    },
+    {
+      "id": "cmkf6uo5y000316ef4qfl1rd3",
+      "userId": "cmk8sltuv00026lmf3ui32pge",
+      "type": "RECIPE",
+      "priority": "HIGH",
+      "status": "PENDING",
+      "title": "Start Your MICROBIOME Journey",
+      "description": "You haven't logged any microbiome foods yet. These are crucial for your wellness.",
+      "reasoning": "Missing defense system detected. MICROBIOME foods are essential for optimal health.",
+      "actionLabel": "Generate Recipe",
+      "actionUrl": "/recipes/ai-generate",
+      "actionData": {
+        "targetSystem": "MICROBIOME",
+        "preferredMealTime": "DINNER",
+        "dietaryRestrictions": [
+          "Vegetarian"
+        ]
+      },
+      "targetSystem": "MICROBIOME",
+      "targetMealTime": null,
+      "expiresAt": "2026-01-17T12:00:00.000Z",
+      "createdAt": "2026-01-15T08:29:18.166Z",
+      "acceptedAt": null,
+      "dismissedAt": null,
+      "actedAt": null,
+      "shoppedAt": null,
+      "completedAt": null,
+      "linkedRecipeId": null,
+      "linkedShoppingListId": null,
+      "linkedMealLogId": null,
+      "viewCount": 1,
+      "dismissCount": 0
+    },
+    {
+      "id": "cmkf6uo5z000716efq4wxnyv1",
+      "userId": "cmk8sltuv00026lmf3ui32pge",
+      "type": "RECIPE",
+      "priority": "HIGH",
+      "status": "PENDING",
+      "title": "Start Your REGENERATION Journey",
+      "description": "You haven't logged any regeneration foods yet. These are crucial for your wellness.",
+      "reasoning": "Missing defense system detected. REGENERATION foods are essential for optimal health.",
+      "actionLabel": "Generate Recipe",
+      "actionUrl": "/recipes/ai-generate",
+      "actionData": {
+        "targetSystem": "REGENERATION",
+        "preferredMealTime": "DINNER",
+        "dietaryRestrictions": [
+          "Vegetarian"
+        ]
+      },
+      "targetSystem": "REGENERATION",
+      "targetMealTime": null,
+      "expiresAt": "2026-01-17T12:00:00.000Z",
+      "createdAt": "2026-01-15T08:29:18.168Z",
+      "acceptedAt": null,
+      "dismissedAt": null,
+      "actedAt": null,
+      "shoppedAt": null,
+      "completedAt": null,
+      "linkedRecipeId": null,
+      "linkedShoppingListId": null,
+      "linkedMealLogId": null,
+      "viewCount": 1,
+      "dismissCount": 0
+    }
+  ],
+  "progress": [],
+  "aiGenerationLogs": [
+    {
+      "id": "cmkcoiy810009tbxstnyj0kg8",
+      "userId": "cmk8sltuv00026lmf3ui32pge",
+      "generationType": "recipe",
+      "success": true,
+      "qualityScore": null,
+      "defenseSystem": "ANGIOGENESIS",
+      "ingredientCount": 0,
+      "hasDietaryRestrictions": false,
+      "hasMealType": true,
+      "validationErrors": [],
+      "inputData": {
+        "mealType": "breakfast",
+        "ingredients": [],
+        "defenseSystems": [
+          "ANGIOGENESIS",
+          "REGENERATION",
+          "MICROBIOME",
+          "DNA_PROTECTION",
+          "IMMUNITY"
+        ],
+        "dietaryRestrictions": []
+      },
+      "outputData": {
+        "title": "Wild Blueberry Walnut Overnight Oats with Kefir and Chia Seeds",
+        "cookTime": "0 min",
+        "prepTime": "10 min (plus overnight soaking)",
+        "servings": 2,
+        "nutrients": {
+          "Zinc": "3 mg",
+          "Folate": "65 mcg",
+          "Calcium": "380 mg",
+          "Protein": "18 g",
+          "Selenium": "22 mcg",
+          "Vitamin C": "35 mg",
+          "Vitamin E": "5 mg",
+          "Polyphenols": "580 mg",
+          "Resveratrol": "2 mg",
+          "Anthocyanins": "320 mg",
+          "Ellagic Acid": "45 mg",
+          "Pterostilbene": "8 mg",
+          "Omega-3 Fatty Acids (ALA)": "4200 mg",
+          "Dietary Fiber (Soluble & Insoluble)": "14 g",
+          "Probiotics (Lactobacillus, Bifidobacterium)": "15-20 billion CFU"
+        },
+        "description": "This vibrant breakfast bowl combines probiotic-rich kefir with omega-3 packed walnuts and antioxidant-loaded blueberries to create a regenerative powerhouse that feeds your microbiome, protects DNA, and supports healthy blood vessel formation. The chia seeds and walnuts provide essential fatty acids for stem cell activation, while the fermented kefir delivers billions of beneficial bacteria to strengthen your gut health and immunity.",
+        "ingredients": [
+          {
+            "name": "rolled oats",
+            "unit": "g",
+            "amount": "100"
+          },
+          {
+            "name": "plain kefir",
+            "unit": "ml",
+            "amount": "300"
+          },
+          {
+            "name": "fresh blueberries",
+            "unit": "g",
+            "amount": "200"
+          },
+          {
+            "name": "walnuts, chopped",
+            "unit": "g",
+            "amount": "40"
+          },
+          {
+            "name": "chia seeds",
+            "unit": "g",
+            "amount": "20"
+          },
+          {
+            "name": "pure maple syrup",
+            "unit": "ml",
+            "amount": "15"
+          },
+          {
+            "name": "ground cinnamon",
+            "unit": "g",
+            "amount": "2"
+          },
+          {
+            "name": "vanilla extract",
+            "unit": "g",
+            "amount": "1"
+          },
+          {
+            "name": "plain Greek yogurt",
+            "unit": "g",
+            "amount": "150"
+          },
+          {
+            "name": "pomegranate seeds",
+            "unit": "g",
+            "amount": "30"
+          },
+          {
+            "name": "raw almonds, sliced",
+            "unit": "g",
+            "amount": "10"
+          },
+          {
+            "name": "ground flaxseeds",
+            "unit": "g",
+            "amount": "5"
+          },
+          {
+            "name": "sea salt",
+            "unit": "pinch",
+            "amount": "1"
+          },
+          {
+            "name": "fresh strawberries, sliced",
+            "unit": "g",
+            "amount": "100"
+          }
+        ],
+        "instructions": "1. In a medium glass bowl, combine the rolled oats, chia seeds, ground cinnamon, and sea salt, mixing well to distribute evenly.\n2. Pour the kefir over the oat mixture and stir thoroughly until all oats are moistened. Add the vanilla extract and maple syrup, stirring to incorporate.\n3. Gently fold in 100 g of the blueberries and half of the chopped walnuts, reserving the rest for topping.\n4. Cover the bowl tightly with plastic wrap or transfer to two individual mason jars with lids, and refrigerate for at least 8 hours or overnight to allow the oats and chia seeds to absorb the liquid and soften.\n5. In the morning, remove the overnight oats from the refrigerator and stir well. If the mixture is too thick, add a splash of additional kefir or water to reach desired consistency.\n6. Divide the oat mixture between two serving bowls and top each with a generous dollop of Greek yogurt.\n7. Arrange the remaining fresh blueberries, sliced strawberries, and pomegranate seeds artfully on top of the yogurt.\n8. Sprinkle with the remaining chopped walnuts, sliced almonds, and ground flaxseeds for added crunch and nutrition.\n9. Serve immediately while cold, or prepare in portable containers for an on-the-go breakfast.\n",
+        "defenseSystem": "ANGIOGENESIS",
+        "defenseSystems": [
+          "ANGIOGENESIS",
+          "REGENERATION",
+          "MICROBIOME",
+          "DNA_PROTECTION",
+          "IMMUNITY"
+        ]
+      },
+      "apiResponseTime": null,
+      "modelUsed": "claude-sonnet-4-5-20250929",
+      "tokensUsed": 842,
+      "createdAt": "2026-01-13T14:20:45.890Z"
+    },
+    {
+      "id": "cmkcqnuu40001lbpyz2ruj29f",
+      "userId": "cmk8sltuv00026lmf3ui32pge",
+      "generationType": "recipe",
+      "success": true,
+      "qualityScore": null,
+      "defenseSystem": "MICROBIOME",
+      "ingredientCount": 1,
+      "hasDietaryRestrictions": true,
+      "hasMealType": true,
+      "validationErrors": [],
+      "inputData": {
+        "mealType": "breakfast",
+        "ingredients": [
+          "Cranberries"
+        ],
+        "defenseSystems": [
+          "MICROBIOME"
+        ],
+        "dietaryRestrictions": [
+          "Vegetarian"
+        ]
+      },
+      "outputData": {
+        "title": "Cranberry Walnut Sourdough Toast with Kefir Yogurt and Honey-Glazed Bananas",
+        "cookTime": "8 min",
+        "prepTime": "10 min",
+        "servings": 2,
+        "nutrients": {
+          "Calcium": "320 mg",
+          "Protein": "18 g",
+          "Magnesium": "95 mg",
+          "Potassium": "680 mg",
+          "Prebiotics": "4 g (inulin and FOS from bananas and oats)",
+          "Probiotics": "15 billion CFU (Lactobacillus and Bifidobacterium from kefir and Greek yogurt)",
+          "Polyphenols": "350 mg (from cranberries, walnuts, and cinnamon)",
+          "Vitamin B12": "1.2 mcg (from fermented dairy)",
+          "Dietary Fiber": "12 g (from sourdough, oats, flaxseeds, bananas, and cranberries)",
+          "Omega-3 Fatty Acids": "2.5 g (from walnuts and flaxseeds)"
+        },
+        "description": "This probiotic-rich breakfast combines tangy kefir and Greek yogurt topped with prebiotic-loaded bananas and whole grain sourdough, creating the perfect environment for beneficial gut bacteria to thrive. The cranberries and walnuts add polyphenols and omega-3s, while the sourdough's natural fermentation provides additional digestive benefits. This delicious morning bowl delivers multiple fermented foods and prebiotic fiber to support a healthy microbiome throughout the day.",
+        "ingredients": [
+          {
+            "name": "sourdough bread",
+            "unit": "slice",
+            "amount": "2"
+          },
+          {
+            "name": "plain kefir",
+            "unit": "ml",
+            "amount": "200"
+          },
+          {
+            "name": "plain Greek yogurt",
+            "unit": "g",
+            "amount": "150"
+          },
+          {
+            "name": "medium bananas, sliced",
+            "unit": "piece",
+            "amount": "2"
+          },
+          {
+            "name": "dried cranberries",
+            "unit": "g",
+            "amount": "40"
+          },
+          {
+            "name": "walnuts, roughly chopped",
+            "unit": "g",
+            "amount": "30"
+          },
+          {
+            "name": "rolled oats",
+            "unit": "g",
+            "amount": "30"
+          },
+          {
+            "name": "honey",
+            "unit": "ml",
+            "amount": "15"
+          },
+          {
+            "name": "ground flaxseeds",
+            "unit": "g",
+            "amount": "10"
+          },
+          {
+            "name": "coconut oil",
+            "unit": "ml",
+            "amount": "5"
+          },
+          {
+            "name": "cinnamon",
+            "unit": "g",
+            "amount": "2"
+          },
+          {
+            "name": "sea salt",
+            "unit": "pinch",
+            "amount": "1"
+          },
+          {
+            "name": "pumpkin seeds",
+            "unit": "g",
+            "amount": "5"
+          }
+        ],
+        "instructions": "1. Toast the sourdough bread slices until golden and crispy, then set aside on serving plates.\n2. In a small pan, heat coconut oil over medium heat and add the sliced bananas. Cook for 2-3 minutes until slightly caramelized, then drizzle with honey and sprinkle with cinnamon. Cook for another minute and remove from heat.\n3. In a mixing bowl, combine the kefir and Greek yogurt until smooth and creamy.\n4. Spread the sourdough toast with half of the kefir-yogurt mixture, dividing evenly between the two slices.\n5. Top each toast with the honey-glazed banana slices, arranging them attractively.\n6. Drizzle the remaining kefir-yogurt mixture over the bananas.\n7. Sprinkle the rolled oats, dried cranberries, chopped walnuts, ground flaxseeds, and pumpkin seeds evenly over both toasts.\n8. Add a final light drizzle of honey and a tiny pinch of cinnamon on top before serving immediately while the toast is still warm.\n",
+        "defenseSystem": "MICROBIOME",
+        "defenseSystems": [
+          "MICROBIOME"
+        ]
+      },
+      "apiResponseTime": null,
+      "modelUsed": "claude-sonnet-4-5-20250929",
+      "tokensUsed": 778,
+      "createdAt": "2026-01-13T15:20:34.012Z"
+    },
+    {
+      "id": "cmkctgirr000dry187j2di9lj",
+      "userId": "cmk8sltuv00026lmf3ui32pge",
+      "generationType": "recipe",
+      "success": true,
+      "qualityScore": null,
+      "defenseSystem": "MICROBIOME",
+      "ingredientCount": 5,
+      "hasDietaryRestrictions": true,
+      "hasMealType": true,
+      "validationErrors": [],
+      "inputData": {
+        "mealType": "dinner",
+        "ingredients": [
+          "Chickpeas",
+          "Chicory Root",
+          "Coffee",
+          "Kidney Beans",
+          "Quinoa"
+        ],
+        "defenseSystems": [
+          "MICROBIOME"
+        ],
+        "dietaryRestrictions": [
+          "Vegetarian"
+        ]
+      },
+      "outputData": {
+        "title": "Mediterranean Quinoa Buddha Bowl with Roasted Chickpeas, Pickled Vegetables, and Miso-Tahini Dres...",
+        "cookTime": "40 min",
+        "prepTime": "20 min",
+        "servings": 4,
+        "nutrients": {
+          "Iron": "6 mg",
+          "Protein": "24 g",
+          "Calories": "620 kcal",
+          "Magnesium": "165 mg",
+          "Total Fat": "28 g",
+          "B Vitamins": "B6 (0.4 mg), Folate (180 mcg)",
+          "Probiotics": "2 billion CFU (from sauerkraut, kimchi, and miso)",
+          "Vitamin K2": "12 mcg",
+          "Polyphenols": "450 mg",
+          "Carbohydrates": "68 g",
+          "Dietary Fiber": "18 g",
+          "Soluble Fiber": "6 g",
+          "Insoluble Fiber": "12 g",
+          "Omega-3 Fatty Acids": "3.2 g",
+          "Prebiotics (Inulin/FOS)": "8 g"
+        },
+        "description": "This vibrant, fiber-rich bowl combines protein-packed quinoa and crispy roasted chickpeas with fermented pickled vegetables and probiotic-rich miso dressing to nourish your gut microbiome. The combination of prebiotic fibers from chickpeas, quinoa, and garlic with fermented foods creates an ideal environment for beneficial bacteria to thrive while delivering a satisfying, flavorful dinner.",
+        "ingredients": [
+          {
+            "name": "quinoa, uncooked",
+            "unit": "g",
+            "amount": "200"
+          },
+          {
+            "name": "vegetable broth",
+            "unit": "ml",
+            "amount": "480"
+          },
+          {
+            "name": "chickpeas, cooked or canned, drained and rinsed",
+            "unit": "g",
+            "amount": "400"
+          },
+          {
+            "name": "olive oil",
+            "unit": "ml",
+            "amount": "30"
+          },
+          {
+            "name": "smoked paprika",
+            "unit": "g",
+            "amount": "5"
+          },
+          {
+            "name": "ground cumin",
+            "unit": "g",
+            "amount": "3"
+          },
+          {
+            "name": "sea salt",
+            "unit": "g",
+            "amount": "2"
+          },
+          {
+            "name": "black pepper",
+            "unit": "g",
+            "amount": "1"
+          },
+          {
+            "name": "sauerkraut, drained",
+            "unit": "g",
+            "amount": "200"
+          },
+          {
+            "name": "kimchi",
+            "unit": "g",
+            "amount": "150"
+          },
+          {
+            "name": "cucumber, sliced",
+            "unit": "whole",
+            "amount": "1"
+          },
+          {
+            "name": "cherry tomatoes, halved",
+            "unit": "g",
+            "amount": "200"
+          },
+          {
+            "name": "dandelion greens or mixed greens",
+            "unit": "g",
+            "amount": "100"
+          },
+          {
+            "name": "avocados, sliced",
+            "unit": "whole",
+            "amount": "2"
+          },
+          {
+            "name": "flaxseeds",
+            "unit": "g",
+            "amount": "30"
+          },
+          {
+            "name": "garlic, minced",
+            "unit": "clove",
+            "amount": "4"
+          },
+          {
+            "name": "lemon, juiced",
+            "unit": "whole",
+            "amount": "1"
+          },
+          {
+            "name": "tahini",
+            "unit": "ml",
+            "amount": "45"
+          },
+          {
+            "name": "white miso paste",
+            "unit": "g",
+            "amount": "30"
+          },
+          {
+            "name": "apple cider vinegar",
+            "unit": "ml",
+            "amount": "15"
+          },
+          {
+            "name": "water",
+            "unit": "ml",
+            "amount": "60"
+          },
+          {
+            "name": "spring onions, sliced",
+            "unit": "whole",
+            "amount": "2"
+          },
+          {
+            "name": "aged cheddar cheese, crumbled",
+            "unit": "g",
+            "amount": "50"
+          },
+          {
+            "name": "extra virgin olive oil for drizzling",
+            "unit": "ml",
+            "amount": "15"
+          }
+        ],
+        "instructions": "1. Preheat your oven to 200°C. Rinse the quinoa thoroughly under cold water using a fine-mesh strainer.\n2. In a medium saucepan, combine quinoa and vegetable broth. Bring to a boil, then reduce heat to low, cover, and simmer for 15 minutes until liquid is absorbed. Remove from heat and let stand covered for 5 minutes, then fluff with a fork.\n3. While quinoa cooks, pat the chickpeas completely dry with paper towels. Toss them in a bowl with 30 ml olive oil, smoked paprika, cumin, 1 g salt, and black pepper until evenly coated.\n4. Spread chickpeas on a baking sheet in a single layer. Roast for 25-30 minutes, shaking the pan halfway through, until golden and crispy.\n5. Prepare the miso-tahini dressing by whisking together tahini, miso paste, minced garlic, lemon juice, apple cider vinegar, and water in a small bowl until smooth and creamy. Add more water if needed for desired consistency.\n6. Arrange the dandelion greens in the bottom of four serving bowls. Divide the cooked quinoa among the bowls.\n7. Top each bowl with portions of roasted chickpeas, sauerkraut, kimchi, sliced cucumber, cherry tomatoes, and avocado slices, arranging them in separate sections.\n8. Sprinkle flaxseeds, sliced spring onions, and crumbled aged cheddar over each bowl.\n9. Drizzle the miso-tahini dressing generously over each bowl and finish with a light drizzle of extra virgin olive oil.\n10. Serve immediately while chickpeas are still warm and crispy, allowing diners to mix ingredients together before eating.\n",
+        "defenseSystem": "MICROBIOME",
+        "defenseSystems": [
+          "MICROBIOME"
+        ]
+      },
+      "apiResponseTime": null,
+      "modelUsed": "claude-sonnet-4-5-20250929",
+      "tokensUsed": 1082,
+      "createdAt": "2026-01-13T16:38:50.630Z"
+    },
+    {
+      "id": "cmkctl92e001zry18upfkntro",
+      "userId": "cmk8sltuv00026lmf3ui32pge",
+      "generationType": "recipe",
+      "success": true,
+      "qualityScore": null,
+      "defenseSystem": "MICROBIOME",
+      "ingredientCount": 0,
+      "hasDietaryRestrictions": true,
+      "hasMealType": true,
+      "validationErrors": [],
+      "inputData": {
+        "mealType": "breakfast",
+        "ingredients": [],
+        "defenseSystems": [
+          "MICROBIOME",
+          "IMMUNITY"
+        ],
+        "dietaryRestrictions": [
+          "Vegetarian"
+        ]
+      },
+      "outputData": {
+        "title": "Savory Miso Mushroom Sourdough Toast with Fermented Vegetable Salad",
+        "cookTime": "12 min",
+        "prepTime": "15 min",
+        "servings": 2,
+        "nutrients": {
+          "Zinc": "2.4 mg from mushrooms and yogurt",
+          "Allicin": "180 mg from fresh garlic",
+          "Protein": "18 g per serving",
+          "Selenium": "18 mcg from mushrooms and garlic",
+          "Vitamin C": "28 mg from lemon juice, kimchi, and sauerkraut",
+          "Prebiotics": "6-8 g from garlic, banana, and sourdough",
+          "Probiotics": "8-12 billion CFU from Greek yogurt, sauerkraut, kimchi, miso, and sourdough",
+          "Vitamin K2": "12 mcg from fermented foods",
+          "Polyphenols": "320 mg from mushrooms and olive oil",
+          "Vitamin B12": "0.8 mcg from Greek yogurt and miso",
+          "Beta-Glucans": "450 mg from shiitake and oyster mushrooms",
+          "Dietary Fiber": "11 g (soluble and insoluble)",
+          "Omega-3 Fatty Acids": "240 mg from walnuts in sourdough",
+          "Short-Chain Fatty Acids": "Butyrate-producing compounds from fermented vegetables"
+        },
+        "description": "This probiotic-rich breakfast combines the umami depth of miso with immune-boosting mushrooms on toasted sourdough, topped with a tangy fermented vegetable salad. The fermented foods deliver beneficial bacteria to support your microbiome, while garlic, mushrooms, and citrus enhance immune function. This satisfying breakfast provides a perfect balance of prebiotics, probiotics, and immune-supporting nutrients to start your day strong.",
+        "ingredients": [
+          {
+            "name": "sourdough bread",
+            "unit": "slice",
+            "amount": "4"
+          },
+          {
+            "name": "mixed mushrooms (shiitake, oyster, and cremini)",
+            "unit": "g",
+            "amount": "200"
+          },
+          {
+            "name": "white miso paste",
+            "unit": "ml",
+            "amount": "30"
+          },
+          {
+            "name": "garlic, minced",
+            "unit": "clove",
+            "amount": "2"
+          },
+          {
+            "name": "olive oil",
+            "unit": "ml",
+            "amount": "15"
+          },
+          {
+            "name": "sauerkraut, drained",
+            "unit": "g",
+            "amount": "100"
+          },
+          {
+            "name": "kimchi, chopped",
+            "unit": "g",
+            "amount": "80"
+          },
+          {
+            "name": "banana, sliced",
+            "unit": "piece",
+            "amount": "1"
+          },
+          {
+            "name": "plain Greek yogurt",
+            "unit": "g",
+            "amount": "150"
+          },
+          {
+            "name": "honey",
+            "unit": "ml",
+            "amount": "15"
+          },
+          {
+            "name": "fresh lemon juice",
+            "unit": "ml",
+            "amount": "30"
+          },
+          {
+            "name": "scallion, thinly sliced",
+            "unit": "piece",
+            "amount": "1"
+          },
+          {
+            "name": "fresh chives, chopped",
+            "unit": "g",
+            "amount": "5"
+          },
+          {
+            "name": "black sesame seeds",
+            "unit": "g",
+            "amount": "2"
+          },
+          {
+            "name": "pinch sea salt",
+            "unit": "as needed",
+            "amount": ""
+          },
+          {
+            "name": "pinch black pepper",
+            "unit": "as needed",
+            "amount": ""
+          }
+        ],
+        "instructions": "1. Heat olive oil in a large skillet over medium-high heat. Slice the mixed mushrooms and add them to the pan with a pinch of salt.\n2. Sauté the mushrooms for 5-6 minutes until golden brown and tender, then add the minced garlic and cook for another minute until fragrant.\n3. In a small bowl, whisk together the miso paste with 15 ml of warm water to create a smooth glaze. Pour this over the cooked mushrooms and toss to coat evenly. Remove from heat.\n4. Toast the sourdough bread slices until golden and crispy on the outside but still soft inside.\n5. In a separate bowl, combine the sauerkraut, chopped kimchi, sliced scallion, and half of the lemon juice. Toss gently to create the fermented vegetable salad.\n6. In another bowl, mix the Greek yogurt with honey and the remaining lemon juice until smooth and creamy.\n7. To assemble, spread a generous layer of the yogurt mixture on each toasted sourdough slice.\n8. Top with the miso mushroom mixture, distributing evenly across all four pieces.\n9. Add a portion of the fermented vegetable salad on top of the mushrooms.\n10. Garnish with sliced banana, chopped chives, and black sesame seeds. Season with freshly ground black pepper and serve immediately.\n",
+        "defenseSystem": "MICROBIOME",
+        "defenseSystems": [
+          "MICROBIOME",
+          "IMMUNITY"
+        ]
+      },
+      "apiResponseTime": null,
+      "modelUsed": "claude-sonnet-4-5-20250929",
+      "tokensUsed": 945,
+      "createdAt": "2026-01-13T16:42:31.334Z"
+    }
+  ]
+}

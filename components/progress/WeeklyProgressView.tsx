@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, addWeeks, subWeeks, isToday, isFuture, isSameDay } from 'date-fns';
 import { ChevronLeft, ChevronRight, Calendar, Plus, TrendingUp, Award, CheckCircle2, Circle, Clock, CalendarPlus, LibraryBig, CheckCheck, Repeat } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import WeeklyMealPlannerModal from './WeeklyMealPlannerModal';
 
 interface DayProgress {
   date: Date;
@@ -37,6 +38,21 @@ interface WeeklyStats {
   } | null;
 }
 
+interface WeekPlanInfo {
+  exists: boolean;
+  mealPlan: {
+    id: string;
+    weekStart: Date;
+    weekEnd: Date;
+    createdAt: Date;
+    stats: {
+      totalMeals: number;
+      loggedMeals: number;
+      remainingMeals: number;
+    };
+  } | null;
+}
+
 interface WeeklyProgressViewProps {
   selectedWeek: Date;
   onWeekChange: (date: Date) => void;
@@ -53,8 +69,9 @@ export default function WeeklyProgressView({
   const [weeklyStats, setWeeklyStats] = useState<WeeklyStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [expandedDay, setExpandedDay] = useState<Date | null>(null);
-  const [showPlanModal, setShowPlanModal] = useState(false);
-  const [showApplyModal, setShowApplyModal] = useState(false);
+  const [showPlannerModal, setShowPlannerModal] = useState(false);
+  const [weekPlanInfo, setWeekPlanInfo] = useState<WeekPlanInfo | null>(null);
+  const [loggingPlan, setLoggingPlan] = useState(false);
 
   // Calculate week boundaries (Monday to Sunday)
   const weekStart = startOfWeek(selectedWeek, { weekStartsOn: 1 }); // 1 = Monday
@@ -63,6 +80,7 @@ export default function WeeklyProgressView({
 
   useEffect(() => {
     fetchWeekData();
+    checkWeekPlan();
   }, [selectedWeek]);
 
   const fetchWeekData = async () => {
@@ -84,15 +102,34 @@ export default function WeeklyProgressView({
       const progressData = await progressResponse.json();
       const plannedData = plannedResponse.ok ? await plannedResponse.json() : { plannedMeals: [] };
       
+      console.log('Weekly Progress Data:', {
+        startDate: format(weekStart, 'yyyy-MM-dd'),
+        endDate: format(weekEnd, 'yyyy-MM-dd'),
+        progressDays: progressData.days?.length || 0,
+        plannedMeals: plannedData.plannedMeals?.length || 0,
+      });
+      
       // Map API data to day progress
       const dayProgressData: DayProgress[] = daysInWeek.map(day => {
-        const dayData = progressData.days?.find((d: any) => 
-          isSameDay(new Date(d.date), day)
-        );
+        // Normalize day for comparison
+        const dayString = format(day, 'yyyy-MM-dd');
+        
+        const dayData = progressData.days?.find((d: any) => {
+          const apiDayString = format(new Date(d.date), 'yyyy-MM-dd');
+          return apiDayString === dayString;
+        });
 
-        const dayPlanned = plannedData.plannedMeals?.filter((meal: any) => 
-          isSameDay(new Date(meal.date), day)
-        ) || [];
+        const dayPlanned = plannedData.plannedMeals?.filter((meal: any) => {
+          const mealDayString = format(new Date(meal.date), 'yyyy-MM-dd');
+          return mealDayString === dayString;
+        }) || [];
+        
+        console.log(`Day ${dayString}:`, {
+          hasProgressData: !!dayData,
+          score: dayData?.score || 0,
+          mealsLogged: dayData?.mealsLogged || 0,
+          plannedCount: dayPlanned.length,
+        });
 
         return {
           date: day,
@@ -159,6 +196,67 @@ export default function WeeklyProgressView({
     return streak;
   };
 
+  const checkWeekPlan = async () => {
+    try {
+      const startDate = format(weekStart, 'yyyy-MM-dd');
+      const endDate = format(weekEnd, 'yyyy-MM-dd');
+      
+      const response = await fetch(
+        `/api/meal-planner/check-week-plan?weekStart=${startDate}&weekEnd=${endDate}`
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setWeekPlanInfo(data);
+      }
+    } catch (error) {
+      console.error('Error checking week plan:', error);
+    }
+  };
+
+  const handleLogWeekPlan = async () => {
+    if (!weekPlanInfo?.mealPlan?.id) return;
+
+    if (!confirm('Log all remaining meals from your weekly plan?')) {
+      return;
+    }
+
+    setLoggingPlan(true);
+    try {
+      const response = await fetch('/api/meal-planner/log-week-plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mealPlanId: weekPlanInfo.mealPlan.id }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to log week plan');
+      }
+
+      console.log('Week plan logged:', result);
+
+      // Refresh data
+      await Promise.all([fetchWeekData(), checkWeekPlan()]);
+      
+      if (result.logged > 0) {
+        alert(result.message || `Successfully logged ${result.logged} meal${result.logged > 1 ? 's' : ''}!`);
+      } else {
+        alert(result.message || 'No meals were logged');
+      }
+    } catch (error) {
+      console.error('Error logging week plan:', error);
+      alert(error instanceof Error ? error.message : 'Failed to log week plan');
+    } finally {
+      setLoggingPlan(false);
+    }
+  };
+
+  const handlePlanCreated = async () => {
+    await Promise.all([fetchWeekData(), checkWeekPlan()]);
+  };
+
   const handlePreviousWeek = () => {
     onWeekChange(subWeeks(selectedWeek, 1));
   };
@@ -172,7 +270,10 @@ export default function WeeklyProgressView({
   };
 
   const handleDayClick = (day: Date) => {
-    if (expandedDay && isSameDay(expandedDay, day)) {
+    const dayString = format(day, 'yyyy-MM-dd');
+    const expandedDayString = expandedDay ? format(expandedDay, 'yyyy-MM-dd') : null;
+    
+    if (expandedDayString === dayString) {
       setExpandedDay(null);
     } else {
       setExpandedDay(day);
@@ -180,7 +281,8 @@ export default function WeeklyProgressView({
   };
 
   const handleNavigateToDay = (day: Date) => {
-    router.push(`/progress?date=${format(day, 'yyyy-MM-dd')}&view=daily`);
+    const dateString = format(day, 'yyyy-MM-dd');
+    router.push(`/progress?date=${dateString}`);
   };
 
   const handleQuickAddMeal = (day: Date) => {
@@ -195,38 +297,64 @@ export default function WeeklyProgressView({
         body: JSON.stringify({ mealId, date: format(dayDate, 'yyyy-MM-dd') }),
       });
 
-      if (!response.ok) throw new Error('Failed to log meal');
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || result.error || 'Failed to log meal');
+      }
 
       // Refresh week data
       await fetchWeekData();
     } catch (error) {
       console.error('Error logging planned meal:', error);
-      alert('Failed to log meal');
+      throw error; // Re-throw to be caught by caller
     }
   };
 
   const handleLogAllPlannedMeals = async (dayDate: Date) => {
-    const dayData = weekData.find(d => isSameDay(d.date, dayDate));
+    const dayDateString = format(dayDate, 'yyyy-MM-dd');
+    const dayData = weekData.find(d => format(d.date, 'yyyy-MM-dd') === dayDateString);
     if (!dayData || !dayData.plannedMeals.length) return;
 
     try {
-      await Promise.all(
-        dayData.plannedMeals
-          .filter(meal => !meal.isLogged)
-          .map(meal => handleLogPlannedMeal(meal.id, dayDate))
-      );
+      const unloggedMeals = dayData.plannedMeals.filter(m => !m.isLogged);
+      
+      let successCount = 0;
+      let failureCount = 0;
+      let placeholderCount = 0;
+
+      for (const meal of unloggedMeals) {
+        try {
+          await handleLogPlannedMeal(meal.id, dayDate);
+          successCount++;
+        } catch (error: any) {
+          if (error.message?.includes('placeholder')) {
+            placeholderCount++;
+          } else {
+            failureCount++;
+          }
+        }
+      }
+      
+      // Final refresh after all meals processed
+      await fetchWeekData();
+
+      // Show appropriate message
+      if (successCount > 0) {
+        if (placeholderCount > 0) {
+          alert(`Logged ${successCount} meal${successCount > 1 ? 's' : ''}. ${placeholderCount} placeholder meal${placeholderCount > 1 ? 's need' : ' needs'} a recipe first.`);
+        } else {
+          alert(`Successfully logged ${successCount} meal${successCount > 1 ? 's' : ''}!`);
+        }
+      } else if (placeholderCount > 0) {
+        alert(`Cannot log ${placeholderCount} placeholder meal${placeholderCount > 1 ? 's' : ''}. Generate recipes first.`);
+      } else if (failureCount > 0) {
+        alert('Failed to log meals');
+      }
     } catch (error) {
       console.error('Error logging all planned meals:', error);
+      alert('Failed to log meals');
     }
-  };
-
-  const handlePlanWeek = () => {
-    // Navigate to meal planner with week mode
-    router.push(`/meal-planner?mode=week&startDate=${format(weekStart, 'yyyy-MM-dd')}`);
-  };
-
-  const handleApplyMealPlan = () => {
-    setShowApplyModal(true);
   };
 
   const getDayStatus = (day: DayProgress) => {
@@ -306,21 +434,41 @@ export default function WeeklyProgressView({
         {/* Planning Actions */}
         <div className="flex gap-3 mb-6">
           <button
-            onClick={handlePlanWeek}
+            onClick={() => setShowPlannerModal(true)}
             className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-700 hover:to-purple-800 transition-all font-medium flex items-center justify-center gap-2 shadow-md"
           >
             <CalendarPlus className="w-5 h-5" />
             Plan This Week
           </button>
           
-          <button
-            onClick={handleApplyMealPlan}
-            className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all font-medium flex items-center justify-center gap-2 shadow-md"
-          >
-            <LibraryBig className="w-5 h-5" />
-            Apply Meal Plan
-          </button>
+          {weekPlanInfo?.exists && weekPlanInfo.mealPlan && weekPlanInfo.mealPlan.stats && (
+            <button
+              onClick={handleLogWeekPlan}
+              disabled={loggingPlan || weekPlanInfo.mealPlan.stats.remainingMeals === 0}
+              className="flex-1 px-4 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 transition-all font-medium flex items-center justify-center gap-2 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <CheckCheck className="w-5 h-5" />
+              {loggingPlan ? 'Logging...' : `Log Meal Plan (${weekPlanInfo.mealPlan.stats.remainingMeals} meals)`}
+            </button>
+          )}
         </div>
+
+        {/* Week Plan Info */}
+        {weekPlanInfo?.exists && weekPlanInfo.mealPlan?.stats && (
+          <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+            <div className="flex items-center gap-2 mb-2">
+              <CheckCircle2 className="w-5 h-5 text-blue-600" />
+              <span className="font-semibold text-blue-900 dark:text-blue-100">
+                Week Plan Active
+              </span>
+            </div>
+            <div className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
+              <div>Total Meals: {weekPlanInfo.mealPlan.stats.totalMeals}</div>
+              <div>Logged: {weekPlanInfo.mealPlan.stats.loggedMeals}</div>
+              <div>Remaining: {weekPlanInfo.mealPlan.stats.remainingMeals}</div>
+            </div>
+          </div>
+        )}
 
         {/* Weekly Stats */}
         {weeklyStats && (
@@ -373,12 +521,14 @@ export default function WeeklyProgressView({
         {weekData.map((dayData) => {
           const status = getDayStatus(dayData);
           const StatusIcon = status.icon;
-          const isExpanded = expandedDay && isSameDay(expandedDay, dayData.date);
+          const dayString = format(dayData.date, 'yyyy-MM-dd');
+          const expandedDayString = expandedDay ? format(expandedDay, 'yyyy-MM-dd') : null;
+          const isExpanded = expandedDayString === dayString;
           const isTodayDate = isToday(dayData.date);
 
           return (
             <div
-              key={dayData.date.toISOString()}
+              key={dayString}
               className={`bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden transition-all ${
                 isTodayDate ? 'ring-2 ring-purple-500' : ''
               } ${isExpanded ? 'lg:col-span-2 xl:col-span-2' : ''}`}
@@ -509,6 +659,15 @@ export default function WeeklyProgressView({
           </div>
         </div>
       )}
+      
+      {/* Weekly Meal Planner Modal */}
+      <WeeklyMealPlannerModal
+        isOpen={showPlannerModal}
+        onClose={() => setShowPlannerModal(false)}
+        weekStart={weekStart}
+        weekEnd={weekEnd}
+        onPlanCreated={handlePlanCreated}
+      />
     </div>
   );
 }

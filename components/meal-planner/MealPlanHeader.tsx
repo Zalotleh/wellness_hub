@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Edit2, Check, X, Save, Share2, ShoppingCart, RefreshCw, 
-  Loader2, Calendar, Users, Eye, EyeOff, Lock, Globe, UserCheck
+  Loader2, Calendar, Users, Eye, EyeOff, Lock, Globe, UserCheck, CheckCircle2
 } from 'lucide-react';
 import ShareMenu from './ShareMenu';
 
@@ -22,11 +22,15 @@ interface MealPlanHeaderProps {
   isEditing?: boolean;
   isSaving?: boolean;
   isGeneratingShoppingList?: boolean;
+  isLoggingPlan?: boolean;
+  mealsWithRecipes?: number;
+  totalMeals?: number;
   onSave: () => void;
   onUpdate: (updates: Partial<MealPlanData>) => void;
   onGenerateShoppingList: () => void;
   onViewShoppingList?: () => void; // New prop for viewing shopping list
   onShoppingListGenerated?: number; // Counter to trigger refresh
+  onLogMealPlan?: () => void;
   onNewPlan: () => void;
   onShare: (method: 'link' | 'whatsapp' | 'email' | 'facebook' | 'twitter' | 'linkedin') => void;
   onExportPDF: () => void;
@@ -38,11 +42,15 @@ export default function MealPlanHeader({
   isEditing = false,
   isSaving = false,
   isGeneratingShoppingList = false,
+  isLoggingPlan = false,
+  mealsWithRecipes = 0,
+  totalMeals = 0,
   onSave,
   onUpdate,
   onGenerateShoppingList,
   onViewShoppingList,
   onShoppingListGenerated,
+  onLogMealPlan,
   onNewPlan,
   onShare,
   onExportPDF,
@@ -323,6 +331,28 @@ export default function MealPlanHeader({
               onExportPDF={onExportPDF}
             />
           </div>
+
+          {/* Log Meal Plan Button */}
+          {onLogMealPlan && mealPlan.id && (
+            <button
+              onClick={onLogMealPlan}
+              disabled={isLoggingPlan || mealsWithRecipes === 0}
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              title={mealsWithRecipes === 0 ? 'Generate recipes first to log meals' : `Log ${mealsWithRecipes} meal${mealsWithRecipes > 1 ? 's' : ''} to track progress`}
+            >
+              {isLoggingPlan ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <CheckCircle2 className="w-4 h-4" />
+              )}
+              <span className="hidden lg:inline">
+                {isLoggingPlan ? 'Logging...' : `Log Plan (${mealsWithRecipes}/${totalMeals})`}
+              </span>
+              <span className="lg:hidden">
+                {isLoggingPlan ? 'Logging...' : 'Log Plan'}
+              </span>
+            </button>
+          )}
 
           {/* Shopping List Button */}
           <button

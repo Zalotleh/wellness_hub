@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { getUserLocalDateNoonUTC } from '@/lib/utils/timezone';
-import { eachDayOfInterval } from 'date-fns';
+import { eachDayOfInterval, format } from 'date-fns';
 
 /**
  * GET /api/progress/weekly
@@ -89,21 +89,21 @@ export async function GET(request: NextRequest) {
 
     // Build daily summaries
     const days = daysInRange.map(day => {
-      const dayStart = new Date(day);
-      dayStart.setUTCHours(0, 0, 0, 0);
-      const dayEnd = new Date(day);
-      dayEnd.setUTCHours(23, 59, 59, 999);
+      // Normalize day to midnight UTC for consistent comparison
+      const dayNormalized = new Date(day);
+      dayNormalized.setUTCHours(12, 0, 0, 0); // Use noon to avoid timezone issues
+      const dayString = format(dayNormalized, 'yyyy-MM-dd');
 
-      // Find score for this day
+      // Find score for this day by comparing date strings
       const dayScore = dailyScores.find(score => {
-        const scoreDate = new Date(score.date);
-        return scoreDate >= dayStart && scoreDate <= dayEnd;
+        const scoreString = format(new Date(score.date), 'yyyy-MM-dd');
+        return scoreString === dayString;
       });
 
       // Count meals for this day
       const dayConsumptions = consumptions.filter(c => {
-        const consumptionDate = new Date(c.date);
-        return consumptionDate >= dayStart && consumptionDate <= dayEnd;
+        const consumptionString = format(new Date(c.date), 'yyyy-MM-dd');
+        return consumptionString === dayString;
       });
 
       // Count unique meal times
@@ -113,11 +113,13 @@ export async function GET(request: NextRequest) {
       // Count systems covered (from gaps field)
       let systemsCovered = 0;
       if (dayScore) {
-        systemsCovered = 5 - (dayScore.gaps as any)?.missingSystems?.length || 0;
+        const gaps = dayScore.gaps as any;
+        const missingSystems = gaps?.missingSystems || [];
+        systemsCovered = 5 - missingSystems.length;
       }
 
       return {
-        date: day.toISOString(),
+        date: dayNormalized.toISOString(),
         score: dayScore?.overallScore || 0,
         mealsLogged,
         systemsCovered,

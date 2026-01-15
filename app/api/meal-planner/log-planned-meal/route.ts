@@ -63,12 +63,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Parse ingredients from generated recipe or use empty array
-    const ingredients = meal.generatedRecipe?.ingredients 
-      ? (Array.isArray(meal.generatedRecipe.ingredients) 
-          ? meal.generatedRecipe.ingredients 
-          : JSON.parse(meal.generatedRecipe.ingredients as string))
-      : [];
+    // Check if meal has a generated recipe
+    if (!meal.generatedRecipe || !meal.generatedRecipe.ingredients) {
+      return NextResponse.json(
+        { 
+          error: 'Cannot log placeholder meal',
+          message: 'This meal needs a recipe before it can be logged. Please generate a recipe first.'
+        },
+        { status: 400 }
+      );
+    }
+
+    // Parse ingredients from generated recipe
+    const ingredients = Array.isArray(meal.generatedRecipe.ingredients) 
+      ? meal.generatedRecipe.ingredients 
+      : JSON.parse(meal.generatedRecipe.ingredients as string);
 
     // Check if already logged
     const userTimezone = user.timezone || 'UTC';

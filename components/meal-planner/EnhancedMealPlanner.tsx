@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { CheckCircle2 } from 'lucide-react';
 import { DefenseSystem, Meal } from '@/types';
 import SystemSelector from './SystemSelector';
 import MealCard from './MealCard';
@@ -412,11 +413,13 @@ export default function EnhancedMealPlanner({
         
         sortedDailyMenus.forEach((dailyMenu: any, dayIndex: number) => {
           if (dailyMenu.meals && Array.isArray(dailyMenu.meals)) {
-            const dayNames = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-            // Calculate week number (1-based) and day of week (0-6)
-            const weekNumber = Math.floor(dayIndex / 7) + 1;
-            const dayOfWeek = dayIndex % 7;
+            const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+            // Use the actual date from the dailyMenu to determine the day
+            const menuDate = new Date(dailyMenu.date);
+            const dayOfWeek = menuDate.getDay(); // 0=Sunday, 1=Monday, etc.
             const dayName = dayNames[dayOfWeek] || 'monday';
+            // Calculate week number based on position in the meal plan
+            const weekNumber = Math.floor(dayIndex / 7) + 1;
             
             dailyMenu.meals.forEach((meal: any) => {
               flattenedMeals.push({
@@ -1008,11 +1011,13 @@ export default function EnhancedMealPlanner({
         
         sortedDailyMenus.forEach((dailyMenu: any, dayIndex: number) => {
           if (dailyMenu.meals && Array.isArray(dailyMenu.meals)) {
-            const dayNames = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-            // Calculate week number (1-based) and day of week (0-6)
-            const weekNumber = Math.floor(dayIndex / 7) + 1;
-            const dayOfWeek = dayIndex % 7;
+            const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+            // Use the actual date from the dailyMenu to determine the day
+            const menuDate = new Date(dailyMenu.date);
+            const dayOfWeek = menuDate.getDay(); // 0=Sunday, 1=Monday, etc.
             const dayName = dayNames[dayOfWeek] || 'monday';
+            // Calculate week number based on position in the meal plan
+            const weekNumber = Math.floor(dayIndex / 7) + 1;
             
             dailyMenu.meals.forEach((meal: any) => {
               flattenedMeals.push({
@@ -1075,6 +1080,47 @@ export default function EnhancedMealPlanner({
       setOptimisticAction(null);
     }
   }, [mealPlan, onPlanSave]);
+
+  // Log meal plan
+  const handleLogMealPlan = useCallback(async () => {
+    if (!mealPlan.id) {
+      alert('Please save the meal plan first');
+      return;
+    }
+
+    if (!confirm('Log all meals with recipes from your meal plan to track progress?')) {
+      return;
+    }
+
+    setOptimisticAction('logging');
+    
+    try {
+      const response = await fetch('/api/meal-planner/log-week-plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mealPlanId: mealPlan.id }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to log meal plan');
+      }
+
+      if (result.logged > 0) {
+        alert(result.message || `Successfully logged ${result.logged} meal${result.logged > 1 ? 's' : ''}! Check your progress page to see your tracked data.`);
+        // Optionally redirect to progress page
+        // router.push('/progress');
+      } else {
+        alert(result.message || 'No meals were logged. Make sure you have generated recipes for your meals.');
+      }
+    } catch (error) {
+      console.error('Error logging meal plan:', error);
+      alert(error instanceof Error ? error.message : 'Failed to log meal plan');
+    } finally {
+      setOptimisticAction(null);
+    }
+  }, [mealPlan.id]);
 
   // Share plan
   const handleSharePlan = useCallback(() => {
@@ -1164,11 +1210,15 @@ export default function EnhancedMealPlanner({
             isEditing={currentStep === 'edit'}
             isSaving={optimisticAction === 'saving'}
             isGeneratingShoppingList={optimisticAction === 'shopping-list'}
+            isLoggingPlan={optimisticAction === 'logging'}
+            mealsWithRecipes={mealPlan.meals.filter(m => m.recipeGenerated).length}
+            totalMeals={mealPlan.meals.length}
             onSave={() => handleSavePlan({})}
             onUpdate={(updates) => handleSavePlan(updates)}
             onGenerateShoppingList={handleGenerateShoppingList}
             onViewShoppingList={handleViewShoppingList}
             onShoppingListGenerated={shoppingListGenerated}
+            onLogMealPlan={handleLogMealPlan}
             onNewPlan={() => {
               // Redirect to main meal planner page to create a new plan
               router.push('/meal-planner');
@@ -1178,6 +1228,50 @@ export default function EnhancedMealPlanner({
           />
         </div>
       </div>
+
+      {/* Guidance Banner */}
+      {mealPlan.id && mealPlan.meals.length > 0 && (
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-b border-blue-200 dark:border-blue-800">
+          <div className={cn(
+            'mx-auto px-4 sm:px-6 lg:px-8 py-4',
+            isMobile ? 'max-w-full' : isTablet ? 'max-w-4xl' : 'max-w-7xl'
+          )}>
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 mt-0.5">
+                <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
+                  <span className="text-lg">💡</span>
+                </div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
+                  Complete Your Meal Plan
+                </h3>
+                <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+                  {mealPlan.meals.filter(m => m.recipeGenerated).length === 0 ? (
+                    <>Generate recipes for your meals by clicking the "+" button on each meal card, then use the <strong>Log Plan</strong> button above to track your progress.</>
+                  ) : mealPlan.meals.filter(m => m.recipeGenerated).length < mealPlan.meals.length ? (
+                    <>You have <strong>{mealPlan.meals.filter(m => m.recipeGenerated).length}/{mealPlan.meals.length} meals</strong> with recipes. Generate the remaining recipes, then click <strong>Log Plan</strong> to track them.</>
+                  ) : (
+                    <>🎉 All meals have recipes! Click <strong>Log Plan ({mealPlan.meals.filter(m => m.recipeGenerated).length})</strong> above to track your meals and monitor your progress.</>
+                  )}
+                </p>
+                <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                  <span className="inline-flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
+                    {mealPlan.meals.filter(m => m.recipeGenerated).length} with recipes
+                  </span>
+                  {mealPlan.meals.filter(m => !m.recipeGenerated).length > 0 && (
+                    <span className="inline-flex items-center gap-1">
+                      <span className="w-3.5 h-3.5 rounded-full border-2 border-orange-400 dark:border-orange-500"></span>
+                      {mealPlan.meals.filter(m => !m.recipeGenerated).length} need recipes
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <div className={cn(
