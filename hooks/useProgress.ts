@@ -68,6 +68,10 @@ export function useProgress(date?: Date) {
       }
 
       const { data } = await response.json();
+      console.log('🔍 [useProgress] Received data from API:', data.length, 'entries');
+      data.forEach((entry: any, idx: number) => {
+        console.log(`  [${idx}] date=${entry.date}, system=${entry.defenseSystem}, foods=${entry.foodsConsumed?.length}`);
+      });
       setProgress(data);
 
       // Calculate daily progress
@@ -233,17 +237,17 @@ function calculateDailyProgress(progressEntries: Progress[], selectedDate: Date 
 
   // Filter entries for the selected date
   const dayEntries = progressEntries.filter((entry) => {
-    // Normalize the entry date to local time
+    // Entry date is stored as UTC noon, format it directly to yyyy-MM-dd
     const entryDate = new Date(entry.date);
-    const normalizedEntryDate = format(new Date(
-      entryDate.getFullYear(),
-      entryDate.getMonth(),
-      entryDate.getDate(),
-      12
-    ), 'yyyy-MM-dd');
-    
+    const normalizedEntryDate = format(entryDate, 'yyyy-MM-dd');
     const targetDate = format(normalizedSelectedDate, 'yyyy-MM-dd');
-    console.log('Comparing dates:', { normalizedEntryDate, targetDate });
+    
+    console.log('Comparing dates:', { 
+      normalizedEntryDate, 
+      targetDate,
+      entryDateISO: entryDate.toISOString(),
+      match: normalizedEntryDate === targetDate
+    });
     return normalizedEntryDate === targetDate;
   });
 

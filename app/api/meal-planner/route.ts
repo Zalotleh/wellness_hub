@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { startOfWeek, endOfWeek, addDays } from 'date-fns';
 import { FeatureAccess, type SubscriptionTier } from '@/lib/features/feature-flags';
+import { getUserLocalDateNoonUTC } from '@/lib/utils/timezone';
 
 // GET - List user's meal plans
 export async function GET(request: NextRequest) {
@@ -124,6 +125,7 @@ export async function POST(request: NextRequest) {
         subscriptionStatus: true,
         mealPlansThisMonth: true,
         lastResetDate: true,
+        timezone: true,
       },
     });
 
@@ -133,6 +135,7 @@ export async function POST(request: NextRequest) {
 
     const subscriptionTier = (user.subscriptionTier || 'FREE') as SubscriptionTier;
     const featureAccess = new FeatureAccess(subscriptionTier);
+    const userTimezone = user.timezone || 'UTC';
 
     // Check if we need to reset monthly counters
     const now = new Date();
@@ -236,14 +239,22 @@ export async function POST(request: NextRequest) {
     let weekStartDate;
     let weekEndDate;
     try {
-      weekStartDate = new Date(weekStart);
+      console.log('🔍 [meal-planner POST] Input weekStart:', weekStart);
+      console.log('🔍 [meal-planner POST] User timezone:', userTimezone);
+      
+      // Parse date string (YYYY-MM-DD) and create noon UTC date
+      const [year, month, day] = weekStart.split('-').map(Number);
+      weekStartDate = new Date(Date.UTC(year, month - 1, day, 12, 0, 0, 0));
+      
+      console.log('🔍 [meal-planner POST] Normalized weekStartDate:', weekStartDate.toISOString());
       if (isNaN(weekStartDate.getTime())) {
         throw new Error('Invalid weekStart date');
       }
       
       // If weekEnd is provided, use it; otherwise calculate from duration
       if (weekEnd) {
-        weekEndDate = new Date(weekEnd);
+        const [endYear, endMonth, endDay] = weekEnd.split('-').map(Number);
+        weekEndDate = new Date(Date.UTC(endYear, endMonth - 1, endDay, 12, 0, 0, 0));
         if (isNaN(weekEndDate.getTime())) {
           throw new Error('Invalid weekEnd date');
         }
@@ -309,7 +320,12 @@ export async function POST(request: NextRequest) {
       // Create daily menus
       for (let dayIndex = 0; dayIndex < dailyMenus.length; dayIndex++) {
         const day = dailyMenus[dayIndex];
+        // Calculate date for this day (weekStartDate is already at noon UTC, addDays preserves the time)
         const dayDate = addDays(weekStartDate, dayIndex);
+        
+        console.log(`🔍 [meal-planner POST] Day ${dayIndex}:`);
+        console.log(`  - weekStartDate: ${weekStartDate.toISOString()}`);
+        console.log(`  - dayDate: ${dayDate.toISOString()}`);
 
         if (!day.meals || !Array.isArray(day.meals)) {
           throw new Error(`Day ${dayIndex + 1} must have a meals array`);
@@ -323,6 +339,9 @@ export async function POST(request: NextRequest) {
             notes: day.notes,
           },
         });
+        
+        console.log(`🔍 [meal-planner POST] Created dailyMenu with date: ${dayDate.toISOString()}`);
+        console.log(`🔍 [meal-planner POST] DailyMenu ID: ${dailyMenu.id}`);
 
         // Create meals for this day
         for (let mealIndex = 0; mealIndex < day.meals.length; mealIndex++) {

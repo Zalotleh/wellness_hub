@@ -91,20 +91,37 @@ export async function POST(request: NextRequest) {
 
     // Process each daily menu - create food consumptions
     for (const dailyMenu of mealPlan.dailyMenus) {
-      const dateKey = format(new Date(dailyMenu.date), 'yyyy-MM-dd');
+      // dailyMenu.date is already stored as noon UTC, use it directly
+      const consumptionDate = dailyMenu.date;
+      const dateKey = format(consumptionDate, 'yyyy-MM-dd');
       const dayLoggedMeals = loggedMeals.get(dateKey) || new Set();
-      const consumptionDate = getUserLocalDateNoonUTC(userTimezone, new Date(dailyMenu.date));
+
+      console.log(`🔍 [log-week-plan] Processing dailyMenu:`, {
+        dateKey,
+        rawDate: dailyMenu.date,
+        isoString: dailyMenu.date.toISOString?.() || dailyMenu.date,
+        consumptionDate: consumptionDate.toISOString?.() || consumptionDate,
+        mealsCount: dailyMenu.meals.length,
+      });
 
       for (const meal of dailyMenu.meals) {
+        console.log(`🔍 [log-week-plan] Meal ${meal.mealType}:`, {
+          id: meal.id,
+          consumed: meal.consumed,
+          hasRecipe: !!meal.generatedRecipe,
+          recipeId: meal.recipeId,
+          hasIngredients: meal.generatedRecipe ? !!meal.generatedRecipe.ingredients : false,
+        });
+        
         // Skip if already logged
         if (dayLoggedMeals.has(meal.mealType) || meal.consumed) {
-          console.log(`Skipping ${meal.mealType} on ${dateKey} - already logged`);
+          console.log(`🔍 [log-week-plan] Skipping ${meal.mealType} on ${dateKey} - already logged`);
           continue;
         }
 
         // Skip placeholder meals without recipes
         if (!meal.generatedRecipe || !meal.generatedRecipe.ingredients) {
-          console.log(`Skipping ${meal.mealType} on ${dateKey} - no recipe (placeholder)`);
+          console.log(`🔍 [log-week-plan] Skipping ${meal.mealType} on ${dateKey} - no recipe (placeholder)`);
           skippedPlaceholders++;
           continue;
         }
@@ -115,7 +132,14 @@ export async function POST(request: NextRequest) {
           : JSON.parse(meal.generatedRecipe.ingredients as string);
 
         // Create food consumption with all food items
-        await prisma.foodConsumption.create({
+        console.log(`🔍 [log-week-plan] Creating consumption:`);
+        console.log(`  - dailyMenu.date (raw): ${dailyMenu.date}`);
+        console.log(`  - dailyMenu.date (ISO): ${dailyMenu.date.toISOString ? dailyMenu.date.toISOString() : 'no toISOString'}`);
+        console.log(`  - consumptionDate (ISO): ${consumptionDate.toISOString ? consumptionDate.toISOString() : 'no toISOString'}`);
+        console.log(`  - dateKey: ${dateKey}`);
+        console.log(`  - mealType: ${meal.mealType}`);
+        
+        const createdConsumption = await prisma.foodConsumption.create({
           data: {
             userId: session.user.id,
             mealTime: meal.mealType as any,

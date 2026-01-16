@@ -66,15 +66,35 @@ export async function GET(request: NextRequest) {
       endDate = today;
     }
 
+    console.log('🔍 [progress GET] Query params:');
+    console.log(`  - startDate: ${startDate.toISOString()}`);
+    console.log(`  - endDate: ${endDate.toISOString()}`);
+    console.log(`  - Single date?: ${startDate.getTime() === endDate.getTime()}`);
+    
+    // For DATE columns in PostgreSQL, we need to query with date range
+    // to handle timezone offsets properly
+    const startOfDay = new Date(Date.UTC(
+      startDate.getUTCFullYear(),
+      startDate.getUTCMonth(),
+      startDate.getUTCDate(),
+      0, 0, 0
+    ));
+    const endOfDay = new Date(Date.UTC(
+      endDate.getUTCFullYear(),
+      endDate.getUTCMonth(),
+      endDate.getUTCDate(),
+      23, 59, 59
+    ));
+    
+    console.log(`  - Querying from ${startOfDay.toISOString()} to ${endOfDay.toISOString()}`);
+    
     const progress = await prisma.foodConsumption.findMany({
       where: {
         userId: session.user.id,
-        date: startDate.getTime() === endDate.getTime() 
-          ? startDate  // Single date query
-          : {          // Date range query
-              gte: startDate,
-              lte: endDate,
-            },
+        date: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
       },
       include: {
         foodItems: {
@@ -87,6 +107,11 @@ export async function GET(request: NextRequest) {
         { date: 'desc' },
         { mealTime: 'asc' },
       ],
+    });
+    
+    console.log(`🔍 [progress GET] Found ${progress.length} consumptions`);
+    progress.forEach(c => {
+      console.log(`  - Consumption ${c.id}: date=${c.date.toISOString()}, mealTime=${c.mealTime}, foods=${c.foodItems.length}`);
     });
 
     // Transform FoodConsumption data to match old Progress format for backward compatibility
@@ -105,17 +130,21 @@ export async function GET(request: NextRequest) {
       });
       
       // Create a progress entry for each defense system
-      return Array.from(systemGroups.entries()).map(([system, foods]) => ({
-        id: `${consumption.id}-${system}`,
-        userId: consumption.userId,
-        date: consumption.date,
-        defenseSystem: system,
-        foodsConsumed: foods,
-        count: foods.length,
-        notes: consumption.notes,
-        createdAt: consumption.createdAt,
-        updatedAt: consumption.updatedAt,
-      }));
+      return Array.from(systemGroups.entries()).map(([system, foods]) => {
+        const entry = {
+          id: `${consumption.id}-${system}`,
+          userId: consumption.userId,
+          date: consumption.date,
+          defenseSystem: system,
+          foodsConsumed: foods,
+          count: foods.length,
+          notes: consumption.notes,
+          createdAt: consumption.createdAt,
+          updatedAt: consumption.updatedAt,
+        };
+        console.log(`🔍 [progress GET] Transformed entry: date=${consumption.date.toISOString()}, system=${system}`);
+        return entry;
+      });
     });
 
     const response = NextResponse.json({ data: transformedProgress });

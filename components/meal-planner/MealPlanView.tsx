@@ -15,15 +15,23 @@ import {
   Utensils,
   Timer,
   Target,
-  Sparkles
+  Sparkles,
+  CheckCircle2
 } from 'lucide-react';
 import { DefenseSystem, Meal, DefenseSystemInfo } from '@/types';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
 import MealCard from './MealCard';
 
+// Utility function for className merging
+function cn(...classes: (string | undefined | false)[]) {
+  return classes.filter(Boolean).join(' ');
+}
+
 interface MealPlanViewProps {
   meals: Meal[];
   duration?: number; // Number of weeks (1-4)
+  weekStart?: string | Date;
+  loggedDates?: Set<string>;
   onMealUpdate: (mealId: string, updates: Partial<Meal>) => void;
   onMealDelete: (mealId: string) => void;
   onMealCopy: (meal: Meal) => void;
@@ -46,6 +54,8 @@ interface DayStats {
 export default function MealPlanView({
   meals,
   duration = 1,
+  weekStart,
+  loggedDates,
   onMealUpdate,
   onMealDelete,
   onMealCopy,
@@ -105,9 +115,14 @@ export default function MealPlanView({
 
   // Debug logging
   console.log('📊 MealPlanView - Total meals received:', meals.length);
+  console.log('📊 MealPlanView - Full meals array:', meals);
   console.log('📊 MealPlanView - Weeks in grouped data:', Object.keys(mealsByWeekAndDay));
   console.log('📊 MealPlanView - Duration (weeks):', duration);
   console.log('📊 MealPlanView - Sample meals:', meals.slice(0, 5).map(m => ({ week: m.week, day: m.day, slot: m.slot, name: m.mealName })));
+  console.log('📊 MealPlanView - Grouped by week/day:', JSON.stringify(Object.keys(mealsByWeekAndDay).reduce((acc: any, week: string) => {
+    acc[week] = Object.keys(mealsByWeekAndDay[parseInt(week)]);
+    return acc;
+  }, {})));
 
   // Also keep the old structure for backward compatibility (first week only)
   const mealsByDay = mealsByWeekAndDay[selectedWeek] || {};
@@ -134,6 +149,23 @@ export default function MealPlanView({
       totalServings: allMeals.reduce((sum: number, meal: Meal) => sum + (meal.servings || 1), 0),
       defenseSystems: systemInfos,
     };
+  };
+
+  // Helper function to check if a day is logged
+  const isDayLogged = (dayKey: string, weekNum: number): boolean => {
+    if (!loggedDates || !weekStart) return false;
+    
+    // Calculate the actual date for this day
+    const startDate = new Date(weekStart);
+    const dayIndex = daysOfWeek.findIndex(d => d.key === dayKey);
+    const absoluteDayIndex = (weekNum - 1) * 7 + dayIndex;
+    
+    const targetDate = new Date(startDate);
+    targetDate.setDate(startDate.getDate() + absoluteDayIndex);
+    
+    // Format as YYYY-MM-DD for comparison
+    const dateStr = targetDate.toISOString().split('T')[0];
+    return loggedDates.has(dateStr);
   };
 
   // Helper function to get snack type icon for compact views
@@ -619,17 +651,39 @@ export default function MealPlanView({
                 {daysOfWeek.map((day) => {
                   const dayStats = calculateDayStats(day.key, weekNum);
                   const hasAnyMeals = dayStats.totalMeals > 0;
+                  const isLogged = isDayLogged(day.key, weekNum);
 
                   return (
                     <div 
                       key={`${weekNum}-${day.key}`}
-                      className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow"
+                      className={cn(
+                        "rounded-xl shadow-sm border overflow-hidden transition-shadow",
+                        isLogged 
+                          ? "bg-gray-100 dark:bg-gray-700/50 border-gray-300 dark:border-gray-600 opacity-60" 
+                          : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:shadow-md"
+                      )}
                     >
                       {/* Day Header */}
-                      <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                      <div className={cn(
+                        "px-4 py-3 border-b border-gray-200 dark:border-gray-700",
+                        isLogged 
+                          ? "bg-gray-200 dark:bg-gray-600/30" 
+                          : "bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20"
+                      )}>
                         <div className="flex items-center justify-between">
                           <div>
-                            <h3 className="font-bold text-gray-900 dark:text-white">{day.label}</h3>
+                            <div className="flex items-center gap-2">
+                              <h3 className={cn(
+                                "font-bold",
+                                isLogged ? "text-gray-600 dark:text-gray-400" : "text-gray-900 dark:text-white"
+                              )}>{day.label}</h3>
+                              {isLogged && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400">
+                                  <CheckCircle2 className="w-3 h-3" />
+                                  Logged
+                                </span>
+                              )}
+                            </div>
                             {hasAnyMeals && (
                               <div className="text-xs text-gray-600 dark:text-gray-300 mt-1 flex items-center gap-2">
                                 <span className="flex items-center gap-1">
@@ -869,6 +923,13 @@ export default function MealPlanView({
                   <div className="space-y-2">
                     {mealSlots.map((slot) => {
                       const slotMeals = dayMeals.filter(m => m.slot === slot.key);
+                      
+                      console.log(`🔍 [Calendar View] ${day.key} - ${slot.key}:`, {
+                        dayMealsTotal: dayMeals.length,
+                        dayMealsSlots: dayMeals.map(m => m.slot),
+                        slotMealsCount: slotMeals.length,
+                        slotMeals: slotMeals.map(m => ({ name: m.mealName, slot: m.slot }))
+                      });
                       
                       if (slotMeals.length === 0) {
                         return (

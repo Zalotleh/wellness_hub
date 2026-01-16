@@ -72,6 +72,7 @@ export default function WeeklyProgressView({
   const [showPlannerModal, setShowPlannerModal] = useState(false);
   const [weekPlanInfo, setWeekPlanInfo] = useState<WeekPlanInfo | null>(null);
   const [loggingPlan, setLoggingPlan] = useState(false);
+  const [loggedDates, setLoggedDates] = useState<Set<string>>(new Set());
 
   // Calculate week boundaries (Monday to Sunday)
   const weekStart = startOfWeek(selectedWeek, { weekStartsOn: 1 }); // 1 = Monday
@@ -152,6 +153,15 @@ export default function WeeklyProgressView({
       });
 
       setWeekData(dayProgressData);
+
+      // Extract logged dates (days with meals logged)
+      const logged = new Set<string>();
+      dayProgressData.forEach(day => {
+        if (day.mealsLogged > 0) {
+          logged.add(format(day.date, 'yyyy-MM-dd'));
+        }
+      });
+      setLoggedDates(logged);
 
       // Calculate weekly stats
       const daysWithData = dayProgressData.filter(d => d.hasData);
@@ -667,6 +677,7 @@ export default function WeeklyProgressView({
         weekStart={weekStart}
         weekEnd={weekEnd}
         onPlanCreated={handlePlanCreated}
+        loggedDates={loggedDates}
       />
     </div>
   );

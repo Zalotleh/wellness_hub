@@ -85,11 +85,13 @@ export default function EnhancedMealPlanner({
   // Shopping List Dialog states
   const [shoppingListDialog, setShoppingListDialog] = useState<{
     isOpen: boolean;
-    type: 'success' | 'error';
+    type: 'success' | 'error' | 'confirm' | 'info';
     title: string;
     message: string;
     shoppingListId?: string;
     itemCount?: number;
+    onConfirm?: () => void;
+    onCancel?: () => void;
   }>({
     isOpen: false,
     type: 'success',
@@ -139,6 +141,7 @@ export default function EnhancedMealPlanner({
 
   // Progress tracking
   const [generationProgress, setGenerationProgress] = useState(0);
+  const [loggedDates, setLoggedDates] = useState<Set<string>>(new Set());
   const [shoppingListGenerated, setShoppingListGenerated] = useState(0); // Counter to trigger refresh
 
   // Meal type selector state
@@ -367,8 +370,8 @@ export default function EnhancedMealPlanner({
       const apiMealPlan = {
         title: configuration.title,
         description: configuration.description,
-        weekStart: weekStart.toISOString(),
-        weekEnd: weekEnd.toISOString(),
+        weekStart: format(weekStart, 'yyyy-MM-dd'),
+        weekEnd: format(weekEnd, 'yyyy-MM-dd'),
         durationWeeks: duration,
         defaultServings: configuration.servings,
         visibility: configuration.visibility,
@@ -405,11 +408,16 @@ export default function EnhancedMealPlanner({
       const savedPlan = saveData.data || saveData;
       const flattenedMeals: Meal[] = [];
       
+      console.log(`🔍 [handleGenerateMealPlan] Received savedPlan:`, savedPlan);
+      console.log(`🔍 [handleGenerateMealPlan] dailyMenus count: ${savedPlan.dailyMenus?.length || 0}`);
+      
       if (savedPlan.dailyMenus) {
         // Sort daily menus by date to ensure correct day mapping
         const sortedDailyMenus = savedPlan.dailyMenus.sort((a: any, b: any) => 
           new Date(a.date).getTime() - new Date(b.date).getTime()
         );
+        
+        console.log(`🔍 [handleGenerateMealPlan] Sorted dailyMenus:`, sortedDailyMenus.map((dm: any) => ({ date: dm.date, mealsCount: dm.meals?.length })));
         
         sortedDailyMenus.forEach((dailyMenu: any, dayIndex: number) => {
           if (dailyMenu.meals && Array.isArray(dailyMenu.meals)) {
@@ -421,26 +429,34 @@ export default function EnhancedMealPlanner({
             // Calculate week number based on position in the meal plan
             const weekNumber = Math.floor(dayIndex / 7) + 1;
             
+            console.log(`🔍 [handleGenerateMealPlan] Processing ${dayName} (index ${dayIndex}, week ${weekNumber})`);
+            console.log(`🔍 [handleGenerateMealPlan] ${dailyMenu.meals.length} meals:`, dailyMenu.meals.map((m: any) => ({ name: m.mealName, type: m.mealType })));
+            
             dailyMenu.meals.forEach((meal: any) => {
-              flattenedMeals.push({
+              const transformedMeal = {
                 id: meal.id || `week${weekNumber}-${dayName}-${meal.mealType}`,
                 mealName: meal.mealName || 'Unnamed Meal',
                 mealType: meal.mealType || 'breakfast',
                 day: dayName,
                 week: weekNumber,
-                slot: meal.mealType || 'breakfast',
+                slot: meal.mealType ? meal.mealType.toLowerCase() : 'breakfast',
                 defenseSystems: meal.defenseSystems || [],
-                prepTime: meal.prepTime ? (typeof meal.prepTime === 'string' ? parseInt(meal.prepTime) : meal.prepTime) : 30,
-                cookTime: meal.cookTime ? (typeof meal.cookTime === 'string' ? parseInt(meal.cookTime) : meal.cookTime) : 0,
-                servings: meal.servings || savedPlan.defaultServings || 2,
-                recipeGenerated: !!meal.generatedRecipe,
-                recipeId: meal.generatedRecipe?.id,
-                customInstructions: meal.customInstructions,
-              });
+              };
+              console.log(`🔍 [handleGenerateMealPlan] Transformed:`, transformedMeal);
+              flattenedMeals.push(transformedMeal as any);
+              transformedMeal.prepTime = meal.prepTime ? (typeof meal.prepTime === 'string' ? parseInt(meal.prepTime) : meal.prepTime) : 30;
+              transformedMeal.cookTime = meal.cookTime ? (typeof meal.cookTime === 'string' ? parseInt(meal.cookTime) : meal.cookTime) : 0;
+              transformedMeal.servings = meal.servings || savedPlan.defaultServings || 2;
+              transformedMeal.recipeGenerated = !!meal.generatedRecipe;
+              transformedMeal.recipeId = meal.generatedRecipe?.id;
+              transformedMeal.customInstructions = meal.customInstructions;
             });
           }
         });
       }
+
+      console.log(`🎯 [handleGenerateMealPlan] Total flattened meals: ${flattenedMeals.length}`);
+      console.log(`🎯 [handleGenerateMealPlan] Sample meals:`, flattenedMeals.slice(0, 3));
 
       const transformedPlan: MealPlan = {
         ...savedPlan,
@@ -1019,31 +1035,44 @@ export default function EnhancedMealPlanner({
             // Calculate week number based on position in the meal plan
             const weekNumber = Math.floor(dayIndex / 7) + 1;
             
+            console.log(`🔍 [handleSaveMealPlan] Processing dailyMenu for ${dayName} (date: ${dailyMenu.date}, dayOfWeek: ${dayOfWeek})`);
+            console.log(`🔍 [handleSaveMealPlan] ${dailyMenu.meals.length} meals in this day:`, dailyMenu.meals.map((m: any) => ({ name: m.mealName, type: m.mealType })));
+            
             dailyMenu.meals.forEach((meal: any) => {
-              flattenedMeals.push({
+              const transformedMeal = {
                 id: meal.id || `week${weekNumber}-${dayName}-${meal.mealType}`,
                 mealName: meal.mealName || 'Unnamed Meal',
                 mealType: meal.mealType || 'breakfast',
                 day: dayName,
-                slot: meal.mealType || 'breakfast',
+                slot: meal.mealType ? meal.mealType.toLowerCase() : 'breakfast',
                 week: weekNumber,
                 defenseSystems: meal.defenseSystems || [],
-                prepTime: meal.prepTime ? (typeof meal.prepTime === 'string' ? parseInt(meal.prepTime) : meal.prepTime) : 30,
-                cookTime: meal.cookTime ? (typeof meal.cookTime === 'string' ? parseInt(meal.cookTime) : meal.cookTime) : 0,
-                servings: meal.servings || rawPlan.defaultServings || 2,
-                recipeGenerated: !!meal.generatedRecipe,
-                recipeId: meal.generatedRecipe?.id,
-                customInstructions: meal.customInstructions,
-              });
+              };
+              console.log(`🔍 [handleSaveMealPlan] Transformed meal:`, transformedMeal);
+              flattenedMeals.push(transformedMeal as any);
+              transformedMeal.prepTime = meal.prepTime ? (typeof meal.prepTime === 'string' ? parseInt(meal.prepTime) : meal.prepTime) : 30;
+              transformedMeal.cookTime = meal.cookTime ? (typeof meal.cookTime === 'string' ? parseInt(meal.cookTime) : meal.cookTime) : 0;
+              transformedMeal.servings = meal.servings || rawPlan.defaultServings || 2;
+              transformedMeal.recipeGenerated = !!meal.generatedRecipe;
+              transformedMeal.recipeId = meal.generatedRecipe?.id;
+              transformedMeal.customInstructions = meal.customInstructions;
             });
           }
         });
       }
 
+      console.log(`🎯 [handleSaveMealPlan] Total flattened meals: ${flattenedMeals.length}`);
+      console.log(`🎯 [handleSaveMealPlan] Meals by day:`, flattenedMeals.reduce((acc: any, m: any) => {
+        acc[m.day] = (acc[m.day] || 0) + 1;
+        return acc;
+      }, {}));
+
       const transformedSavedPlan: MealPlan = {
         ...rawPlan,
         meals: flattenedMeals,
       };
+      
+      console.log(`✅ [handleSaveMealPlan] Setting meal plan with ${transformedSavedPlan.meals.length} meals`);
       
       setMealPlan(transformedSavedPlan);
 
@@ -1084,43 +1113,77 @@ export default function EnhancedMealPlanner({
   // Log meal plan
   const handleLogMealPlan = useCallback(async () => {
     if (!mealPlan.id) {
-      alert('Please save the meal plan first');
-      return;
-    }
-
-    if (!confirm('Log all meals with recipes from your meal plan to track progress?')) {
-      return;
-    }
-
-    setOptimisticAction('logging');
-    
-    try {
-      const response = await fetch('/api/meal-planner/log-week-plan', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mealPlanId: mealPlan.id }),
+      setShoppingListDialog({
+        isOpen: true,
+        type: 'error',
+        title: 'Save Required',
+        message: 'Please save the meal plan first',
       });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || 'Failed to log meal plan');
-      }
-
-      if (result.logged > 0) {
-        alert(result.message || `Successfully logged ${result.logged} meal${result.logged > 1 ? 's' : ''}! Check your progress page to see your tracked data.`);
-        // Optionally redirect to progress page
-        // router.push('/progress');
-      } else {
-        alert(result.message || 'No meals were logged. Make sure you have generated recipes for your meals.');
-      }
-    } catch (error) {
-      console.error('Error logging meal plan:', error);
-      alert(error instanceof Error ? error.message : 'Failed to log meal plan');
-    } finally {
-      setOptimisticAction(null);
+      return;
     }
-  }, [mealPlan.id]);
+
+    // Show confirmation dialog
+    setShoppingListDialog({
+      isOpen: true,
+      type: 'success',
+      title: 'Log Meal Plan',
+      message: 'This will log all meals with recipes from your meal plan to track your progress. This helps you monitor your adherence to your wellness goals!',
+      onConfirm: async () => {
+        setShoppingListDialog({ isOpen: false, type: 'info', title: '', message: '' });
+        setOptimisticAction('logging');
+        
+        try {
+          console.log('🔍 [EnhancedMealPlanner] Logging meal plan:', mealPlan.id);
+          console.log('🔍 [EnhancedMealPlanner] Meals in plan:', mealPlan.meals.length);
+          console.log('🔍 [EnhancedMealPlanner] Meals with recipes:', mealPlan.meals.filter(m => m.recipeGenerated).length);
+          
+          const response = await fetch('/api/meal-planner/log-week-plan', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mealPlanId: mealPlan.id }),
+          });
+
+          const result = await response.json();
+          console.log('🔍 [EnhancedMealPlanner] Log result:', result);
+
+          if (!response.ok) {
+            throw new Error(result.message || 'Failed to log meal plan');
+          }
+
+          if (result.logged > 0) {
+            // Close dialog first, then redirect to progress page
+            setShoppingListDialog({ isOpen: false, type: 'info', title: '', message: '' });
+            setOptimisticAction(null);
+            
+            // Small delay to ensure dialog closes before redirect
+            setTimeout(() => {
+              router.push('/progress');
+            }, 100);
+          } else {
+            setShoppingListDialog({
+              isOpen: true,
+              type: 'error',
+              title: 'No Meals Logged',
+              message: result.message || 'No meals were logged. Make sure you have generated recipes for your meals.',
+            });
+            setOptimisticAction(null);
+          }
+        } catch (error) {
+          console.error('Error logging meal plan:', error);
+          setShoppingListDialog({
+            isOpen: true,
+            type: 'error',
+            title: 'Error',
+            message: error instanceof Error ? error.message : 'Failed to log meal plan',
+          });
+          setOptimisticAction(null);
+        }
+      },
+      onCancel: () => {
+        setShoppingListDialog({ isOpen: false, type: 'info', title: '', message: '' });
+      },
+    });
+  }, [mealPlan.id, mealPlan.meals]);
 
   // Share plan
   const handleSharePlan = useCallback(() => {
@@ -1128,6 +1191,25 @@ export default function EnhancedMealPlanner({
       onPlanShare(mealPlan);
     }
   }, [mealPlan, onPlanShare]);
+
+  // Fetch logged dates for this meal plan
+  useEffect(() => {
+    const fetchLoggedDates = async () => {
+      if (!mealPlan.id) return;
+
+      try {
+        const response = await fetch(`/api/meal-planner/${mealPlan.id}/logged-dates`);
+        if (response.ok) {
+          const data = await response.json();
+          setLoggedDates(new Set(data.loggedDates || []));
+        }
+      } catch (error) {
+        console.error('Error fetching logged dates:', error);
+      }
+    };
+
+    fetchLoggedDates();
+  }, [mealPlan.id]);
 
   // Configuration step
   if (currentStep === 'configure') {
@@ -1284,6 +1366,8 @@ export default function EnhancedMealPlanner({
           <MealPlanView
             meals={mealPlan.meals}
             duration={mealPlan.durationWeeks || mealPlan.duration || configuration.duration || 1}
+            weekStart={mealPlan.weekStart}
+            loggedDates={loggedDates}
             onMealUpdate={handleMealUpdate}
             onMealDelete={handleMealDelete}
             onMealCopy={handleMealCopy}
@@ -1342,18 +1426,37 @@ export default function EnhancedMealPlanner({
       {/* Shopping List Dialog */}
       <ConfirmDialog
         isOpen={shoppingListDialog.isOpen}
-        onClose={() => setShoppingListDialog({ ...shoppingListDialog, isOpen: false })}
-        onConfirm={() => {
-          if (shoppingListDialog.type === 'success' && shoppingListDialog.shoppingListId) {
-            router.push(`/shopping-lists/${shoppingListDialog.shoppingListId}`);
+        onClose={() => {
+          if (shoppingListDialog.onCancel) {
+            shoppingListDialog.onCancel();
+          } else {
+            setShoppingListDialog({ ...shoppingListDialog, isOpen: false });
           }
-          setShoppingListDialog({ ...shoppingListDialog, isOpen: false });
+        }}
+        onConfirm={() => {
+          if (shoppingListDialog.onConfirm) {
+            shoppingListDialog.onConfirm();
+          } else if (shoppingListDialog.type === 'success' && shoppingListDialog.shoppingListId) {
+            router.push(`/shopping-lists/${shoppingListDialog.shoppingListId}`);
+            setShoppingListDialog({ ...shoppingListDialog, isOpen: false });
+          } else {
+            setShoppingListDialog({ ...shoppingListDialog, isOpen: false });
+          }
         }}
         title={shoppingListDialog.title}
         message={shoppingListDialog.message}
-        confirmText={shoppingListDialog.type === 'success' ? 'View Shopping List' : 'OK'}
-        cancelText={shoppingListDialog.type === 'success' ? 'Close' : undefined}
-        type={shoppingListDialog.type === 'success' ? 'success' : 'danger'}
+        confirmText={
+          shoppingListDialog.type === 'success' && shoppingListDialog.shoppingListId ? 'View Shopping List' :
+          shoppingListDialog.type === 'success' && shoppingListDialog.onConfirm ? 'Log Meals' :
+          shoppingListDialog.type === 'confirm' ? 'Continue' :
+          'OK'
+        }
+        cancelText={
+          (shoppingListDialog.type === 'success' || shoppingListDialog.type === 'confirm') ? 'Cancel' : 
+          undefined
+        }
+        type={shoppingListDialog.type === 'success' ? 'success' : shoppingListDialog.type === 'error' ? 'danger' : 'info'}
+        icon={shoppingListDialog.type === 'success' && shoppingListDialog.onConfirm ? <CheckCircle2 className="w-6 h-6" /> : undefined}
       />
 
       {/* Save/Update Dialog */}

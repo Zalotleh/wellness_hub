@@ -49,20 +49,24 @@ export default function MealPlanViewPage() {
         
         sortedDailyMenus.forEach((dailyMenu: any, dayIndex: number) => {
           if (dailyMenu.meals && Array.isArray(dailyMenu.meals)) {
-            const dayNames = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-            // Calculate week number (1-based) and day of week (0-6)
-            const weekNumber = Math.floor(dayIndex / 7) + 1;
-            const dayOfWeek = dayIndex % 7;
+            const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+            // Use the actual date from the dailyMenu to determine the day
+            const menuDate = new Date(dailyMenu.date);
+            const dayOfWeek = menuDate.getDay(); // 0=Sunday, 1=Monday, etc.
             const dayName = dayNames[dayOfWeek] || 'monday';
+            // Calculate week number based on position in the meal plan
+            const weekNumber = Math.floor(dayIndex / 7) + 1;
+            
+            console.log(`🔍 [page.tsx] Processing ${dayName} (date: ${dailyMenu.date}, dayOfWeek: ${dayOfWeek}, index: ${dayIndex})`);
             
             dailyMenu.meals.forEach((meal: any) => {
               // Map database meal structure to frontend expected structure
-              flattenedMeals.push({
+              const transformedMeal = {
                 id: meal.id || `week${weekNumber}-${dayName}-${meal.mealType}`,
                 mealName: meal.mealName || 'Unnamed Meal',
                 mealType: meal.mealType || 'breakfast',
                 day: dayName,
-                slot: meal.slot || meal.mealType || 'breakfast', // Use persisted slot, fallback to mealType
+                slot: meal.mealType ? meal.mealType.toLowerCase() : 'breakfast', // Convert to lowercase
                 week: weekNumber,
                 defenseSystems: meal.defenseSystems || [],
                 prepTime: meal.prepTime ? (typeof meal.prepTime === 'string' ? parseInt(meal.prepTime) : meal.prepTime) : 30,
@@ -71,7 +75,9 @@ export default function MealPlanViewPage() {
                 recipeGenerated: !!meal.generatedRecipe,
                 recipeId: meal.generatedRecipe?.id,
                 customInstructions: meal.customInstructions,
-              });
+              };
+              console.log(`🔍 [page.tsx] Transformed meal:`, { name: transformedMeal.mealName, day: transformedMeal.day, slot: transformedMeal.slot, mealType: meal.mealType });
+              flattenedMeals.push(transformedMeal);
             });
           }
         });
