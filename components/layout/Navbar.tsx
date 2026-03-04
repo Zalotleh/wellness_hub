@@ -1,7 +1,7 @@
 // components/layout/Navbar.tsx
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
@@ -29,13 +29,13 @@ import {
   CheckCircle2,
   ChevronDown,
   PlusCircle,
-  Wand2,
 } from 'lucide-react';
+
 
 export default function Navbar() {
   const pathname = usePathname();
   const { data: session, status } = useSession();
-  const { tier, isTrialing, canUse } = useFeatureAccess();
+  const { tier, isTrialing } = useFeatureAccess();
   const usageStats = useUsageStats();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -44,7 +44,7 @@ export default function Navbar() {
 
   // Debug: Log current tier (remove in production)
   if (process.env.NODE_ENV === 'development' && session?.user) {
-    console.log('Navbar tier:', tier, 'user:', (session.user as any)?.subscriptionTier);
+    console.log('Navbar tier:', tier, 'user:', (session.user as { subscriptionTier?: string })?.subscriptionTier);
   }
 
   // Use real usage data from API
@@ -59,33 +59,25 @@ export default function Navbar() {
   // Grouped Navigation Structure
   const navGroups = [
     {
-      label: 'My Health',
+      label: 'Dashboard',
       icon: TrendingUp,
       href: '/progress',
       hasDropdown: false,
     },
     {
-      label: 'My Kitchen',
+      label: 'Kitchen',
       icon: ChefHat,
       hasDropdown: true,
       items: [
-        { href: '/meal-planner', label: 'Create Meal Plan', icon: Calendar },
         { href: '/recipes', label: 'Browse Recipes', icon: ChefHat },
-        { href: '/recipes/ai-generate', label: 'AI Recipe Generator', icon: Sparkles },
-        { href: '/recipes/create', label: 'Add Your Recipe', icon: PlusCircle },
-      ],
-    },
-    {
-      label: 'Meal Planner',
-      icon: Calendar,
-      hasDropdown: true,
-      items: [
+        { href: '/recipes/ai-generate', label: 'AI Generator', icon: Sparkles },
+        { href: '/recipes/create', label: 'Add Recipe', icon: PlusCircle },
         { href: '/meal-planner', label: 'Create Meal Plan', icon: Calendar },
-        { href: '/saved-plans', label: 'My Plans', icon: Bookmark },
+        { href: '/saved-plans', label: 'Saved Plans', icon: Bookmark },
       ],
     },
     {
-      label: 'Shopping Lists',
+      label: 'Shopping',
       icon: ShoppingCart,
       href: '/shopping-lists',
       hasDropdown: false,
@@ -125,18 +117,17 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-white dark:bg-gray-900 shadow-lg border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 backdrop-blur-sm bg-white/95 dark:bg-gray-900/95">
+    <nav className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200/60 dark:border-gray-700/60 sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/progress" className="flex items-center space-x-3 group">
-            <div className="bg-gradient-to-br from-green-500 via-green-600 to-blue-600 p-2.5 rounded-xl shadow-md group-hover:shadow-lg transition-all duration-200 group-hover:scale-105">
-              <Heart className="w-6 h-6 text-white" />
+          <Link href="/progress" className="flex items-center gap-2.5 group">
+            <div className="bg-gradient-to-br from-violet-500 via-purple-500 to-pink-500 p-2 rounded-xl shadow-md group-hover:shadow-lg group-hover:shadow-violet-500/25 transition-all duration-200 group-hover:scale-105">
+              <Heart className="w-5 h-5 text-white" />
             </div>
             <div className="hidden sm:block">
-              <span className="text-xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
-                5x5x5 Wellness
-              </span>
+              <span className="text-lg font-extrabold tracking-tight bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">5×5×5</span>
+              <span className="hidden md:inline text-lg font-extrabold text-gray-700 dark:text-gray-200"> Wellness</span>
             </div>
           </Link>
 
@@ -148,28 +139,28 @@ export default function Navbar() {
               // If group has dropdown
               if (group.hasDropdown && group.items) {
                 const isGroupActive = group.items.some(item => isActive(item.href));
-                const showMenu = 
-                  (group.label === 'My Kitchen' && showMyKitchenMenu) ||
-                  (group.label === 'Meal Planner' && showMealPlansMenu);
+                const showMenu =
+                  (group.label === 'Kitchen' && showMyKitchenMenu) ||
+                  (group.label === 'Meal Plans' && showMealPlansMenu);
                 
                 return (
                   <div 
                     key={group.label} 
                     className="relative"
                     onMouseEnter={() => {
-                      if (group.label === 'My Kitchen') setShowMyKitchenMenu(true);
-                      if (group.label === 'Meal Planner') setShowMealPlansMenu(true);
+                      if (group.label === 'Kitchen') setShowMyKitchenMenu(true);
+                      if (group.label === 'Meal Plans') setShowMealPlansMenu(true);
                     }}
                     onMouseLeave={() => {
-                      if (group.label === 'My Kitchen') setShowMyKitchenMenu(false);
-                      if (group.label === 'Meal Planner') setShowMealPlansMenu(false);
+                      if (group.label === 'Kitchen') setShowMyKitchenMenu(false);
+                      if (group.label === 'Meal Plans') setShowMealPlansMenu(false);
                     }}
                   >
                     <button
                       className={`flex items-center space-x-1.5 px-3 py-2 rounded-xl font-medium transition-all duration-200 ${
                         isGroupActive
-                          ? 'bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/30 dark:to-blue-900/30 text-green-700 dark:text-green-400 shadow-sm border border-green-200 dark:border-green-800'
-                          : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
+                          ? 'bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-400 font-semibold'
+                          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
                       }`}
                     >
                       <Icon className="w-4 h-4" />
@@ -181,21 +172,27 @@ export default function Navbar() {
                     {showMenu && (
                       <div className="absolute top-full left-0 pt-1 z-50">
                         <div className="w-64 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-100 dark:border-gray-700 py-2 animate-in fade-in slide-in-from-top-1 duration-200">
-                          {group.items.map((item) => {
+                          {group.items.map((item, idx) => {
                             const ItemIcon = item.icon;
+                            // Separator before meal plan items in Kitchen dropdown (after index 2)
+                            const showDivider = group.label === 'Kitchen' && idx === 3;
                             return (
-                              <Link
-                                key={item.href}
-                                href={item.href}
-                                className={`flex items-center space-x-3 px-4 py-2.5 mx-2 rounded-lg transition-all duration-150 ${
-                                  isActive(item.href)
-                                    ? 'bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/30 dark:to-blue-900/30 text-green-700 dark:text-green-400 shadow-sm'
-                                    : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'
-                                }`}
-                              >
-                                <ItemIcon className={`w-5 h-5 ${isActive(item.href) ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`} />
-                                <span className="text-sm font-medium">{item.label}</span>
-                              </Link>
+                              <React.Fragment key={item.href}>
+                                {showDivider && (
+                                  <div className="mx-3 my-1.5 border-t border-gray-100 dark:border-gray-700" />
+                                )}
+                                <Link
+                                  href={item.href}
+                                  className={`flex items-center space-x-3 px-4 py-2.5 mx-2 rounded-lg transition-all duration-150 ${
+                                    isActive(item.href)
+                                      ? 'bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-400'
+                                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'
+                                  }`}
+                                >
+                                  <ItemIcon className={`w-4 h-4 flex-shrink-0 ${isActive(item.href) ? 'text-violet-600 dark:text-violet-400' : 'text-gray-400 dark:text-gray-500'}`} />
+                                  <span className="text-sm font-medium">{item.label}</span>
+                                </Link>
+                              </React.Fragment>
                             );
                           })}
                         </div>
@@ -211,13 +208,9 @@ export default function Navbar() {
                   key={group.label}
                   href={group.href!}
                   className={`flex items-center space-x-2 px-3 py-2 rounded-xl font-medium transition-all duration-200 ${
-                    group.label === 'Community'
-                      ? isActive(group.href!)
-                        ? 'bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/30 dark:to-blue-900/30 text-green-700 dark:text-green-400 shadow-sm border border-green-200 dark:border-green-800'
-                        : 'text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-700 dark:hover:text-purple-300'
-                      : isActive(group.href!)
-                        ? 'bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/30 dark:to-blue-900/30 text-green-700 dark:text-green-400 shadow-sm border border-green-200 dark:border-green-800'
-                        : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
+                    isActive(group.href!)
+                      ? 'bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-400 font-semibold'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -364,7 +357,7 @@ export default function Navbar() {
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center space-x-2 p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200 border border-transparent hover:border-gray-200 dark:hover:border-gray-700"
                 >
-                  <div className="w-9 h-9 bg-gradient-to-br from-green-500 via-green-600 to-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-md">
+                  <div className="w-9 h-9 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-md shadow-violet-500/20">
                     {session.user.name?.[0]?.toUpperCase() || 'U'}
                   </div>
                   <span className="hidden md:block text-sm font-medium text-gray-700 dark:text-gray-200">
@@ -387,7 +380,7 @@ export default function Navbar() {
                             <p className="text-sm font-medium text-gray-900 dark:text-white">
                               {session.user.name}
                             </p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-300">{session.user.email}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">{session.user.email}</p>
                           </div>
                           <TierBadge className="ml-2" />
                         </div>
@@ -757,22 +750,27 @@ export default function Navbar() {
                         <Icon className="w-3.5 h-3.5" />
                         <span>{group.label}</span>
                       </div>
-                      {group.items.map((item) => {
+                      {group.items.map((item, idx) => {
                         const ItemIcon = item.icon;
+                        const showDivider = group.label === 'Kitchen' && idx === 3;
                         return (
-                          <Link
-                            key={item.href}
-                            href={item.href}
-                            onClick={() => setShowMobileMenu(false)}
-                            className={`flex items-center space-x-3 px-4 py-3 ml-2 rounded-xl font-medium transition-all duration-200 ${
-                              isActive(item.href)
-                                ? 'bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/30 dark:to-blue-900/30 text-green-700 dark:text-green-400 shadow-sm border border-green-200 dark:border-green-800'
-                                : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
-                            }`}
-                          >
-                            <ItemIcon className={`w-5 h-5 ${isActive(item.href) ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`} />
-                            <span>{item.label}</span>
-                          </Link>
+                          <React.Fragment key={item.href}>
+                            {showDivider && (
+                              <div className="mx-4 my-1 border-t border-gray-100 dark:border-gray-700" />
+                            )}
+                            <Link
+                              href={item.href}
+                              onClick={() => setShowMobileMenu(false)}
+                              className={`flex items-center space-x-3 px-4 py-3 ml-2 rounded-xl font-medium transition-all duration-200 ${
+                                isActive(item.href)
+                                  ? 'bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-400 font-semibold'
+                                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
+                              }`}
+                            >
+                              <ItemIcon className={`w-5 h-5 ${isActive(item.href) ? 'text-violet-600 dark:text-violet-400' : 'text-gray-400 dark:text-gray-500'}`} />
+                              <span>{item.label}</span>
+                            </Link>
+                          </React.Fragment>
                         );
                       })}
                     </div>
@@ -786,20 +784,12 @@ export default function Navbar() {
                     href={group.href!}
                     onClick={() => setShowMobileMenu(false)}
                     className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
-                      group.label === 'Community'
-                        ? isActive(group.href!)
-                          ? 'bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/30 dark:to-blue-900/30 text-green-700 dark:text-green-400 shadow-sm border border-green-200 dark:border-green-800'
-                          : 'text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-700 dark:hover:text-purple-300'
-                        : isActive(group.href!)
-                          ? 'bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/30 dark:to-blue-900/30 text-green-700 dark:text-green-400 shadow-sm border border-green-200 dark:border-green-800'
-                          : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
+                      isActive(group.href!)
+                        ? 'bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-400 font-semibold'
+                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
                     }`}
                   >
-                    <Icon className={`w-5 h-5 ${
-                      group.label === 'Community'
-                        ? isActive(group.href!) ? 'text-green-600 dark:text-green-400' : 'text-purple-600 dark:text-purple-400'
-                        : isActive(group.href!) ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'
-                    }`} />
+                    <Icon className={`w-5 h-5 ${isActive(group.href!) ? 'text-violet-600 dark:text-violet-400' : 'text-gray-400 dark:text-gray-500'}`} />
                     <span>{group.label}</span>
                   </Link>
                 );

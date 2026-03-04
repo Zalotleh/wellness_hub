@@ -7,28 +7,37 @@ import EnhancedMealPlanner from '@/components/meal-planner/EnhancedMealPlanner';
 import Footer from '@/components/layout/Footer';
 import ErrorBoundary from '@/components/ui/ErrorBoundary';
 import { ToastContainer, useToast } from '@/components/ui/Toast';
-import { Calendar, ChefHat, TrendingUp, Sparkles, Shield, Target, Activity } from 'lucide-react';
+import { Calendar, ChefHat, Sparkles, Target, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
+
+interface MealPlannerParams {
+  targetSystems?: string[];
+  dietaryRestrictions?: string[];
+  duration?: number;
+}
+
+interface SavedPlan {
+  id?: string;
+  [key: string]: unknown;
+}
 
 // Custom error boundary for meal planner
 function MealPlannerErrorFallback() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
-      <div className="max-w-lg w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 text-center border dark:border-gray-700">
-        <div className="w-16 h-16 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
-          <ChefHat className="w-8 h-8 text-red-600 dark:text-red-400" />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-violet-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
+      <div className="max-w-lg w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-10 text-center border dark:border-gray-700">
+        <div className="w-14 h-14 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-5">
+          <ChefHat className="w-7 h-7 text-red-600 dark:text-red-400" />
         </div>
-        
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+        <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white mb-3 tracking-tight">
           Meal Planner Temporarily Unavailable
         </h2>
-        
-        <p className="text-gray-600 dark:text-gray-200 mb-6">
-          We're experiencing issues with the meal planner. Please try refreshing the page or check back in a few minutes.
+        <p className="text-gray-500 dark:text-gray-400 mb-7">
+          We&apos;re experiencing issues with the meal planner. Please try refreshing the page or check back in a few minutes.
         </p>
-        
         <button
           onClick={() => window.location.reload()}
-          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-semibold shadow-lg shadow-blue-500/20 transition-all active:scale-[0.98]"
         >
           Refresh Page
         </button>
@@ -43,7 +52,7 @@ export default function MealPlannerPage() {
   const { toasts, removeToast, success, error } = useToast();
   const [fromRecommendation, setFromRecommendation] = useState(false);
   const [recommendationId, setRecommendationId] = useState<string | null>(null);
-  const [initialParams, setInitialParams] = useState<any>(null);
+  const [initialParams, setInitialParams] = useState<MealPlannerParams | null>(null);
 
   // Parse URL params from recommendation
   useEffect(() => {
@@ -57,21 +66,14 @@ export default function MealPlannerPage() {
       setFromRecommendation(true);
       setRecommendationId(recId);
 
-      // Build initial params
-      const params: any = {};
+      const params: MealPlannerParams = {};
       if (targetSystems) {
-        try {
-          params.targetSystems = JSON.parse(targetSystems);
-        } catch {
-          params.targetSystems = targetSystems.split(',');
-        }
+        try { params.targetSystems = JSON.parse(targetSystems); }
+        catch { params.targetSystems = targetSystems.split(','); }
       }
       if (dietaryRestrictions) {
-        try {
-          params.dietaryRestrictions = JSON.parse(dietaryRestrictions);
-        } catch {
-          params.dietaryRestrictions = dietaryRestrictions.split(',');
-        }
+        try { params.dietaryRestrictions = JSON.parse(dietaryRestrictions); }
+        catch { params.dietaryRestrictions = dietaryRestrictions.split(','); }
       }
       if (duration) params.duration = parseInt(duration);
 
@@ -79,18 +81,13 @@ export default function MealPlannerPage() {
     }
   }, [searchParams]);
 
-  // Dynamic SEO setup for client component
+  // Dynamic SEO setup
   useEffect(() => {
-    // Update document title
     document.title = 'AI Meal Planner | 5x5x5 Wellness Hub';
-    
-    // Update meta description
     const metaDescription = document.querySelector('meta[name="description"]');
     if (metaDescription) {
       metaDescription.setAttribute('content', 'Create personalized weekly meal plans using AI based on Dr. William Li\'s 5x5x5 system. Balance nutrition across five defense systems for optimal health.');
     }
-    
-    // Update meta keywords
     const metaKeywords = document.querySelector('meta[name="keywords"]');
     if (metaKeywords) {
       metaKeywords.setAttribute('content', 'meal planner, AI nutrition, 5x5x5 system, defense systems, healthy eating');
@@ -102,209 +99,104 @@ export default function MealPlannerPage() {
     }
   }, []);
 
-  // Handle meal plan save
-  const handlePlanSave = async (plan: any) => {
+  const handlePlanSave = async (plan: SavedPlan) => {
     success('Meal Plan Saved', 'Your meal plan has been saved successfully!');
-    
-    // If from recommendation, mark as completed
+
     if (fromRecommendation && recommendationId) {
       try {
         await fetch(`/api/recommendations/${recommendationId}/accept`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            metadata: {
-              mealPlanId: plan.id,
-              completedAt: new Date().toISOString(),
-            },
+            metadata: { mealPlanId: plan.id, completedAt: new Date().toISOString() },
           }),
         });
       } catch (err) {
         console.error('Failed to track recommendation completion:', err);
       }
     }
-    
-    // Redirect to the individual meal plan page after creation
+
     if (plan?.id) {
-      // Use replace to avoid flash of create page
       router.replace(`/meal-planner/${plan.id}`);
     }
   };
 
-  // Handle meal plan share
-  const handlePlanShare = (plan: any) => {
+  const handlePlanShare = (_plan: SavedPlan) => {
     success('Meal Plan Shared', 'Your meal plan has been shared successfully!');
   };
 
-  // Handle errors
-  const handleError = (error: Error, errorInfo: any) => {
-    console.error('Meal Planner Error:', error, errorInfo);
+  const handleError = (err: Error, errorInfo: unknown) => {
+    console.error('Meal Planner Error:', err, errorInfo);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
-      <main className="py-8 px-4">
-        <div className="max-w-7xl mx-auto">
-          {/* Enhanced Header */}
-          <header className="mb-8">
-            {/* Recommendation Indicator */}
-            {fromRecommendation && (
-              <div className="mb-4 p-4 bg-gradient-to-r from-green-100 to-blue-100 dark:from-green-900/30 dark:to-blue-900/30 border border-green-200 dark:border-green-800 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <Target className="w-5 h-5 text-green-600 dark:text-green-400" />
-                  <div className="flex-1">
-                    <p className="font-semibold text-green-900 dark:text-green-100">
-                      Smart Recommendation
-                    </p>
-                    <p className="text-sm text-green-700 dark:text-green-300">
-                      This meal plan will help balance multiple defense systems
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-violet-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
+      {/* Sticky page header */}
+      <div className="sticky top-0 z-30 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200/60 dark:border-gray-700/60">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Link
+              href="/progress"
+              className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Dashboard</span>
+            </Link>
+            <span className="text-gray-300 dark:text-gray-600">/</span>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Meal Planner</span>
+          </div>
 
-            <div className="flex items-center space-x-4 mb-6">
-              <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-blue-500 rounded-lg flex items-center justify-center">
-                <Calendar className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 dark:text-white">
-                  AI Meal Planner
-                </h1>
-                <p className="text-gray-600 dark:text-gray-300 text-lg">
-                  Powered by the 5x5x5 Defense System
-                </p>
-              </div>
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-md flex items-center justify-center shadow">
+              <Calendar className="w-3.5 h-3.5 text-white" />
             </div>
-
-            {/* Enhanced Info Banner */}
-            <div className="bg-gradient-to-r from-green-500 to-blue-500 rounded-lg p-6 text-white shadow-lg">
-              <div className="flex items-start space-x-4">
-                <Sparkles className="w-8 h-8 flex-shrink-0" />
-                <div>
-                  <h2 className="text-xl font-bold mb-3">Smart Meal Planning Made Simple</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                    <div className="flex items-start space-x-3">
-                      <span className="font-bold text-lg bg-white/20 rounded-full w-8 h-8 flex items-center justify-center">1</span>
-                      <div>
-                        <p className="font-semibold">Configure Preferences</p>
-                        <p className="text-green-100">Set dietary needs and focus on specific defense systems</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <span className="font-bold text-lg bg-white/20 rounded-full w-8 h-8 flex items-center justify-center">2</span>
-                      <div>
-                        <p className="font-semibold">AI Generation</p>
-                        <p className="text-green-100">Advanced AI creates balanced weekly meal plans</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <span className="font-bold text-lg bg-white/20 rounded-full w-8 h-8 flex items-center justify-center">3</span>
-                      <div>
-                        <p className="font-semibold">Customize & Share</p>
-                        <p className="text-green-100">Edit meals, generate recipes, and share your plan</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </header>
-
-          {/* Main Meal Planner with Error Boundary */}
-          <ErrorBoundary 
-            fallback={<MealPlannerErrorFallback />}
-            onError={handleError}
-          >
-            <EnhancedMealPlanner
-              onPlanSave={handlePlanSave}
-              onPlanShare={handlePlanShare}
-              initialParams={initialParams}
-              fromRecommendation={fromRecommendation}
-              className="mb-8"
-            />
-          </ErrorBoundary>
-
-          {/* Enhanced Features Grid */}
-          <section className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6" aria-labelledby="features-heading">
-            <h2 id="features-heading" className="sr-only">Meal Planner Features</h2>
-            
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow border dark:border-gray-700">
-              <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center mb-4">
-                <Shield className="w-6 h-6 text-green-600 dark:text-green-400" />
-              </div>
-              <h3 className="font-bold text-gray-900 dark:text-white mb-2">Balanced Defense Systems</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-300">
-                Every meal plan ensures comprehensive coverage of all five defense systems: Angiogenesis, Regeneration, Microbiome, DNA Protection, and Immunity.
-              </p>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow border dark:border-gray-700">
-              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mb-4">
-                <Activity className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-              </div>
-              <h3 className="font-bold text-gray-900 dark:text-white mb-2">AI-Powered Optimization</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-300">
-                Advanced algorithms ensure diverse meals with optimal nutrient distribution, cooking methods, and ingredient variety throughout the week.
-              </p>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow border dark:border-gray-700">
-              <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center mb-4">
-                <Target className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-              </div>
-              <h3 className="font-bold text-gray-900 dark:text-white mb-2">Fully Customizable</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-300">
-                Personalize every aspect: edit meals, adjust portions, set dietary restrictions, generate shopping lists, and share with others.
-              </p>
-            </div>
-          </section>
-
-          {/* Enhanced Tips Section */}
-          <section className="mt-8 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-lg p-6" aria-labelledby="tips-heading">
-            <h3 id="tips-heading" className="font-bold text-blue-900 dark:text-blue-300 mb-4 flex items-center gap-2">
-              <Sparkles className="w-5 h-5" />
-              Pro Meal Planning Tips
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <ul className="space-y-3 text-sm text-blue-800 dark:text-blue-300">
-                <li className="flex items-start space-x-3">
-                  <span className="text-blue-600 dark:text-blue-400 font-bold">•</span>
-                  <span>
-                    <strong>Sunday Prep:</strong> Batch prepare ingredients and proteins for the week ahead
-                  </span>
-                </li>
-                <li className="flex items-start space-x-3">
-                  <span className="text-blue-600 dark:text-blue-400 font-bold">•</span>
-                  <span>
-                    <strong>Smart Shopping:</strong> Export your shopping list and organize by store layout
-                  </span>
-                </li>
-              </ul>
-              <ul className="space-y-3 text-sm text-blue-800 dark:text-blue-300">
-                <li className="flex items-start space-x-3">
-                  <span className="text-blue-600 dark:text-blue-400 font-bold">•</span>
-                  <span>
-                    <strong>Flexible Swapping:</strong> Feel free to move meals between days as needed
-                  </span>
-                </li>
-                <li className="flex items-start space-x-3">
-                  <span className="text-blue-600 dark:text-blue-400 font-bold">•</span>
-                  <span>
-                    <strong>Leftover Strategy:</strong> Plan larger portions for strategic leftover meals
-                  </span>
-                </li>
-              </ul>
-            </div>
-          </section>
+            <span className="text-sm font-semibold text-gray-700 dark:text-gray-200 hidden sm:block">
+              AI Meal Planner
+            </span>
+          </div>
         </div>
+      </div>
+
+      <main className="max-w-7xl mx-auto px-4 py-8">
+        {/* Hero header */}
+        <div className="mb-8 text-center">
+          {fromRecommendation ? (
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 dark:bg-blue-900/40 border border-blue-200 dark:border-blue-700 rounded-full text-sm font-medium text-blue-700 dark:text-blue-300 mb-4">
+              <Target className="w-4 h-4" />
+              Smart Recommendation — this plan targets your wellness goals
+            </div>
+          ) : (
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-100 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-700 rounded-full text-sm font-medium text-indigo-700 dark:text-indigo-300 mb-4">
+              <Sparkles className="w-4 h-4" />
+              Powered by AI
+            </div>
+          )}
+
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-white mb-3 tracking-tight">
+            Plan Your Week
+          </h1>
+          <p className="text-gray-500 dark:text-gray-400 max-w-lg mx-auto text-base">
+            Choose your defense systems and dietary needs, then let AI craft a balanced
+            weekly meal plan tailored to your health goals.
+          </p>
+        </div>
+
+        {/* Main Meal Planner with Error Boundary */}
+        <ErrorBoundary
+          fallback={<MealPlannerErrorFallback />}
+          onError={handleError}
+        >
+          <EnhancedMealPlanner
+            onPlanSave={handlePlanSave}
+            onPlanShare={handlePlanShare}
+            initialParams={initialParams ?? undefined}
+            fromRecommendation={fromRecommendation}
+            className="mb-8"
+          />
+        </ErrorBoundary>
       </main>
 
-      {/* Footer */}
       <Footer />
-
-      {/* Toast Notifications */}
       <ToastContainer toasts={toasts} onRemove={removeToast} />
     </div>
   );

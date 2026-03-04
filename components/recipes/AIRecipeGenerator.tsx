@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { DefenseSystem, RecipeFormData } from '@/types';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
 import { Sparkles, Loader2, Plus, X, Wand2, Info, ChevronDown } from 'lucide-react';
@@ -10,9 +10,15 @@ import {
   trackGeneration,
   shouldShowOnboarding,
   shouldShowEncouragement,
-  getPersonalizedTips,
 } from '@/lib/tracking/generation-stats';
 import AIGeneratorOnboarding from '@/components/onboarding/AIGeneratorOnboarding';
+
+interface GeneratedIngredient {
+  name: string;
+  amount?: string;
+  quantity?: string;
+  unit?: string;
+}
 
 interface AIRecipeGeneratorProps {
   onRecipeGenerated?: (recipe: RecipeFormData) => void;
@@ -40,7 +46,7 @@ export default function AIRecipeGenerator({
   const [dietaryRestrictions, setDietaryRestrictions] = useState<string[]>(
     initialParams?.dietaryRestrictions || []
   );
-  const [preferencesLoaded, setPreferencesLoaded] = useState(false);
+  const preferencesLoadedRef = useRef(false);
   const [mealType, setMealType] = useState(
     initialParams?.preferredMealTime?.toLowerCase() || 'any'
   );
@@ -57,7 +63,6 @@ export default function AIRecipeGenerator({
     measurementSystem: 'imperial' | 'metric';
   } | null>(null);
   const [wasNotCounted, setWasNotCounted] = useState(false);
-  const [showTips, setShowTips] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [encouragementMsg, setEncouragementMsg] = useState<string | null>(null);
   const [ingredientSuggestions, setIngredientSuggestions] = useState<string[]>([]);
@@ -67,7 +72,7 @@ export default function AIRecipeGenerator({
   const calculateQualityScore = () => {
     const validIngredients = ingredients.filter((ing) => ing.trim() !== '');
     let score = 0;
-    let tips: string[] = [];
+    const tips: string[] = [];
 
     // Defense system selected (always true)
     score += 1;
@@ -111,10 +116,6 @@ export default function AIRecipeGenerator({
     qualityPercentage >= 80 ? 'text-green-600 dark:text-green-400' :
     qualityPercentage >= 60 ? 'text-yellow-600 dark:text-yellow-400' :
     'text-orange-600 dark:text-orange-400';
-  const qualityBgColor = 
-    qualityPercentage >= 80 ? 'bg-green-100 dark:bg-green-900/20' :
-    qualityPercentage >= 60 ? 'bg-yellow-100 dark:bg-yellow-900/20' :
-    'bg-orange-100 dark:bg-orange-900/20';
   const qualityBarColor = 
     qualityPercentage >= 80 ? 'bg-green-500' :
     qualityPercentage >= 60 ? 'bg-yellow-500' :
@@ -140,13 +141,13 @@ export default function AIRecipeGenerator({
         
         console.log('🔍 AIRecipeGenerator - Loaded user preferences:', userPrefs);
         console.log('🔍 AIRecipeGenerator - initialParams:', initialParams);
-        console.log('🔍 AIRecipeGenerator - preferencesLoaded:', preferencesLoaded);
+        console.log('🔍 AIRecipeGenerator - preferencesLoaded:', preferencesLoadedRef.current);
         
         // Set measurement system
         setMeasurementSystem(measurementPref.system);
 
         // Load user preferences if not overridden by initialParams
-        if (userPrefs?.preferences && !preferencesLoaded) {
+        if (userPrefs?.preferences && !preferencesLoadedRef.current) {
           console.log('✅ Loading preferences from API...');
           
           // Dietary restrictions: Only set if not provided via initialParams
@@ -166,7 +167,7 @@ export default function AIRecipeGenerator({
             setDefenseSystems(userPrefs.preferences.defaultFocusSystems as DefenseSystem[]);
           }
           
-          setPreferencesLoaded(true);
+          preferencesLoadedRef.current = true;
         }
       } catch (error) {
         console.error('Error loading preferences:', error);
@@ -331,7 +332,7 @@ export default function AIRecipeGenerator({
       if (onRecipeGenerated) {
         onRecipeGenerated(validatedRecipe);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('❌ Error in handleGenerate:', err);
       
       // Track failed generation (only if it wasn't due to validation/not counted)
@@ -347,7 +348,7 @@ export default function AIRecipeGenerator({
         );
       }
       
-      setError(err.message || 'Failed to generate recipe');
+      setError(err instanceof Error ? err.message : 'Failed to generate recipe');
     } finally {
       setIsGenerating(false);
     }
@@ -414,9 +415,9 @@ export default function AIRecipeGenerator({
       if (onRecipeGenerated) {
         onRecipeGenerated(validatedRecipe);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('❌ Error in handleRetry:', err);
-      setError(err.message || 'Failed to generate recipe');
+      setError(err instanceof Error ? err.message : 'Failed to generate recipe');
     } finally {
       setIsGenerating(false);
     }
@@ -447,7 +448,7 @@ export default function AIRecipeGenerator({
     const recipeData: RecipeFormData = {
       title: recipeTitle,
       ingredients: Array.isArray(generatedRecipe.ingredients) 
-        ? generatedRecipe.ingredients.map((ing: any) => {
+        ? generatedRecipe.ingredients.map((ing: GeneratedIngredient) => {
             if (typeof ing === 'string') {
               return { name: ing, quantity: '1', unit: 'piece' };
             }
@@ -518,8 +519,8 @@ export default function AIRecipeGenerator({
       setIngredients(['']);
       setDietaryRestrictions([]);
       setError(null); // Clear any previous errors on success
-    } catch (err: any) {
-      setError(err.message || 'Failed to save recipe');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to save recipe');
     } finally {
       setIsSaving(false);
     }
@@ -565,9 +566,9 @@ export default function AIRecipeGenerator({
           <div className="flex items-start gap-3">
             <Sparkles className="w-5 h-5 mt-0.5 flex-shrink-0" />
             <div>
-              <p className="font-semibold mb-1">Let's Add More Variety! 🌈</p>
+              <p className="font-semibold mb-1">Let&apos;s Add More Variety! 🌈</p>
               <p className="text-sm text-white/90">
-                Try new ingredients you haven't used before. The AI will suggest creative recipes with diverse foods.
+                Try new ingredients you haven&apos;t used before. The AI will suggest creative recipes with diverse foods.
               </p>
             </div>
           </div>
@@ -585,24 +586,6 @@ export default function AIRecipeGenerator({
               </p>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Personalized Tips (from history) */}
-      {!showOnboarding && getPersonalizedTips().length > 0 && (
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-          <h4 className="font-semibold text-blue-900 dark:text-blue-200 mb-2 flex items-center gap-2">
-            <Wand2 className="w-4 h-4" />
-            Personalized Tips for You
-          </h4>
-          <ul className="space-y-2">
-            {getPersonalizedTips().slice(0, 3).map((tip, index) => (
-              <li key={index} className="text-sm text-blue-800 dark:text-blue-300 flex items-start gap-2">
-                <span className="text-blue-500 mt-0.5">→</span>
-                <span>{tip}</span>
-              </li>
-            ))}
-          </ul>
         </div>
       )}
 
@@ -666,128 +649,45 @@ export default function AIRecipeGenerator({
         </div>
       )}
 
-      {/* Header */}
-      <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg p-6 text-white">
-        <div className="flex items-center space-x-3 mb-2">
-          <Sparkles className="w-8 h-8" />
-          <h2 className="text-2xl font-bold">AI Recipe Generator</h2>
-        </div>
-        <p className="text-purple-100">
-          Let AI create personalized health-boosting recipes based on your preferences!
-        </p>
-      </div>
-
       {!generatedRecipe && (
-        <>
-          {/* Quality Score Indicator */}
-          <div className={`${qualityBgColor} border-2 ${qualityPercentage >= 80 ? 'border-green-300 dark:border-green-700' : qualityPercentage >= 60 ? 'border-yellow-300 dark:border-yellow-700' : 'border-orange-300 dark:border-orange-700'} rounded-lg p-4 space-y-3`}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <span className="text-2xl">
-                  {qualityPercentage >= 80 ? '🌟' : qualityPercentage >= 60 ? '⭐' : '💡'}
-                </span>
-                <div>
-                  <h3 className="font-bold text-gray-900 dark:text-white">Input Quality Score</h3>
-                  <p className="text-xs text-gray-600 dark:text-gray-300">
-                    {qualityPercentage >= 80 ? 'Excellent! Ready for best results' : 
-                     qualityPercentage >= 60 ? 'Good start! A few improvements will help' : 
-                     'Add more details for better recipes'}
-                  </p>
-                </div>
-              </div>
-              <div className={`text-2xl font-bold ${qualityColor}`}>
-                {qualityData.score}/{qualityData.maxScore}
-              </div>
+        /* Slim quality score bar */
+        <div className="flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="text-lg flex-shrink-0">
+              {qualityPercentage >= 80 ? '🌟' : qualityPercentage >= 60 ? '⭐' : '💡'}
+            </span>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold text-gray-700 dark:text-gray-200 truncate">
+                {qualityPercentage >= 80
+                  ? 'Ready to generate a great recipe!'
+                  : qualityPercentage >= 60
+                  ? 'Add a few more details for better results'
+                  : 'Add ingredients or a meal type to improve quality'}
+              </p>
+              {qualityData.tips.length > 0 && qualityData.score < qualityData.maxScore && (
+                <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{qualityData.tips[0]}</p>
+              )}
             </div>
-            
-            {/* Progress Bar */}
-            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
-              <div 
-                className={`h-full ${qualityBarColor} transition-all duration-500 ease-out`}
-                style={{ width: `${qualityPercentage}%` }}
-              ></div>
-            </div>
-
-            {/* Tips */}
-            {qualityData.tips.length > 0 && qualityData.score < qualityData.maxScore && (
-              <div className="pt-2 border-t border-current/20">
-                <button
-                  onClick={() => setShowTips(!showTips)}
-                  className="flex items-center justify-between w-full text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white"
-                >
-                  <span>💡 Tips to improve your recipe ({qualityData.tips.length})</span>
-                  <span className="transform transition-transform">{showTips ? '▼' : '▶'}</span>
-                </button>
-                {showTips && (
-                  <ul className="mt-2 space-y-1">
-                    {qualityData.tips.map((tip, index) => (
-                      <li key={index} className="text-xs text-gray-600 dark:text-gray-300 flex items-start space-x-2">
-                        <span className="text-purple-500 mt-0.5">•</span>
-                        <span>{tip}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            )}
           </div>
-
-          {/* Quick Examples Section - Collapsible */}
-          <details className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-            <summary className="cursor-pointer font-semibold text-blue-900 dark:text-blue-200 flex items-center space-x-2 hover:text-blue-700 dark:hover:text-blue-100">
-              <span>📚</span>
-              <span>Quick Examples: What Makes a Great Recipe Request?</span>
-            </summary>
-            <div className="mt-4 space-y-4 text-sm">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border-l-4 border-green-500">
-                  <div className="flex items-start space-x-2 mb-2">
-                    <span className="text-green-500 font-bold">✓</span>
-                    <span className="font-bold text-gray-900 dark:text-white">Good Example</span>
-                  </div>
-                  <ul className="space-y-1 text-gray-600 dark:text-gray-300 text-xs">
-                    <li><strong>System:</strong> Microbiome</li>
-                    <li><strong>Ingredients:</strong> Greek yogurt, kimchi, oats, blueberries</li>
-                    <li><strong>Restrictions:</strong> Vegetarian</li>
-                    <li><strong>Meal:</strong> Breakfast</li>
-                    <li className="pt-1 text-green-600 dark:text-green-400"><strong>Result:</strong> "Probiotic Power Bowl"</li>
-                  </ul>
-                </div>
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border-l-4 border-red-500">
-                  <div className="flex items-start space-x-2 mb-2">
-                    <span className="text-red-500 font-bold">✗</span>
-                    <span className="font-bold text-gray-900 dark:text-white">Common Mistake</span>
-                  </div>
-                  <ul className="space-y-1 text-gray-600 dark:text-gray-300 text-xs">
-                    <li><strong>System:</strong> Any</li>
-                    <li><strong>Ingredients:</strong> chicken</li>
-                    <li><strong>Restrictions:</strong> None</li>
-                    <li><strong>Meal:</strong> Any</li>
-                    <li className="pt-1 text-red-600 dark:text-red-400"><strong>Result:</strong> Generic, wasted generation</li>
-                  </ul>
-                </div>
-              </div>
-              <div className="bg-purple-50 dark:bg-purple-900/20 rounded p-3 text-xs text-gray-700 dark:text-gray-200">
-                <p className="font-semibold mb-1">💡 Pro Tips:</p>
-                <ul className="space-y-1 pl-4 list-disc">
-                  <li>Mix food types: 1 protein + 2 vegetables + 1 grain = variety</li>
-                  <li>Be specific with restrictions: "low-sodium" works better than "healthy"</li>
-                  <li>Choose a defense system that matches your health goals</li>
-                  <li>3-5 ingredients work best for creative, balanced recipes</li>
-                </ul>
-              </div>
+          <div className="flex items-center gap-2 flex-shrink-0 ml-3">
+            <div className="w-16 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div
+                className={`h-full ${qualityBarColor} rounded-full transition-all duration-500`}
+                style={{ width: `${qualityPercentage}%` }}
+              />
             </div>
-          </details>
-        </>
+            <span className={`text-xs font-bold ${qualityColor}`}>{qualityData.score}/{qualityData.maxScore}</span>
+          </div>
+        </div>
       )}
 
       {!generatedRecipe ? (
         /* Configuration Form */
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:border dark:border-gray-700 p-6 space-y-6">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-6 sm:p-8 space-y-7">
           {/* Defense System Selection */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">
-              Which defense systems would you like to support? {fromRecommendation && <span className="text-xs text-purple-600 dark:text-purple-400">(Pre-selected from recommendation, add more if you'd like)</span>}
+              Which defense systems would you like to support? {fromRecommendation && <span className="text-xs text-purple-600 dark:text-purple-400">(Pre-selected from recommendation, add more if you&apos;d like)</span>}
             </label>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {Object.values(DefenseSystem).map((system) => {
@@ -904,7 +804,7 @@ export default function AIRecipeGenerator({
                   Choose Your Ingredients or Let AI Surprise You! 🎨
                 </p>
                 <p className="text-xs text-purple-700 dark:text-purple-300">
-                  Click the sections below to explore recommended foods for each defense system and add them to your recipe, or skip this step and trust our AI's creativity to craft something amazing for you!
+                  Click the sections below to explore recommended foods for each defense system and add them to your recipe, or skip this step and trust our AI&apos;s creativity to craft something amazing for you!
                 </p>
               </div>
             </div>
@@ -1011,7 +911,7 @@ export default function AIRecipeGenerator({
           <div>
             <div className="flex items-center justify-between mb-3">
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200">
-                Ingredients you'd like to use (optional)
+                Ingredients you&apos;d like to use (optional)
               </label>
               <span className={`text-xs font-medium px-2 py-1 rounded ${
                 ingredients.filter(i => i.trim()).length >= 3 
@@ -1205,7 +1105,7 @@ export default function AIRecipeGenerator({
             type="button"
             onClick={handleGenerate}
             disabled={isGenerating}
-            className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-4 rounded-lg font-bold hover:from-purple-600 hover:to-pink-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-3"
+            className="w-full bg-gradient-to-r from-violet-600 to-purple-600 text-white py-4 rounded-xl font-bold hover:from-violet-700 hover:to-purple-700 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-3 shadow-lg shadow-violet-500/20 text-base"
           >
             {isGenerating ? (
               <>
@@ -1221,163 +1121,182 @@ export default function AIRecipeGenerator({
           </button>
         </div>
       ) : (
-        /* Generated Recipe Display */
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:border dark:border-gray-700 p-6 space-y-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-2xl font-bold text-gray-800 dark:text-white">
-              🎉 Your AI-Generated Recipe
-            </h3>
+        /* ── Generated Recipe Display ────────────────────────────────── */
+        <div className="rounded-2xl overflow-hidden shadow-xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800">
+          {/* Gradient hero header */}
+          <div className="relative bg-gradient-to-br from-violet-600 via-purple-600 to-pink-600 px-6 py-8 text-white overflow-hidden">
+            <div className="absolute top-0 right-0 w-56 h-56 bg-white/5 rounded-full -translate-y-28 translate-x-28 pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-36 h-36 bg-white/5 rounded-full translate-y-20 -translate-x-20 pointer-events-none" />
+
+            {/* Close / try again */}
             <button
               type="button"
               onClick={() => setGeneratedRecipe(null)}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+              title="Try another recipe"
+              className="absolute top-4 right-4 p-1.5 bg-white/10 hover:bg-white/25 rounded-lg transition-colors"
             >
-              <X className="w-5 h-5 text-gray-500 dark:text-gray-300" />
+              <X className="w-4 h-4 text-white/80" />
             </button>
-          </div>
 
-          {/* Recipe Content */}
-          <div className="space-y-4">
-            <div>
-              <h4 className="text-xl font-bold text-gray-800 dark:text-white">
-                {generatedRecipe.title}
-              </h4>
-              {/* Defense System Badge - use defenseSystems from recipe or fallback */}
-              {(() => {
-                const recipeSystems = generatedRecipe.defenseSystems || defenseSystems;
-                return recipeSystems && recipeSystems.length > 0 ? (
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {recipeSystems.map((system: DefenseSystem) => {
-                      const systemInfo = DEFENSE_SYSTEMS[system];
-                      return systemInfo ? (
-                        <div
-                          key={system}
-                          className={`inline-flex items-center space-x-2 px-3 py-1 rounded-full text-sm font-medium ${systemInfo.bgColor} ${systemInfo.textColor}`}
-                        >
-                          <span>{systemInfo.icon}</span>
-                          <span>{systemInfo.displayName}</span>
-                        </div>
-                      ) : null;
-                    })}
-                  </div>
-                ) : null;
-              })()}
+            {/* Generated badge */}
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/15 backdrop-blur-sm rounded-full text-xs font-semibold mb-4">
+              <Sparkles className="w-3.5 h-3.5" />
+              AI Generated
             </div>
 
-            {generatedRecipe.description && (
-              <p className="text-gray-600 dark:text-gray-200">{generatedRecipe.description}</p>
-            )}
+            <h3 className="text-2xl sm:text-3xl font-extrabold mb-3 leading-tight">
+              {generatedRecipe.title}
+            </h3>
 
-            <div className="flex items-center space-x-6 text-sm text-gray-600 dark:text-gray-200">
+            {/* Defense system badges */}
+            {(() => {
+              const recipeSystems: DefenseSystem[] = generatedRecipe.defenseSystems || defenseSystems;
+              return recipeSystems?.length > 0 ? (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {recipeSystems.map((system) => {
+                    const si = DEFENSE_SYSTEMS[system];
+                    return si ? (
+                      <span key={system} className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white/15 backdrop-blur-sm rounded-full text-xs font-semibold">
+                        <span>{si.icon}</span>
+                        {si.displayName}
+                      </span>
+                    ) : null;
+                  })}
+                </div>
+              ) : null;
+            })()}
+
+            {/* Meta row */}
+            <div className="flex items-center flex-wrap gap-4 text-sm text-white/75">
               {generatedRecipe.prepTime && (
-                <span>⏱️ Prep: {generatedRecipe.prepTime}</span>
+                <span>⏱️ <strong className="text-white">{generatedRecipe.prepTime}</strong> prep</span>
               )}
               {generatedRecipe.cookTime && (
-                <span>🔥 Cook: {generatedRecipe.cookTime}</span>
+                <span>🔥 <strong className="text-white">{generatedRecipe.cookTime}</strong> cook</span>
               )}
               {generatedRecipe.servings && (
-                <span>🍽️ Servings: {generatedRecipe.servings}</span>
+                <span>🍽️ <strong className="text-white">{generatedRecipe.servings}</strong> servings</span>
+              )}
+            </div>
+          </div>
+
+          {/* Body */}
+          <div className="p-6 sm:p-8 space-y-6">
+            {generatedRecipe.description && (
+              <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed border-l-2 border-violet-300 dark:border-violet-600 pl-4">
+                {generatedRecipe.description}
+              </p>
+            )}
+
+            <div className="grid sm:grid-cols-2 gap-6">
+              {/* Ingredients */}
+              <div>
+                <h5 className="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-3">
+                  Ingredients
+                </h5>
+                <ul className="space-y-2">
+                  {generatedRecipe.ingredients.map((ing: GeneratedIngredient, i: number) => (
+                    <li key={i} className="flex items-start gap-2.5 text-sm text-gray-700 dark:text-gray-200">
+                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-violet-500 flex-shrink-0" />
+                      <span>
+                        {ing.quantity && ing.unit ? (
+                          <>
+                            <span className="font-semibold text-gray-900 dark:text-white">{ing.quantity} {ing.unit}</span>
+                            {' '}{ing.name}
+                          </>
+                        ) : (
+                          ing.name
+                        )}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Key Nutrients */}
+              {generatedRecipe.nutrients && Object.keys(generatedRecipe.nutrients).length > 0 && (
+                <div>
+                  <h5 className="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-3">
+                    Key Nutrients
+                  </h5>
+                  <div className="flex flex-wrap gap-2">
+                    {Object.entries(generatedRecipe.nutrients).map(([nutrient, value]) => (
+                      <span
+                        key={nutrient}
+                        className="px-3 py-1.5 bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 rounded-lg text-xs font-semibold"
+                      >
+                        {nutrient}: {value as string}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
 
+            {/* Instructions */}
             <div>
-              <h5 className="font-bold text-gray-800 dark:text-white mb-2">Ingredients</h5>
-              <ul className="space-y-1">
-                {generatedRecipe.ingredients.map((ing, index) => (
-                  <li key={index} className="flex items-start space-x-2 text-sm text-gray-700 dark:text-gray-200">
-                    <span className="w-2 h-2 bg-purple-500 rounded-full mt-1.5 flex-shrink-0"></span>
-                    <span>
-                      {ing.quantity && ing.unit ? (
-                        <>
-                          <span className="font-medium">{ing.quantity} {ing.unit}</span>
-                          {' '}
-                          <span>{ing.name}</span>
-                        </>
-                      ) : (
-                        <span>{ing.name}</span>
-                      )}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+              <h5 className="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-3">
+                Instructions
+              </h5>
+              <ol className="space-y-3">
+                {String(generatedRecipe.instructions)
+                  .split(/\n+/)
+                  .filter((line: string) => line.trim())
+                  .map((step: string, i: number) => {
+                    const cleaned = step.replace(/^(step\s*\d+[:\.\s]+|\d+[:\.\s]+)/i, '').trim();
+                    return (
+                      <li key={i} className="flex gap-3">
+                        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center text-xs font-bold text-violet-600 dark:text-violet-400 mt-0.5">
+                          {i + 1}
+                        </div>
+                        <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed">{cleaned}</p>
+                      </li>
+                    );
+                  })}
+              </ol>
             </div>
 
-            <div>
-              <h5 className="font-bold text-gray-800 dark:text-white mb-2">Instructions</h5>
-              <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg whitespace-pre-line text-sm text-gray-700 dark:text-gray-200">
-                {generatedRecipe.instructions}
-              </div>
-            </div>
-
-            {generatedRecipe.nutrients && Object.keys(generatedRecipe.nutrients).length > 0 && (
-              <div>
-                <h5 className="font-bold text-gray-800 dark:text-white mb-2">Key Nutrients</h5>
-                <div className="flex flex-wrap gap-2">
-                  {Object.entries(generatedRecipe.nutrients).map(([nutrient, value]) => (
-                    <span
-                      key={nutrient}
-                      className="bg-purple-50 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 px-3 py-1 rounded-full text-sm font-medium"
-                    >
-                      {nutrient}: {value}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex items-center space-x-3 pt-4 border-t dark:border-gray-700">
-            <button
-              type="button"
-              onClick={() => setGeneratedRecipe(null)}
-              className="flex-1 px-6 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium"
-            >
-              Generate Another
-            </button>
-            {onSaveRecipe && (
+            {/* Action Buttons */}
+            <div className="flex items-center gap-3 pt-5 border-t border-gray-100 dark:border-gray-700">
               <button
                 type="button"
-                onClick={() => {
-                  console.log('Save button clicked');
-                  handleSave();
-                }}
-                disabled={isSaving}
-                className="flex-1 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                onClick={() => setGeneratedRecipe(null)}
+                className="flex items-center gap-2 px-5 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-medium"
               >
-                {isSaving ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Saving...</span>
-                  </>
-                ) : (
-                  <span>Save to My Recipes</span>
-                )}
+                <X className="w-4 h-4" />
+                Try Again
               </button>
-            )}
+              {onSaveRecipe && (
+                <button
+                  type="button"
+                  onClick={() => handleSave()}
+                  disabled={isSaving}
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-2.5 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white rounded-xl transition-all font-semibold text-sm shadow-md shadow-violet-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Saving…
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4" />
+                      Save to My Recipes
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}
 
-      {/* Info Box */}
-      <div className="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-lg p-4">
-        <h4 className="font-bold text-blue-900 dark:text-blue-300 mb-2">💡 How it works</h4>
-        <ul className="space-y-1 text-sm text-blue-800 dark:text-blue-300">
-          <li>• AI analyzes the defense system and its key nutrients</li>
-          <li>• Creates recipes using foods that support your health goals</li>
-          <li>• Considers your ingredients and dietary restrictions</li>
-          <li>• Generates complete recipes with instructions and nutrition info</li>
-        </ul>
-      </div>
-
-      {/* Fairness Guarantee */}
-      <div className="bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-800 rounded-lg p-4">
-        <h4 className="font-bold text-green-900 dark:text-green-300 mb-2">✓ Fair Usage Guarantee</h4>
-        <p className="text-sm text-green-800 dark:text-green-300">
-          If the AI generates an incomplete or invalid recipe, <strong>it won't count against your monthly limit</strong>. 
-          Only successfully generated, quality-validated recipes are counted. You can try again immediately at no cost.
+      {/* Fair usage note — minimal, only shown before generation */}
+      {!generatedRecipe && (
+        <p className="text-center text-xs text-gray-400 dark:text-gray-500 pb-2">
+          ✓ Incomplete generations are <strong>never</strong> counted against your monthly limit.
         </p>
-      </div>
+      )}
     </div>
   );
 }
