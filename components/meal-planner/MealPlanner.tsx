@@ -402,7 +402,7 @@ export default function MealPlanner() {
           </div>
 
           {/* Summary Stats */}
-          <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-6 border-2 border-blue-200">
+          <div className="bg-gradient-to-br from-blue-50 to-teal-50 rounded-lg p-6 border-2 border-blue-200">
             <h3 className="font-bold text-blue-900 mb-4">📊 Weekly Summary</h3>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               {Object.values(DefenseSystem).map((system) => {

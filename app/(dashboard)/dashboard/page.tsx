@@ -132,12 +132,12 @@ export default function ProgressPage() {
 
       {/* ── EMPTY / WELCOME STATE ─────────────────────────────────────────── */}
       {shouldShowWelcome ? (
-        <div className="bg-gradient-to-br from-purple-50 via-blue-50 to-green-50 dark:from-gray-900 dark:to-gray-800 min-h-screen">
+        <div className="bg-gradient-to-br from-green-50 via-teal-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 min-h-screen">
           <div className="max-w-7xl mx-auto px-4 py-8">
             {/* Slim top bar with page identity + info toggle */}
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center shadow">
+                <div className="w-9 h-9 bg-gradient-to-br from-green-500 to-teal-600 rounded-lg flex items-center justify-center shadow">
                   <TrendingUp className="w-4 h-4 text-white" />
                 </div>
                 <span className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -154,7 +154,7 @@ export default function ProgressPage() {
             </div>
 
             {showInfo && (
-              <div className="mb-6 p-5 bg-gradient-to-r from-purple-100 to-blue-100 dark:from-purple-900/30 dark:to-blue-900/30 border border-purple-200 dark:border-purple-800 rounded-xl text-sm">
+              <div className="mb-6 p-5 bg-gradient-to-r from-green-100 to-teal-100 dark:from-green-900/30 dark:to-teal-900/30 border border-green-200 dark:border-green-800 rounded-xl text-sm">
                 <h3 className="font-semibold text-gray-900 dark:text-white mb-2">📊 Why the 5x5x5 Framework Matters</h3>
                 <p className="text-gray-700 dark:text-gray-300 mb-2">
                   Based on Dr. William Li&apos;s research, the framework activates the body&apos;s natural defense systems through food:

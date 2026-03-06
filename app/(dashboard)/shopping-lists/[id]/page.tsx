@@ -22,7 +22,8 @@ import {
   MessageCircle,
   Copy,
   Smartphone,
-  Info
+  Info,
+  ChefHat
 } from 'lucide-react';
 import { ConfirmDialog } from '@/components/ui/DialogComponents';
 import QuickOrderButtons from '@/components/shopping/QuickOrderButtons';
@@ -50,6 +51,8 @@ interface ShoppingList {
     description: string;
     createdAt: string;
   };
+  sourceType?: string;   // 'meal-plans' | 'recipes' | 'RECIPE' | 'MANUAL'
+  sourceIds?: string[];  // Array of source IDs
   totalItems: number;
   totalCost?: number;
   currency?: string;
@@ -643,6 +646,16 @@ export default function ShoppingListDetailPage() {
                 <ExternalLink className="w-3 h-3" />
               </Link>
             )}
+            {!shoppingList.mealPlan && shoppingList.sourceType?.toLowerCase().includes('recipe') && shoppingList.sourceIds?.[0] && (
+              <Link
+                href={`/recipes/${shoppingList.sourceIds[0]}`}
+                className="flex items-center space-x-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
+              >
+                <ChefHat className="w-4 h-4" />
+                <span>View Source Recipe</span>
+                <ExternalLink className="w-3 h-3" />
+              </Link>
+            )}
           </div>
         </div>
 
@@ -908,6 +921,8 @@ export default function ShoppingListDetailPage() {
           <QuickOrderButtons 
             items={shoppingList.items}
             onlyUnchecked={true}
+            title={shoppingList.title}
+            listId={params.id as string}
           />
         </div>
       </div>

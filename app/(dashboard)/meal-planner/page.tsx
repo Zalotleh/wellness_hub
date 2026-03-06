@@ -24,7 +24,7 @@ interface SavedPlan {
 // Custom error boundary for meal planner
 function MealPlannerErrorFallback() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-violet-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-teal-50 to-emerald-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
       <div className="max-w-lg w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-10 text-center border dark:border-gray-700">
         <div className="w-14 h-14 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-5">
           <ChefHat className="w-7 h-7 text-red-600 dark:text-red-400" />
@@ -130,7 +130,7 @@ export default function MealPlannerPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-violet-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-teal-50 to-emerald-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
       {/* Sticky page header */}
       <div className="sticky top-0 z-30 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200/60 dark:border-gray-700/60">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">

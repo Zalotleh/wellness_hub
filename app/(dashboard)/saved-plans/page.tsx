@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Clock, Users, Plus, CheckSquare, Square, Trash2, X, Bookmark, Search, Filter, Calendar, Shield } from 'lucide-react';
+import { Clock, Users, Plus, CheckSquare, Square, Trash2, X, Bookmark, Search, Filter, Calendar, Shield, ArrowLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { DeleteConfirmationDialog } from '@/components/ui/ConfirmationDialog';
@@ -283,10 +283,12 @@ export default function SavedPlansPage() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-teal-50 to-blue-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 dark:border-green-400 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-300">Loading your saved plans...</p>
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-blue-500 rounded-2xl shadow-lg mb-5">
+            <div className="animate-spin w-7 h-7 border-[3px] border-white border-t-transparent rounded-full" />
+          </div>
+          <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">Loading your saved plans…</p>
         </div>
       </div>
     );
@@ -294,10 +296,17 @@ export default function SavedPlansPage() {
 
   if (!session?.user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-600 dark:text-gray-300 mb-4">Please sign in to view your saved plans.</p>
-          <Link href="/login" className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-teal-50 to-blue-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 flex items-center justify-center">
+        <div className="text-center max-w-sm mx-auto px-6">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-blue-500 rounded-2xl shadow-lg mb-5">
+            <Bookmark className="w-8 h-8 text-white" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Sign in to continue</h2>
+          <p className="text-gray-500 dark:text-gray-400 mb-6 text-sm">Please sign in to view your saved meal plans.</p>
+          <Link
+            href="/login"
+            className="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white rounded-xl font-medium transition-all shadow-md"
+          >
             Sign In
           </Link>
         </div>
@@ -306,86 +315,123 @@ export default function SavedPlansPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 p-4">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6 border dark:border-gray-700">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="bg-gradient-to-r from-green-500 to-blue-500 p-3 rounded-lg">
-                <Bookmark className="w-6 h-6 text-white" />
+    <div className="min-h-screen bg-white dark:bg-gray-900">
+
+      {/* ── STICKY TOP NAV ───────────────────────────────────────────────── */}
+      <div className="sticky top-0 z-30 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200/60 dark:border-gray-700/60">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Dashboard</span>
+            </Link>
+            <span className="text-gray-300 dark:text-gray-600">/</span>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Saved Plans</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 bg-gradient-to-br from-green-500 to-teal-500 rounded-md flex items-center justify-center shadow">
+              <Bookmark className="w-3.5 h-3.5 text-white" />
+            </div>
+            <span className="text-sm font-semibold text-gray-700 dark:text-gray-200 hidden sm:block">Meal Plans</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── HERO SECTION ─────────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-green-50 via-teal-50 to-blue-50 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800">
+        {/* Decorative blobs */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-10 left-10 w-56 h-56 bg-green-300 dark:bg-green-700 rounded-full mix-blend-multiply dark:mix-blend-soft-light filter blur-xl opacity-20 animate-blob" />
+          <div className="absolute top-20 right-10 w-56 h-56 bg-teal-300 dark:bg-teal-700 rounded-full mix-blend-multiply dark:mix-blend-soft-light filter blur-xl opacity-20 animate-blob animation-delay-2000" />
+          <div className="absolute -bottom-8 left-1/3 w-56 h-56 bg-blue-300 dark:bg-blue-700 rounded-full mix-blend-multiply dark:mix-blend-soft-light filter blur-xl opacity-20 animate-blob animation-delay-4000" />
+        </div>
+
+        <div className="relative max-w-7xl mx-auto px-4 py-10 md:py-14">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
+            {/* Title block */}
+            <div className="flex items-center gap-4">
+              <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-green-500 to-teal-500 rounded-2xl shadow-lg flex-shrink-0">
+                <Bookmark className="w-7 h-7 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Saved Meal Plans</h1>
-                <p className="text-gray-600 dark:text-gray-300">
-                  Your collection of favorite meal plans
-                  {mealPlans.length > 0 && ` (${mealPlans.length} plan${mealPlans.length > 1 ? 's' : ''})`}
+                <p className="text-sm font-semibold text-green-700 dark:text-green-400 uppercase tracking-wider mb-0.5">
+                  Your Collection
+                </p>
+                <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">
+                  Saved{' '}
+                  <span className="bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
+                    Meal Plans
+                  </span>
+                </h1>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                  {mealPlans.length > 0
+                    ? `${mealPlans.length} plan${mealPlans.length > 1 ? 's' : ''} saved`
+                    : 'Ready to build your first plan?'}
                 </p>
               </div>
             </div>
-            <div className="flex items-center space-x-3">
+
+            {/* CTA + manage button */}
+            <div className="flex items-center gap-3 flex-shrink-0">
               {mealPlans.length > 0 && (
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => setShowBulkActions(!showBulkActions)}
-                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                      showBulkActions
-                        ? 'bg-red-500 text-white hover:bg-red-600'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600'
-                    }`}
-                    title={showBulkActions ? 'Cancel selection mode' : 'Select multiple plans to delete'}
-                  >
-                    {showBulkActions ? <X className="w-4 h-4" /> : <Trash2 className="w-4 h-4" />}
-                    <span>{showBulkActions ? 'Cancel Selection' : 'Manage Plans'}</span>
-                  </button>
-                  
-                  {/* Quick info about bulk selection */}
-                  {!showBulkActions && (
-                    <span className="text-xs text-gray-500 dark:text-gray-400 hidden sm:block">
-                      Select multiple to delete
-                    </span>
-                  )}
-                </div>
+                <button
+                  onClick={() => setShowBulkActions(!showBulkActions)}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all shadow-sm ${
+                    showBulkActions
+                      ? 'bg-red-500 text-white hover:bg-red-600 shadow-red-200 dark:shadow-red-900/30'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
+                  }`}
+                >
+                  {showBulkActions ? <X className="w-4 h-4" /> : <Trash2 className="w-4 h-4" />}
+                  <span>{showBulkActions ? 'Cancel' : 'Manage'}</span>
+                </button>
               )}
-              <Link 
+              <Link
                 href="/meal-planner"
-                className="flex items-center space-x-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white rounded-xl text-sm font-semibold transition-all shadow-md shadow-green-200 dark:shadow-green-900/30"
               >
                 <Plus className="w-4 h-4" />
-                <span>Create New Plan</span>
+                <span>New Plan</span>
               </Link>
             </div>
           </div>
         </div>
+      </section>
+
+      {/* ── MAIN CONTENT ─────────────────────────────────────────────────── */}
+      <div className="max-w-7xl mx-auto px-4 pb-12 pt-8">
 
         {/* Search and Filter Bar */}
         {mealPlans.length > 0 && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-6 border dark:border-gray-700">
-            <div className="flex flex-col space-y-4">
-              {/* Search and Filter Toggle */}
-              <div className="flex items-center space-x-3">
+          <div className="bg-white dark:bg-gray-800/80 backdrop-blur border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm p-4 mb-6">
+            <div className="flex flex-col gap-4">
+              {/* Search row */}
+              <div className="flex items-center gap-3">
                 <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <input
                     type="text"
-                    placeholder="Search meal plans..."
+                    placeholder="Search meal plans…"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:text-white"
+                    className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent dark:text-white placeholder-gray-400 transition-shadow"
                   />
                 </div>
                 <button
                   onClick={() => setShowFilters(!showFilters)}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
                     showFilters || hasActiveFilters
-                      ? 'bg-green-500 text-white hover:bg-green-600'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600'
+                      ? 'bg-green-500 text-white shadow-md shadow-green-200 dark:shadow-green-900/30'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                   }`}
                 >
                   <Filter className="w-4 h-4" />
                   <span className="hidden sm:inline">Filters</span>
                   {hasActiveFilters && !showFilters && (
-                    <span className="bg-white text-green-600 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+                    <span className="bg-white text-green-600 rounded-full w-4 h-4 flex items-center justify-center text-xs font-bold leading-none">
                       {[selectedDuration !== null, selectedServings !== null, selectedSystems.length > 0, selectedRestrictions.length > 0, selectedVisibility !== null, sortBy !== 'recent'].filter(Boolean).length}
                     </span>
                   )}
@@ -393,9 +439,9 @@ export default function SavedPlansPage() {
                 {hasActiveFilters && (
                   <button
                     onClick={clearFilters}
-                    className="flex items-center space-x-2 px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-xl transition-colors"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="w-3.5 h-3.5" />
                     <span className="hidden sm:inline">Clear</span>
                   </button>
                 )}
@@ -403,25 +449,24 @@ export default function SavedPlansPage() {
 
               {/* Filter Panel */}
               {showFilters && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-4 border-t dark:border-gray-700">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 pt-4 border-t border-gray-100 dark:border-gray-700">
                   {/* Duration Filter */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      <Clock className="w-4 h-4 inline mr-1" />
-                      Duration
+                    <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2.5">
+                      <Clock className="w-3.5 h-3.5" /> Duration
                     </label>
                     <div className="flex flex-wrap gap-2">
                       {[1, 2, 3, 4].map((weeks) => (
                         <button
                           key={weeks}
                           onClick={() => setSelectedDuration(selectedDuration === weeks ? null : weeks)}
-                          className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                             selectedDuration === weeks
-                              ? 'bg-green-500 text-white'
-                              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                              ? 'bg-green-500 text-white shadow-sm'
+                              : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                           }`}
                         >
-                          {weeks} Week{weeks > 1 ? 's' : ''}
+                          {weeks}W
                         </button>
                       ))}
                     </div>
@@ -429,22 +474,21 @@ export default function SavedPlansPage() {
 
                   {/* Servings Filter */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      <Users className="w-4 h-4 inline mr-1" />
-                      Servings
+                    <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2.5">
+                      <Users className="w-3.5 h-3.5" /> Servings
                     </label>
                     <div className="flex flex-wrap gap-2">
                       {[1, 2, 4, 6].map((servings) => (
                         <button
                           key={servings}
                           onClick={() => setSelectedServings(selectedServings === servings ? null : servings)}
-                          className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                             selectedServings === servings
-                              ? 'bg-green-500 text-white'
-                              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                              ? 'bg-green-500 text-white shadow-sm'
+                              : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                           }`}
                         >
-                          {servings} {servings === 1 ? 'Person' : 'People'}
+                          {servings}×
                         </button>
                       ))}
                     </div>
@@ -452,36 +496,35 @@ export default function SavedPlansPage() {
 
                   {/* Sort By */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2.5">
                       Sort By
                     </label>
                     <select
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value as SortBy)}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:text-white"
+                      className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 border-0 rounded-lg text-sm focus:ring-2 focus:ring-green-500 dark:text-white"
                     >
                       <option value="recent">Most Recent</option>
                       <option value="oldest">Oldest First</option>
-                      <option value="title">Title (A-Z)</option>
+                      <option value="title">Title (A–Z)</option>
                       <option value="duration">Duration</option>
                     </select>
                   </div>
 
                   {/* Defense Systems Filter */}
                   <div className="md:col-span-2 lg:col-span-1">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      <Shield className="w-4 h-4 inline mr-1" />
-                      Defense Systems
+                    <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2.5">
+                      <Shield className="w-3.5 h-3.5" /> Defense Systems
                     </label>
                     <div className="flex flex-wrap gap-2">
                       {Object.values(DEFENSE_SYSTEMS).map((system) => (
                         <button
                           key={system.id}
                           onClick={() => toggleSystem(system.id)}
-                          className={`px-3 py-1.5 rounded-lg text-xs transition-colors ${
+                          className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                             selectedSystems.includes(system.id)
-                              ? 'bg-green-500 text-white'
-                              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                              ? 'bg-green-500 text-white shadow-sm'
+                              : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                           }`}
                           title={system.name}
                         >
@@ -493,18 +536,18 @@ export default function SavedPlansPage() {
 
                   {/* Dietary Restrictions Filter */}
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Dietary Restrictions
+                    <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2.5">
+                      Dietary
                     </label>
                     <div className="flex flex-wrap gap-2">
                       {['vegetarian', 'vegan', 'gluten-free', 'dairy-free', 'nut-free', 'low-carb', 'keto', 'paleo'].map((restriction) => (
                         <button
                           key={restriction}
                           onClick={() => toggleRestriction(restriction)}
-                          className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors capitalize ${
                             selectedRestrictions.includes(restriction)
-                              ? 'bg-green-500 text-white'
-                              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                              ? 'bg-green-500 text-white shadow-sm'
+                              : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                           }`}
                         >
                           {restriction}
@@ -515,7 +558,7 @@ export default function SavedPlansPage() {
 
                   {/* Visibility Filter */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2.5">
                       Visibility
                     </label>
                     <div className="flex flex-wrap gap-2">
@@ -523,10 +566,10 @@ export default function SavedPlansPage() {
                         <button
                           key={visibility}
                           onClick={() => setSelectedVisibility(selectedVisibility === visibility ? null : visibility)}
-                          className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                             selectedVisibility === visibility
-                              ? 'bg-green-500 text-white'
-                              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                              ? 'bg-green-500 text-white shadow-sm'
+                              : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                           }`}
                         >
                           {visibility}
@@ -538,43 +581,44 @@ export default function SavedPlansPage() {
               )}
 
               {/* Results Count */}
-              <div className="text-sm text-gray-600 dark:text-gray-400">
-                Showing <span className="font-semibold text-gray-900 dark:text-white">{filteredPlans.length}</span> of <span className="font-semibold">{mealPlans.length}</span> meal plans
-              </div>
+              <p className="text-xs text-gray-400 dark:text-gray-500">
+                Showing{' '}
+                <span className="font-semibold text-gray-700 dark:text-gray-200">{filteredPlans.length}</span>
+                {' '}of{' '}
+                <span className="font-semibold text-gray-700 dark:text-gray-200">{mealPlans.length}</span>
+                {' '}meal plan{mealPlans.length !== 1 ? 's' : ''}
+              </p>
             </div>
           </div>
         )}
 
         {/* Bulk Actions Bar */}
         {showBulkActions && mealPlans.length > 0 && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-6 border dark:border-gray-700">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <button
-                  onClick={handleSelectAll}
-                  className="flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white"
-                >
-                  {selectedPlans.size === mealPlans.length ? (
-                    <CheckSquare className="w-5 h-5" />
-                  ) : (
-                    <Square className="w-5 h-5" />
-                  )}
-                  <span>
-                    {selectedPlans.size === mealPlans.length ? 'Deselect All' : 'Select All'}
-                  </span>
-                </button>
-                <span className="text-gray-600 dark:text-gray-300">
-                  {selectedPlans.size} of {mealPlans.length} selected
-                </span>
-              </div>
-              
+          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm p-4 mb-6">
+            <div className="flex items-center justify-between gap-4">
+              <button
+                onClick={handleSelectAll}
+                className="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+              >
+                {selectedPlans.size === mealPlans.length ? (
+                  <CheckSquare className="w-5 h-5 text-green-500" />
+                ) : (
+                  <Square className="w-5 h-5" />
+                )}
+                <span>{selectedPlans.size === mealPlans.length ? 'Deselect All' : 'Select All'}</span>
+              </button>
+
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                <strong className="text-gray-900 dark:text-white">{selectedPlans.size}</strong> of {mealPlans.length} selected
+              </span>
+
               {selectedPlans.size > 0 && (
                 <button
                   onClick={handleBulkDelete}
-                  className="flex items-center space-x-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-medium transition-colors shadow-sm ml-auto"
                 >
                   <Trash2 className="w-4 h-4" />
-                  <span>Delete Selected ({selectedPlans.size})</span>
+                  Delete ({selectedPlans.size})
                 </button>
               )}
             </div>
@@ -583,174 +627,232 @@ export default function SavedPlansPage() {
 
         {/* Error Message */}
         {error && (
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-4 mb-6 flex items-start justify-between gap-4">
             <div className="text-red-800 dark:text-red-300">
-              <p className="font-medium">Error</p>
-              <p className="text-sm">{error}</p>
+              <p className="font-semibold text-sm">Something went wrong</p>
+              <p className="text-sm mt-0.5 text-red-600 dark:text-red-400">{error}</p>
             </div>
             <button
               onClick={() => setError(null)}
-              className="mt-2 text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
+              className="text-red-400 hover:text-red-600 dark:hover:text-red-300 transition-colors flex-shrink-0"
             >
-              Dismiss
+              <X className="w-4 h-4" />
             </button>
           </div>
         )}
 
-        {/* Meal Plans Grid */}
+        {/* ── CONTENT STATES ─────────────────────────────────────────────── */}
+
+        {/* Invalid data */}
         {!Array.isArray(mealPlans) ? (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-12 text-center border dark:border-gray-700">
-            <div className="text-red-600 dark:text-red-400 mb-4">
-              <Calendar className="w-12 h-12 mx-auto mb-2" />
-              <h2 className="text-xl font-bold">Invalid Data Format</h2>
-              <p className="text-gray-600 dark:text-gray-300">Expected array, got: {typeof mealPlans}</p>
+          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm p-12 text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-2xl mb-4">
+              <Calendar className="w-8 h-8 text-red-500 dark:text-red-400" />
             </div>
-            <button 
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Unexpected Data</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Got <code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">{typeof mealPlans}</code> instead of an array.</p>
+            <button
               onClick={fetchMealPlans}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              className="px-5 py-2 bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-xl text-sm font-medium hover:from-green-600 hover:to-teal-600 transition-all shadow-sm"
             >
               Retry
             </button>
           </div>
+
+        /* Empty — no plans at all */
         ) : mealPlans.length === 0 ? (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-12 text-center border dark:border-gray-700">
-            <div className="max-w-md mx-auto">
-              <div className="bg-gradient-to-r from-green-100 to-blue-100 dark:from-green-900/30 dark:to-blue-900/30 p-4 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm p-12 text-center">
+            <div className="max-w-sm mx-auto">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-green-100 to-teal-100 dark:from-green-900/30 dark:to-teal-900/30 rounded-2xl mb-6">
                 <Calendar className="w-10 h-10 text-green-600 dark:text-green-400" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">No Saved Plans Yet</h2>
-              <p className="text-gray-600 dark:text-gray-300 mb-8">
-                Create your first meal plan and it will appear here for easy access.
+              <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white mb-3">No Saved Plans Yet</h2>
+              <p className="text-gray-500 dark:text-gray-400 mb-8 leading-relaxed">
+                Create your first meal plan and it will appear here for easy access anytime.
               </p>
-              <Link 
+              <Link
                 href="/meal-planner"
-                className="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg hover:from-green-600 hover:to-blue-600 transition-all"
+                className="inline-flex items-center gap-2 px-7 py-3 bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white rounded-xl font-semibold transition-all shadow-lg shadow-green-200 dark:shadow-green-900/30"
               >
                 <Plus className="w-4 h-4" />
-                <span>Create Your First Meal Plan</span>
+                Create Your First Plan
               </Link>
             </div>
           </div>
+
+        /* Empty — filters return nothing */
         ) : filteredPlans.length === 0 ? (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-12 text-center border dark:border-gray-700">
-            <div className="max-w-md mx-auto">
-              <div className="bg-gradient-to-r from-yellow-100 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30 p-4 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
-                <Search className="w-10 h-10 text-yellow-600 dark:text-yellow-400" />
+          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm p-12 text-center">
+            <div className="max-w-sm mx-auto">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 rounded-2xl mb-6">
+                <Search className="w-10 h-10 text-amber-600 dark:text-amber-400" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">No Plans Match Your Filters</h2>
-              <p className="text-gray-600 dark:text-gray-300 mb-8">
-                Try adjusting your filters or clear them to see all plans.
+              <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white mb-3">No Matches Found</h2>
+              <p className="text-gray-500 dark:text-gray-400 mb-8 leading-relaxed">
+                No plans match your current filters. Try adjusting or clearing them.
               </p>
               <button
                 onClick={clearFilters}
-                className="inline-flex items-center space-x-2 px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-all"
+                className="inline-flex items-center gap-2 px-7 py-3 bg-gray-700 hover:bg-gray-800 text-white rounded-xl font-semibold transition-all shadow-sm"
               >
                 <X className="w-4 h-4" />
-                <span>Clear All Filters</span>
+                Clear All Filters
               </button>
             </div>
           </div>
+
+        /* Plans grid */
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {filteredPlans.map((plan) => (
-              <div key={plan.id} className={`bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 relative group border dark:border-gray-700 ${
-                selectedPlans.has(plan.id) ? 'ring-2 ring-blue-500' : ''
-              }`}>
-                
-                {/* Selection Checkbox */}
+              <div
+                key={plan.id}
+                className={`group relative bg-white dark:bg-gray-800 rounded-2xl border transition-all duration-200 overflow-hidden ${
+                  selectedPlans.has(plan.id)
+                    ? 'border-green-400 dark:border-green-500 ring-2 ring-green-400/30 shadow-lg'
+                    : 'border-gray-200 dark:border-gray-700 hover:border-green-300 dark:hover:border-green-600 hover:shadow-lg'
+                }`}
+              >
+                {/* Gradient top accent bar */}
+                <div className="h-1 bg-gradient-to-r from-green-400 to-teal-500" />
+
+                {/* Selection Checkbox (bulk mode) */}
                 {showBulkActions && (
-                  <div className="absolute top-4 left-4 z-20 bg-white dark:bg-gray-700 rounded-full p-1 shadow-sm">
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleSelectPlan(plan.id);
-                      }}
-                      className="text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300"
-                    >
-                      {selectedPlans.has(plan.id) ? (
-                        <CheckSquare className="w-5 h-5" />
-                      ) : (
-                        <Square className="w-5 h-5" />
-                      )}
-                    </button>
-                  </div>
+                  <button
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleSelectPlan(plan.id); }}
+                    className="absolute top-4 left-4 z-20 w-6 h-6 flex items-center justify-center"
+                  >
+                    {selectedPlans.has(plan.id) ? (
+                      <CheckSquare className="w-5 h-5 text-green-500" />
+                    ) : (
+                      <Square className="w-5 h-5 text-gray-400 hover:text-green-500 transition-colors" />
+                    )}
+                  </button>
                 )}
 
-                {/* Delete Button - Always visible but styled appropriately */}
+                {/* Delete button (normal mode) */}
                 {!showBulkActions && (
-                  <div className="absolute top-4 right-4 z-20 flex space-x-1">
-                    {/* Quick delete button - subtle but accessible */}
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleDeleteSingle({id: plan.id, title: plan.title});
-                      }}
-                      className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-all opacity-70 hover:opacity-100"
-                      title="Delete this meal plan"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+                  <button
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteSingle({ id: plan.id, title: plan.title }); }}
+                    className="absolute top-3 right-3 z-20 p-1.5 text-gray-300 dark:text-gray-600 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
+                    title="Delete this meal plan"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 )}
 
-                {/* Clickable Card Content */}
-                <Link 
+                {/* Card body */}
+                <Link
                   href={`/meal-planner/${plan.id}`}
-                  className="block p-6 cursor-pointer"
+                  className="block p-5"
                   onClick={() => showBulkActions && handleSelectPlan(plan.id)}
                 >
-                  <div className={`mb-4 ${showBulkActions ? 'ml-8' : ''}`}>
-                    <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">{plan.title}</h3>
-                    <p className="text-gray-600 dark:text-gray-300 text-sm line-clamp-2">{plan.description}</p>
-                  </div>
-                  
-                  <div className={`space-y-2 mb-4 ${showBulkActions ? 'ml-8' : ''}`}>
-                    <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                      <Clock className="w-4 h-4 mr-2" />
-                      <span>Created {new Date(plan.createdAt).toLocaleDateString()}</span>
-                    </div>
-                    <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                      <Users className="w-4 h-4 mr-2" />
-                      <span>{plan.defaultServings} servings</span>
-                    </div>
-                  </div>
+                  <div className={showBulkActions ? 'pl-7' : ''}>
+                    {/* Title + description */}
+                    <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1.5 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors line-clamp-1 pr-6">
+                      {plan.title}
+                    </h3>
+                    {plan.description && (
+                      <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-4 leading-relaxed">
+                        {plan.description}
+                      </p>
+                    )}
 
-                  <div className={`flex items-center justify-between ${showBulkActions ? 'ml-8' : ''}`}>
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      plan.visibility === 'PUBLIC' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' :
-                      plan.visibility === 'FRIENDS' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300' :
-                      'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
-                    }`}>
-                      {plan.visibility}
-                    </span>
-                    
-                    <span className="text-green-600 dark:text-green-400 font-medium text-sm group-hover:text-green-700 dark:group-hover:text-green-300 transition-colors">
-                      Click to view →
-                    </span>
+                    {/* Meta row */}
+                    <div className="flex items-center gap-4 text-xs text-gray-400 dark:text-gray-500 mb-4">
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5" />
+                        {new Date(plan.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </span>
+                      {plan.defaultServings && (
+                        <span className="flex items-center gap-1">
+                          <Users className="w-3.5 h-3.5" />
+                          {plan.defaultServings} serving{plan.defaultServings > 1 ? 's' : ''}
+                        </span>
+                      )}
+                      {plan.durationWeeks && (
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-3.5 h-3.5" />
+                          {plan.durationWeeks}w
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Defense systems tags */}
+                    {plan.focusSystems && plan.focusSystems.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mb-4">
+                        {plan.focusSystems.slice(0, 3).map((sysId) => {
+                          const sys = Object.values(DEFENSE_SYSTEMS).find(s => s.id === sysId);
+                          return sys ? (
+                            <span
+                              key={sysId}
+                              className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 text-xs rounded-lg border border-green-100 dark:border-green-800/50 font-medium"
+                            >
+                              <span>{sys.icon}</span>
+                              <span>{sys.name}</span>
+                            </span>
+                          ) : null;
+                        })}
+                        {plan.focusSystems.length > 3 && (
+                          <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-xs rounded-lg">
+                            +{plan.focusSystems.length - 3}
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Footer row */}
+                    <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-700/60">
+                      <span className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full ${
+                        plan.visibility === 'PUBLIC'
+                          ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                          : plan.visibility === 'FRIENDS'
+                          ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                      }`}>
+                        {plan.visibility ?? 'PRIVATE'}
+                      </span>
+                      <span className="flex items-center gap-1 text-xs font-semibold text-green-600 dark:text-green-400 group-hover:gap-2 transition-all">
+                        View plan
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </span>
+                    </div>
                   </div>
                 </Link>
               </div>
             ))}
+
+            {/* "New plan" ghost card */}
+            <Link
+              href="/meal-planner"
+              className="group flex flex-col items-center justify-center gap-3 min-h-[200px] border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-green-400 dark:hover:border-green-500 rounded-2xl transition-all hover:bg-green-50/40 dark:hover:bg-green-900/10 text-center p-6"
+            >
+              <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 group-hover:bg-green-100 dark:group-hover:bg-green-900/30 rounded-xl flex items-center justify-center transition-colors">
+                <Plus className="w-6 h-6 text-gray-400 dark:text-gray-500 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-400 dark:text-gray-500 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">Create New Plan</p>
+                <p className="text-xs text-gray-300 dark:text-gray-600 mt-0.5">Add another plan to your collection</p>
+              </div>
+            </Link>
           </div>
         )}
-
-        {/* Delete Confirmation Dialog */}
-        <DeleteConfirmationDialog
-          isOpen={isDeleteModalOpen}
-          onClose={cancelDelete}
-          onConfirm={confirmDelete}
-          itemName={
-            isBulkDeleting 
-              ? `${selectedPlans.size} meal plan${selectedPlans.size > 1 ? 's' : ''}`
-              : deletingPlan?.title
-          }
-          itemType="meal plan"
-          count={isBulkDeleting ? selectedPlans.size : 1}
-          isLoading={isDeleting}
-        />
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        isOpen={isDeleteModalOpen}
+        onClose={cancelDelete}
+        onConfirm={confirmDelete}
+        itemName={
+          isBulkDeleting
+            ? `${selectedPlans.size} meal plan${selectedPlans.size > 1 ? 's' : ''}`
+            : deletingPlan?.title
+        }
+        itemType="meal plan"
+        count={isBulkDeleting ? selectedPlans.size : 1}
+        isLoading={isDeleting}
+      />
 
       {/* Footer */}
       <Footer />

@@ -121,10 +121,10 @@ export default function AddMealChoiceDialog({
           {/* AI generator */}
           <button
             onClick={handleAI}
-            className="w-full flex items-start gap-4 p-5 rounded-xl border-2 border-violet-200 dark:border-violet-700 hover:border-violet-400 dark:hover:border-violet-500 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-all text-left group"
+            className="w-full flex items-start gap-4 p-5 rounded-xl border-2 border-green-200 dark:border-green-700 hover:border-green-400 dark:hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 transition-all text-left group"
           >
-            <div className="w-12 h-12 bg-violet-100 dark:bg-violet-900/40 group-hover:bg-violet-200 dark:group-hover:bg-violet-800 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors">
-              <Sparkles className="w-6 h-6 text-violet-600 dark:text-violet-400" />
+            <div className="w-12 h-12 bg-green-100 dark:bg-green-900/40 group-hover:bg-green-200 dark:group-hover:bg-green-800 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors">
+              <Sparkles className="w-6 h-6 text-green-600 dark:text-green-400" />
             </div>
             <div>
               <div className="font-semibold text-gray-900 dark:text-white mb-1">

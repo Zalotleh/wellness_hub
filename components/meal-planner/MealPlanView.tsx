@@ -321,7 +321,7 @@ export default function MealPlanView({
               <button
                 onClick={() => { setSelectedDay(day.key); setSelectedWeek(weekNum); setViewMode('day'); }}
                 title={`View ${day.label}'s meal plan`}
-                className="p-1 text-purple-400 hover:text-purple-600 dark:text-purple-400 dark:hover:text-purple-300 transition-colors"
+                className="p-1 text-green-500 hover:text-green-700 dark:text-green-500 dark:hover:text-green-300 transition-colors"
               >
                 <CalendarDays className="w-4 h-4" />
               </button>
@@ -599,7 +599,7 @@ export default function MealPlanView({
             </p>
             <button
               onClick={() => router.push(`/dashboard?date=${getDayDate(selectedDay, selectedWeek)}`)}
-              className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 bg-purple-50 hover:bg-purple-100 dark:bg-purple-900/30 dark:hover:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-full text-xs font-semibold transition-colors border border-purple-200 dark:border-purple-700"
+              className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 hover:bg-green-100 dark:bg-green-900/30 dark:hover:bg-green-900/50 text-green-700 dark:text-green-300 rounded-full text-xs font-semibold transition-colors border border-green-200 dark:border-green-700"
             >
               <CalendarDays className="w-3 h-3" />
               View Day Progress
@@ -864,7 +864,7 @@ export default function MealPlanView({
                         isLogged 
                           ? "bg-gray-100 dark:bg-gray-700/50 border-gray-300 dark:border-gray-600" 
                           : isActive
-                          ? "bg-white dark:bg-gray-800 border-purple-400 dark:border-purple-500"
+                          ? "bg-white dark:bg-gray-800 border-green-400 dark:border-green-500"
                           : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
                       )}
                     >
@@ -881,7 +881,7 @@ export default function MealPlanView({
                               <h3
                                 className={cn(
                                   "font-bold transition-colors",
-                                  isLogged ? "text-gray-600 dark:text-gray-400" : "text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400"
+                                  isLogged ? "text-gray-600 dark:text-gray-400" : "text-gray-900 dark:text-white group-hover:text-green-600 dark:group-hover:text-green-400"
                                 )}
                               >{day.label}</h3>
                               {isLogged && (
@@ -904,7 +904,7 @@ export default function MealPlanView({
                               </div>
                             )}
                           </div>
-                          <div className="p-1.5 text-purple-400 dark:text-purple-400">
+                          <div className="p-1.5 text-green-500 dark:text-green-400">
                             <CalendarDays className="w-4 h-4" />
                           </div>
                         </div>
@@ -1080,7 +1080,7 @@ export default function MealPlanView({
                       </div>
 
                       {/* Day-view hint */}
-                      <div className="px-3 py-2 border-t border-gray-100 dark:border-gray-700 flex items-center justify-center gap-1.5 text-xs text-purple-500 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors">
+                      <div className="px-3 py-2 border-t border-gray-100 dark:border-gray-700 flex items-center justify-center gap-1.5 text-xs text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors">
                         <CalendarDays className="w-3 h-3" />
                         <span>Click to open day view</span>
                       </div>
@@ -1212,9 +1212,9 @@ export default function MealPlanView({
               )}m
             </div>
           </div>
-          <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-lg p-4 border border-purple-200 dark:border-purple-800">
-            <div className="text-sm text-purple-700 dark:text-purple-300 font-medium mb-1">This Week</div>
-            <div className="text-3xl font-bold text-purple-900 dark:text-purple-100">
+          <div className="bg-gradient-to-br from-green-50 to-teal-100 dark:from-green-900/20 dark:to-teal-800/20 rounded-lg p-4 border border-green-200 dark:border-green-800">
+            <div className="text-sm text-green-700 dark:text-green-300 font-medium mb-1">This Week</div>
+            <div className="text-3xl font-bold text-green-900 dark:text-green-100">
               Week {selectedWeek}/{duration}
             </div>
           </div>

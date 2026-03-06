@@ -186,7 +186,7 @@ export default function MealCard({
       case 'lunch':
         return 'bg-blue-100 text-blue-700 border-blue-200';
       case 'dinner':
-        return 'bg-purple-100 text-purple-700 border-purple-200';
+        return 'bg-teal-100 text-teal-700 border-teal-200';
       case 'snack':
         return 'bg-green-100 text-green-700 border-green-200';
       default:
@@ -262,7 +262,7 @@ export default function MealCard({
       {isLoading && (
         <div className="absolute top-0 left-0 right-0 h-1 bg-gray-200 dark:bg-gray-700 rounded-t-xl overflow-hidden">
           <div 
-            className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300"
+            className="h-full bg-gradient-to-r from-blue-500 to-teal-500 transition-all duration-300"
             style={{ width: `${recipeGenerationProgress}%` }}
           />
         </div>
@@ -464,10 +464,10 @@ export default function MealCard({
                   ${hasRecipe
                     ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-green-500/25'
                     : isLoading
-                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-blue-500/25'
+                      ? 'bg-gradient-to-r from-blue-500 to-teal-600 text-white shadow-blue-500/25'
                       : isEmpty
                         ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-300 cursor-not-allowed'
-                        : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-blue-500/25 hover:shadow-lg transform hover:scale-105'
+                        : 'bg-gradient-to-r from-green-600 to-teal-600 text-white hover:from-green-700 hover:to-teal-700 shadow-green-500/25 hover:shadow-lg transform hover:scale-105'
                   }
                 `}
                 aria-label={

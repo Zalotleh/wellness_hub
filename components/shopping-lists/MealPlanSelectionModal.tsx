@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { X, Calendar, Users, Search, Check, Loader2, UtensilsCrossed } from 'lucide-react';
+import { X, Calendar, Users, Search, Check, Loader2, UtensilsCrossed, RefreshCw } from 'lucide-react';
 import { getMeasurementPreference } from '@/lib/shopping/measurement-system';
 
 interface MealPlan {
@@ -148,173 +148,190 @@ export default function MealPlanSelectionModal({
 
   if (!isOpen) return null;
 
+  const selectedCount = selectedPlans.size;
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 max-w-4xl w-full max-h-[90vh] flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center space-x-3">
-            <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg">
-              <UtensilsCrossed className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+    <div className="fixed inset-0 bg-black/60 dark:bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+
+        {/* ── Header ──────────────────────────────────────────────────── */}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 dark:border-gray-800">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-teal-600 flex items-center justify-center shadow-sm shadow-green-500/20">
+              <UtensilsCrossed className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-800 dark:text-white">Select Meal Plans</h2>
-              <p className="text-gray-600 dark:text-gray-300">Choose meal plans to create shopping list from</p>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">Select Meal Plans</h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Pick one or more plans to generate a shopping list</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            className="p-2 rounded-xl text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           >
-            <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Search Bar */}
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-          <div className="relative mb-4">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
+        {/* ── Search + pantry toggle ───────────────────────────────── */}
+        <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 space-y-3">
+          <div className="relative">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
-              placeholder="Search meal plans..."
+              placeholder="Search meal plans…"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-800 dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
             />
           </div>
-          
-          {/* Pantry Filter */}
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="filterPantry"
-              checked={filterPantry}
-              onChange={(e) => setFilterPantry(e.target.checked)}
-              className="w-4 h-4 text-blue-600 bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
-            />
-            <label htmlFor="filterPantry" className="text-sm text-gray-700 dark:text-gray-300">
-              Filter out items I already have in pantry
-            </label>
-          </div>
+
+          <label className="flex items-center gap-2.5 cursor-pointer select-none group">
+            <div
+              onClick={() => setFilterPantry(!filterPantry)}
+              className={`w-9 h-5 rounded-full transition-colors relative flex-shrink-0 ${
+                filterPantry ? 'bg-green-500' : 'bg-gray-200 dark:bg-gray-700'
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                  filterPantry ? 'translate-x-4' : 'translate-x-0'
+                }`}
+              />
+            </div>
+            <span className="text-sm text-gray-600 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
+              Filter out items I already have in my pantry
+            </span>
+          </label>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        {/* ── Content ─────────────────────────────────────────────── */}
+        <div className="flex-1 overflow-y-auto px-6 py-5">
           {fetchLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-blue-600 dark:text-blue-400" />
-              <span className="ml-3 text-gray-600 dark:text-gray-300">Loading meal plans...</span>
+            <div className="flex flex-col items-center justify-center py-16 gap-3">
+              <Loader2 className="w-8 h-8 animate-spin text-teal-500" />
+              <span className="text-sm text-gray-500 dark:text-gray-400">Loading your meal plans…</span>
             </div>
           ) : error ? (
-            <div className="text-center py-12">
-              <div className="bg-red-100 dark:bg-red-900/30 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                <X className="w-8 h-8 text-red-600 dark:text-red-400" />
+            <div className="flex flex-col items-center justify-center py-16 gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                <X className="w-7 h-7 text-red-500" />
               </div>
-              <h3 className="text-lg font-medium text-gray-800 dark:text-white mb-2">Error Loading Meal Plans</h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
+              <div className="text-center">
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-1">Couldn't load meal plans</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{error}</p>
+              </div>
               <button
                 onClick={fetchMealPlans}
-                className="px-4 py-2 bg-blue-500 dark:bg-blue-600 text-white rounded-lg hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-teal-600 text-white text-sm font-semibold rounded-xl shadow shadow-green-500/20 hover:shadow-md transition-all"
               >
-                Try Again
+                <RefreshCw className="w-4 h-4" /> Retry
               </button>
             </div>
           ) : mealPlans.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                <UtensilsCrossed className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+            <div className="flex flex-col items-center justify-center py-16 gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-green-100 to-teal-100 dark:from-green-900/30 dark:to-teal-900/30 flex items-center justify-center">
+                <UtensilsCrossed className="w-7 h-7 text-teal-600 dark:text-teal-400" />
               </div>
-              <h3 className="text-lg font-medium text-gray-800 dark:text-white mb-2">
-                {searchTerm ? 'No matching meal plans' : 'No meal plans found'}
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
-                {searchTerm 
-                  ? 'Try adjusting your search terms.'
-                  : 'Create your first meal plan to get started.'
-                }
-              </p>
+              <div className="text-center">
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
+                  {searchTerm ? 'No matching meal plans' : 'No meal plans yet'}
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {searchTerm ? 'Try a different search term.' : 'Create a meal plan first, then come back to build your list.'}
+                </p>
+              </div>
               {!searchTerm && (
                 <button
-                  onClick={() => {
-                    onClose();
-                    window.open('/meal-planner', '_blank');
-                  }}
-                  className="px-4 py-2 bg-blue-500 dark:bg-blue-600 text-white rounded-lg hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors"
+                  onClick={() => { onClose(); window.open('/meal-planner', '_blank'); }}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-teal-600 text-white text-sm font-semibold rounded-xl shadow shadow-green-500/20 hover:shadow-md transition-all"
                 >
-                  Create Meal Plan
+                  <UtensilsCrossed className="w-4 h-4" /> Create Meal Plan
                 </button>
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {mealPlans.map((plan) => (
-                <div
-                  key={plan.id}
-                  onClick={() => toggleSelection(plan.id)}
-                  className={`border rounded-lg p-4 cursor-pointer transition-all ${
-                    selectedPlans.has(plan.id)
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                  }`}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-800 dark:text-white mb-1">{plan.title}</h3>
-                      {plan.description && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 line-clamp-2">{plan.description}</p>
-                      )}
-                      
-                      <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-                        <div className="flex items-center space-x-1">
-                          <Calendar className="w-3 h-3" />
-                          <span>{formatDateRange(plan.weekStart, plan.weekEnd) || new Date(plan.createdAt).toLocaleDateString()}</span>
-                        </div>
-                        {plan.defaultServings && (
-                          <div className="flex items-center space-x-1">
-                            <Users className="w-3 h-3" />
-                            <span>{plan.defaultServings} {plan.defaultServings === 1 ? 'person' : 'people'}</span>
-                          </div>
-                        )}
-                        {plan.mealCount && (
-                          <span>{plan.mealCount} meals</span>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center ml-3 ${
-                      selectedPlans.has(plan.id)
-                        ? 'bg-blue-500 border-blue-500 text-white'
-                        : 'border-gray-300 dark:border-gray-600'
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {mealPlans.map((plan) => {
+                const selected = selectedPlans.has(plan.id);
+                return (
+                  <div
+                    key={plan.id}
+                    onClick={() => toggleSelection(plan.id)}
+                    className={`relative rounded-2xl border-2 p-4 cursor-pointer transition-all duration-200 ${
+                      selected
+                        ? 'border-green-500 bg-green-50 dark:bg-green-900/20 shadow-sm shadow-green-500/20'
+                        : 'border-gray-100 dark:border-gray-700 hover:border-green-300 dark:hover:border-green-700 hover:shadow-sm'
+                    }`}
+                  >
+                    {/* Checkmark */}
+                    <div className={`absolute top-3.5 right-3.5 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                      selected
+                        ? 'bg-green-500 border-green-500'
+                        : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
                     }`}>
-                      {selectedPlans.has(plan.id) && <Check className="w-3 h-3" />}
+                      {selected && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                    </div>
+
+                    {/* Top accent */}
+                    {selected && <div className="absolute top-0 left-0 right-0 h-0.5 rounded-t-2xl bg-gradient-to-r from-green-400 to-teal-500" />}
+
+                    <h3 className={`font-semibold pr-7 mb-1 text-sm leading-snug ${
+                      selected ? 'text-green-900 dark:text-green-100' : 'text-gray-900 dark:text-white'
+                    }`}>
+                      {plan.title}
+                    </h3>
+
+                    {plan.description && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-2.5 line-clamp-2">{plan.description}</p>
+                    )}
+
+                    <div className="flex flex-wrap items-center gap-2.5 text-xs text-gray-400 dark:text-gray-500">
+                      <span className="inline-flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        {formatDateRange(plan.weekStart, plan.weekEnd) || new Date(plan.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </span>
+                      {plan.defaultServings && (
+                        <span className="inline-flex items-center gap-1">
+                          <Users className="w-3 h-3" />
+                          {plan.defaultServings} {plan.defaultServings === 1 ? 'person' : 'people'}
+                        </span>
+                      )}
+                      {!!plan.mealCount && (
+                        <span className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700/60 rounded-md font-medium">
+                          {plan.mealCount} meals
+                        </span>
+                      )}
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-between p-6 border-t border-gray-200 dark:border-gray-700">
-          <div className="text-sm text-gray-600 dark:text-gray-400">
-            {selectedPlans.size > 0 ? `${selectedPlans.size} meal plan${selectedPlans.size === 1 ? '' : 's'} selected` : 'No meal plans selected'}
-          </div>
-          
-          <div className="flex items-center space-x-3">
+        {/* ── Footer ──────────────────────────────────────────────── */}
+        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 dark:border-gray-800">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {selectedCount > 0
+              ? <span><span className="font-semibold text-green-600 dark:text-green-400">{selectedCount}</span> plan{selectedCount !== 1 ? 's' : ''} selected</span>
+              : 'Select at least one plan'}
+          </p>
+
+          <div className="flex items-center gap-2.5">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleConfirm}
-              disabled={selectedPlans.size === 0 || creating}
-              className="px-4 py-2 bg-blue-500 dark:bg-blue-600 text-white rounded-lg hover:bg-blue-600 dark:hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+              disabled={selectedCount === 0 || creating}
+              className="inline-flex items-center gap-2 px-5 py-2 text-sm font-semibold text-white bg-gradient-to-r from-green-500 to-teal-600 rounded-xl shadow shadow-green-500/20 hover:shadow-md hover:from-green-600 hover:to-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
-              {creating && <Loader2 className="w-4 h-4 animate-spin" />}
-              <span>{creating ? 'Creating...' : 'Create Shopping List'}</span>
+              {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+              {creating ? 'Creating list…' : 'Create Shopping List'}
             </button>
           </div>
         </div>

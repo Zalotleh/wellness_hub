@@ -441,6 +441,8 @@ export async function POST(
       totalItems: shoppingItems.length,
       totalCost,
       pantryFiltered: filterPantry,
+      sourceType: 'meal-plans',
+      sourceIds: JSON.stringify([mealPlanId]),
     };
 
     if (existingList) {

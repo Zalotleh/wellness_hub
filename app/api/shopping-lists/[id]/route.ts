@@ -68,11 +68,26 @@ export async function GET(
       firstItem: items[0],
     });
 
+    // Parse sourceIds from JSON string to array
+    let sourceIds: string[] = [];
+    if (Array.isArray(shoppingList.sourceIds)) {
+      sourceIds = shoppingList.sourceIds as string[];
+    } else if (typeof shoppingList.sourceIds === 'string') {
+      try {
+        sourceIds = JSON.parse(shoppingList.sourceIds);
+      } catch (e) {
+        sourceIds = [];
+      }
+    } else if (shoppingList.sourceIds && typeof shoppingList.sourceIds === 'object') {
+      sourceIds = Object.values(shoppingList.sourceIds) as string[];
+    }
+
     return NextResponse.json({
       success: true,
       data: {
         ...shoppingList,
         items,
+        sourceIds,
       },
     });
 

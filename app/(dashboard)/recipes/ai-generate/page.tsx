@@ -330,7 +330,7 @@ export default function AIGeneratorPage() {
         />
       )}
 
-      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-teal-50 to-emerald-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
         {/* Sticky page header */}
         <div className="sticky top-0 z-30 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200/60 dark:border-gray-700/60">
           <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -347,7 +347,7 @@ export default function AIGeneratorPage() {
             </div>
 
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 bg-gradient-to-br from-violet-500 to-pink-500 rounded-md flex items-center justify-center shadow">
+              <div className="w-7 h-7 bg-gradient-to-br from-green-500 to-teal-500 rounded-md flex items-center justify-center shadow">
                 <Sparkles className="w-3.5 h-3.5 text-white" />
               </div>
               <span className="text-sm font-semibold text-gray-700 dark:text-gray-200 hidden sm:block">
@@ -361,12 +361,12 @@ export default function AIGeneratorPage() {
           {/* Hero header */}
           <div className="mb-8 text-center">
             {fromRecommendation ? (
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-100 dark:bg-purple-900/40 border border-purple-200 dark:border-purple-700 rounded-full text-sm font-medium text-purple-700 dark:text-purple-300 mb-4">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 dark:bg-green-900/40 border border-green-200 dark:border-green-700 rounded-full text-sm font-medium text-green-700 dark:text-green-300 mb-4">
                 <Target className="w-4 h-4" />
                 Smart Recommendation — this recipe targets your wellness goals
               </div>
             ) : (
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-violet-100 dark:bg-violet-900/30 border border-violet-200 dark:border-violet-700 rounded-full text-sm font-medium text-violet-700 dark:text-violet-300 mb-4">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-teal-100 dark:bg-teal-900/30 border border-teal-200 dark:border-teal-700 rounded-full text-sm font-medium text-teal-700 dark:text-teal-300 mb-4">
                 <Sparkles className="w-4 h-4" />
                 Powered by AI
               </div>

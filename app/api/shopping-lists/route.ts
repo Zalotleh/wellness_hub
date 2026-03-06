@@ -147,7 +147,7 @@ export async function POST(request: NextRequest) {
 
     // If recipeId is provided, get ingredients from recipe
     let listItems = items;
-    let sourceIds = [];
+    let sourceIds: string[] = [];
     let sourceType = 'MANUAL';
 
     if (recipeId) {
@@ -177,7 +177,7 @@ export async function POST(request: NextRequest) {
       }));
 
       sourceIds = [recipeId];
-      sourceType = 'RECIPE';
+      sourceType = 'recipes';
     }
 
     // If mealPlanId is provided, verify it belongs to the user
@@ -195,13 +195,19 @@ export async function POST(request: NextRequest) {
           { status: 404 }
         );
       }
+
+      // Set source tracking for meal plan
+      if (sourceType === 'MANUAL') {
+        sourceType = 'meal-plans';
+        sourceIds = [mealPlanId];
+      }
     }
 
     // Create the shopping list
     const shoppingList = await prisma.shoppingList.create({
       data: {
         userId: session.user.id,
-        mealPlanId: mealPlanId || '', // Use empty string if no meal plan
+        mealPlanId: mealPlanId || null, // Use null if no meal plan
         title: listTitle,
         sourceType,
         sourceIds: JSON.stringify(sourceIds),

@@ -36,10 +36,11 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch meal plans with minimal data needed for selection modal
+    // Include DRAFT and ACTIVE — exclude only ARCHIVED so users see all their plans
     const mealPlans = await prisma.mealPlan.findMany({
       where: {
         userId: session.user.id,
-        status: 'ACTIVE', // Only show active meal plans
+        status: { not: 'ARCHIVED' },
         ...searchFilter,
       },
       select: {

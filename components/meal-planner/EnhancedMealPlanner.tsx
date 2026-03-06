@@ -1356,7 +1356,7 @@ export default function EnhancedMealPlanner({
 
       {/* Guidance Banner */}
       {mealPlan.id && mealPlan.meals.length > 0 && (
-        <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-b border-blue-200 dark:border-blue-800">
+        <div className="bg-gradient-to-r from-blue-50 to-teal-50 dark:from-blue-900/20 dark:to-teal-900/20 border-b border-blue-200 dark:border-blue-800">
           <div className={cn(
             'mx-auto px-4 sm:px-6 lg:px-8 py-4',
             isMobile ? 'max-w-full' : isTablet ? 'max-w-4xl' : 'max-w-7xl'

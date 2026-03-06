@@ -63,7 +63,7 @@ const ACTION_CARDS = [
   {
     href: '/advisor',
     Icon: Bot,
-    gradient: 'from-purple-500 to-violet-600',
+    gradient: 'from-green-500 to-teal-600',
     title: 'AI Health Advisor',
     description: 'Get personalized nutrition advice and answers from your AI wellness coach.',
     cta: 'Ask the advisor',
@@ -94,10 +94,10 @@ const STEPS = [
     desc: 'Let our AI craft a personalized recipe based on your nutritional profile and health goals.',
     href: '/recipes/ai-generate',
     cta: 'Start Cooking',
-    bg: 'bg-purple-100 dark:bg-purple-900/30',
-    text: 'text-purple-600 dark:text-purple-400',
-    btnBg: 'bg-purple-500 hover:bg-purple-600',
-    hoverRow: 'hover:bg-purple-50 dark:hover:bg-purple-900/20',
+    bg: 'bg-green-100 dark:bg-green-900/30',
+    text: 'text-green-600 dark:text-green-400',
+    btnBg: 'bg-green-500 hover:bg-green-600',
+    hoverRow: 'hover:bg-green-50 dark:hover:bg-green-900/20',
   },
   {
     num: 2,
@@ -162,7 +162,7 @@ function ReturningUserEmpty({ userName }: { userName?: string | null }) {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Hero */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-600 rounded-2xl shadow-2xl text-white">
+      <div className="relative overflow-hidden bg-gradient-to-br from-green-600 via-teal-600 to-emerald-700 rounded-2xl shadow-2xl text-white">
         {/* Background blobs */}
         <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full -translate-y-40 translate-x-40 pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-60 h-60 bg-white/5 rounded-full translate-y-32 -translate-x-32 pointer-events-none" />
@@ -206,10 +206,10 @@ function ReturningUserEmpty({ userName }: { userName?: string | null }) {
       </div>
 
       {/* Tip / info bar */}
-      <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-xl p-4">
+      <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4">
         <div className="flex gap-3 items-start">
-          <CheckCircle2 className="w-5 h-5 text-indigo-500 dark:text-indigo-400 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-indigo-800 dark:text-indigo-200 leading-relaxed">
+          <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-green-900 dark:text-green-200 leading-relaxed">
             <strong>Tip:</strong> Even on quieter days, logging a single meal keeps your defense systems active and your body on track — and helps the AI fine-tune tomorrow&apos;s recommendations to your wellbeing.
           </p>
         </div>
@@ -225,7 +225,7 @@ function FirstTimeWelcome() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Hero */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-violet-600 via-purple-600 to-pink-600 rounded-2xl shadow-2xl text-white">
+      <div className="relative overflow-hidden bg-gradient-to-br from-green-600 via-teal-600 to-emerald-700 rounded-2xl shadow-2xl text-white">
         <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full -translate-y-40 translate-x-40 pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-60 h-60 bg-white/5 rounded-full translate-y-32 -translate-x-32 pointer-events-none" />
 
@@ -259,7 +259,7 @@ function FirstTimeWelcome() {
       {/* 3-step guide */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 md:p-8">
         <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-          <Target className="w-5 h-5 text-purple-500" />
+          <Target className="w-5 h-5 text-green-500" />
           Get started in 3 simple steps
         </h3>
         <div className="space-y-3">

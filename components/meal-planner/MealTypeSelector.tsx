@@ -12,7 +12,7 @@ interface MealTypeSelectorProps {
 const mealTypes = [
   { key: 'breakfast', label: 'Breakfast', icon: '🌅', color: 'bg-orange-100 hover:bg-orange-200 text-orange-700 border-orange-300' },
   { key: 'lunch', label: 'Lunch', icon: '☀️', color: 'bg-blue-100 hover:bg-blue-200 text-blue-700 border-blue-300' },
-  { key: 'dinner', label: 'Dinner', icon: '🌙', color: 'bg-purple-100 hover:bg-purple-200 text-purple-700 border-purple-300' },
+  { key: 'dinner', label: 'Dinner', icon: '🌙', color: 'bg-teal-100 hover:bg-teal-200 text-teal-700 border-teal-300' },
   { key: 'snack', label: 'Snack', icon: '🍎', color: 'bg-green-100 hover:bg-green-200 text-green-700 border-green-300' },
 ];
 
