@@ -270,7 +270,7 @@ export default function LearnPage() {
 
           <div className="flex flex-col sm:flex-row gap-4">
             <a
-              href="/progress"
+              href="/dashboard"
               className="flex-1 px-6 py-3 bg-white text-green-600 rounded-lg hover:bg-gray-100 dark:bg-gray-800 dark:text-green-400 dark:hover:bg-gray-700 transition-colors font-bold text-center"
             >
               Start Tracking

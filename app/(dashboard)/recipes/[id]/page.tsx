@@ -19,6 +19,9 @@ import {
   Loader2,
   Send,
   ShoppingCart,
+  Activity,
+  CheckCircle2,
+  X,
 } from 'lucide-react';
 import { RecipeWithRelations } from '@/types';
 import { ConfirmDialog, ShareDialog } from '@/components/ui/DialogComponents';
@@ -51,6 +54,22 @@ export default function RecipeDetailPage() {
   const [showShoppingListDialog, setShowShoppingListDialog] = useState(false);
   const [shoppingListMessage, setShoppingListMessage] = useState({ type: '', message: '' });
   const [isFavoriting, setIsFavoriting] = useState(false);
+  const [showLogModal, setShowLogModal] = useState(false);
+  const [selectedMealTime, setSelectedMealTime] = useState('BREAKFAST');
+  const [isLoggingMeal, setIsLoggingMeal] = useState(false);
+  const [logSuccess, setLogSuccess] = useState(false);
+
+  // Map recipe mealType (lowercase) to the uppercase enum used in the tracker
+  const mealTypeToEnum = (mt: string | null | undefined): string => {
+    switch (mt?.toLowerCase()) {
+      case 'breakfast': return 'BREAKFAST';
+      case 'lunch':     return 'LUNCH';
+      case 'dinner':    return 'DINNER';
+      case 'snack':     return 'MORNING_SNACK';
+      case 'dessert':   return 'AFTERNOON_SNACK';
+      default:          return 'BREAKFAST';
+    }
+  };
 
   useEffect(() => {
     fetchRecipe();
@@ -64,6 +83,10 @@ export default function RecipeDetailPage() {
       const data = await response.json();
       setRecipe(data);
       setUserRating(data.userRating || 0);
+      // Pre-select the meal time from the saved recipe mealType
+      if (data.mealType) {
+        setSelectedMealTime(mealTypeToEnum(data.mealType));
+      }
     } catch (error) {
       console.error('Error fetching recipe:', error);
       router.push('/recipes');
@@ -174,6 +197,36 @@ export default function RecipeDetailPage() {
       console.error('Error toggling favorite:', error);
     } finally {
       setIsFavoriting(false);
+    }
+  };
+
+  const handleLogMeal = async () => {
+    if (!session?.user || isLoggingMeal) return;
+    setIsLoggingMeal(true);
+    try {
+      const response = await fetch(`/api/recipes/${params.id}/log-meal`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mealTime: selectedMealTime,
+          date: new Date().toISOString(),
+        }),
+      });
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Failed to log meal');
+      }
+      setLogSuccess(true);
+      setTimeout(() => {
+        setShowLogModal(false);
+        setLogSuccess(false);
+        router.push(`/dashboard?updated=${Date.now()}`);
+      }, 1200);
+    } catch (error) {
+      console.error('Error logging meal:', error);
+      alert(`Failed to log meal: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsLoggingMeal(false);
     }
   };
 
@@ -393,6 +446,20 @@ export default function RecipeDetailPage() {
                     <span>{recipe.servings} servings</span>
                   </div>
                 )}
+                {recipe.mealType && recipe.mealType !== 'any' && (
+                  <div className="flex items-center space-x-2">
+                    <span className="text-lg">
+                      {recipe.mealType === 'breakfast' ? '🌅' :
+                       recipe.mealType === 'lunch' ? '🌞' :
+                       recipe.mealType === 'dinner' ? '🌙' :
+                       recipe.mealType === 'snack' ? '🍎' :
+                       recipe.mealType === 'dessert' ? '🍰' : '🍽️'}
+                    </span>
+                    <span className="px-2 py-0.5 bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 rounded-full text-sm font-medium capitalize">
+                      {recipe.mealType}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -465,23 +532,36 @@ export default function RecipeDetailPage() {
                   Ingredients
                 </h2>
                 {session?.user && (
-                  <button
-                    onClick={handleCreateShoppingList}
-                    disabled={isCreatingShoppingList}
-                    className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg hover:from-green-600 hover:to-blue-600 transition-all font-medium shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isCreatingShoppingList ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        <span>Creating...</span>
-                      </>
-                    ) : (
-                      <>
-                        <ShoppingCart className="w-5 h-5" />
-                        <span>Create Shopping List</span>
-                      </>
-                    )}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => recipe?.mealType ? handleLogMeal() : setShowLogModal(true)}
+                      disabled={isLoggingMeal}
+                      className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-lg hover:from-violet-600 hover:to-purple-700 transition-all font-medium shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isLoggingMeal ? (
+                        <><Loader2 className="w-5 h-5 animate-spin" /><span>Logging…</span></>
+                      ) : (
+                        <><Activity className="w-5 h-5" /><span>Track This Meal</span></>
+                      )}
+                    </button>
+                    <button
+                      onClick={handleCreateShoppingList}
+                      disabled={isCreatingShoppingList}
+                      className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg hover:from-green-600 hover:to-blue-600 transition-all font-medium shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isCreatingShoppingList ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          <span>Creating...</span>
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingCart className="w-5 h-5" />
+                          <span>Shopping List</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
                 )}
               </div>
               <ul className="space-y-3">
@@ -701,6 +781,102 @@ export default function RecipeDetailPage() {
           )
         }
       />
+
+      {/* Log to Dashboard Modal */}
+      {showLogModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-6">
+            {logSuccess ? (
+              <div className="text-center py-4">
+                <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle2 className="w-8 h-8 text-green-600 dark:text-green-400" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">Logged!</h3>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">Redirecting to your dashboard…</p>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-violet-100 dark:bg-violet-900/30 rounded-xl flex items-center justify-center">
+                      <Activity className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">Track This Meal</h3>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {recipe?.mealType && recipe.mealType !== 'any'
+                          ? `Pre-selected based on recipe type`
+                          : 'Choose a meal time for today'}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowLogModal(false)}
+                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  >
+                    <X className="w-5 h-5 text-gray-500" />
+                  </button>
+                </div>
+
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                  Logging: <span className="font-semibold text-violet-600 dark:text-violet-400">{recipe?.title}</span>
+                </p>
+
+                <div className="grid grid-cols-1 gap-2 mb-6">
+                  {[
+                    { value: 'BREAKFAST', label: 'Breakfast', icon: '🌅', time: '7–9 AM' },
+                    { value: 'MORNING_SNACK', label: 'Morning Snack', icon: '☕', time: '10–11 AM' },
+                    { value: 'LUNCH', label: 'Lunch', icon: '🌞', time: '12–2 PM' },
+                    { value: 'AFTERNOON_SNACK', label: 'Afternoon Snack', icon: '🍎', time: '3–4 PM' },
+                    { value: 'DINNER', label: 'Dinner', icon: '🌙', time: '6–8 PM' },
+                  ].map(({ value, label, icon, time }) => (
+                    <button
+                      key={value}
+                      onClick={() => setSelectedMealTime(value)}
+                      className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${
+                        selectedMealTime === value
+                          ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/20'
+                          : 'border-gray-200 dark:border-gray-600 hover:border-violet-300 dark:hover:border-violet-700'
+                      }`}
+                    >
+                      <span className="text-xl">{icon}</span>
+                      <div className="flex-1">
+                        <span className={`font-semibold text-sm ${selectedMealTime === value ? 'text-violet-700 dark:text-violet-300' : 'text-gray-800 dark:text-gray-200'}`}>
+                          {label}
+                        </span>
+                        <span className="text-xs text-gray-400 dark:text-gray-500 ml-2">{time}</span>
+                      </div>
+                      {selectedMealTime === value && (
+                        <CheckCircle2 className="w-5 h-5 text-violet-500 flex-shrink-0" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowLogModal(false)}
+                    className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-xl font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleLogMeal}
+                    disabled={isLoggingMeal}
+                    className="flex-1 px-4 py-2.5 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-xl font-medium hover:from-violet-600 hover:to-purple-700 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {isLoggingMeal ? (
+                      <><Loader2 className="w-4 h-4 animate-spin" /> Logging…</>
+                    ) : (
+                      <><Activity className="w-4 h-4" /> Log Recipe</>
+                    )}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

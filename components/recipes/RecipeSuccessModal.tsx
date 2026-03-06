@@ -11,6 +11,9 @@ interface RecipeSuccessModalProps {
   recipeName: string;
   onCreateShoppingList: () => Promise<void>;
   onLogToMealPlanner: () => Promise<void>;
+  /** Optional overrides when coming from a specific meal-planner day view */
+  logToMealPlannerLabel?: string;
+  logToMealPlannerDescription?: string;
   onViewRecipe: () => void;
 }
 
@@ -21,6 +24,8 @@ export function RecipeSuccessModal({
   recipeName,
   onCreateShoppingList,
   onLogToMealPlanner,
+  logToMealPlannerLabel = 'Log This Meal Now',
+  logToMealPlannerDescription = 'Track it in your progress today',
   onViewRecipe,
 }: RecipeSuccessModalProps) {
   const [isCreatingList, setIsCreatingList] = useState(false);
@@ -116,9 +121,9 @@ export function RecipeSuccessModal({
                 <ClipboardList className="w-6 h-6 text-white" />
               </div>
               <div className="flex-1 text-left">
-                <h3 className="font-semibold text-gray-900">Log This Meal Now</h3>
+                <h3 className="font-semibold text-gray-900">{logToMealPlannerLabel}</h3>
                 <p className="text-sm text-gray-600">
-                  {isLogging ? 'Logging meal...' : 'Track it in your progress today'}
+                  {isLogging ? 'Going back...' : logToMealPlannerDescription}
                 </p>
               </div>
             </button>

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   Calendar, 
   Clock, 
@@ -16,7 +17,8 @@ import {
   Timer,
   Target,
   Sparkles,
-  CheckCircle2
+  CheckCircle2,
+  CalendarDays
 } from 'lucide-react';
 import { DefenseSystem, Meal, DefenseSystemInfo } from '@/types';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
@@ -42,6 +44,10 @@ interface MealPlanViewProps {
   onBulkRegenerate: (day: string) => void;
   isGenerating?: boolean;
   className?: string;
+  /** Pre-select a specific day on mount (e.g. 'friday') */
+  initialDay?: string;
+  /** Start in day-focused view instead of the default calendar grid */
+  initialViewMode?: 'day' | 'calendar';
 }
 
 interface DayStats {
@@ -66,10 +72,15 @@ export default function MealPlanView({
   onBulkRegenerate,
   isGenerating = false,
   className = '',
+  initialDay,
+  initialViewMode,
 }: MealPlanViewProps) {
-  const [selectedDay, setSelectedDay] = useState<string>('monday');
+  const router = useRouter();
+  const [selectedDay, setSelectedDay] = useState<string>(initialDay || 'monday');
   const [selectedWeek, setSelectedWeek] = useState<number>(1);
-  const [viewMode, setViewMode] = useState<'day' | 'calendar' | 'month'>('calendar');
+  const [viewMode, setViewMode] = useState<'day' | 'calendar' | 'month'>(initialViewMode || 'calendar');
+  const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+  const [selectedCalendarCard, setSelectedCalendarCard] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Detect if it's a multi-week plan
@@ -84,6 +95,26 @@ export default function MealPlanView({
     { key: 'saturday', label: 'Saturday', short: 'Sat' },
     { key: 'sunday', label: 'Sunday', short: 'Sun' },
   ];
+
+  // Helper: compute YYYY-MM-DD for a (dayKey, weekNum) pair.
+  // Falls back to the current week's Monday when weekStart is not provided.
+  const getDayDate = (dayKey: string, weekNum: number): string => {
+    const startDate = weekStart
+      ? new Date(weekStart)
+      : (() => {
+          const d = new Date();
+          // Roll back to Monday (weekStartsOn: 1)
+          const diff = (d.getDay() + 6) % 7;
+          d.setDate(d.getDate() - diff);
+          d.setHours(12, 0, 0, 0);
+          return d;
+        })();
+    const dayIndex = daysOfWeek.findIndex(d => d.key === dayKey);
+    const absoluteDayIndex = (weekNum - 1) * 7 + dayIndex;
+    const targetDate = new Date(startDate);
+    targetDate.setDate(startDate.getDate() + absoluteDayIndex);
+    return targetDate.toISOString().split('T')[0];
+  };
 
   const mealSlots = [
     { key: 'breakfast', label: 'Breakfast', icon: '🌅', time: '8:00 AM' },
@@ -281,12 +312,19 @@ export default function MealPlanView({
                 <button
                   onClick={() => onBulkRegenerate(day.key)}
                   disabled={isGenerating}
-                  className="p-1 text-gray-400 dark:text-gray-300 hover:text-gray-600 dark:text-gray-200 transition-colors"
+                  className="p-1 text-gray-400 dark:text-gray-300 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
                   title="Regenerate all meals for this day"
                 >
                   <Shuffle className="w-4 h-4" />
                 </button>
               )}
+              <button
+                onClick={() => { setSelectedDay(day.key); setSelectedWeek(weekNum); setViewMode('day'); }}
+                title={`View ${day.label}'s meal plan`}
+                className="p-1 text-purple-400 hover:text-purple-600 dark:text-purple-400 dark:hover:text-purple-300 transition-colors"
+              >
+                <CalendarDays className="w-4 h-4" />
+              </button>
             </div>
           </div>
         </div>
@@ -309,44 +347,103 @@ export default function MealPlanView({
                 </div>
 
                 {/* Meals or Empty Slot */}
-                {slotMeals.length > 0 ? (
-                  <div className="space-y-3">
-                    {slotMeals.map((meal, index) => (
-                      <MealCard
-                        key={meal.id}
-                        meal={{
-                          ...meal,
-                          mealType: slot.key,
-                          prepTime: meal.prepTime?.toString(),
-                          cookTime: meal.cookTime?.toString(),
-                        }}
-                        dayIndex={daysOfWeek.findIndex(d => d.key === day.key)}
-                        mealIndex={index}
-                        isPrimary={index === 0} // First meal is primary
-                        onMealUpdate={(dayIndex: number, mealIndex: number, updates: any) => {
-                          onMealUpdate(meal.id, updates);
-                        }}
-                        onGenerateRecipe={() => onRegenerateMeal(meal.id)}
-                        onViewRecipe={onViewRecipe}
-                        isGeneratingRecipe={isGenerating}
-                      />
-                    ))}
-                    
-                    {/* Add Another Meal Button */}
-                    <button
-                      onClick={() => onAddMeal(day.key, slot.key, undefined, weekNum)}
-                      disabled={isGenerating}
-                      className="w-full px-4 py-3 border-2 border-dashed border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-600 dark:text-gray-200 hover:border-green-500 dark:hover:border-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-700 dark:hover:text-green-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
-                    >
-                      <div className="w-6 h-6 bg-gray-100 dark:bg-gray-700 group-hover:bg-green-200 dark:group-hover:bg-green-800 rounded-full flex items-center justify-center transition-colors">
-                        <Plus className="w-4 h-4" />
-                      </div>
-                      <span className="font-medium">Add Extra Meal</span>
-                    </button>
-                  </div>
-                ) : (
-                  renderEmptySlot(day.key, slot.key, weekNum)
-                )}
+                {(() => {
+                  // Exclude ghost/empty-named planned meals so they don't render alongside logged cards
+                  const plannedMeals = slotMeals.filter(m => m.source !== 'logged' && m.mealName?.trim());
+                  const loggedMeals  = slotMeals.filter(m => m.source === 'logged');
+                  return (
+                    <div className="space-y-3">
+                      {/* Dashboard-logged meals (read-only) */}
+                      {loggedMeals.length > 0 && (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-1.5 px-1">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
+                            <span className="text-xs font-semibold text-green-700 dark:text-green-400 uppercase tracking-wide">
+                              Logged from dashboard
+                            </span>
+                          </div>
+                          {loggedMeals.map((meal) => (
+                            <div
+                              key={meal.id}
+                              className="p-3 rounded-lg border border-green-200 dark:border-green-700 bg-green-50 dark:bg-green-900/20"
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-semibold text-green-900 dark:text-green-100 truncate">
+                                    {meal.mealName}
+                                  </p>
+                                  {meal.defenseSystems && meal.defenseSystems.length > 0 && (
+                                    <p className="text-xs text-green-700 dark:text-green-400 mt-0.5 truncate">
+                                      {meal.defenseSystems.slice(0, 3).join(' · ')}
+                                    </p>
+                                  )}
+                                  {meal.servings && meal.servings > 1 && (
+                                    <p className="text-xs text-green-600 dark:text-green-500 mt-0.5">
+                                      {meal.servings} serving{meal.servings !== 1 ? 's' : ''}
+                                    </p>
+                                  )}
+                                </div>
+                                <span className="flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-300 border border-green-300 dark:border-green-600">
+                                  <CheckCircle2 className="w-3 h-3" />
+                                  Logged
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Planned meals with full MealCard */}
+                      {plannedMeals.length > 0 ? (
+                        <>
+                          {plannedMeals.map((meal, index) => (
+                            <MealCard
+                              key={meal.id}
+                              meal={{
+                                ...meal,
+                                mealType: slot.key,
+                                prepTime: meal.prepTime?.toString(),
+                                cookTime: meal.cookTime?.toString(),
+                              }}
+                              dayIndex={daysOfWeek.findIndex(d => d.key === day.key)}
+                              mealIndex={index}
+                              isPrimary={index === 0}
+                              onMealUpdate={(dayIndex: number, mealIndex: number, updates: any) => {
+                                onMealUpdate(meal.id, updates);
+                              }}
+                              onGenerateRecipe={() => onRegenerateMeal(meal.id)}
+                              onViewRecipe={onViewRecipe}
+                              isGeneratingRecipe={isGenerating}
+                            />
+                          ))}
+                          {/* Add Another Meal Button */}
+                          <button
+                            onClick={() => onAddMeal(day.key, slot.key, undefined, weekNum)}
+                            disabled={isGenerating}
+                            className="w-full px-4 py-3 border-2 border-dashed border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-600 dark:text-gray-200 hover:border-green-500 dark:hover:border-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-700 dark:hover:text-green-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
+                          >
+                            <div className="w-6 h-6 bg-gray-100 dark:bg-gray-700 group-hover:bg-green-200 dark:group-hover:bg-green-800 rounded-full flex items-center justify-center transition-colors">
+                              <Plus className="w-4 h-4" />
+                            </div>
+                            <span className="font-medium">Add Extra Meal</span>
+                          </button>
+                        </>
+                      ) : loggedMeals.length > 0 ? (
+                        /* Logged meals exist but nothing planned — show a compact add button */
+                        <button
+                          onClick={() => onAddMeal(day.key, slot.key, undefined, weekNum)}
+                          disabled={isGenerating}
+                          className="w-full px-4 py-2 border border-dashed border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-500 dark:text-gray-400 hover:border-green-500 hover:text-green-700 dark:hover:text-green-300 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>Add Planned {slot.label}</span>
+                        </button>
+                      ) : (
+                        renderEmptySlot(day.key, slot.key, weekNum)
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             );
           })}
@@ -361,58 +458,112 @@ export default function MealPlanView({
             </div>
 
             {/* Snacks */}
-            {dayMealsToUse['snack'] && dayMealsToUse['snack'].length > 0 ? (
-              <div className="space-y-3">
-                {dayMealsToUse['snack'].map((meal, index) => (
-                  <MealCard
-                    key={meal.id}
-                    meal={{
-                      ...meal,
-                      mealType: 'snack',
-                      prepTime: meal.prepTime?.toString(),
-                      cookTime: meal.cookTime?.toString(),
-                    }}
-                    dayIndex={daysOfWeek.findIndex(d => d.key === day.key)}
-                    mealIndex={index}
-                    isPrimary={true} // All snacks are primary (show MAIN badge)
-                    onMealUpdate={(dayIndex: number, mealIndex: number, updates: any) => {
-                      onMealUpdate(meal.id, updates);
-                    }}
-                    onGenerateRecipe={() => onRegenerateMeal(meal.id)}
-                    onViewRecipe={onViewRecipe}
-                    isGeneratingRecipe={isGenerating}
-                  />
-                ))}
-                
-                {/* Add Another Snack Button */}
-                <button
-                  onClick={() => onAddMeal(day.key, 'snack', undefined, weekNum)}
-                  disabled={isGenerating}
-                  className="w-full px-4 py-3 border-2 border-dashed border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-600 dark:text-gray-200 hover:border-green-500 dark:hover:border-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-700 dark:hover:text-green-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
-                >
-                  <div className="w-6 h-6 bg-gray-100 dark:bg-gray-700 group-hover:bg-green-200 dark:group-hover:bg-green-800 rounded-full flex items-center justify-center transition-colors">
-                    <Plus className="w-4 h-4" />
-                  </div>
-                  <span className="font-medium">Add Snack</span>
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => onAddMeal(day.key, 'snack', undefined, weekNum)}
-                disabled={isGenerating}
-                className="w-full px-6 py-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-green-500 dark:hover:border-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
-              >
-                <div className="flex flex-col items-center gap-3">
-                  <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 group-hover:bg-green-200 dark:group-hover:bg-green-800 rounded-full flex items-center justify-center transition-colors">
-                    <span className="text-2xl">🍎</span>
-                  </div>
-                  <div>
-                    <div className="font-medium text-gray-900 dark:text-white mb-1">Add Your First Snack</div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">Keep your energy up throughout the day</div>
-                  </div>
+            {(() => {
+              const allSnacks = dayMealsToUse['snack'] || [];
+              // Exclude ghost/empty-named planned snacks so they don't render alongside logged cards
+              const plannedSnacks = allSnacks.filter(m => m.source !== 'logged' && m.mealName?.trim());
+              const loggedSnacks  = allSnacks.filter(m => m.source === 'logged');
+              return (
+                <div className="space-y-3">
+                  {/* Dashboard-logged snacks (read-only) */}
+                  {loggedSnacks.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-1.5 px-1">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
+                        <span className="text-xs font-semibold text-green-700 dark:text-green-400 uppercase tracking-wide">
+                          Logged from dashboard
+                        </span>
+                      </div>
+                      {loggedSnacks.map((meal) => (
+                        <div
+                          key={meal.id}
+                          className="p-3 rounded-lg border border-green-200 dark:border-green-700 bg-green-50 dark:bg-green-900/20"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-green-900 dark:text-green-100 truncate">
+                                {meal.mealName}
+                              </p>
+                              {meal.defenseSystems && meal.defenseSystems.length > 0 && (
+                                <p className="text-xs text-green-700 dark:text-green-400 mt-0.5 truncate">
+                                  {meal.defenseSystems.slice(0, 3).join(' · ')}
+                                </p>
+                              )}
+                            </div>
+                            <span className="flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-300 border border-green-300 dark:border-green-600">
+                              <CheckCircle2 className="w-3 h-3" />
+                              Logged
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Planned snacks */}
+                  {plannedSnacks.length > 0 ? (
+                    <>
+                      {plannedSnacks.map((meal, index) => (
+                        <MealCard
+                          key={meal.id}
+                          meal={{
+                            ...meal,
+                            mealType: 'snack',
+                            prepTime: meal.prepTime?.toString(),
+                            cookTime: meal.cookTime?.toString(),
+                          }}
+                          dayIndex={daysOfWeek.findIndex(d => d.key === day.key)}
+                          mealIndex={index}
+                          isPrimary={true}
+                          onMealUpdate={(dayIndex: number, mealIndex: number, updates: any) => {
+                            onMealUpdate(meal.id, updates);
+                          }}
+                          onGenerateRecipe={() => onRegenerateMeal(meal.id)}
+                          onViewRecipe={onViewRecipe}
+                          isGeneratingRecipe={isGenerating}
+                        />
+                      ))}
+                      {/* Add Another Snack Button */}
+                      <button
+                        onClick={() => onAddMeal(day.key, 'snack', undefined, weekNum)}
+                        disabled={isGenerating}
+                        className="w-full px-4 py-3 border-2 border-dashed border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-600 dark:text-gray-200 hover:border-green-500 dark:hover:border-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-700 dark:hover:text-green-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
+                      >
+                        <div className="w-6 h-6 bg-gray-100 dark:bg-gray-700 group-hover:bg-green-200 dark:group-hover:bg-green-800 rounded-full flex items-center justify-center transition-colors">
+                          <Plus className="w-4 h-4" />
+                        </div>
+                        <span className="font-medium">Add Snack</span>
+                      </button>
+                    </>
+                  ) : loggedSnacks.length > 0 ? (
+                    <button
+                      onClick={() => onAddMeal(day.key, 'snack', undefined, weekNum)}
+                      disabled={isGenerating}
+                      className="w-full px-4 py-2 border border-dashed border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-500 dark:text-gray-400 hover:border-green-500 hover:text-green-700 dark:hover:text-green-300 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add Planned Snack</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => onAddMeal(day.key, 'snack', undefined, weekNum)}
+                      disabled={isGenerating}
+                      className="w-full px-6 py-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-green-500 dark:hover:border-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
+                    >
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 group-hover:bg-green-200 dark:group-hover:bg-green-800 rounded-full flex items-center justify-center transition-colors">
+                          <span className="text-2xl">🍎</span>
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-900 dark:text-white mb-1">Add Your First Snack</div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400">Keep your energy up throughout the day</div>
+                        </div>
+                      </div>
+                    </button>
+                  )}
                 </div>
-              </button>
-            )}
+              );
+            })()}
           </div>
         </div>
       </div>
@@ -446,11 +597,18 @@ export default function MealPlanView({
             <p className="text-sm text-gray-500 dark:text-gray-400">
               {duration > 1 ? `Week ${selectedWeek} • Day ${absoluteDayNumber}/${duration * 7}` : 'Use arrow keys to navigate'}
             </p>
+            <button
+              onClick={() => router.push(`/dashboard?date=${getDayDate(selectedDay, selectedWeek)}`)}
+              className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 bg-purple-50 hover:bg-purple-100 dark:bg-purple-900/30 dark:hover:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-full text-xs font-semibold transition-colors border border-purple-200 dark:border-purple-700"
+            >
+              <CalendarDays className="w-3 h-3" />
+              View Day Progress
+            </button>
           </div>
 
           <button
             onClick={() => navigateDay(1)}
-            className="p-2 text-gray-400 dark:text-gray-300 hover:text-gray-600 dark:text-gray-200 transition-colors"
+            className="p-2 text-gray-400 dark:text-gray-300 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
             aria-label="Next day"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -581,7 +739,12 @@ export default function MealPlanView({
               {weekMeals.map(({ week, day, dayLabel, slot, slotInfo, meal, isPrimary }, index) => (
                 <div 
                   key={`${week}-${day}-${slot}-${meal.id}-${index}`}
-                  className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow"
+                  className={cn(
+                    "rounded-lg shadow-sm border p-4 hover:shadow-md transition-shadow",
+                    meal.source === 'logged'
+                      ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700"
+                      : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
+                  )}
                 >
                   <div className="flex items-start gap-4">
                     {/* Day & Time Info */}
@@ -597,25 +760,43 @@ export default function MealPlanView({
                       </div>
                     </div>
 
-                    {/* Meal Card */}
+                    {/* Meal display */}
                     <div className="flex-1 min-w-0">
-                      <MealCard
-                        meal={{
-                          ...meal,
-                          mealType: slot,
-                          prepTime: meal.prepTime?.toString(),
-                          cookTime: meal.cookTime?.toString(),
-                        }}
-                        dayIndex={daysOfWeek.findIndex(d => d.key === day)}
-                        mealIndex={index}
-                        isPrimary={isPrimary}
-                        onMealUpdate={(dayIndex: number, mealIndex: number, updates: any) => {
-                          onMealUpdate(meal.id, updates);
-                        }}
-                        onGenerateRecipe={() => onRegenerateMeal(meal.id)}
-                        onViewRecipe={onViewRecipe}
-                        isGeneratingRecipe={isGenerating}
-                      />
+                      {meal.source === 'logged' ? (
+                        /* Read-only card for dashboard-logged meals */
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-green-900 dark:text-green-100 truncate">{meal.mealName}</p>
+                            {meal.defenseSystems && meal.defenseSystems.length > 0 && (
+                              <p className="text-xs text-green-700 dark:text-green-400 mt-0.5 truncate">
+                                {meal.defenseSystems.join(' · ')}
+                              </p>
+                            )}
+                          </div>
+                          <span className="flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-300 border border-green-300 dark:border-green-600">
+                            <CheckCircle2 className="w-3 h-3" />
+                            Logged
+                          </span>
+                        </div>
+                      ) : (
+                        <MealCard
+                          meal={{
+                            ...meal,
+                            mealType: slot,
+                            prepTime: meal.prepTime?.toString(),
+                            cookTime: meal.cookTime?.toString(),
+                          }}
+                          dayIndex={daysOfWeek.findIndex(d => d.key === day)}
+                          mealIndex={index}
+                          isPrimary={isPrimary}
+                          onMealUpdate={(dayIndex: number, mealIndex: number, updates: any) => {
+                            onMealUpdate(meal.id, updates);
+                          }}
+                          onGenerateRecipe={() => onRegenerateMeal(meal.id)}
+                          onViewRecipe={onViewRecipe}
+                          isGeneratingRecipe={isGenerating}
+                        />
+                      )}
                     </div>
                   </div>
                 </div>
@@ -647,20 +828,44 @@ export default function MealPlanView({
               )}
 
               {/* Calendar Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 overflow-visible">
                 {daysOfWeek.map((day) => {
                   const dayStats = calculateDayStats(day.key, weekNum);
                   const hasAnyMeals = dayStats.totalMeals > 0;
                   const isLogged = isDayLogged(day.key, weekNum);
 
+                  const cardId = `${weekNum}-${day.key}`;
+                  const isHovered = hoveredCard === cardId;
+                  const isSelected = selectedCalendarCard === cardId;
+                  const isActive = isHovered || isSelected;
+                  const anyActive = hoveredCard !== null || selectedCalendarCard !== null;
+
                   return (
                     <div 
-                      key={`${weekNum}-${day.key}`}
+                      key={cardId}
+                      onMouseEnter={() => setHoveredCard(cardId)}
+                      onMouseLeave={() => setHoveredCard(null)}
+                      onClick={() => { setSelectedDay(day.key); setSelectedWeek(weekNum); setViewMode('day'); }}
+                      style={{
+                        transform: isActive
+                          ? 'scale(1.06) translateY(-10px)'
+                          : anyActive
+                          ? 'scale(0.97) translateY(4px)'
+                          : 'scale(1) translateY(0px)',
+                        zIndex: isActive ? 20 : 0,
+                        transition: 'transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease, opacity 0.25s ease',
+                        opacity: isLogged && !isActive ? 0.6 : anyActive && !isActive ? 0.85 : 1,
+                      }}
                       className={cn(
-                        "rounded-xl shadow-sm border overflow-hidden transition-shadow",
+                        "rounded-xl border overflow-hidden relative cursor-pointer",
+                        isActive
+                          ? "shadow-2xl"
+                          : "shadow-sm",
                         isLogged 
-                          ? "bg-gray-100 dark:bg-gray-700/50 border-gray-300 dark:border-gray-600 opacity-60" 
-                          : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:shadow-md"
+                          ? "bg-gray-100 dark:bg-gray-700/50 border-gray-300 dark:border-gray-600" 
+                          : isActive
+                          ? "bg-white dark:bg-gray-800 border-purple-400 dark:border-purple-500"
+                          : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
                       )}
                     >
                       {/* Day Header */}
@@ -673,10 +878,12 @@ export default function MealPlanView({
                         <div className="flex items-center justify-between">
                           <div>
                             <div className="flex items-center gap-2">
-                              <h3 className={cn(
-                                "font-bold",
-                                isLogged ? "text-gray-600 dark:text-gray-400" : "text-gray-900 dark:text-white"
-                              )}>{day.label}</h3>
+                              <h3
+                                className={cn(
+                                  "font-bold transition-colors",
+                                  isLogged ? "text-gray-600 dark:text-gray-400" : "text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400"
+                                )}
+                              >{day.label}</h3>
                               {isLogged && (
                                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400">
                                   <CheckCircle2 className="w-3 h-3" />
@@ -697,16 +904,9 @@ export default function MealPlanView({
                               </div>
                             )}
                           </div>
-                          {hasAnyMeals && (
-                            <button
-                              onClick={() => onBulkRegenerate(day.key)}
-                              disabled={isGenerating}
-                              className="p-1.5 text-gray-400 dark:text-gray-300 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-white dark:hover:bg-gray-700 rounded-lg transition-all"
-                              title="Regenerate all meals"
-                            >
-                              <Shuffle className="w-4 h-4" />
-                            </button>
-                          )}
+                          <div className="p-1.5 text-purple-400 dark:text-purple-400">
+                            <CalendarDays className="w-4 h-4" />
+                          </div>
                         </div>
 
                         {/* Defense Systems Indicators */}
@@ -737,16 +937,13 @@ export default function MealPlanView({
                     
                           if (slotMeals.length === 0) {
                             return (
-                              <button
+                              <div
                                 key={slot.key}
-                                onClick={() => onAddMeal(day.key, slot.key, undefined, weekNum)}
-                                disabled={isGenerating}
-                                className="w-full px-3 py-2 border border-dashed border-gray-200 dark:border-gray-600 rounded-lg text-xs text-gray-500 dark:text-gray-400 hover:border-green-400 dark:hover:border-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-700 dark:hover:text-green-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                className="w-full px-3 py-2 border border-dashed border-gray-200 dark:border-gray-700 rounded-lg flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500 select-none"
                               >
                                 <span>{slot.icon}</span>
-                                <Plus className="w-3 h-3" />
-                                <span>Add {slot.label}</span>
-                              </button>
+                                <span>No {slot.label.toLowerCase()} planned</span>
+                              </div>
                             );
                           }
 
@@ -755,13 +952,22 @@ export default function MealPlanView({
                               {slotMeals.map((meal, index) => (
                                 <div
                                   key={meal.id}
-                                  className="p-2 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-100 dark:border-gray-600 hover:border-gray-200 dark:hover:border-gray-500 transition-colors group cursor-pointer"
-                                  onClick={() => meal.recipeId && onViewRecipe(meal.recipeId)}
+                                  className={cn(
+                                    "p-2 rounded-lg border transition-colors group",
+                                    meal.source === 'logged'
+                                      ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700"
+                                      : "bg-gray-50 dark:bg-gray-700 border-gray-100 dark:border-gray-600"
+                                  )}
                                 >
                                   <div className="flex items-start gap-2">
                                     <span className="text-sm flex-shrink-0">{slot.icon}</span>
                                     <div className="flex-1 min-w-0">
-                                      <div className="text-xs font-semibold text-gray-900 dark:text-white truncate group-hover:text-green-600 dark:group-hover:text-green-400">
+                                      <div className={cn(
+                                        "text-xs font-semibold truncate",
+                                        meal.source === 'logged'
+                                          ? "text-green-900 dark:text-green-100 group-hover:text-green-700 dark:group-hover:text-green-300"
+                                          : "text-gray-900 dark:text-white group-hover:text-green-600 dark:group-hover:text-green-400"
+                                      )}>
                                         {meal.mealName}
                                       </div>
                                       <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -779,19 +985,17 @@ export default function MealPlanView({
                                         )}
                                       </div>
                                     </div>
-                                    {!meal.recipeGenerated && (
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          onRegenerateMeal(meal.id);
-                                        }}
-                                        disabled={isGenerating}
-                                        className="flex-shrink-0 p-1 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/20 rounded transition-colors"
-                                        title="Generate recipe"
-                                      >
-                                        <Sparkles className="w-3 h-3" />
-                                      </button>
-                                    )}
+                                    {meal.source === 'logged' ? (
+                                      <span className="flex-shrink-0 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-300">
+                                        <CheckCircle2 className="w-2.5 h-2.5" />
+                                        Logged
+                                      </span>
+                                    ) : meal.recipeGenerated ? (
+                                      <span className="flex-shrink-0 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300">
+                                        <CheckCircle2 className="w-2.5 h-2.5" />
+                                        Recipe
+                                      </span>
+                                    ) : null}
                                   </div>
                                 </div>
                               ))}
@@ -805,16 +1009,13 @@ export default function MealPlanView({
                           
                           if (snackMeals.length === 0) {
                             return (
-                              <button
+                              <div
                                 key="snack-section"
-                                onClick={() => onAddMeal(day.key, 'snack', undefined, weekNum)}
-                                disabled={isGenerating}
-                                className="w-full px-3 py-2 border border-dashed border-gray-200 dark:border-gray-600 rounded-lg text-xs text-gray-500 dark:text-gray-400 hover:border-green-400 dark:hover:border-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-700 dark:hover:text-green-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mt-2 border-t-2"
+                                className="w-full px-3 py-2 border border-dashed border-gray-200 dark:border-gray-700 rounded-lg flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500 mt-2 select-none"
                               >
                                 <span>🍎</span>
-                                <Plus className="w-3 h-3" />
-                                <span>Add Snack</span>
-                              </button>
+                                <span>No snacks planned</span>
+                              </div>
                             );
                           }
 
@@ -825,50 +1026,63 @@ export default function MealPlanView({
                                 return (
                                   <div
                                     key={meal.id}
-                                    className="p-2 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-100 dark:border-gray-600 hover:border-gray-200 dark:hover:border-gray-500 transition-colors group cursor-pointer"
-                                    onClick={() => meal.recipeId && onViewRecipe(meal.recipeId)}
+                                    className={cn(
+                                      "p-2 rounded-lg border transition-colors group",
+                                      meal.source === 'logged'
+                                        ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700"
+                                        : "bg-gray-50 dark:bg-gray-700 border-gray-100 dark:border-gray-600"
+                                    )}
                                   >
                                     <div className="flex items-start gap-2">
                                       <span className="text-sm flex-shrink-0">{snackTypeIcon || '🍎'}</span>
                                       <div className="flex-1 min-w-0">
-                                        <div className="text-xs font-semibold text-gray-900 dark:text-white truncate group-hover:text-green-600 dark:group-hover:text-green-400">
-                                        {meal.mealName}
+                                        <div className={cn(
+                                          "text-xs font-semibold truncate",
+                                          meal.source === 'logged'
+                                            ? "text-green-900 dark:text-green-100 group-hover:text-green-700 dark:group-hover:text-green-300"
+                                            : "text-gray-900 dark:text-white group-hover:text-green-600 dark:group-hover:text-green-400"
+                                        )}>
+                                          {meal.mealName}
+                                        </div>
+                                        <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                          {meal.cookTime && (
+                                            <span className="flex items-center gap-0.5">
+                                              <Clock className="w-2.5 h-2.5" />
+                                              {meal.cookTime}m
+                                            </span>
+                                          )}
+                                          {meal.defenseSystems && meal.defenseSystems.length > 0 && (
+                                            <span className="flex items-center gap-0.5">
+                                              <Target className="w-2.5 h-2.5" />
+                                              {meal.defenseSystems.length}
+                                            </span>
+                                          )}
+                                        </div>
                                       </div>
-                                      <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                        {meal.cookTime && (
-                                          <span className="flex items-center gap-0.5">
-                                            <Clock className="w-2.5 h-2.5" />
-                                            {meal.cookTime}m
-                                          </span>
-                                        )}
-                                        {meal.defenseSystems && meal.defenseSystems.length > 0 && (
-                                          <span className="flex items-center gap-0.5">
-                                            <Target className="w-2.5 h-2.5" />
-                                            {meal.defenseSystems.length}
-                                          </span>
-                                        )}
-                                      </div>
+                                      {meal.source === 'logged' ? (
+                                        <span className="flex-shrink-0 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-300">
+                                          <CheckCircle2 className="w-2.5 h-2.5" />
+                                          Logged
+                                        </span>
+                                      ) : meal.recipeGenerated ? (
+                                        <span className="flex-shrink-0 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300">
+                                          <CheckCircle2 className="w-2.5 h-2.5" />
+                                          Recipe
+                                        </span>
+                                      ) : null}
                                     </div>
-                                    {!meal.recipeGenerated && (
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          onRegenerateMeal(meal.id);
-                                        }}
-                                        disabled={isGenerating}
-                                        className="flex-shrink-0 p-1 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/20 rounded transition-colors"
-                                        title="Generate recipe"
-                                      >
-                                        <Sparkles className="w-3 h-3" />
-                                      </button>
-                                    )}
                                   </div>
-                                </div>
-                              );
+                                );
                               })}
                             </div>
                           );
                         })()}
+                      </div>
+
+                      {/* Day-view hint */}
+                      <div className="px-3 py-2 border-t border-gray-100 dark:border-gray-700 flex items-center justify-center gap-1.5 text-xs text-purple-500 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors">
+                        <CalendarDays className="w-3 h-3" />
+                        <span>Click to open day view</span>
                       </div>
                     </div>
                   );

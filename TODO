@@ -44,9 +44,8 @@
 **-can we add a feature to select the country for the user so the recipes can as much closer to the common ingredients we can find in that specifc country?
 
 
--  integrate shopping api
+-Test smpt integrations, notifications and check password change implementation as it depends on smpt, the feature hasnt been tested yet, check files: docs/PASSWORD_QUICK_START.md and docs/PASSWORD_RESET_FEATURE.md
 
--password change implementation depends on smpt, the feature hasnt been tested yet, check files: docs/PASSWORD_QUICK_START.md and docs/PASSWORD_RESET_FEATURE.md
 
 -  Update available 5.22.0 -> 7.2.0                       │
 │                                                         │
@@ -56,8 +55,6 @@
 │  Run the following to update                            │
 │    npm i --save-dev prisma@latest                       │
 │    npm i @prisma/client@latest 
-
-- email smpt provider setting for password and notifications.
 
 
  
@@ -78,7 +75,6 @@ Next.js 15 Mig
 │    npm i --save-dev prisma@latest                       │
 │    npm i @prisma/client@latest 
 
-- email smpt provider setting for password and notifications.
 
 ration Scope
 ✅ API routes: Already compatible (using await)
@@ -100,125 +96,9 @@ Update React to 19
 Thorough testing across all features
 
 
-
--  integrate shopping api
-
--password change implementation depends on smpt, the feature hasnt been tested yet, check files: docs/PASSWORD_QUICK_START.md and docs/PASSWORD_RESET_FEATURE.md
-
--  Update available 5.22.0 -> 7.2.0                       │
-│                                                         │
-│  This is a major update - please follow the guide at    │
-│  https://pris.ly/d/major-version-upgrade                │
-│                                                         │
-│  Run the following to update                            │
-│    npm i --save-dev prisma@latest                       │
-│    npm i @prisma/client@latest 
-
-- email smpt provider setting for password and notifications.
-
-for admin dashboard:
-recipe genetaing Success Rate Tracking: Track how often validation passes
-Admin Dashboard: See ai recipe/meal plan, shopping list generating validation failure patterns
-
-- the front page, should be the progress, and from there depending on what you lack then you ask the Ai to generate a new meal. recipe, or plan. or create a recommendations.
-the tracking charts and stats should be redesigned: to have an overall score, then a chart for the 5 defence system coverage, the 5 foods for each system, and the 5 times the calculation should reflect that in away, also the date selection shoud be daily, weekly, and monthly, and smart recommendation or each view.
-
-- the whole tracking page to be redesigned to shows a recommendations based on the actual progress,
- for example: when you click on the home page, the header should be reminder for user why this is important.
-then the tracker, should have a recommendation to create a recipe or plan based on the status,  the whole flow should be as a sequesnce of actions. create recipe/plan> create shopping list> purchase> log to track... with notifciations sent if any step hasnt been completed.
-- based on the status, the smart recommendation system will take in consideration the user history, current status and recommend to create meal plan or a recipe, the date shoud be send to the geneartor if the user agree, link the home page with the meal plan generator and the recipe generators.
-
-- rearrange the nav bar, meal plannin rename it to more friendly one, move it before the recipes.
-- meal plan, make the options for each step drop down list, with a default selected option for each.
-- have the dietry preference as part of the user preferences, and to be a default for their meal plan and recipe generators
+-------------------
 
 
-Issues:
-
-in the progress page welcome state there is a card for Get Started in 3 Easy Steps
-1
-Log Your First Meal
-Click "Add Food" on any meal time below to start tracking what you eat. We'll automatically categorize foods by their health benefits.
-
-Log Your First Meal
-
-the Log your First Meal shows the following only:
-
-Log Food
-
-Logging for
-🌅
-Breakfast
-Click foods below to add to this meal
-Foods
-Search for a food...
-Notes (Optional)
-
-so only breakfast shows, and also the search doesnt work.
-
-
-- in wellness preferences, there are Save Preferences and Save Changes buttons
-
-Dietary Restrictions (optional)
-vegetarian
-vegan
-gluten-free
-dairy-free
-nut-free
-low-carb
-
-while in Wellness Preferences in settings there are way more Dietary Restrictions 
-
-
-- the ingredients in the ai generated recipe shows like that:
-
-Ingredients
-g
-sweet potato, peeled and cubed
-g
-shiitake mushrooms, sliced
-g
-cremini mushrooms, quartered
-g
-oyster mushrooms, torn into pieces
-g
-kale, stems removed and chopped
-g
-Brussels sprouts, halved
-piece
-red bell peppers, diced
-piece
-medium onion, diced
-clove
-garlic, minced
-g
-fresh ginger, grated
-g
-fresh turmeric root, grated (or 5 g ground turmeric)
-ml
-olive oil
-liter
-vegetable broth
-ml
-coconut milk
-ml
-white miso paste
-ml
-lemon juice
-g
-cherry tomatoes, halved
-piece
-scallions, sliced
-g
-cumin seeds
-g
-black pepper
-g
-sea salt
-g
-red pepper flakes
-ml
-sesame oil
 
 npm audit error to fix:
 174 packages are looking for funding
@@ -245,40 +125,31 @@ Update available 5.22.0 -> 7.2.0                       │
 │    npm i @prisma/client@latest    
 
 
-- when user click on start cooking or generate recipe from the recommendation, I need to give them the option to select multiple systems, beside the ones preselected.
--so i did the following, John Davis user, had the welcome state page so no metrics, i created a Lunch recipe for DNA protection system, with 18 foods, and i logged the recipe so in the progress page the 18 foods showed under DNA protection, now i went to the Daily Meal Timeline section and i selected the Breakfast meal and added 3 more foods: Blackberries, Walnuts, Green Tea, these 3 foods are serving multiple systems so they should be tracked as such among all the graphs and progress page cards and features, now the issue  is that:
-- the progress page should refresh automatically to show the data after logging the foods.
-- in section: Your 5x5x5 Score the logged foods are not reflected here.:
-32
-Your 5x5x5 Score
-Let's Improve
 
-View full score for detailed insights
-
-1/5
-
-Systems
-
-1/4
-
-Meals
-
-18
-
-Foods
-
-
-
-- in the Recommendation section: the Angiogensis is still considered critical even though it has 3 food logged, and there are Microbiom system with 1 food logged only, and immunity system with 2 food logged only.
-- in the Defense systems Progress the new logged food are not counted here,even though in System Details section i can see the number of foods are reflecting the new logged foods.the graph in this section doesnt reflect them. the highlighted data are not accurate: total Foods should be replaced with Missing food (calculate how many foods in total are missing to have 100% completion). the Complete metric is good, but check why it doesnt take into consideration the new logged food and fix that, the Average metric is useless, remove it or replace with another one more usefull for the users.
-- i still do not understand the  Food Suggestions section, what it doesn, and based on what data or metric it suggests the foods, and what
-
-
-the recommendations are sometimes repetitives and redundant, like in the main recommendation card i can see Add ANGIOGENESIS to Your Diet
-CRITICAL You haven't logged any angiogenesis foods yet. These are crucial for your wellness. 
-and in the Your Action Items:
-Add ANGIOGENESIS to Your Diet
-You haven't logged any angiogenesis foods yet. These are crucial for your wellness.
-
-ANGIOGENESIS
 ----------
+
+- Week View notes:
+feature to be added: Weekly Recommendations System - Analyze week's gaps and suggest improvements
+
+
+-issues on progress page/weekly view
+
+- meal plan, make the options for each step drop down list, with a default selected option for each.
+
+- in wellness preferences, there are Save Preferences and Save Changes buttons
+
+Dietary Restrictions (optional)
+vegetarian
+vegan
+gluten-free
+dairy-free
+nut-free
+low-carb
+
+while in Wellness Preferences in settings there are way more Dietary Restrictions 
+
+for admin dashboard:
+-recipe generating Success Rate Tracking: Track how often validation passes
+-Admin Dashboard: See ai recipe/meal plan, shopping list generating validation failure patterns
+
+

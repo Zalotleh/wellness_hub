@@ -136,7 +136,7 @@ export default function MealPlannerPage() {
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link
-              href="/progress"
+              href="/dashboard"
               className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />

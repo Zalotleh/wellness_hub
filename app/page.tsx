@@ -10,9 +10,9 @@ export default async function HomePage() {
   // Check if user is authenticated
   const session = await getServerSession(authOptions);
   
-  // If user is logged in, redirect to progress page (health-first approach)
+  // If user is logged in, redirect to dashboard page (health-first approach)
   if (session) {
-    redirect('/progress');
+    redirect('/dashboard');
   }
 
   const features = [

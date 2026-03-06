@@ -19,7 +19,7 @@ export const recipeSchema = z.object({
   prepTime: z.string().optional(),
   cookTime: z.string().optional(),
   servings: z.number().int().positive().optional(),
-  mealType: z.string().optional(),
+  mealType: z.string().min(1, 'Meal type is required'),
   dietaryRestrictions: z.array(z.string()).default([]),
   defenseSystems: z.array(z.nativeEnum(DefenseSystem)).min(1, 'Please select at least one defense system'),
   nutrients: z.record(z.string()).optional(),

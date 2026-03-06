@@ -209,13 +209,13 @@ export default function SystemSelector({
                 aria-describedby={`system-${key}-desc`}
                 style={{
                   boxShadow: isSelected 
-                    ? `0 0 30px rgba(34, 197, 94, 0.3), 0 10px 40px rgba(0, 0, 0, 0.1)`
+                    ? `0 0 8px rgba(34, 197, 94, 0.2), 0 4px 12px rgba(0, 0, 0, 0.06)`
                     : undefined
                 }}
               >
                 {/* Glow Effect Overlay for Selected Items */}
                 {isSelected && (
-                  <div className="absolute -inset-1 bg-gradient-to-r from-green-400 to-emerald-400 rounded-xl blur opacity-30 -z-10 animate-pulse" />
+                  <div className="absolute -inset-1 bg-gradient-to-r from-green-400 to-emerald-400 rounded-xl blur opacity-10 -z-10" />
                 )}
                 
                 <div className="flex items-start justify-between gap-3">

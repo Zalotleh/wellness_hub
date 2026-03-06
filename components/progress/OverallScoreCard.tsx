@@ -130,11 +130,11 @@ export default function OverallScoreCard({ date, onRefresh, className }: Overall
   // Horizontal layout for placement under tabs
   if (isHorizontal) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
-        <div className="flex items-center gap-8">
-          {/* Score Circle - Smaller for horizontal layout */}
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg hover:shadow-xl transition-shadow border border-gray-100 dark:border-gray-700 p-6 mb-6">
+        <div className="flex items-center gap-6 md:gap-8">
+          {/* Score Circle */}
           <div className="flex-shrink-0">
-            <div style={{ width: 120, height: 120 }}>
+            <div style={{ width: 110, height: 110 }}>
               <CircularProgressbar
                 value={score.overallScore}
                 text={`${score.overallScore}`}
@@ -150,28 +150,28 @@ export default function OverallScoreCard({ date, onRefresh, className }: Overall
           </div>
 
           {/* Score Info */}
-          <div className="flex-1">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-0.5">
               Your 5x5x5 Score
             </h2>
             <p
-              className="text-lg font-semibold mb-2"
+              className="text-base font-bold mb-1"
               style={{ color: getScoreColor(score.overallScore) }}
             >
               {getScoreLabel(score.overallScore)}
             </p>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed line-clamp-2">
               {score.insights.recommendation}
             </p>
           </div>
 
-          {/* Quick Stats - Horizontal */}
-          <div className="flex gap-6 pr-4">
+          {/* Quick Stats */}
+          <div className="hidden sm:flex gap-4 md:gap-6 pr-2">
             <div className="text-center">
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
                 {systemsComplete}/5
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
                 Complete
               </p>
               <p className="text-[10px] text-gray-400 dark:text-gray-500">
@@ -182,7 +182,7 @@ export default function OverallScoreCard({ date, onRefresh, className }: Overall
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
                 {mealsLogged}/5
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
                 Meals
               </p>
               <p className="text-[10px] text-gray-400 dark:text-gray-500">
@@ -193,7 +193,7 @@ export default function OverallScoreCard({ date, onRefresh, className }: Overall
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
                 {score.foodVariety.totalUniqueFoods}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
                 Foods
               </p>
               <p className="text-[10px] text-gray-400 dark:text-gray-500">
@@ -202,55 +202,53 @@ export default function OverallScoreCard({ date, onRefresh, className }: Overall
             </div>
           </div>
 
-          {/* Info Button */}
+          {/* Info toggle */}
           <button
             onClick={() => setShowInfo(!showInfo)}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors flex-shrink-0"
+            className="p-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors flex-shrink-0 border border-gray-100 dark:border-gray-700"
             aria-label="Toggle information"
           >
-            <Info className={`w-5 h-5 ${showInfo ? 'text-purple-600' : 'text-gray-600 dark:text-gray-400'}`} />
+            <Info className={`w-5 h-5 ${showInfo ? 'text-purple-600' : 'text-gray-400 dark:text-gray-500'}`} />
           </button>
+        </div>
+
+        {/* Mobile quick stats */}
+        <div className="sm:hidden grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+          <div className="text-center">
+            <p className="text-xl font-bold text-gray-900 dark:text-white">{systemsComplete}/5</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Complete</p>
+          </div>
+          <div className="text-center">
+            <p className="text-xl font-bold text-gray-900 dark:text-white">{mealsLogged}/5</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Meals</p>
+          </div>
+          <div className="text-center">
+            <p className="text-xl font-bold text-gray-900 dark:text-white">{score.foodVariety.totalUniqueFoods}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Foods</p>
+          </div>
         </div>
 
         {/* Info Panel */}
         {showInfo && (
-          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-sm">
-            <h3 className="font-semibold text-blue-900 dark:text-blue-200 mb-2">
-              📊 How Your Score is Calculated
-            </h3>
-            <div className="bg-white dark:bg-gray-800 p-3 rounded-lg mb-3">
-              <p className="font-mono text-xs text-gray-700 dark:text-gray-300 mb-2">
-                Score = (Defense Systems × 50%) + (Meal Coverage × 30%) + (Food Variety × 20%)
-              </p>
-              <div className="space-y-1 text-xs">
-                <p className="text-gray-600 dark:text-gray-400">
-                  • <strong>Defense Systems (50%):</strong> Based on unique foods per system (goal: 5 foods each)
+          <div className="mt-5 pt-5 border-t border-gray-100 dark:border-gray-700">
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-xl text-sm">
+              <h3 className="font-bold text-blue-900 dark:text-blue-200 mb-2">
+                📊 How Your Score is Calculated
+              </h3>
+              <div className="bg-white dark:bg-gray-800 p-3 rounded-lg mb-3">
+                <p className="font-mono text-xs text-gray-700 dark:text-gray-300 mb-2">
+                  Score = (Defense Systems × 50%) + (Meal Coverage × 30%) + (Food Variety × 20%)
                 </p>
-                <p className="text-gray-600 dark:text-gray-400">
-                  • <strong>Meal Coverage (30%):</strong> Distribution across 5 meal times daily
-                </p>
-                <p className="text-gray-600 dark:text-gray-400">
-                  • <strong>Food Variety (20%):</strong> Diversity and uniqueness of foods consumed
-                </p>
+                <div className="space-y-1 text-xs text-gray-600 dark:text-gray-400">
+                  <p>• <strong>Defense Systems (50%):</strong> Based on unique foods per system (goal: 5 foods each)</p>
+                  <p>• <strong>Meal Coverage (30%):</strong> Distribution across 5 meal times daily</p>
+                  <p>• <strong>Food Variety (20%):</strong> Diversity and uniqueness of foods consumed</p>
+                </div>
               </div>
+              <p className="mt-2 text-blue-800 dark:text-blue-300 font-semibold text-xs">
+                🌟 Aim for 80+ for optimal health benefits!
+              </p>
             </div>
-            <h3 className="font-semibold text-blue-900 dark:text-blue-200 mb-2 mt-3">
-              🎯 Understanding Your Metrics
-            </h3>
-            <ul className="list-disc pl-5 space-y-1 text-gray-600 dark:text-gray-400">
-              <li>
-                <strong className="text-gray-900 dark:text-gray-200">Complete Systems:</strong> Systems with 5+ unique foods (fully optimized)
-              </li>
-              <li>
-                <strong className="text-gray-900 dark:text-gray-200">Covered Systems:</strong> Systems with at least 1 food (in progress)
-              </li>
-              <li>
-                <strong className="text-gray-900 dark:text-gray-200">Meals Logged:</strong> Unique meal times tracked today
-              </li>
-            </ul>
-            <p className="mt-3 text-gray-700 dark:text-gray-300 font-medium">
-              🌟 Aim for 80+ for optimal health benefits!
-            </p>
           </div>
         )}
       </div>

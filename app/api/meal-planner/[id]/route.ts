@@ -71,6 +71,7 @@ export async function GET(
         dailyMenus: {
           include: {
             meals: {
+              where: { mealName: { not: '' } }, // exclude ghost/empty-named meals
               include: {
                 generatedRecipe: true,
               },

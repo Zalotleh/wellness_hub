@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { RecipeWithRelations } from '@/types';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
-import { Star, Clock, User, Heart, MessageCircle, ChefHat, Calendar, UtensilsCrossed, Leaf } from 'lucide-react';
+import { Star, Clock, User, Heart, MessageCircle, ChefHat, Calendar, Leaf } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface RecipeCardProps {
@@ -32,6 +32,24 @@ export default function RecipeCard({ recipe, onFavorite, onFilterByCreator }: Re
         ) : (
           <ChefHat className="w-24 h-24 text-white opacity-50 group-hover:scale-110 transition-transform duration-300" />
         )}
+
+        {/* Meal Type Badge */}
+        {recipe.mealType && (() => {
+          const mealStyles: Record<string, { bg: string; text: string; emoji: string }> = {
+            breakfast: { bg: 'bg-amber-500',  text: 'text-white', emoji: '🌅' },
+            lunch:     { bg: 'bg-sky-500',    text: 'text-white', emoji: '☀️' },
+            dinner:    { bg: 'bg-indigo-600', text: 'text-white', emoji: '🌙' },
+            snack:     { bg: 'bg-emerald-500',text: 'text-white', emoji: '🍎' },
+            dessert:   { bg: 'bg-pink-500',   text: 'text-white', emoji: '🍰' },
+          };
+          const style = mealStyles[recipe.mealType.toLowerCase()] ?? { bg: 'bg-gray-600', text: 'text-white', emoji: '🍽️' };
+          return (
+            <span className={`absolute top-3 left-3 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold shadow-md ${style.bg} ${style.text}`}>
+              <span>{style.emoji}</span>
+              <span className="capitalize">{recipe.mealType}</span>
+            </span>
+          );
+        })()}
 
         {/* Favorite Button */}
         {onFavorite && (
@@ -87,12 +105,6 @@ export default function RecipeCard({ recipe, onFavorite, onFilterByCreator }: Re
         {/* Meta Info */}
         <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-300 mb-3">
           <div className="flex items-center space-x-3">
-            {recipe.mealType && (
-              <div className="flex items-center space-x-1">
-                <UtensilsCrossed className="w-4 h-4" />
-                <span className="capitalize">{recipe.mealType}</span>
-              </div>
-            )}
             {recipe.prepTime && (
               <div className="flex items-center space-x-1">
                 <Clock className="w-4 h-4" />

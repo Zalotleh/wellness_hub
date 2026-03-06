@@ -19,6 +19,25 @@ interface AIGeneratorParams {
   avoidIngredients?: string[];
 }
 
+interface MealPlannerContext {
+  planId: string;
+  day: string;
+  slot: string;
+  date: string;
+  week: number;
+}
+
+// Slot → FoodConsumption mealTime enum mapping
+const SLOT_TO_MEAL_TIME: Record<string, string> = {
+  breakfast: 'BREAKFAST',
+  lunch: 'LUNCH',
+  dinner: 'DINNER',
+  snack: 'SNACK',
+  'morning-snack': 'MORNING_SNACK',
+  'afternoon-snack': 'AFTERNOON_SNACK',
+  'evening-snack': 'SNACK',
+};
+
 export default function AIGeneratorPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -29,6 +48,8 @@ export default function AIGeneratorPage() {
   const [fromRecommendation, setFromRecommendation] = useState(false);
   const [recommendationId, setRecommendationId] = useState<string | null>(null);
   const [initialParams, setInitialParams] = useState<AIGeneratorParams | null>(null);
+  // Meal-planner context — set when the user arrived via the Add Meal Choice Dialog
+  const [mealPlannerContext, setMealPlannerContext] = useState<MealPlannerContext | null>(null);
 
   useEffect(() => {
     console.log('🔷 AI-GENERATE PAGE - useEffect running');
@@ -42,15 +63,37 @@ export default function AIGeneratorPage() {
     const preferredMealTime = searchParams.get('preferredMealTime');
     const avoidIngredients = searchParams.get('avoidIngredients');
 
+    // Meal-planner context
+    if (from === 'meal-planner') {
+      const planId = searchParams.get('planId') || '';
+      const day = searchParams.get('day') || '';
+      const slot = searchParams.get('slot') || '';
+      const date = searchParams.get('date') || '';
+      const week = Number(searchParams.get('week') || '1');
+      if (planId && day && slot) {
+        setMealPlannerContext({ planId, day, slot, date, week });
+      }
+    }
+
     console.log('🔷 Parsed params:', { from, recId, targetSystem, dietaryRestrictions, preferredMealTime, avoidIngredients });
 
-    if ((from === 'recommendation' || from === 'variety' || from === 'missed-meal') && recId) {
-      console.log('🔷 ✅ This is from a recommendation!');
-      setFromRecommendation(true);
-      setRecommendationId(recId);
+    // Recognised source values – some (e.g. meal-timeline) have no recId
+    const knownSource = from === 'recommendation' || from === 'variety' ||
+      from === 'missed-meal' || from === 'meal-timeline';
+    const hasAnyParam = !!(targetSystem || preferredMealTime || avoidIngredients || dietaryRestrictions);
+
+    if (knownSource || hasAnyParam) {
+      // Only wire up recommendation-status tracking when we have an actual recId
+      if (recId) {
+        console.log('🔷 ✅ This is from a recommendation! recId:', recId);
+        setFromRecommendation(true);
+        setRecommendationId(recId);
+      } else {
+        console.log('🔷 ✅ Direct navigation with params (no recommendation tracking)');
+      }
 
       // Build initial params for generator
-      const params: AIGeneratorParams = { from };
+      const params: AIGeneratorParams = { from: from || 'direct' };
       
       if (targetSystem) {
         params.targetSystem = targetSystem as DefenseSystem;
@@ -80,7 +123,7 @@ export default function AIGeneratorPage() {
       console.log('🔷 Final initialParams being set:', params);
       setInitialParams(params);
     } else {
-      console.log('🔷 ❌ Not from recommendation or missing recId');
+      console.log('🔷 ❌ No recognised source or params – using user defaults');
     }
   }, [searchParams]);
 
@@ -110,6 +153,30 @@ export default function AIGeneratorPage() {
       setSavedRecipeName(newRecipe.title || newRecipe.name || 'Your Recipe');
       setSavedRecipeMealType(newRecipe.mealType || null);
       console.log('✅ Saved recipe mealType:', newRecipe.mealType);
+
+      // Auto-link to the meal plan slot and log to dashboard when coming from the meal planner
+      if (mealPlannerContext) {
+        try {
+          // Log to FoodConsumption so it shows in both the dashboard Daily view
+          // and the meal planner day view (as a 'Logged from dashboard' card).
+          // We do NOT create a separate Meal record in the plan — that would produce
+          // a duplicate 'Generate Recipe' card alongside the logged card.
+          const mealTime = SLOT_TO_MEAL_TIME[mealPlannerContext.slot] || 'LUNCH';
+          await fetch(`/api/recipes/${newRecipe.id}/log-meal`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              mealTime,
+              date: mealPlannerContext.date
+                ? new Date(mealPlannerContext.date).toISOString()
+                : new Date().toISOString(),
+            }),
+          });
+        } catch (err) {
+          console.error('Failed to log recipe to meal plan:', err);
+          // Non-fatal — recipe was still created
+        }
+      }
 
       // Update recommendation status to ACTED_ON (user created recipe)
       if (fromRecommendation && recommendationId) {
@@ -180,6 +247,12 @@ export default function AIGeneratorPage() {
   };
 
   const handleLogToMealPlanner = async () => {
+    // When coming from the meal planner, linking was already done — navigate back to the specific day view
+    if (mealPlannerContext) {
+      router.push(`/meal-planner/${mealPlannerContext.planId}?day=${mealPlannerContext.day}`);
+      return;
+    }
+
     if (!savedRecipeId) {
       console.error('No savedRecipeId available');
       return;
@@ -221,9 +294,9 @@ export default function AIGeneratorPage() {
       const result = await response.json();
       console.log('Log meal success:', result);
 
-      // Refresh and navigate to progress page with timestamp to force data refetch
+      // Refresh and navigate to dashboard page with timestamp to force data refetch
       router.refresh();
-      router.push(`/progress?updated=${Date.now()}`);
+      router.push(`/dashboard?updated=${Date.now()}`);
     } catch (error) {
       console.error('Error logging meal:', error);
       alert(`Failed to log meal: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -247,6 +320,12 @@ export default function AIGeneratorPage() {
           recipeName={savedRecipeName}
           onCreateShoppingList={handleCreateShoppingList}
           onLogToMealPlanner={handleLogToMealPlanner}
+          logToMealPlannerLabel={mealPlannerContext ? 'Back to Day View' : 'Log This Meal Now'}
+          logToMealPlannerDescription={
+            mealPlannerContext
+              ? `Return to ${mealPlannerContext.day.charAt(0).toUpperCase() + mealPlannerContext.day.slice(1)}'s meal plan`
+              : 'Track it in your progress today'
+          }
           onViewRecipe={handleViewRecipe}
         />
       )}

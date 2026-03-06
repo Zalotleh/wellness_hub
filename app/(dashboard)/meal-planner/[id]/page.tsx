@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import EnhancedMealPlanner from '@/components/meal-planner/EnhancedMealPlanner';
 import Link from 'next/link';
@@ -12,12 +12,16 @@ import { DeleteConfirmationDialog } from '@/components/ui/ConfirmationDialog';
 export default function MealPlanViewPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session } = useSession();
   const [mealPlan, setMealPlan] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Support ?day=friday deep-link from Weekly Progress view
+  const initialDay = searchParams.get('day') || undefined;
 
   useEffect(() => {
     if (params.id && session?.user) {
@@ -60,10 +64,13 @@ export default function MealPlanViewPage() {
             console.log(`🔍 [page.tsx] Processing ${dayName} (date: ${dailyMenu.date}, dayOfWeek: ${dayOfWeek}, index: ${dayIndex})`);
             
             dailyMenu.meals.forEach((meal: any) => {
+              // Skip ghost/empty-named meals — they have no content and should not render
+              if (!meal.mealName?.trim()) return;
+
               // Map database meal structure to frontend expected structure
               const transformedMeal = {
                 id: meal.id || `week${weekNumber}-${dayName}-${meal.mealType}`,
-                mealName: meal.mealName || 'Unnamed Meal',
+                mealName: meal.mealName,
                 mealType: meal.mealType || 'breakfast',
                 day: dayName,
                 slot: meal.mealType ? meal.mealType.toLowerCase() : 'breakfast', // Convert to lowercase
@@ -194,6 +201,7 @@ export default function MealPlanViewPage() {
           
           <EnhancedMealPlanner
             initialPlan={mealPlan}
+            initialDay={initialDay}
             onPlanSave={(plan) => {
               console.log('Plan updated:', plan);
               setMealPlan(plan);

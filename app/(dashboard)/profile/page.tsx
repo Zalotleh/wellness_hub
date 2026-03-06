@@ -341,7 +341,7 @@ export default function ProfilePage() {
                 const timeAgo = getTimeAgo(activity.timestamp);
 
                 return (
-                  <div key={index} className="flex items-center space-x-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:bg-gray-700 transition-colors">
+                  <div key={index} className="flex items-center space-x-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
                       <div className={`w-12 h-12 ${activityInfo.bg} rounded-full flex items-center justify-center`}> 
                         <Icon className={`w-6 h-6 ${activityInfo.color}`} />
                       </div>

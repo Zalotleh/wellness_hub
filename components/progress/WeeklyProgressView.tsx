@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { format, startOfWeek, endOfWeek, eachDayOfInterval, addWeeks, subWeeks, isToday, isFuture, isSameDay } from 'date-fns';
-import { ChevronLeft, ChevronRight, Calendar, Plus, TrendingUp, Award, CheckCircle2, Circle, Clock, CalendarPlus, LibraryBig, CheckCheck, Repeat } from 'lucide-react';
+import { format, startOfWeek, endOfWeek, eachDayOfInterval, addWeeks, subWeeks, isToday, isFuture } from 'date-fns';
+import { ChevronLeft, ChevronRight, Calendar, TrendingUp, Award, CheckCircle2, Circle, Clock, CalendarPlus, CheckCheck, ExternalLink } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import WeeklyMealPlannerModal from './WeeklyMealPlannerModal';
 
@@ -25,6 +25,7 @@ interface PlannedMeal {
   recipeId: string;
   recipeTitle: string;
   isLogged: boolean;
+  mealPlanId?: string;
 }
 
 interface WeeklyStats {
@@ -73,6 +74,8 @@ export default function WeeklyProgressView({
   const [weekPlanInfo, setWeekPlanInfo] = useState<WeekPlanInfo | null>(null);
   const [loggingPlan, setLoggingPlan] = useState(false);
   const [loggedDates, setLoggedDates] = useState<Set<string>>(new Set());
+  const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+  const [selectedCard, setSelectedCard] = useState<string | null>(null);
 
   // Calculate week boundaries (Monday to Sunday)
   const weekStart = startOfWeek(selectedWeek, { weekStartsOn: 1 }); // 1 = Monday
@@ -82,6 +85,7 @@ export default function WeeklyProgressView({
   useEffect(() => {
     fetchWeekData();
     checkWeekPlan();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedWeek]);
 
   const fetchWeekData = async () => {
@@ -115,12 +119,15 @@ export default function WeeklyProgressView({
         // Normalize day for comparison
         const dayString = format(day, 'yyyy-MM-dd');
         
-        const dayData = progressData.days?.find((d: any) => {
+        type ApiDay = { date: string; score?: number; mealsLogged?: number; systemsCovered?: number; hasData?: boolean };
+        type ApiMeal = { date: string; id: string; mealTime: string; recipeId: string; recipeTitle: string; isLogged?: boolean; mealPlanId?: string };
+
+        const dayData = progressData.days?.find((d: ApiDay) => {
           const apiDayString = format(new Date(d.date), 'yyyy-MM-dd');
           return apiDayString === dayString;
         });
 
-        const dayPlanned = plannedData.plannedMeals?.filter((meal: any) => {
+        const dayPlanned: ApiMeal[] = plannedData.plannedMeals?.filter((meal: ApiMeal) => {
           const mealDayString = format(new Date(meal.date), 'yyyy-MM-dd');
           return mealDayString === dayString;
         }) || [];
@@ -142,12 +149,13 @@ export default function WeeklyProgressView({
           totalSystems: 5,
           hasData: dayData?.hasData || false,
           hasPlannedMeals: dayPlanned.length > 0,
-          plannedMeals: dayPlanned.map((meal: any) => ({
+          plannedMeals: dayPlanned.map((meal) => ({
             id: meal.id,
             mealTime: meal.mealTime,
             recipeId: meal.recipeId,
             recipeTitle: meal.recipeTitle,
             isLogged: meal.isLogged || false,
+            mealPlanId: meal.mealPlanId,
           })),
         };
       });
@@ -282,7 +290,9 @@ export default function WeeklyProgressView({
   const handleDayClick = (day: Date) => {
     const dayString = format(day, 'yyyy-MM-dd');
     const expandedDayString = expandedDay ? format(expandedDay, 'yyyy-MM-dd') : null;
-    
+
+    setSelectedCard(prev => prev === dayString ? null : dayString);
+
     if (expandedDayString === dayString) {
       setExpandedDay(null);
     } else {
@@ -292,11 +302,7 @@ export default function WeeklyProgressView({
 
   const handleNavigateToDay = (day: Date) => {
     const dateString = format(day, 'yyyy-MM-dd');
-    router.push(`/progress?date=${dateString}`);
-  };
-
-  const handleQuickAddMeal = (day: Date) => {
-    router.push(`/recipes/ai-generate?date=${format(day, 'yyyy-MM-dd')}&from=weekly-view`);
+    router.push(`/dashboard?date=${dateString}`);
   };
 
   const handleLogPlannedMeal = async (mealId: string, dayDate: Date) => {
@@ -337,8 +343,8 @@ export default function WeeklyProgressView({
         try {
           await handleLogPlannedMeal(meal.id, dayDate);
           successCount++;
-        } catch (error: any) {
-          if (error.message?.includes('placeholder')) {
+        } catch (error: unknown) {
+          if (error instanceof Error && error.message?.includes('placeholder')) {
             placeholderCount++;
           } else {
             failureCount++;
@@ -371,7 +377,7 @@ export default function WeeklyProgressView({
     if (isFuture(day.date)) {
       return { icon: Clock, color: 'text-gray-400', bgColor: 'bg-gray-100', label: 'Future' };
     }
-    if (!day.hasData) {
+    if (!day.hasData || day.mealsLogged === 0) {
       return { icon: Circle, color: 'text-gray-400', bgColor: 'bg-gray-100', label: 'No data' };
     }
     if (day.score >= 80) {
@@ -445,10 +451,10 @@ export default function WeeklyProgressView({
         <div className="flex gap-3 mb-6">
           <button
             onClick={() => setShowPlannerModal(true)}
-            className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-700 hover:to-purple-800 transition-all font-medium flex items-center justify-center gap-2 shadow-md"
+            className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-700 hover:to-purple-800 transition-all shadow-md flex items-center justify-center gap-3"
           >
-            <CalendarPlus className="w-5 h-5" />
-            Plan This Week
+            <CalendarPlus className="w-5 h-5 flex-shrink-0" />
+            <div className="font-bold text-sm leading-tight">Generate a full week of meals at once</div>
           </button>
           
           {weekPlanInfo?.exists && weekPlanInfo.mealPlan && weekPlanInfo.mealPlan.stats && (
@@ -527,133 +533,269 @@ export default function WeeklyProgressView({
       </div>
 
       {/* Day Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 overflow-visible">
         {weekData.map((dayData) => {
           const status = getDayStatus(dayData);
           const StatusIcon = status.icon;
           const dayString = format(dayData.date, 'yyyy-MM-dd');
-          const expandedDayString = expandedDay ? format(expandedDay, 'yyyy-MM-dd') : null;
-          const isExpanded = expandedDayString === dayString;
           const isTodayDate = isToday(dayData.date);
+          const isFutureDay = isFuture(dayData.date);
+
+          // SVG ring values
+          const radius = 22;
+          const circumference = 2 * Math.PI * radius;
+          const strokeDashoffset = circumference * (1 - (dayData.hasData ? dayData.score : 0) / 100);
+          const ringStroke =
+            dayData.score >= 80 ? '#16a34a'
+            : dayData.score >= 60 ? '#ca8a04'
+            : dayData.score >= 40 ? '#ea580c'
+            : dayData.score > 0  ? '#dc2626'
+            : '#d1d5db';
+
+          // Top accent bar colour
+          const accentBar = isFutureDay || !dayData.hasData
+            ? 'bg-gray-200 dark:bg-gray-700'
+            : dayData.score >= 80 ? 'bg-gradient-to-r from-green-400 to-emerald-500'
+            : dayData.score >= 60 ? 'bg-gradient-to-r from-yellow-400 to-amber-500'
+            : dayData.score >= 40 ? 'bg-gradient-to-r from-orange-400 to-orange-500'
+            : 'bg-gradient-to-r from-red-400 to-red-500';
+
+          const isHovered = hoveredCard === dayString;
+          const isSelected = selectedCard === dayString;
+          const isActive = isHovered || isSelected;
+          const anyActive = hoveredCard !== null || selectedCard !== null;
 
           return (
             <div
               key={dayString}
-              className={`bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden transition-all ${
-                isTodayDate ? 'ring-2 ring-purple-500' : ''
-              } ${isExpanded ? 'lg:col-span-2 xl:col-span-2' : ''}`}
+              onMouseEnter={() => setHoveredCard(dayString)}
+              onMouseLeave={() => setHoveredCard(null)}
+              style={{
+                transform: isActive
+                  ? 'scale(1.07) translateY(-10px)'
+                  : anyActive
+                  ? 'scale(0.96) translateY(4px)'
+                  : 'scale(1) translateY(0px)',
+                zIndex: isActive ? 20 : 0,
+                opacity: anyActive && !isActive ? 0.82 : 1,
+                transition: 'transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease, opacity 0.25s ease',
+              }}
+              className={`relative rounded-2xl overflow-hidden ${
+                isActive ? 'shadow-2xl' : 'shadow-md'
+              } ${isTodayDate ? 'ring-2 ring-purple-500 ring-offset-2' : ''}`}
             >
-              {/* Day Header */}
+              {/* Clickable card face */}
               <div
-                className={`p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${status.bgColor}`}
+                className="bg-white dark:bg-gray-800 cursor-pointer select-none"
                 onClick={() => handleDayClick(dayData.date)}
               >
-                <div className="flex items-center justify-between mb-2">
-                  <div>
-                    <div className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">
-                      {format(dayData.date, 'EEE')}
+                {/* Accent bar */}
+                <div className={`h-1.5 w-full ${accentBar}`} />
+
+                <div className="p-3 sm:p-4">
+                  {/* Day label row */}
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <div className={`text-[11px] font-bold uppercase tracking-widest ${
+                        isTodayDate ? 'text-purple-500 dark:text-purple-400' : 'text-gray-600 dark:text-gray-400'
+                      }`}>
+                        {format(dayData.date, 'EEE')}
+                      </div>
+                      <div className={`text-2xl font-extrabold leading-none mt-0.5 ${
+                        isTodayDate ? 'text-purple-700 dark:text-purple-300' : 'text-gray-800 dark:text-white'
+                      }`}>
+                        {format(dayData.date, 'd')}
+                      </div>
                     </div>
-                    <div className="text-lg font-bold text-gray-900 dark:text-white">
-                      {format(dayData.date, 'd')}
-                    </div>
+                    {isTodayDate && (
+                      <span className="text-[9px] font-bold uppercase bg-purple-100 text-purple-600 dark:bg-purple-900/40 dark:text-purple-300 px-1.5 py-0.5 rounded-full tracking-wide">
+                        Today
+                      </span>
+                    )}
                   </div>
-                  <StatusIcon className={`w-6 h-6 ${status.color}`} />
+
+                  {/* Score ring */}
+                  <div className="flex justify-center my-2">
+                    {isFutureDay ? (
+                      <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                        <Clock className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                      </div>
+                    ) : (
+                      <div className="relative w-12 h-12">
+                        <svg className="w-12 h-12 -rotate-90" viewBox="0 0 52 52">
+                          <circle
+                            cx="26" cy="26" r={radius}
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="5"
+                            className="text-gray-200 dark:text-gray-700"
+                          />
+                          {dayData.hasData && (
+                            <circle
+                              cx="26" cy="26" r={radius}
+                              fill="none"
+                              stroke={ringStroke}
+                              strokeWidth="5"
+                              strokeLinecap="round"
+                              strokeDasharray={circumference}
+                              strokeDashoffset={strokeDashoffset}
+                              style={{ transition: 'stroke-dashoffset 0.6s ease' }}
+                            />
+                          )}
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          {dayData.hasData ? (
+                            <span className={`text-[11px] font-black ${getScoreColor(dayData.score)}`}>
+                              {dayData.score}%
+                            </span>
+                          ) : (
+                            <Circle className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Mini stats */}
+                  <div className="mt-2 space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-semibold text-gray-600 dark:text-gray-400">Meals</span>
+                      <span className="text-[11px] font-bold text-gray-800 dark:text-gray-200">
+                        {dayData.mealsLogged}
+                        <span className="font-semibold text-gray-500 dark:text-gray-400">/{dayData.totalMeals}</span>
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-semibold text-gray-600 dark:text-gray-400">Systems</span>
+                      <span className="text-[11px] font-bold text-gray-800 dark:text-gray-200">
+                        {dayData.systemsCovered}
+                        <span className="font-semibold text-gray-500 dark:text-gray-400">/{dayData.totalSystems}</span>
+                      </span>
+                    </div>
+                    {dayData.hasPlannedMeals && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-semibold text-gray-600 dark:text-gray-400">Planned</span>
+                        <span className="text-[11px] font-bold text-blue-500 dark:text-blue-400">
+                          {dayData.mealsPlanned}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                {/* Score */}
-                {dayData.hasData && (
-                  <div className={`text-3xl font-bold mb-2 ${getScoreColor(dayData.score)}`}>
-                    {dayData.score}%
-                  </div>
-                )}
-
-                {/* Stats */}
-                <div className="space-y-1 text-xs text-gray-600 dark:text-gray-400">
-                  {dayData.hasPlannedMeals && (
-                    <div className="flex items-center justify-between">
-                      <span>📋 Planned</span>
-                      <span className="font-semibold">{dayData.mealsPlanned}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center justify-between">
-                    <span>✅ Logged</span>
-                    <span className="font-semibold">{dayData.mealsLogged}/{dayData.totalMeals}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Systems</span>
-                    <span className="font-semibold">{dayData.systemsCovered}/{dayData.totalSystems}</span>
+                {/* Status chip */}
+                <div className="px-3 sm:px-4 pb-3">
+                  <div className={`flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide rounded-full px-2 py-0.5 w-fit border ${
+                    isFutureDay || !dayData.hasData
+                      ? 'bg-gray-100 text-gray-600 border-gray-300 dark:bg-gray-700/50 dark:text-gray-400 dark:border-gray-600'
+                      : dayData.score >= 80
+                        ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800'
+                        : dayData.score >= 50
+                          ? 'bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-800'
+                          : 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800'
+                  }`}>
+                    <StatusIcon className="w-3 h-3" />
+                    {status.label}
                   </div>
                 </div>
               </div>
-
-              {/* Expanded Actions */}
-              {isExpanded && (
-                <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 space-y-3">
-                  {/* Planned Meals List */}
-                  {dayData.hasPlannedMeals && (
-                    <div className="space-y-2">
-                      <div className="text-xs font-semibold text-gray-700 dark:text-gray-300">Planned Meals:</div>
-                      {dayData.plannedMeals.map((meal) => (
-                        <div key={meal.id} className="flex items-center justify-between p-2 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700">
-                          <div className="flex-1">
-                            <div className="text-xs font-medium text-gray-900 dark:text-white">{meal.mealTime}</div>
-                            <div className="text-xs text-gray-600 dark:text-gray-400 truncate">{meal.recipeTitle}</div>
-                          </div>
-                          {!meal.isLogged && !isFuture(dayData.date) && (
-                            <button
-                              onClick={() => handleLogPlannedMeal(meal.id, dayData.date)}
-                              className="ml-2 px-2 py-1 bg-green-100 text-green-700 rounded text-xs hover:bg-green-200 transition-colors flex items-center gap-1"
-                            >
-                              <CheckCheck className="w-3 h-3" />
-                              Log
-                            </button>
-                          )}
-                          {meal.isLogged && (
-                            <span className="ml-2 text-green-600 text-xs flex items-center gap-1">
-                              <CheckCircle2 className="w-3 h-3" />
-                              Logged
-                            </span>
-                          )}
-                        </div>
-                      ))}
-                      
-                      {/* Log All Button */}
-                      {dayData.plannedMeals.some(m => !m.isLogged) && !isFuture(dayData.date) && (
-                        <button
-                          onClick={() => handleLogAllPlannedMeals(dayData.date)}
-                          className="w-full px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium flex items-center justify-center gap-2"
-                        >
-                          <CheckCheck className="w-4 h-4" />
-                          Log All Planned Meals
-                        </button>
-                      )}
-                    </div>
-                  )}
-                  
-                  {/* Action Buttons */}
-                  <button
-                    onClick={() => handleNavigateToDay(dayData.date)}
-                    className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium flex items-center justify-center gap-2"
-                  >
-                    <Calendar className="w-4 h-4" />
-                    View Day Details
-                  </button>
-                  
-                  {!isFuture(dayData.date) && (
-                    <button
-                      onClick={() => handleQuickAddMeal(dayData.date)}
-                      className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-sm font-medium flex items-center justify-center gap-2"
-                    >
-                      <Plus className="w-4 h-4" />
-                      Add Meal
-                    </button>
-                  )}
-                </div>
-              )}
             </div>
           );
         })}
       </div>
+
+      {/* Expanded day panel — rendered below the grid so cards never shift */}
+      {expandedDay && (() => {
+        const expandedDayString = format(expandedDay, 'yyyy-MM-dd');
+        const dayData = weekData.find(d => format(d.date, 'yyyy-MM-dd') === expandedDayString);
+        if (!dayData) return null;
+        const isFutureDay = isFuture(dayData.date);
+        return (
+          <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/60 p-4 space-y-3 shadow-lg animate-in slide-in-from-top-2 duration-200">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-sm font-bold text-gray-700 dark:text-gray-200">
+                {format(dayData.date, 'EEEE, MMMM d')}
+              </span>
+              <button
+                onClick={() => setExpandedDay(null)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xs font-semibold"
+              >
+                ✕ Close
+              </button>
+            </div>
+
+            {dayData.hasPlannedMeals && (
+              <div className="space-y-2">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-gray-600 dark:text-gray-400 mb-1">
+                  Planned Meals
+                </div>
+                {dayData.plannedMeals.map((meal) => (
+                  <div
+                    key={meal.id}
+                    className="flex items-center gap-3 p-2.5 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm"
+                  >
+                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                      meal.isLogged ? 'bg-green-500' : 'bg-blue-400'
+                    }`} />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+                        {meal.mealTime}
+                      </div>
+                      <div className="text-xs font-semibold text-gray-900 dark:text-white truncate">
+                        {meal.recipeTitle}
+                      </div>
+                    </div>
+                    {meal.isLogged ? (
+                      <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
+                    ) : !isFutureDay ? (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleLogPlannedMeal(meal.id, dayData.date); }}
+                        className="flex-shrink-0 px-2 py-1 bg-green-500 hover:bg-green-600 text-white rounded-lg text-[11px] font-bold transition-colors flex items-center gap-1"
+                      >
+                        <CheckCheck className="w-3 h-3" />
+                        Log
+                      </button>
+                    ) : null}
+                  </div>
+                ))}
+
+                {dayData.plannedMeals.some(m => !m.isLogged) && !isFutureDay && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleLogAllPlannedMeals(dayData.date); }}
+                    className="w-full py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl text-sm font-bold transition-all shadow-sm flex items-center justify-center gap-2"
+                  >
+                    <CheckCheck className="w-4 h-4" />
+                    Log All Planned Meals
+                  </button>
+                )}
+              </div>
+            )}
+
+            <button
+              onClick={(e) => { e.stopPropagation(); handleNavigateToDay(dayData.date); }}
+              className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white rounded-xl text-sm font-bold transition-all shadow-sm flex items-center justify-center gap-2"
+            >
+              <Calendar className="w-4 h-4" />
+              View Day Details
+            </button>
+
+            {dayData.hasPlannedMeals && dayData.plannedMeals[0]?.mealPlanId && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const dayName = format(dayData.date, 'EEEE').toLowerCase();
+                  const planId = dayData.plannedMeals[0].mealPlanId;
+                  router.push(`/meal-planner/${planId}?day=${dayName}`);
+                }}
+                className="w-full py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-xl text-sm font-bold transition-all shadow-sm flex items-center justify-center gap-2"
+              >
+                <ExternalLink className="w-4 h-4" />
+                Open {format(dayData.date, 'EEEE')} Meal Plan
+              </button>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Best Day Highlight */}
       {weeklyStats?.bestDay && (

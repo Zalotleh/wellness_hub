@@ -42,13 +42,13 @@ export default function AIRecipeGenerator({
   const [defenseSystems, setDefenseSystems] = useState<DefenseSystem[]>(
     initialParams?.targetSystem ? [initialParams.targetSystem] : [DefenseSystem.ANGIOGENESIS]
   );
-  const [ingredients, setIngredients] = useState<string[]>(['']);
+  const [ingredients, setIngredients] = useState<string[]>([]);
   const [dietaryRestrictions, setDietaryRestrictions] = useState<string[]>(
     initialParams?.dietaryRestrictions || []
   );
   const preferencesLoadedRef = useRef(false);
   const [mealType, setMealType] = useState(
-    initialParams?.preferredMealTime?.toLowerCase() || 'any'
+    initialParams?.preferredMealTime?.toLowerCase() || 'breakfast'
   );
   const [measurementSystem, setMeasurementSystem] = useState<'imperial' | 'metric'>('imperial');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -66,6 +66,7 @@ export default function AIRecipeGenerator({
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [encouragementMsg, setEncouragementMsg] = useState<string | null>(null);
   const [ingredientSuggestions, setIngredientSuggestions] = useState<string[]>([]);
+  const [ingredientInput, setIngredientInput] = useState('');
   const [expandedSystems, setExpandedSystems] = useState<Record<string, boolean>>({});
 
   // Quality Score Calculator
@@ -146,7 +147,14 @@ export default function AIRecipeGenerator({
         // Set measurement system
         setMeasurementSystem(measurementPref.system);
 
-        // Load user preferences if not overridden by initialParams
+        // Defense system from recommendation ALWAYS wins – checked BEFORE the
+        // preferencesLoaded guard so it applies even on re-runs of this effect.
+        if (initialParams?.targetSystem) {
+          console.log('🎯 Using recommended defense system (overriding user settings):', initialParams.targetSystem);
+          setDefenseSystems([initialParams.targetSystem]);
+        }
+
+        // Load user preferences only on first run (or when no override exists)
         if (userPrefs?.preferences && !preferencesLoadedRef.current) {
           console.log('✅ Loading preferences from API...');
           
@@ -158,11 +166,8 @@ export default function AIRecipeGenerator({
             }
           }
           
-          // Defense Systems: Recommendation ALWAYS overrides user settings
-          if (initialParams?.targetSystem) {
-            console.log('🎯 Using recommended defense system (overriding user settings):', initialParams.targetSystem);
-            setDefenseSystems([initialParams.targetSystem]);
-          } else if (userPrefs.preferences.defaultFocusSystems?.length > 0) {
+          // Defense Systems from user preferences (only when no recommendation override)
+          if (!initialParams?.targetSystem && userPrefs.preferences.defaultFocusSystems?.length > 0) {
             console.log('✅ Setting defense systems from user preferences:', userPrefs.preferences.defaultFocusSystems);
             setDefenseSystems(userPrefs.preferences.defaultFocusSystems as DefenseSystem[]);
           }
@@ -202,7 +207,7 @@ export default function AIRecipeGenerator({
     setIngredientSuggestions(suggestions.slice(0, 8)); // Limit to 8 suggestions
   }, [defenseSystems, mealType, dietaryRestrictions, ingredients]);
 
-  const mealTypes = ['any', 'breakfast', 'lunch', 'dinner', 'snack', 'dessert'];
+  const mealTypes = ['breakfast', 'lunch', 'dinner', 'snack', 'dessert'];
   const commonRestrictions = [
     'vegetarian',
     'vegan',
@@ -212,18 +217,17 @@ export default function AIRecipeGenerator({
     'low-carb',
   ];
 
-  const handleAddIngredient = () => {
-    setIngredients([...ingredients, '']);
+  const handleAddIngredientFromInput = () => {
+    const val = ingredientInput.trim();
+    if (!val) return;
+    if (!ingredients.some(i => i.toLowerCase() === val.toLowerCase())) {
+      setIngredients([...ingredients, val]);
+    }
+    setIngredientInput('');
   };
 
   const handleRemoveIngredient = (index: number) => {
     setIngredients(ingredients.filter((_, i) => i !== index));
-  };
-
-  const handleIngredientChange = (index: number, value: string) => {
-    const newIngredients = [...ingredients];
-    newIngredients[index] = value;
-    setIngredients(newIngredients);
   };
 
   const toggleRestriction = (restriction: string) => {
@@ -480,7 +484,7 @@ export default function AIRecipeGenerator({
       prepTime: generatedRecipe.prepTime,
       cookTime: generatedRecipe.cookTime,
       servings: typeof generatedRecipe.servings === 'number' ? generatedRecipe.servings : undefined,
-      mealType: mealType !== 'any' ? mealType : undefined,
+      mealType: mealType,
       dietaryRestrictions: dietaryRestrictions.length > 0 ? dietaryRestrictions : [],
       nutrients: generatedRecipe.nutrients,
     };
@@ -516,7 +520,8 @@ export default function AIRecipeGenerator({
     try {
       await onSaveRecipe(recipeData);
       setGeneratedRecipe(null);
-      setIngredients(['']);
+      setIngredients([]);
+      setIngredientInput('');
       setDietaryRestrictions([]);
       setError(null); // Clear any previous errors on success
     } catch (err: unknown) {
@@ -749,7 +754,7 @@ export default function AIRecipeGenerator({
             {/* Meal Type */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">
-                Meal Type
+                Meal Type *
               </label>
               <div className="flex flex-wrap gap-2">
                 {mealTypes.map((type) => (
@@ -852,13 +857,7 @@ export default function AIRecipeGenerator({
                               type="button"
                               onClick={() => {
                                 if (!isSelected) {
-                                  // Add ingredient
-                                  const emptyIndex = ingredients.findIndex(i => !i.trim());
-                                  if (emptyIndex >= 0) {
-                                    handleIngredientChange(emptyIndex, food);
-                                  } else {
-                                    setIngredients([...ingredients, food]);
-                                  }
+                                  setIngredients([...ingredients, food]);
                                 }
                               }}
                               disabled={isGenerating || isSaving}
@@ -878,16 +877,9 @@ export default function AIRecipeGenerator({
                               <button
                                 type="button"
                                 onClick={() => {
-                                  // Remove ingredient
                                   const index = ingredients.findIndex(ing => ing.trim().toLowerCase() === food.toLowerCase());
                                   if (index >= 0) {
-                                    const newIngredients = [...ingredients];
-                                    newIngredients.splice(index, 1);
-                                    if (newIngredients.length === 0) {
-                                      setIngredients(['']);
-                                    } else {
-                                      setIngredients(newIngredients);
-                                    }
+                                    setIngredients(ingredients.filter((_, i) => i !== index));
                                   }
                                 }}
                                 disabled={isGenerating || isSaving}
@@ -914,61 +906,66 @@ export default function AIRecipeGenerator({
                 Ingredients you&apos;d like to use (optional)
               </label>
               <span className={`text-xs font-medium px-2 py-1 rounded ${
-                ingredients.filter(i => i.trim()).length >= 3 
+                ingredients.length >= 3
                   ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
-                  : ingredients.filter(i => i.trim()).length > 0
+                  : ingredients.length > 0
                   ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300'
                   : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
               }`}>
-                {ingredients.filter(i => i.trim()).length} ingredient{ingredients.filter(i => i.trim()).length !== 1 ? 's' : ''}
-                {ingredients.filter(i => i.trim()).length < 3 && ' (add 3+ recommended)'}
+                {ingredients.length} ingredient{ingredients.length !== 1 ? 's' : ''}
+                {ingredients.length < 3 && ' (add 3+ recommended)'}
               </span>
             </div>
-            <div className="space-y-2">
-              {ingredients.map((ingredient, index) => (
-                <div key={index} className="flex items-center space-x-2">
-                  <input
-                    type="text"
-                    value={ingredient}
-                    onChange={(e) => handleIngredientChange(index, e.target.value)}
-                    disabled={isGenerating || isSaving}
-                    className="flex-1 px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:border-purple-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100 dark:disabled:bg-gray-800 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-500"
-                    placeholder="e.g., Salmon, Broccoli, Tomatoes"
-                  />
-                  {ingredients.length > 1 && (
+
+            {/* Chip list of confirmed ingredients */}
+            {ingredients.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-3">
+                {ingredients.map((ingredient, index) => (
+                  <span
+                    key={index}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-violet-100 dark:bg-violet-900/30 text-violet-800 dark:text-violet-200 text-sm font-medium rounded-full border border-violet-200 dark:border-violet-700"
+                  >
+                    {ingredient}
                     <button
                       type="button"
                       onClick={() => handleRemoveIngredient(index)}
                       disabled={isGenerating || isSaving}
-                      className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="ml-0.5 w-4 h-4 rounded-full hover:bg-violet-200 dark:hover:bg-violet-700 flex items-center justify-center transition-colors disabled:opacity-50"
+                      aria-label={`Remove ${ingredient}`}
                     >
-                      <X className="w-5 h-5" />
+                      <X className="w-3 h-3" />
                     </button>
-                  )}
-                </div>
-              ))}
-              
-              {/* Add Ingredient Button - Enhanced Card Style */}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Single text input to add a new ingredient */}
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={ingredientInput}
+                onChange={(e) => setIngredientInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') { e.preventDefault(); handleAddIngredientFromInput(); }
+                }}
+                disabled={isGenerating || isSaving}
+                placeholder="e.g. Salmon — press Enter or click +"
+                className="flex-1 px-4 py-2.5 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-violet-500 focus:outline-none text-sm dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              />
               <button
                 type="button"
-                onClick={handleAddIngredient}
-                disabled={isGenerating || isSaving}
-                className="w-full p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all group mt-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-300 dark:disabled:hover:border-gray-600 disabled:hover:bg-transparent"
+                onClick={handleAddIngredientFromInput}
+                disabled={!ingredientInput.trim() || isGenerating || isSaving}
+                className="p-2.5 bg-violet-600 hover:bg-violet-700 disabled:bg-gray-200 dark:disabled:bg-gray-700 text-white disabled:text-gray-400 rounded-xl transition-colors disabled:cursor-not-allowed"
+                aria-label="Add ingredient"
               >
-                <div className="flex flex-col items-center space-y-2">
-                  <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center group-hover:bg-purple-500 transition-colors">
-                    <Plus className="w-6 h-6 text-purple-600 dark:text-purple-400 group-hover:text-white transition-colors" />
-                  </div>
-                  <span className="text-sm font-medium text-gray-600 dark:text-gray-200 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
-                    Add Another Ingredient
-                  </span>
-                  <span className="text-xs text-gray-400 dark:text-gray-500">Optional: Specify more ingredients you want to use</span>
-                </div>
+                <Plus className="w-5 h-5" />
               </button>
             </div>
 
             {/* Smart Ingredient Suggestions */}
-            {ingredientSuggestions.length > 0 && ingredients.filter(i => i.trim()).length < 5 && (
+            {ingredientSuggestions.length > 0 && ingredients.length < 5 && (
               <div className="mt-4 p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
                 <div className="flex items-center gap-2 mb-3">
                   <Wand2 className="w-4 h-4 text-purple-600 dark:text-purple-400" />
@@ -983,11 +980,7 @@ export default function AIRecipeGenerator({
                       key={idx}
                       type="button"
                       onClick={() => {
-                        // Find first empty slot or add new
-                        const emptyIndex = ingredients.findIndex(i => !i.trim());
-                        if (emptyIndex >= 0) {
-                          handleIngredientChange(emptyIndex, suggestion);
-                        } else {
+                        if (!ingredients.some(i => i.toLowerCase() === suggestion.toLowerCase())) {
                           setIngredients([...ingredients, suggestion]);
                         }
                       }}

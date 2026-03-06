@@ -45,6 +45,7 @@ export default function RecipeForm({
     prepTime: initialData?.prepTime || '',
     cookTime: initialData?.cookTime || '',
     servings: initialData?.servings || undefined,
+    mealType: initialData?.mealType || '',
     defenseSystems: initialData?.defenseSystems || [],
     nutrients: initialData?.nutrients || {},
     imageUrl: initialData?.imageUrl || '',
@@ -56,6 +57,9 @@ export default function RecipeForm({
 
     if (!formData.title.trim()) {
       newErrors.title = 'Title is required';
+    }
+    if (!formData.mealType) {
+      newErrors.mealType = 'Meal type is required';
     }
     if (!formData.defenseSystems || formData.defenseSystems.length === 0) {
       newErrors.defenseSystems = 'Please select at least one defense system';
@@ -361,6 +365,39 @@ export default function RecipeForm({
                       className="w-full px-3 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:border-green-500 focus:outline-none dark:bg-gray-700 dark:text-white text-sm"
                       placeholder="4"
                     />
+                  </div>
+                </div>
+
+                {/* Meal Type */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                    Meal Type *
+                  </label>
+                  {errors.mealType && (
+                    <p className="mb-2 text-sm text-red-600 dark:text-red-400">{errors.mealType}</p>
+                  )}
+                  <div className="grid grid-cols-5 gap-2">
+                    {[
+                      { value: 'breakfast', label: 'Breakfast', emoji: '🌅' },
+                      { value: 'lunch',     label: 'Lunch',     emoji: '☀️' },
+                      { value: 'dinner',    label: 'Dinner',    emoji: '🌙' },
+                      { value: 'snack',     label: 'Snack',     emoji: '🍎' },
+                      { value: 'dessert',   label: 'Dessert',   emoji: '🍰' },
+                    ].map(({ value, label, emoji }) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setFormData((prev) => ({ ...prev, mealType: value }))}
+                        className={`flex flex-col items-center gap-1 py-2 px-1 border-2 rounded-lg text-xs font-semibold transition-all ${
+                          formData.mealType === value
+                            ? 'border-green-500 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 ring-2 ring-offset-1 ring-green-500'
+                            : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:border-gray-400'
+                        }`}
+                      >
+                        <span className="text-lg">{emoji}</span>
+                        <span>{label}</span>
+                      </button>
+                    ))}
                   </div>
                 </div>
 

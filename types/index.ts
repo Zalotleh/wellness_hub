@@ -119,7 +119,7 @@ export interface RecipeFormData {
   prepTime?: string;
   cookTime?: string;
   servings?: number;
-  mealType?: string;
+  mealType: string;
   dietaryRestrictions?: string[];
   defenseSystems: DefenseSystem[];
   nutrients?: Record<string, string>;
@@ -235,6 +235,8 @@ export interface Meal {
   customInstructions?: string;
   ingredients?: string[];
   instructions?: string[];
+  /** 'planned' = from the meal planner; 'logged' = imported from dashboard day-view logs */
+  source?: 'planned' | 'logged';
 }
 
 export interface Recipe {

@@ -184,8 +184,7 @@ export default function MealTimeTracker({
       return;
     }
     
-    // Navigate to recipe generator with meal type pre-selected
-    const mealTypeForUrl = mealTime.toLowerCase().replace('_', '-');
+    // Navigate to recipe generator with meal type and source pre-selected
     router.push(`/recipes/ai-generate?preferredMealTime=${mealTime}&from=meal-timeline`);
   };
 

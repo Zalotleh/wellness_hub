@@ -2,11 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Sparkles,
   ChefHat,
@@ -20,7 +15,7 @@ import {
   Lightbulb,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useBreakpoint, getTouchTargetClass, getSpacing } from '@/lib/utils/mobile-responsive';
+import { useBreakpoint, getSpacing } from '@/lib/utils/mobile-responsive';
 
 interface SmartRecommendation {
   id: string;
@@ -53,7 +48,6 @@ export default function SmartActionsPanel({ date, className }: SmartActionsPanel
   const [showReasoning, setShowReasoning] = useState(false);
   
   const breakpoint = useBreakpoint();
-  const touchTargetClass = getTouchTargetClass(breakpoint);
   const spacing = getSpacing(breakpoint);
 
   useEffect(() => {
@@ -203,129 +197,148 @@ export default function SmartActionsPanel({ date, className }: SmartActionsPanel
 
   if (loading) {
     return (
-      <Card className={className}>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Skeleton className="h-5 w-5 rounded" />
-            <Skeleton className="h-6 w-32" />
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-lg p-6">
+        <div className="animate-pulse flex items-start gap-4">
+          <div className="w-12 h-12 rounded-xl bg-gray-200 dark:bg-gray-700 flex-shrink-0" />
+          <div className="flex-1 space-y-3">
+            <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-2/5" />
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full" />
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-4/5" />
+            <div className="flex gap-3 pt-2">
+              <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded-lg flex-1" />
+              <div className="h-10 w-24 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+            </div>
           </div>
-          <Skeleton className="h-4 w-full mt-2" />
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-20 w-full" />
-          <div className="flex gap-2 mt-4">
-            <Skeleton className="h-10 flex-1" />
-            <Skeleton className="h-10 w-24" />
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Alert variant="destructive" className={className}>
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
+      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-5 flex items-center gap-3">
+        <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
+        <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+      </div>
     );
   }
 
   if (!recommendation) {
     return (
-      <Card className={cn('border-green-200 bg-green-50/50', className)}>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="h-5 w-5 text-green-600" />
-            <CardTitle className="text-green-900">All Caught Up!</CardTitle>
-          </div>
-          <CardDescription className="text-green-700">
+      <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl border border-green-200 dark:border-green-800 shadow-lg p-6 flex items-center gap-5">
+        <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl shadow-md flex-shrink-0">
+          <CheckCircle2 className="h-7 w-7 text-white" />
+        </div>
+        <div>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white">All Caught Up!</h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
             Great job! You&apos;re on track with your wellness goals. Keep up the excellent work!
-          </CardDescription>
-        </CardHeader>
-      </Card>
+          </p>
+        </div>
+      </div>
     );
   }
 
   const styles = getPriorityStyles(recommendation.priority);
 
+  const priorityGradient: Record<string, string> = {
+    CRITICAL: 'from-red-500 to-orange-500',
+    HIGH: 'from-orange-500 to-amber-500',
+    MEDIUM: 'from-blue-500 to-indigo-500',
+    LOW: 'from-gray-400 to-gray-500',
+  };
+  const iconGradient = priorityGradient[recommendation.priority] ?? 'from-blue-500 to-indigo-500';
+
   return (
-    <Card className={cn(styles.card, className)}>
-      <CardHeader className={spacing.card}>
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-start gap-3 flex-1">
-            <div className="mt-0.5">{getIcon()}</div>
-            <div className="flex-1 space-y-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <CardTitle className={breakpoint.mobile ? 'text-base' : 'text-lg'}>
-                  {recommendation.title}
-                </CardTitle>
-                <Badge className={styles.badge}>{recommendation.priority}</Badge>
-              </div>
-              <CardDescription className={breakpoint.mobile ? 'text-xs' : 'text-sm'}>
-                {recommendation.description}
-              </CardDescription>
+    <div className={cn(
+      'bg-white dark:bg-gray-900 rounded-2xl border shadow-lg hover:shadow-xl transition-shadow overflow-hidden',
+      recommendation.priority === 'CRITICAL' ? 'border-red-200 dark:border-red-800' :
+      recommendation.priority === 'HIGH' ? 'border-orange-200 dark:border-orange-800' :
+      'border-gray-100 dark:border-gray-700',
+      className
+    )}>
+      {/* Top accent bar */}
+      <div className={`h-1 bg-gradient-to-r ${iconGradient}`} />
+
+      <div className="p-6">
+        <div className="flex items-start gap-4">
+          {/* Icon */}
+          <div className={`inline-flex items-center justify-center w-12 h-12 bg-gradient-to-r ${iconGradient} rounded-xl shadow-md flex-shrink-0`}>
+            <div className="text-white">{getIcon()}</div>
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap mb-1">
+              <h3 className="font-bold text-gray-900 dark:text-white text-base md:text-lg">
+                {recommendation.title}
+              </h3>
+              <span className={cn('text-xs font-semibold px-2 py-0.5 rounded-full', styles.badge)}>
+                {recommendation.priority}
+              </span>
             </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+              {recommendation.description}
+            </p>
+
+            {/* Reasoning toggle */}
+            <button
+              onClick={() => setShowReasoning(!showReasoning)}
+              className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors mt-2"
+            >
+              <Info className="h-3 w-3" />
+              {showReasoning ? 'Hide details' : 'Why this recommendation?'}
+            </button>
+
+            {showReasoning && (
+              <div className="mt-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-300">
+                {recommendation.reasoning}
+              </div>
+            )}
+
+            {/* Target badges */}
+            {(recommendation.targetSystem || recommendation.targetMealTime) && (
+              <div className="flex gap-2 mt-3 flex-wrap">
+                {recommendation.targetSystem && (
+                  <span className="text-xs px-2.5 py-1 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 font-medium">
+                    {recommendation.targetSystem}
+                  </span>
+                )}
+                {recommendation.targetMealTime && (
+                  <span className="text-xs px-2.5 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium">
+                    {recommendation.targetMealTime}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Reasoning toggle */}
-        <button
-          onClick={() => setShowReasoning(!showReasoning)}
-          className={cn(
-            'flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mt-2',
-            touchTargetClass
-          )}
-        >
-          <Info className="h-3 w-3" />
-          {showReasoning ? 'Hide details' : 'Why this recommendation?'}
-        </button>
-
-        {showReasoning && (
-          <div className="mt-2 p-3 rounded-lg bg-background/50 border text-sm text-muted-foreground">
-            {recommendation.reasoning}
-          </div>
-        )}
-      </CardHeader>
-
-      <CardContent className={spacing.card}>
-        <div className={`flex gap-2 ${breakpoint.mobile ? 'flex-col' : ''}`}>
-          <Button
+        {/* Action buttons */}
+        <div className={`flex gap-3 mt-5 ${breakpoint.mobile ? 'flex-col' : ''}`}>
+          <button
             onClick={handleAccept}
             disabled={actioning}
-            className={cn('flex-1', styles.button, touchTargetClass)}
+            className={cn(
+              'flex-1 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all shadow-md hover:shadow-lg disabled:opacity-60',
+              `bg-gradient-to-r ${iconGradient} text-white hover:opacity-90`
+            )}
           >
-            <Sparkles className="h-4 w-4 mr-2" />
+            <Sparkles className="h-4 w-4" />
             {recommendation.actionLabel}
-          </Button>
-          <Button
+          </button>
+          <button
             onClick={handleDismiss}
             disabled={actioning}
-            variant="outline"
-            className={cn(breakpoint.mobile ? 'w-full' : '', touchTargetClass)}
-            size={breakpoint.mobile ? 'default' : 'icon'}
+            className="px-5 py-2.5 rounded-xl font-medium text-sm border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
           >
-            <X className="h-4 w-4" />
-            {breakpoint.mobile && <span className="ml-2">Dismiss</span>}
-          </Button>
+            {breakpoint.mobile ? (
+              <span className="flex items-center justify-center gap-1.5"><X className="h-4 w-4" /> Dismiss</span>
+            ) : (
+              <X className="h-4 w-4" />
+            )}
+          </button>
         </div>
-
-        {/* Target info badges */}
-        {(recommendation.targetSystem || recommendation.targetMealTime) && (
-          <div className="flex gap-2 mt-3 flex-wrap">
-            {recommendation.targetSystem && (
-              <Badge variant="secondary" className="text-xs">
-                {recommendation.targetSystem}
-              </Badge>
-            )}
-            {recommendation.targetMealTime && (
-              <Badge variant="secondary" className="text-xs">
-                {recommendation.targetMealTime}
-              </Badge>
-            )}
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
+      </div>
+    </div>  );
 }

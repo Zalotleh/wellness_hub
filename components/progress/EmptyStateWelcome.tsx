@@ -15,6 +15,7 @@ import {
   Bot,
   BookOpen,
   Users,
+  ShoppingCart,
 } from 'lucide-react';
 
 interface EmptyStateWelcomeProps {
@@ -31,11 +32,38 @@ function getTimeOfDay(): { greeting: string; Icon: typeof Sun } {
   return { greeting: 'Good evening', Icon: Moon as typeof Sun };
 }
 
+const RETURNING_PRIMARY_CARDS = [
+  {
+    href: '/recipes/ai-generate',
+    Icon: ChefHat,
+    gradient: 'from-rose-500 to-pink-600',
+    title: 'Generate a Meal',
+    description: 'Let AI craft a personalized recipe targeting your weakest defense systems right now.',
+    cta: 'Generate meal',
+  },
+  {
+    href: '/meal-planner',
+    Icon: Calendar,
+    gradient: 'from-amber-500 to-orange-500',
+    title: 'Plan the Whole Week',
+    description: 'Build a full 7-day meal plan balanced across all 5 defense systems in one go.',
+    cta: 'Plan my week',
+  },
+  {
+    href: '/shopping-lists',
+    Icon: ShoppingCart,
+    gradient: 'from-indigo-500 to-sky-600',
+    title: 'Shopping Lists',
+    description: 'View and manage your shopping lists so you always have the right ingredients on hand.',
+    cta: 'View lists',
+  },
+];
+
 const ACTION_CARDS = [
   {
     href: '/advisor',
     Icon: Bot,
-    gradient: 'from-violet-500 to-purple-600',
+    gradient: 'from-purple-500 to-violet-600',
     title: 'AI Health Advisor',
     description: 'Get personalized nutrition advice and answers from your AI wellness coach.',
     cta: 'Ask the advisor',
@@ -43,7 +71,7 @@ const ACTION_CARDS = [
   {
     href: '/learn',
     Icon: BookOpen,
-    gradient: 'from-amber-500 to-orange-500',
+    gradient: 'from-emerald-500 to-green-600',
     title: 'Learn the 5x5x5 System',
     description: 'Dive into the science behind Dr. Li\'s framework and understand each defense system.',
     cta: 'Start learning',
@@ -51,7 +79,7 @@ const ACTION_CARDS = [
   {
     href: '/community',
     Icon: Users,
-    gradient: 'from-teal-500 to-emerald-500',
+    gradient: 'from-teal-500 to-cyan-700',
     title: 'Join the Community',
     description: 'Connect with others on the same journey, share recipes, and stay motivated.',
     cta: 'Explore community',
@@ -97,10 +125,10 @@ const STEPS = [
   },
 ];
 
-function ActionCards() {
+function CardGrid({ cards }: { cards: typeof ACTION_CARDS }) {
   return (
     <div className="grid sm:grid-cols-3 gap-4">
-      {ACTION_CARDS.map(({ href, Icon, gradient, title, description, cta }) => (
+      {cards.map(({ href, Icon, gradient, title, description, cta }) => (
         <Link
           key={href}
           href={href}
@@ -118,6 +146,10 @@ function ActionCards() {
       ))}
     </div>
   );
+}
+
+function ActionCards() {
+  return <CardGrid cards={ACTION_CARDS} />;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -165,11 +197,12 @@ function ReturningUserEmpty({ userName }: { userName?: string | null }) {
       </div>
 
       {/* What would you like to do today? */}
-      <div>
-        <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">
+      <div className="space-y-4">
+        <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
           What would you like to do today?
         </p>
-        <ActionCards />
+        <CardGrid cards={RETURNING_PRIMARY_CARDS} />
+        <CardGrid cards={ACTION_CARDS} />
       </div>
 
       {/* Tip / info bar */}
@@ -177,7 +210,7 @@ function ReturningUserEmpty({ userName }: { userName?: string | null }) {
         <div className="flex gap-3 items-start">
           <CheckCircle2 className="w-5 h-5 text-indigo-500 dark:text-indigo-400 flex-shrink-0 mt-0.5" />
           <p className="text-sm text-indigo-800 dark:text-indigo-200 leading-relaxed">
-            <strong>Tip:</strong> Even on quieter days, logging a single meal helps maintain your streak and gives the AI better recommendations tomorrow.
+            <strong>Tip:</strong> Even on quieter days, logging a single meal keeps your defense systems active and your body on track — and helps the AI fine-tune tomorrow&apos;s recommendations to your wellbeing.
           </p>
         </div>
       </div>

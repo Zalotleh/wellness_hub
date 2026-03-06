@@ -2,17 +2,31 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Utensils, Clock, Users, Plus, CheckSquare, Square, Trash2, MoreVertical, Heart, X, Bookmark, Search, Filter, Calendar, Shield } from 'lucide-react';
+import { Clock, Users, Plus, CheckSquare, Square, Trash2, X, Bookmark, Search, Filter, Calendar, Shield } from 'lucide-react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { DeleteConfirmationDialog } from '@/components/ui/ConfirmationDialog';
 import Footer from '@/components/layout/Footer';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
 
+type SortBy = 'recent' | 'oldest' | 'title' | 'duration';
+
+type MealPlan = {
+  id: string;
+  title: string;
+  description?: string;
+  createdAt: string;
+  durationWeeks?: number;
+  defaultServings?: number;
+  visibility?: string;
+  focusSystems?: string[];
+  dietaryRestrictions?: string[];
+};
+
 export default function SavedPlansPage() {
   const { data: session, status } = useSession();
-  const [mealPlans, setMealPlans] = useState<any[]>([]);
-  const [filteredPlans, setFilteredPlans] = useState<any[]>([]);
+  const [mealPlans, setMealPlans] = useState<MealPlan[]>([]);
+  const [filteredPlans, setFilteredPlans] = useState<MealPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedPlans, setSelectedPlans] = useState<Set<string>>(new Set());
@@ -30,7 +44,7 @@ export default function SavedPlansPage() {
   const [selectedSystems, setSelectedSystems] = useState<string[]>([]);
   const [selectedRestrictions, setSelectedRestrictions] = useState<string[]>([]);
   const [selectedVisibility, setSelectedVisibility] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<'recent' | 'oldest' | 'title' | 'duration'>('recent');
+  const [sortBy, setSortBy] = useState<SortBy>('recent');
 
   useEffect(() => {
     if (session?.user) {
@@ -41,6 +55,7 @@ export default function SavedPlansPage() {
   // Apply filters whenever filters or mealPlans change
   useEffect(() => {
     applyFilters();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mealPlans, searchQuery, selectedDuration, selectedServings, selectedSystems, selectedRestrictions, selectedVisibility, sortBy]);
 
   const fetchMealPlans = async () => {
@@ -105,14 +120,14 @@ export default function SavedPlansPage() {
     // Defense systems filter
     if (selectedSystems.length > 0) {
       filtered = filtered.filter(plan =>
-        plan.focusSystems && selectedSystems.some((system: string) => plan.focusSystems.includes(system))
+        plan.focusSystems && selectedSystems.some((system: string) => plan.focusSystems!.includes(system))
       );
     }
 
     // Dietary restrictions filter
     if (selectedRestrictions.length > 0) {
       filtered = filtered.filter(plan =>
-        plan.dietaryRestrictions && selectedRestrictions.some((restriction: string) => plan.dietaryRestrictions.includes(restriction))
+        plan.dietaryRestrictions && selectedRestrictions.some((restriction: string) => plan.dietaryRestrictions!.includes(restriction))
       );
     }
 
@@ -442,7 +457,7 @@ export default function SavedPlansPage() {
                     </label>
                     <select
                       value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value as any)}
+                      onChange={(e) => setSortBy(e.target.value as SortBy)}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:text-white"
                     >
                       <option value="recent">Most Recent</option>
@@ -637,7 +652,7 @@ export default function SavedPlansPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredPlans.map((plan: any) => (
+            {filteredPlans.map((plan) => (
               <div key={plan.id} className={`bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 relative group border dark:border-gray-700 ${
                 selectedPlans.has(plan.id) ? 'ring-2 ring-blue-500' : ''
               }`}>

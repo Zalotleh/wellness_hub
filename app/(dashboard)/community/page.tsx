@@ -353,7 +353,7 @@ export default function CommunityPage() {
                   Share a Recipe
                 </Link>
                 <Link
-                  href="/progress"
+                  href="/dashboard"
                   className="block p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors text-gray-900 dark:text-gray-100 font-medium"
                 >
                   Track Progress

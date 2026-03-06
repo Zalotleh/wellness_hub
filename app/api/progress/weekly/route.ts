@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { getUserLocalDateNoonUTC } from '@/lib/utils/timezone';
+import { getCachedOrCalculateScore } from '@/lib/tracking/score-cache';
 import { eachDayOfInterval, format } from 'date-fns';
 
 /**
@@ -87,20 +88,21 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Build daily summaries
-    const days = daysInRange.map(day => {
-      // Normalize day to midnight UTC for consistent comparison
+    // Build daily summaries — compute missing scores for days that have
+    // food logged but no cached dailyProgressScore (lazy cache miss)
+    const days = await Promise.all(daysInRange.map(async day => {
+      // Normalize day to noon UTC for consistent comparison
       const dayNormalized = new Date(day);
-      dayNormalized.setUTCHours(12, 0, 0, 0); // Use noon to avoid timezone issues
+      dayNormalized.setUTCHours(12, 0, 0, 0);
       const dayString = format(dayNormalized, 'yyyy-MM-dd');
 
-      // Find score for this day by comparing date strings
+      // Find cached score for this day
       const dayScore = dailyScores.find(score => {
         const scoreString = format(new Date(score.date), 'yyyy-MM-dd');
         return scoreString === dayString;
       });
 
-      // Count meals for this day
+      // Count consumptions for this day
       const dayConsumptions = consumptions.filter(c => {
         const consumptionString = format(new Date(c.date), 'yyyy-MM-dd');
         return consumptionString === dayString;
@@ -110,32 +112,81 @@ export async function GET(request: NextRequest) {
       const uniqueMealTimes = new Set(dayConsumptions.map(c => c.mealTime));
       const mealsLogged = uniqueMealTimes.size;
 
-      // Count systems covered (from gaps field)
+      // If food was logged but no score is cached, calculate it now and cache it
+      // This fixes the case where a user logged food but never opened the daily view
+      type GapsShape = { missingSystems?: string[]; missedSystems?: string[] };
+      type ResolvedScore = {
+        overallScore: number;
+        uniqueFoodsCount: number;
+        angiogenesisCount: number;
+        regenerationCount: number;
+        microbiomeCount: number;
+        dnaProtectionCount: number;
+        immunityCount: number;
+        gaps: GapsShape;
+      };
+      let resolvedScore: ResolvedScore | null = dayScore
+        ? {
+            overallScore: dayScore.overallScore,
+            uniqueFoodsCount: dayScore.uniqueFoodsCount,
+            angiogenesisCount: dayScore.angiogenesisCount,
+            regenerationCount: dayScore.regenerationCount,
+            microbiomeCount: dayScore.microbiomeCount,
+            dnaProtectionCount: dayScore.dnaProtectionCount,
+            immunityCount: dayScore.immunityCount,
+            gaps: dayScore.gaps as GapsShape,
+          }
+        : null;
+
+      if (!resolvedScore && dayConsumptions.length > 0) {
+        try {
+          const computed = await getCachedOrCalculateScore(user.id, dayNormalized);
+          const sysCounts: Record<string, number> = {};
+          computed.defenseSystems.forEach(s => { sysCounts[s.system] = s.foodsConsumed; });
+          resolvedScore = {
+            overallScore: computed.overallScore,
+            uniqueFoodsCount: computed.foodVariety.totalUniqueFoods,
+            angiogenesisCount: sysCounts['ANGIOGENESIS'] || 0,
+            regenerationCount: sysCounts['REGENERATION'] || 0,
+            microbiomeCount: sysCounts['MICROBIOME'] || 0,
+            dnaProtectionCount: sysCounts['DNA_PROTECTION'] || 0,
+            immunityCount: sysCounts['IMMUNITY'] || 0,
+            gaps: {
+              missingSystems: computed.defenseSystems
+                .filter(s => s.foodsConsumed === 0)
+                .map(s => s.system),
+            },
+          };
+        } catch (err) {
+          console.error(`Failed to compute score for ${dayString}:`, err);
+        }
+      }
+
+      // Count systems covered
       let systemsCovered = 0;
-      if (dayScore) {
-        const gaps = dayScore.gaps as any;
-        const missingSystems = gaps?.missingSystems || [];
+      if (resolvedScore) {
+        const missingSystems = resolvedScore.gaps?.missingSystems ?? resolvedScore.gaps?.missedSystems ?? [];
         systemsCovered = 5 - missingSystems.length;
       }
 
       return {
         date: dayNormalized.toISOString(),
-        score: dayScore?.overallScore || 0,
+        score: resolvedScore?.overallScore || 0,
         mealsLogged,
         systemsCovered,
-        hasData: !!dayScore || dayConsumptions.length > 0,
+        hasData: dayConsumptions.length > 0,
         details: {
-          totalFoods: dayScore?.uniqueFoodsCount || 0,
+          totalFoods: resolvedScore?.uniqueFoodsCount || 0,
           systemBreakdown: {
-            angiogenesis: dayScore?.angiogenesisCount || 0,
-            regeneration: dayScore?.regenerationCount || 0,
-            microbiome: dayScore?.microbiomeCount || 0,
-            dnaProtection: dayScore?.dnaProtectionCount || 0,
-            immunity: dayScore?.immunityCount || 0,
+            angiogenesis: resolvedScore?.angiogenesisCount || 0,
+            regeneration: resolvedScore?.regenerationCount || 0,
+            microbiome: resolvedScore?.microbiomeCount || 0,
+            dnaProtection: resolvedScore?.dnaProtectionCount || 0,
+            immunity: resolvedScore?.immunityCount || 0,
           },
         },
       };
-    });
+    }));
 
     // Calculate week summary stats
     const daysWithData = days.filter(d => d.hasData);

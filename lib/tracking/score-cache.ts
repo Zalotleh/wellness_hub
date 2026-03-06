@@ -9,7 +9,7 @@ import { DefenseSystem } from '@/types';
  * Cache TTL (Time To Live) in minutes
  * Cached scores older than this will be recalculated
  */
-const CACHE_TTL_MINUTES = 60;
+const CACHE_TTL_MINUTES = 5;
 
 /**
  * Invalidate (delete) cached score for a specific date
@@ -79,7 +79,12 @@ export async function cacheDailyScore(
       breakfastSystems: score.mealTimes.find(m => m.mealTime === 'BREAKFAST')?.systemsCovered.length || 0,
       lunchSystems: score.mealTimes.find(m => m.mealTime === 'LUNCH')?.systemsCovered.length || 0,
       dinnerSystems: score.mealTimes.find(m => m.mealTime === 'DINNER')?.systemsCovered.length || 0,
-      snackSystems: score.mealTimes.find(m => m.mealTime === 'SNACK')?.systemsCovered.length || 0,
+      // Combine MORNING_SNACK, AFTERNOON_SNACK and legacy SNACK into one column
+      snackSystems: Math.max(
+        score.mealTimes.find(m => m.mealTime === 'MORNING_SNACK')?.systemsCovered.length || 0,
+        score.mealTimes.find(m => m.mealTime === 'AFTERNOON_SNACK')?.systemsCovered.length || 0,
+        score.mealTimes.find(m => m.mealTime === 'SNACK')?.systemsCovered.length || 0,
+      ),
       uniqueFoodsCount: score.foodVariety.totalUniqueFoods,
       totalServings: 0, // Will be calculated from actual serving data
       gaps: {
@@ -103,7 +108,12 @@ export async function cacheDailyScore(
       breakfastSystems: score.mealTimes.find(m => m.mealTime === 'BREAKFAST')?.systemsCovered.length || 0,
       lunchSystems: score.mealTimes.find(m => m.mealTime === 'LUNCH')?.systemsCovered.length || 0,
       dinnerSystems: score.mealTimes.find(m => m.mealTime === 'DINNER')?.systemsCovered.length || 0,
-      snackSystems: score.mealTimes.find(m => m.mealTime === 'SNACK')?.systemsCovered.length || 0,
+      // Combine MORNING_SNACK, AFTERNOON_SNACK and legacy SNACK into one column
+      snackSystems: Math.max(
+        score.mealTimes.find(m => m.mealTime === 'MORNING_SNACK')?.systemsCovered.length || 0,
+        score.mealTimes.find(m => m.mealTime === 'AFTERNOON_SNACK')?.systemsCovered.length || 0,
+        score.mealTimes.find(m => m.mealTime === 'SNACK')?.systemsCovered.length || 0,
+      ),
       uniqueFoodsCount: score.foodVariety.totalUniqueFoods,
       gaps: {
         missedSystems: score.defenseSystems.filter(s => s.foodsConsumed === 0).map(s => s.system),
@@ -136,13 +146,32 @@ export async function getCachedOrCalculateScore(
     },
   });
 
-  // If cached and fresh (calculated within TTL), use it
-  if (cached && differenceInMinutes(new Date(), cached.createdAt) < CACHE_TTL_MINUTES) {
-    // Reconstruct Score5x5x5 from cached data
-    return reconstructScoreFromCache(cached);
+  if (cached) {
+    // Check if the cache is still fresh (within TTL)
+    const isFresh = differenceInMinutes(new Date(), cached.updatedAt) < CACHE_TTL_MINUTES;
+
+    if (isFresh) {
+      // Also verify no new FoodConsumption records were added after the cache was saved.
+      // The day range spans ±12 h around noon UTC to cover all timezones.
+      const dayStart = new Date(dateOnly.getTime() - 12 * 60 * 60 * 1000);
+      const dayEnd   = new Date(dateOnly.getTime() + 12 * 60 * 60 * 1000);
+      const newerConsumption = await prisma.foodConsumption.findFirst({
+        where: {
+          userId,
+          date: { gte: dayStart, lt: dayEnd },
+          createdAt: { gt: cached.updatedAt },
+        },
+        select: { id: true },
+      });
+
+      // If no newer data, serve the cache
+      if (!newerConsumption) {
+        return reconstructScoreFromCache(cached);
+      }
+    }
   }
 
-  // Otherwise, calculate fresh (timezone will be fetched from user in calculate function)
+  // Cache is absent, stale, or outdated — recalculate
   const score = await calculate5x5x5Score(userId, date);
   await cacheDailyScore(userId, date, score);
   return score;
@@ -224,6 +253,13 @@ function reconstructScoreFromCache(cached: any): Score5x5x5 {
         score: cached.breakfastSystems > 0 ? 100 : 0,
       },
       {
+        mealTime: 'MORNING_SNACK',
+        hasFood: cached.snackSystems > 0,
+        foodCount: cached.snackSystems,
+        systemsCovered: [],
+        score: cached.snackSystems > 0 ? 100 : 0,
+      },
+      {
         mealTime: 'LUNCH',
         hasFood: cached.lunchSystems > 0,
         foodCount: cached.lunchSystems,
@@ -231,18 +267,18 @@ function reconstructScoreFromCache(cached: any): Score5x5x5 {
         score: cached.lunchSystems > 0 ? 100 : 0,
       },
       {
+        mealTime: 'AFTERNOON_SNACK',
+        hasFood: false, // Cannot distinguish from MORNING_SNACK with single DB column
+        foodCount: 0,
+        systemsCovered: [],
+        score: 0,
+      },
+      {
         mealTime: 'DINNER',
         hasFood: cached.dinnerSystems > 0,
         foodCount: cached.dinnerSystems,
         systemsCovered: [],
         score: cached.dinnerSystems > 0 ? 100 : 0,
-      },
-      {
-        mealTime: 'SNACK',
-        hasFood: cached.snackSystems > 0,
-        foodCount: cached.snackSystems,
-        systemsCovered: [],
-        score: cached.snackSystems > 0 ? 100 : 0,
       },
     ],
     foodVariety: {

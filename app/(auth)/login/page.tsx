@@ -49,7 +49,7 @@ export default function LoginPage() {
       if (session?.user?.role === 'ADMIN') {
         router.push('/admin');
       } else {
-        router.push('/progress');
+        router.push('/dashboard');
       }
       
       router.refresh();

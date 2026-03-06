@@ -61,7 +61,7 @@ export default function Navbar() {
     {
       label: 'Dashboard',
       icon: TrendingUp,
-      href: '/progress',
+      href: '/dashboard',
       hasDropdown: false,
     },
     {
@@ -73,7 +73,7 @@ export default function Navbar() {
         { href: '/recipes/ai-generate', label: 'AI Generator', icon: Sparkles },
         { href: '/recipes/create', label: 'Add Recipe', icon: PlusCircle },
         { href: '/meal-planner', label: 'Create Meal Plan', icon: Calendar },
-        { href: '/saved-plans', label: 'Saved Plans', icon: Bookmark },
+        { href: '/saved-plans', label: 'Browse Meals Plans', icon: Bookmark },
       ],
     },
     {
@@ -121,7 +121,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/progress" className="flex items-center gap-2.5 group">
+          <Link href="/dashboard" className="flex items-center gap-2.5 group">
             <div className="bg-gradient-to-br from-violet-500 via-purple-500 to-pink-500 p-2 rounded-xl shadow-md group-hover:shadow-lg group-hover:shadow-violet-500/25 transition-all duration-200 group-hover:scale-105">
               <Heart className="w-5 h-5 text-white" />
             </div>

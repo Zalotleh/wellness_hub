@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { getUserLocalDateNoonUTC } from '@/lib/utils/timezone';
+import { invalidateScoreCache } from '@/lib/tracking/score-cache';
 
 /**
  * POST /api/recipes/[id]/log-meal
@@ -35,11 +36,11 @@ export async function POST(
     const userTimezone = user?.timezone || 'UTC';
 
     // Validate mealTime
-    const validMealTimes = ['BREAKFAST', 'LUNCH', 'DINNER', 'SNACK'];
+    const validMealTimes = ['BREAKFAST', 'MORNING_SNACK', 'LUNCH', 'AFTERNOON_SNACK', 'DINNER', 'SNACK'];
     if (!validMealTimes.includes(mealTime)) {
       console.error('Invalid meal time:', mealTime);
       return NextResponse.json(
-        { error: 'Invalid meal time. Must be BREAKFAST, LUNCH, DINNER, or SNACK' },
+        { error: 'Invalid meal time. Must be BREAKFAST, MORNING_SNACK, LUNCH, AFTERNOON_SNACK, DINNER, or SNACK' },
         { status: 400 }
       );
     }
@@ -66,7 +67,8 @@ export async function POST(
       : JSON.parse(recipe.ingredients as string);
 
     // Get unique food items from ingredients
-    const foodItems = ingredients.map((ing: any) => 
+    type Ingredient = string | { name?: string; item?: string };
+    const foodItems = ingredients.map((ing: Ingredient) => 
       typeof ing === 'string' ? ing : ing.name || ing.item || ''
     ).filter((name: string) => name.length > 0);
 
@@ -116,27 +118,40 @@ export async function POST(
     console.log(`   - Systems: ${defenseSystems.join(', ')}`);
     console.log(`   - Foods: ${foodItems.length} items`);
 
+    // Invalidate score cache so the dashboard reflects the new data immediately
+    try {
+      await invalidateScoreCache(session.user.id, targetDate);
+      console.log('✅ Score cache invalidated');
+    } catch (cacheError) {
+      console.error('Error invalidating score cache (non-critical):', cacheError);
+    }
+
     // Check if this recipe is linked to a recommendation and mark it COMPLETED
     try {
+      type RecommendationStatus = Parameters<typeof prisma.recommendation.findFirst>[0] extends { where?: infer W } ? W extends { status?: infer S } ? S : never : never;
+      const actedOn = 'ACTED_ON' as unknown as RecommendationStatus;
+      const shopped = 'SHOPPED' as unknown as RecommendationStatus;
+      const completed = 'COMPLETED' as unknown as RecommendationStatus;
+
       const linkedRecommendation = await prisma.recommendation.findFirst({
         where: {
           userId: session.user.id,
           linkedRecipeId: recipeId,
           OR: [
-            { status: 'ACTED_ON' as any },
-            { status: 'SHOPPED' as any },
+            { status: actedOn },
+            { status: shopped },
           ],
-        } as any,
+        },
       });
 
       if (linkedRecommendation) {
         await prisma.recommendation.update({
           where: { id: linkedRecommendation.id },
           data: {
-            status: 'COMPLETED' as any,
+            status: completed,
             completedAt: new Date(),
             linkedMealLogId: consumption.id,
-          } as any,
+          },
         });
       }
     } catch (error) {

@@ -12,6 +12,7 @@ import MealPlanHeader from './MealPlanHeader';
 import PlanConfiguration from './PlanConfiguration';
 import MealPlanView from './MealPlanView';
 import AddMealModal from './AddMealModal';
+import AddMealChoiceDialog from './AddMealChoiceDialog';
 import { ConfirmDialog } from '@/components/ui/DialogComponents';
 import {
   GeneratingOverlay,
@@ -62,6 +63,8 @@ interface EnhancedMealPlannerProps {
     duration?: number;
   };
   fromRecommendation?: boolean;
+  /** Jump straight to this day when the meal plan loads (e.g. 'friday') */
+  initialDay?: string;
 }
 
 export default function EnhancedMealPlanner({
@@ -71,6 +74,7 @@ export default function EnhancedMealPlanner({
   initialPlan,
   initialParams,
   fromRecommendation = false,
+  initialDay,
 }: EnhancedMealPlannerProps) {
   const { data: session } = useSession();
   const router = useRouter();
@@ -142,11 +146,17 @@ export default function EnhancedMealPlanner({
   // Progress tracking
   const [generationProgress, setGenerationProgress] = useState(0);
   const [loggedDates, setLoggedDates] = useState<Set<string>>(new Set());
+  /** Meals logged via the dashboard day-view (FoodConsumption records), shown read-only in the planner. */
+  const [loggedDashboardMeals, setLoggedDashboardMeals] = useState<Meal[]>([]);
   const [shoppingListGenerated, setShoppingListGenerated] = useState(0); // Counter to trigger refresh
 
-  // Meal type selector state
+  // Meal type selector state (kept for legacy compatibility)
   const [showMealTypeSelector, setShowMealTypeSelector] = useState(false);
   const [pendingMealAdd, setPendingMealAdd] = useState<{ day: string; slot: string; week?: number } | null>(null);
+
+  // Add meal choice dialog (redirects to recipe creation pages)
+  const [showAddMealChoiceDialog, setShowAddMealChoiceDialog] = useState(false);
+  const [addMealChoiceContext, setAddMealChoiceContext] = useState<{ day: string; slot: string; week: number } | null>(null);
 
   // Load user preferences and initialize plan
   useEffect(() => {
@@ -433,9 +443,12 @@ export default function EnhancedMealPlanner({
             console.log(`🔍 [handleGenerateMealPlan] ${dailyMenu.meals.length} meals:`, dailyMenu.meals.map((m: any) => ({ name: m.mealName, type: m.mealType })));
             
             dailyMenu.meals.forEach((meal: any) => {
+              // Skip ghost/empty-named meals — they should not render
+              if (!meal.mealName?.trim()) return;
+
               const transformedMeal = {
                 id: meal.id || `week${weekNumber}-${dayName}-${meal.mealType}`,
-                mealName: meal.mealName || 'Unnamed Meal',
+                mealName: meal.mealName,
                 mealType: meal.mealType || 'breakfast',
                 day: dayName,
                 week: weekNumber,
@@ -647,75 +660,11 @@ export default function EnhancedMealPlanner({
     }
   }, []);
 
-  // Add new meal
-  const handleAddMeal = useCallback(async (day: string, slot: string, mealType?: string, week?: number) => {
-    // If no mealType provided, show selector
-    if (!mealType) {
-      setPendingMealAdd({ day, slot, week });
-      setShowMealTypeSelector(true);
-      return;
-    }
-
-    setOptimisticAction('Adding meal');
-    
-    const newMeal: Meal = {
-      id: `temp-${Date.now()}`,
-      mealType: mealType,
-      mealName: `New ${ mealType.charAt(0).toUpperCase() + mealType.slice(1) }`,
-      day,
-      slot,
-      week: week || 1,
-      defenseSystems: [],
-      servings: configuration.servings,
-    };
-
-    // Optimistic update
-    setMealPlan(prev => ({
-      ...prev,
-      meals: [...prev.meals, newMeal],
-    }));
-
-    try {
-      const response = await fetch('/api/meals', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...newMeal,
-          id: undefined,
-          planId: mealPlan.id,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to add meal');
-      }
-
-      const createdMeal = await response.json();
-      
-      // Replace temporary meal with actual server response
-      setMealPlan(prev => ({
-        ...prev,
-        meals: prev.meals.map(m => 
-          m.id === newMeal.id ? createdMeal : m
-        ),
-      }));
-
-    } catch (error) {
-      console.error('Error adding meal:', error);
-      
-      // Remove optimistic update
-      setMealPlan(prev => ({
-        ...prev,
-        meals: prev.meals.filter(m => m.id !== newMeal.id),
-      }));
-      
-      setError('Failed to add meal');
-    } finally {
-      setOptimisticAction(null);
-    }
-  }, [configuration.servings, mealPlan.id]);
+  // Add new meal — opens the choice dialog to redirect to recipe creation / AI generator
+  const handleAddMeal = useCallback(async (day: string, slot: string, _mealType?: string, week?: number) => {
+    setAddMealChoiceContext({ day, slot, week: week || 1 });
+    setShowAddMealChoiceDialog(true);
+  }, []);
 
   // Handle meal type selection from modal
   const handleMealTypeSelected = useCallback((selectedMealType: string, selectedSlot: string) => {
@@ -1039,9 +988,12 @@ export default function EnhancedMealPlanner({
             console.log(`🔍 [handleSaveMealPlan] ${dailyMenu.meals.length} meals in this day:`, dailyMenu.meals.map((m: any) => ({ name: m.mealName, type: m.mealType })));
             
             dailyMenu.meals.forEach((meal: any) => {
+              // Skip ghost/empty-named meals — they should not render
+              if (!meal.mealName?.trim()) return;
+
               const transformedMeal = {
                 id: meal.id || `week${weekNumber}-${dayName}-${meal.mealType}`,
-                mealName: meal.mealName || 'Unnamed Meal',
+                mealName: meal.mealName,
                 mealType: meal.mealType || 'breakfast',
                 day: dayName,
                 slot: meal.mealType ? meal.mealType.toLowerCase() : 'breakfast',
@@ -1157,7 +1109,7 @@ export default function EnhancedMealPlanner({
             
             // Small delay to ensure dialog closes before redirect
             setTimeout(() => {
-              router.push('/progress');
+              router.push('/dashboard');
             }, 100);
           } else {
             setShoppingListDialog({
@@ -1211,10 +1163,101 @@ export default function EnhancedMealPlanner({
     fetchLoggedDates();
   }, [mealPlan.id]);
 
+  // Fetch FoodConsumption records logged via the dashboard day-view and surface them
+  // as read-only meals inside the week view so the user can see both planned and
+  // already-eaten meals in one place.
+  useEffect(() => {
+    const fetchDashboardMeals = async () => {
+      if (!mealPlan.weekStart) return;
+
+      const weekStart = new Date(mealPlan.weekStart);
+      const totalDays = (mealPlan.durationWeeks || mealPlan.duration || 1) * 7;
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + totalDays - 1);
+
+      const startStr = weekStart.toISOString().split('T')[0];
+      const endStr = weekEnd.toISOString().split('T')[0];
+
+      try {
+        const response = await fetch(
+          `/api/progress/consumption?startDate=${startStr}&endDate=${endStr}&limit=500`
+        );
+        if (!response.ok) return;
+        const data = await response.json();
+
+        const DAY_NAMES = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        const MEAL_TIME_TO_SLOT: Record<string, string> = {
+          BREAKFAST: 'breakfast',
+          MORNING_SNACK: 'snack',
+          LUNCH: 'lunch',
+          AFTERNOON_SNACK: 'snack',
+          DINNER: 'dinner',
+          EVENING_SNACK: 'snack',
+          CUSTOM: 'snack',
+        };
+
+        // Group consumptions by (date + mealTime) so we get one synthetic Meal per slot
+        const grouped: Record<string, any[]> = {};
+        for (const c of (data.consumptions || [])) {
+          const dateStr = new Date(c.date).toISOString().split('T')[0];
+          const key = `${dateStr}||${c.mealTime}`;
+          if (!grouped[key]) grouped[key] = [];
+          grouped[key].push(c);
+        }
+
+        const transformed: Meal[] = Object.entries(grouped).map(([key, cons]) => {
+          const [dateStr, mealTime] = key.split('||');
+          // Use noon UTC to avoid day-boundary issues
+          const date = new Date(`${dateStr}T12:00:00Z`);
+          const dayKey = DAY_NAMES[date.getDay()];
+
+          const msPerDay = 24 * 60 * 60 * 1000;
+          const daysDiff = Math.round((date.getTime() - weekStart.getTime()) / msPerDay);
+          const weekNum = Math.max(1, Math.floor(daysDiff / 7) + 1);
+
+          const slot = MEAL_TIME_TO_SLOT[mealTime] || 'breakfast';
+
+          const allFoodItems = cons.flatMap((c: any) => c.foodItems || []);
+          const foodNames: string[] = allFoodItems.map((fi: any) => fi.name as string);
+          const mealName =
+            foodNames.length > 0
+              ? foodNames.slice(0, 3).join(', ') + (foodNames.length > 3 ? ` +${foodNames.length - 3} more` : '')
+              : mealTime.charAt(0) + mealTime.slice(1).toLowerCase().replace(/_/g, ' ');
+
+          const defenseSystems: DefenseSystem[] = Array.from(
+            new Set<DefenseSystem>(
+              allFoodItems.flatMap((fi: any) =>
+                (fi.defenseSystems || []).map((ds: any) => ds.defenseSystem as DefenseSystem)
+              )
+            )
+          );
+
+          return {
+            id: `logged-${key}`,
+            mealName,
+            mealType: slot,
+            day: dayKey,
+            week: weekNum,
+            slot,
+            defenseSystems,
+            servings: cons.reduce((sum: number, c: any) => sum + (c.servings || 1), 0),
+            source: 'logged' as const,
+          };
+        });
+
+        setLoggedDashboardMeals(transformed);
+      } catch (err) {
+        console.error('Error fetching dashboard meals for planner view:', err);
+      }
+    };
+
+    fetchDashboardMeals();
+  }, [mealPlan.weekStart, mealPlan.durationWeeks, mealPlan.duration]);
+
   // Configuration step
   if (currentStep === 'configure') {
     return (
-      <div className={cn('min-h-screen bg-gray-50 dark:bg-gray-900', className)}>
+      <div className={cn('min-h-screen', className)}>
         <PlanConfiguration
           configuration={configuration}
           onConfigurationChange={(updates) => 
@@ -1237,7 +1280,7 @@ export default function EnhancedMealPlanner({
   // Error state
   if (error && (!mealPlan.meals || !mealPlan.meals.length)) {
     return (
-      <div className={cn('min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center', className)}>
+      <div className={cn('min-h-screen flex items-center justify-center', className)}>
         <ErrorState
           message={error}
           onRetry={() => {
@@ -1252,7 +1295,7 @@ export default function EnhancedMealPlanner({
   // Empty state
   if ((!mealPlan.meals || !mealPlan.meals.length) && !isGenerating) {
     return (
-      <div className={cn('min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center', className)}>
+      <div className={cn('min-h-screen flex items-center justify-center', className)}>
         <EmptyState
           title="No meals planned yet"
           description="Start by configuring your meal plan preferences and generating your first weekly plan."
@@ -1267,7 +1310,7 @@ export default function EnhancedMealPlanner({
 
   // Main view
   return (
-    <div className={cn('min-h-screen bg-gray-50 dark:bg-gray-900', className)}>
+    <div className={cn('min-h-screen', className)}>
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
         <div className={cn(
@@ -1364,7 +1407,7 @@ export default function EnhancedMealPlanner({
           <WeekViewSkeleton />
         ) : (
           <MealPlanView
-            meals={mealPlan.meals}
+            meals={[...mealPlan.meals, ...loggedDashboardMeals]}
             duration={mealPlan.durationWeeks || mealPlan.duration || configuration.duration || 1}
             weekStart={mealPlan.weekStart}
             loggedDates={loggedDates}
@@ -1377,6 +1420,8 @@ export default function EnhancedMealPlanner({
             onGenerateShoppingList={handleGenerateShoppingList}
             onBulkRegenerate={handleBulkRegenerate}
             isGenerating={isGenerating}
+            initialDay={initialDay}
+            initialViewMode={initialDay ? 'day' : undefined}
           />
         )}
       </div>
@@ -1387,12 +1432,16 @@ export default function EnhancedMealPlanner({
         action={optimisticAction || ''}
       />
 
-      {/* Meal Add Modal */}
-      {showMealTypeSelector && pendingMealAdd && (
-        <AddMealModal
-          currentSlot={pendingMealAdd.slot}
-          onSelect={handleMealTypeSelected}
-          onCancel={handleMealTypeSelectorCancel}
+      {/* Add Meal Choice Dialog — redirects to recipe create or AI generate page */}
+      {showAddMealChoiceDialog && addMealChoiceContext && (
+        <AddMealChoiceDialog
+          isOpen={showAddMealChoiceDialog}
+          onClose={() => { setShowAddMealChoiceDialog(false); setAddMealChoiceContext(null); }}
+          planId={mealPlan.id || ''}
+          day={addMealChoiceContext.day}
+          slot={addMealChoiceContext.slot}
+          week={addMealChoiceContext.week}
+          weekStart={mealPlan.weekStart}
         />
       )}
 
