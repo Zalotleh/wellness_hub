@@ -28,10 +28,89 @@ export interface IngredientMatch {
 }
 
 /**
- * Extract defense system benefits from recipe ingredients
+ * Build a per-ingredient defense-system map from the food database.
+ *
+ * This is stored as `Recipe.ingredientSystemMap` at save time so that
+ * tracking can resolve multi-system benefits even when an ingredient is
+ * not matched on the fly.
+ *
+ * Shape: { "blueberries": { "ANGIOGENESIS": "HIGH", "DNA_PROTECTION": "HIGH" }, ... }
+ * Ingredients with no database match are omitted from the map (they will fall
+ * back to recipe-level systems with LOW strength at tracking time).
+ */
+export async function buildIngredientSystemMap(
+  ingredients: Array<{ name: string }>,
+  foodDatabase?: Array<{
+    id: string;
+    name: string;
+    category: string;
+    defenseSystems: DefenseSystem[];
+    systemBenefits: any;
+    nutrients: string[];
+  }>
+): Promise<Record<string, Record<string, string>>> {
+  if (!foodDatabase) {
+    foodDatabase = await prisma.foodDatabase.findMany();
+  }
+
+  const map: Record<string, Record<string, string>> = {};
+
+  for (const ingredient of ingredients) {
+    const match = await matchIngredientToFood(ingredient.name, foodDatabase);
+
+    if (match.matchedFood && match.defenseSystems.length > 0) {
+      map[ingredient.name] = Object.fromEntries(
+        match.defenseSystems.map((ds) => [ds.system, ds.strength])
+      );
+    }
+    // No entry for unmatched ingredients – they fall back to recipe-level systems
+    // at tracking time (with LOW strength to avoid over-crediting).
+  }
+
+  return map;
+}
+
+/**
+ * Find an ingredient entry in the map using case-insensitive / partial matching.
+ */
+function findIngredientInMap(
+  ingredientName: string,
+  map: Record<string, Record<string, string>>
+): Record<string, string> | undefined {
+  const normalized = ingredientName.toLowerCase().trim();
+
+  // 1. Case-insensitive exact match
+  for (const key of Object.keys(map)) {
+    if (key.toLowerCase() === normalized) return map[key];
+  }
+
+  // 2. Ingredient name contains map key or vice-versa (e.g. "fresh blueberries" → "blueberries")
+  for (const key of Object.keys(map)) {
+    const k = key.toLowerCase();
+    if (normalized.includes(k) || k.includes(normalized)) return map[key];
+  }
+
+  return undefined;
+}
+
+/**
+ * Extract defense system benefits from recipe ingredients.
+ *
+ * Resolution priority (per ingredient):
+ *   1. Food database match  → full multi-system benefits from `systemBenefits`
+ *   2. `ingredientSystemMap` → pre-computed per-ingredient map (stored on recipe)
+ *   3. Recipe-level fallback → recipe's `defenseSystems[]` with LOW strength
+ *
+ * Using LOW strength for the fallback prevents neutral ingredients (salt,
+ * water, cooking oil, spices) from artificially boosting defence-system
+ * counts the way the old MEDIUM blanket assignment did.
  */
 export async function extractRecipeSystemBenefits(
-  recipe: RecipeWithRelations | { ingredients: any[]; defenseSystems: DefenseSystem[] }
+  recipe: RecipeWithRelations | {
+    ingredients: any[];
+    defenseSystems: DefenseSystem[];
+    ingredientSystemMap?: any; // Record<string, Record<string, string>> | null
+  }
 ): Promise<FoodWithSystems[]> {
   const ingredients = recipe.ingredients as Array<{
     name: string;
@@ -39,12 +118,19 @@ export async function extractRecipeSystemBenefits(
     unit?: string;
   }>;
 
-  // Load food database
+  // Per-ingredient map stored on the recipe (may be null for older recipes)
+  const storedMap = (recipe as any).ingredientSystemMap as
+    | Record<string, Record<string, string>>
+    | null
+    | undefined;
+
+  // Load food database once
   const foodDatabase = await prisma.foodDatabase.findMany();
 
   const foodsWithSystems: FoodWithSystems[] = [];
 
   for (const ingredient of ingredients) {
+    // ── Layer 1: Food database lookup (most authoritative – full multi-system) ──
     const match = await matchIngredientToFood(ingredient.name, foodDatabase);
 
     if (match.matchedFood && match.defenseSystems.length > 0) {
@@ -52,20 +138,39 @@ export async function extractRecipeSystemBenefits(
         name: ingredient.name,
         systems: match.defenseSystems,
       });
-    } else {
-      // If not in database, use recipe's defenseSystems as fallback
-      // Distribute equally across recipe's tagged systems
-      const systems = recipe.defenseSystems.map(system => ({
-        system,
-        strength: BenefitStrength.MEDIUM,
-      }));
+      continue;
+    }
 
-      if (systems.length > 0) {
-        foodsWithSystems.push({
-          name: ingredient.name,
-          systems,
-        });
+    // ── Layer 2: Pre-computed ingredientSystemMap (handles cross-system foods
+    //            that may be phrased differently from DB entries) ──────────────
+    if (storedMap) {
+      const mapEntry =
+        storedMap[ingredient.name] ??
+        findIngredientInMap(ingredient.name, storedMap);
+
+      if (mapEntry && Object.keys(mapEntry).length > 0) {
+        const systems = Object.entries(mapEntry).map(([system, strength]) => ({
+          system: system as DefenseSystem,
+          strength: strength as BenefitStrength,
+        }));
+        foodsWithSystems.push({ name: ingredient.name, systems });
+        continue;
       }
+    }
+
+    // ── Layer 3: Recipe-level fallback – use LOW strength to signal uncertainty.
+    //    This avoids neutral ingredients (salt, water, spices) being counted at
+    //    the same weight as genuine superfood contributors. ────────────────────
+    const fallbackSystems = recipe.defenseSystems.map((system) => ({
+      system,
+      strength: BenefitStrength.LOW,
+    }));
+
+    if (fallbackSystems.length > 0) {
+      foodsWithSystems.push({
+        name: ingredient.name,
+        systems: fallbackSystems,
+      });
     }
   }
 

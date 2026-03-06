@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { recipeSchema } from '@/lib/validations';
 import { DefenseSystem } from '@/types';
+import { buildIngredientSystemMap } from '@/lib/utils/food-matcher';
 
 // GET /api/recipes - Get all recipes with filters
 export async function GET(request: NextRequest) {
@@ -133,11 +134,20 @@ export async function POST(request: NextRequest) {
     // Validate request body
     const validatedData = recipeSchema.parse(cleanedBody);
 
+    // Build per-ingredient defense-system map from the food database.
+    // This enables accurate multi-system tracking when a user logs this recipe.
+    const ingredientSystemMap = await buildIngredientSystemMap(
+      (validatedData.ingredients as Array<{ name: string }>)
+    );
+
     // Create recipe
     const recipe = await prisma.recipe.create({
       data: {
         ...validatedData,
         userId: session.user.id,
+        ingredientSystemMap: Object.keys(ingredientSystemMap).length > 0
+          ? ingredientSystemMap
+          : undefined,
       },
       include: {
         user: {
