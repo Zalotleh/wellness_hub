@@ -42,6 +42,8 @@ interface SmartActionsPanelProps {
 export default function SmartActionsPanel({ date, className }: SmartActionsPanelProps) {
   const router = useRouter();
   const [recommendation, setRecommendation] = useState<SmartRecommendation | null>(null);
+  const [allSystemsComplete, setAllSystemsComplete] = useState(false);
+  const [missedMainMeals, setMissedMainMeals] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actioning, setActioning] = useState(false);
@@ -73,6 +75,8 @@ export default function SmartActionsPanel({ date, className }: SmartActionsPanel
 
       const data = await response.json();
       setRecommendation(data.recommendation || null);
+      setAllSystemsComplete(data.allSystemsComplete ?? false);
+      setMissedMainMeals(data.missedMainMeals ?? []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -224,15 +228,84 @@ export default function SmartActionsPanel({ date, className }: SmartActionsPanel
   }
 
   if (!recommendation) {
+    // ── All systems fully covered + missing main meals → celebration + nudge ──
+    if (allSystemsComplete && missedMainMeals.length > 0) {
+      const mealMeta: Record<string, { label: string; icon: string; emoji: string }> = {
+        BREAKFAST: { label: 'Breakfast', icon: '🌅', emoji: '🍳' },
+        LUNCH:     { label: 'Lunch',     icon: '🌞', emoji: '🥗' },
+        DINNER:    { label: 'Dinner',    icon: '🌙', emoji: '🍽️' },
+      };
+      return (
+        <div className="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:from-green-900/20 dark:via-emerald-900/20 dark:to-teal-900/20 rounded-2xl border border-green-200 dark:border-green-800 shadow-lg overflow-hidden">
+          {/* Top accent bar */}
+          <div className="h-1 bg-gradient-to-r from-green-400 via-emerald-400 to-teal-400" />
+          <div className="p-6">
+            {/* Celebration header */}
+            <div className="flex items-start gap-4 mb-5">
+              <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl shadow-md flex-shrink-0">
+                <CheckCircle2 className="h-7 w-7 text-white" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">All 5 Defense Systems Covered! 🎉</h3>
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
+                  Amazing work today! You&apos;re hitting all your nutrition targets.
+                </p>
+              </div>
+            </div>
+
+            {/* Missing main meal nudge cards */}
+            <div className="space-y-3">
+              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Want to plan {missedMainMeals.length === 1 ? 'this meal' : 'these meals'} too?
+              </p>
+              {missedMainMeals.map(meal => {
+                const meta = mealMeta[meal] ?? { label: meal, icon: '🍴', emoji: '🍴' };
+                return (
+                  <div
+                    key={meal}
+                    className="flex items-center gap-3 p-3.5 rounded-xl bg-white dark:bg-gray-800 border border-green-100 dark:border-green-900/40 shadow-sm"
+                  >
+                    <span className="text-2xl flex-shrink-0">{meta.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                        {meta.label} <span className="font-normal text-gray-500 dark:text-gray-400">not logged yet</span>
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Create a healthy {meta.label.toLowerCase()} recipe to complete your day
+                      </p>
+                    </div>
+                    <button
+                      onClick={() =>
+                        router.push(
+                          `/recipes/ai-generate?preferredMealTime=${meal}&from=celebration-nudge`
+                        )
+                      }
+                      className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-semibold shadow hover:opacity-90 transition-opacity flex-shrink-0"
+                    >
+                      <ChefHat className="h-3.5 w-3.5" />
+                      Create
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ── Truly all done → simple All Caught Up ─────────────────────────────
     return (
       <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl border border-green-200 dark:border-green-800 shadow-lg p-6 flex items-center gap-5">
         <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl shadow-md flex-shrink-0">
           <CheckCircle2 className="h-7 w-7 text-white" />
         </div>
         <div>
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white">All Caught Up!</h3>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white">All Caught Up! 🏆</h3>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
-            Great job! You&apos;re on track with your wellness goals. Keep up the excellent work!
+            You&apos;ve covered all 5 defense systems across all your meals. Outstanding work!
           </p>
         </div>
       </div>

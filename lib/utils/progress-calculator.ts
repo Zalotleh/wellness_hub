@@ -59,28 +59,39 @@ export function calculate5x5x5Score(consumption: {
   totalMeals: number;
   totalUniqueFoods: number;
 }): {
-  systemScore: number;      // Out of 5
-  foodScore: number;        // Out of 5
-  frequencyScore: number;   // Out of 5
-  overallScore: number;     // Out of 100
+  systemScore: number;      // Number of defense systems with ≥1 food (0–5, for display)
+  foodScore: number;        // Total unique foods consumed today (for display)
+  frequencyScore: number;   // Meal times covered (0–5, for display)
+  overallScore: number;     // Weighted 0–100
   level: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'MASTER';
 } {
-  // System dimension: How many unique defense systems are covered?
-  const systemsCovered = Object.values(consumption.systemFoodCounts)
-    .filter(count => count > 0).length;
+  // ── Defense Systems (50%) ────────────────────────────────────────────────
+  // Goal: 5 unique foods per system. Each system contributes min(count/5, 1)
+  // to the component, then we average across all 5 systems.
+  const systemCounts = Object.values(consumption.systemFoodCounts);
+  const systemPerc =
+    (systemCounts.reduce((sum, count) => sum + Math.min(count / 5, 1), 0) / 5) * 100;
 
-  // Food dimension: Total unique foods consumed
-  const uniqueFoodsCount = consumption.totalUniqueFoods;
+  // For display: number of systems that have at least one food (0–5)
+  const systemsCovered = systemCounts.filter(count => count > 0).length;
 
-  // Frequency dimension: Unique meal times (capped at 5)
+  // ── Meal Coverage (30%) ──────────────────────────────────────────────────
+  // Goal: food spread across all 5 meal times.
   const frequencyScore = Math.min(consumption.totalMeals, 5);
+  const mealPerc = (frequencyScore / 5) * 100;
 
-  // Calculate percentages
-  const systemPerc = (systemsCovered / 5) * 100;
-  const foodPerc = (Math.min(uniqueFoodsCount, 5) / 5) * 100;
-  const freqPerc = (frequencyScore / 5) * 100;
+  // ── Food Variety (20%) ──────────────────────────────────────────────────
+  // Goal: 25 unique foods (5 systems × 5 foods = perfect variety).
+  const uniqueFoodsCount = consumption.totalUniqueFoods;
+  const varietyPerc = Math.min((uniqueFoodsCount / 25) * 100, 100);
 
-  const overallScore = (systemPerc + foodPerc + freqPerc) / 3;
+  // ── Weighted Overall Score ───────────────────────────────────────────────
+  // Score = (Defense Systems × 50%) + (Meal Coverage × 30%) + (Food Variety × 20%)
+  const overallScore = (
+    systemPerc  * 0.5 +
+    mealPerc    * 0.3 +
+    varietyPerc * 0.2
+  );
 
   // Determine level
   let level: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'MASTER' = 'BEGINNER';
@@ -89,10 +100,10 @@ export function calculate5x5x5Score(consumption: {
   else if (overallScore >= 50) level = 'INTERMEDIATE';
 
   return {
-    systemScore: systemsCovered,
-    foodScore: uniqueFoodsCount,
-    frequencyScore,
-    overallScore,
+    systemScore: systemsCovered,  // 0-5 (systems with ≥1 food)
+    foodScore: uniqueFoodsCount,  // raw count for display
+    frequencyScore,               // 0-5 (meal times covered)
+    overallScore: Math.round(overallScore),
     level,
   };
 }

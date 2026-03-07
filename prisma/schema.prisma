@@ -789,3 +789,15 @@ enum RecommendationStatus {
   DISMISSED    // User dismissed
   EXPIRED      // Recommendation expired
 }
+
+model ResearchSummaryCache {
+  id            String   @id @default(cuid())
+  pmid          String   @unique
+  summary       String
+  articleTitle  String
+  defenseSystem String
+  generatedAt   DateTime @default(now())
+  hitCount      Int      @default(0)
+
+  @@index([pmid])
+}

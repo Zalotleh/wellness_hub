@@ -183,8 +183,8 @@ export default function ProgressPage() {
         /* ── ACTIVE DASHBOARD STATE ─────────────────────────────────────── */
         <>
           {/* ── HERO SECTION (mirrors Welcome page pattern) ────────────── */}
-          <section className="relative overflow-hidden bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800">
-            {/* Decorative blobs — same technique as the Welcome/marketing page */}
+          <section className="relative bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800">
+            {/* Decorative blobs — overflow-hidden scoped to blob layer only so dropdown isn't clipped */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
               <div className="absolute top-10 left-10 w-64 h-64 bg-green-300 dark:bg-green-700 rounded-full mix-blend-multiply dark:mix-blend-soft-light filter blur-xl opacity-20 animate-blob" />
               <div className="absolute top-20 right-10 w-64 h-64 bg-blue-300 dark:bg-blue-700 rounded-full mix-blend-multiply dark:mix-blend-soft-light filter blur-xl opacity-20 animate-blob animation-delay-2000" />
@@ -209,7 +209,7 @@ export default function ProgressPage() {
                       </span>
                     </h1>
                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                      {isToday(selectedDate) ? 'Today — ' : ''}{format(selectedDate, 'EEEE, MMMM d, yyyy')}
+                      Today — {format(new Date(), 'EEEE, MMMM d, yyyy')}
                     </p>
                   </div>
                 </div>

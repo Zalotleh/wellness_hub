@@ -56,7 +56,30 @@ export class RecommendationEngine {
     if (!this.shouldGenerateRecommendation(context)) {
       return [];
     }
-    
+
+    // ── Priority 0: All defense systems fully covered ──────────────────────
+    // When every system has ≥5 foods, nutrition goals are met for the day.
+    // Skip all system/variety priorities and focus purely on missing main meals
+    // (BREAKFAST, LUNCH, DINNER). This also bypasses the WORKFLOW_STEP dismissal
+    // guard so we always surface the celebratory nudge.
+    const allSystemsComplete = context.score.defenseSystems.every(
+      s => s.foodsConsumed >= 5
+    );
+    if (allSystemsComplete) {
+      const missingMainMeals = (gaps.missedMeals as string[]).filter(
+        mt => mt === 'BREAKFAST' || mt === 'LUNCH' || mt === 'DINNER'
+      );
+      if (missingMainMeals.length === 0) {
+        // Truly all done – show nothing (plain "All Caught Up!")
+        return [];
+      }
+      // Generate one nudge per missing main meal (max 3)
+      return missingMainMeals
+        .slice(0, 3)
+        .map(mt => this.createMealCelebrationNudge(mt, context))
+        .filter((r): r is SmartRecommendation => r !== null);
+    }
+
     // Prioritize gaps
     const prioritizedGaps = prioritizeGaps(gaps);
     const recommendations: SmartRecommendation[] = [];
@@ -371,7 +394,49 @@ export class RecommendationEngine {
       createdAt: new Date(),
     };
   }
-  
+
+  /**
+   * Create a celebratory nudge shown when the user has fully covered all 5
+   * defense systems but hasn't logged a main meal yet.
+   *
+   * Unlike createMissedMealRecommendation, this intentionally SKIPS the
+   * hasRecentlyDismissedType guard – the user earned the celebration and
+   * should always be offered the next helpful action.
+   */
+  private createMealCelebrationNudge(
+    mealTime: string,
+    context: RecommendationContext
+  ): SmartRecommendation | null {
+    const mealLabel = mealTime
+      .toLowerCase()
+      .replace(/_/g, ' ')
+      .replace(/\b\w/g, c => c.toUpperCase()); // e.g. "Dinner", "Breakfast"
+
+    return {
+      id: crypto.randomUUID(),
+      userId: context.userId,
+      type: 'WORKFLOW_STEP',
+      priority: 'LOW',
+      status: 'PENDING',
+      title: `Amazing! All 5 Systems Covered 🎉`,
+      description: `You've hit all 5 defense systems today! Would you like to create a ${mealLabel} recipe to complete your day?`,
+      reasoning: `All 5 defense systems are fully covered. ${mealLabel} hasn't been logged yet — a great chance to round out your day with another healthy meal.`,
+      actionLabel: `Create ${mealLabel} Recipe`,
+      actionUrl: '/recipes/ai-generate',
+      actionData: {
+        from: 'celebration-nudge',
+        preferredMealTime: mealTime,
+        dietaryRestrictions: context.userProfile.dietaryRestrictions,
+      },
+      targetSystem: undefined,
+      targetMealTime: mealTime,
+      viewCount: 0,
+      dismissCount: 0,
+      expiresAt: addHours(context.date, 18), // Valid for rest of the day
+      createdAt: new Date(),
+    };
+  }
+
   /**
    * Get active recommendations for a user
    */

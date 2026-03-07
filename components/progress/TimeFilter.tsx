@@ -112,7 +112,7 @@ export default function TimeFilter({
         {/* View Selector Tabs */}
         <div className="flex items-center gap-2">
           <button
-            onClick={() => onViewChange('daily')}
+            onClick={() => { onViewChange('daily'); onDateChange(new Date()); }}
             className={`px-3 py-2 rounded-lg font-medium transition-colors text-sm ${
               view === 'daily'
                 ? 'bg-purple-600 text-white'
@@ -122,7 +122,7 @@ export default function TimeFilter({
             Today
           </button>
           <button
-            onClick={() => onViewChange('weekly')}
+            onClick={() => { onViewChange('weekly'); onDateChange(new Date()); }}
             className={`px-3 py-2 rounded-lg font-medium transition-colors text-sm ${
               view === 'weekly'
                 ? 'bg-purple-600 text-white'
@@ -189,7 +189,7 @@ export default function TimeFilter({
         </div>
 
         {/* Quick Actions */}
-        <div className="relative">
+        <div className="relative z-50">
           <button
             onClick={() => setShowDatePicker(!showDatePicker)}
             className="px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-2 text-sm whitespace-nowrap"
@@ -199,7 +199,7 @@ export default function TimeFilter({
           
           {/* Dropdown Menu */}
           {showDatePicker && (
-            <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-10">
+            <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50">
               <div className="py-1">
                 <button
                   onClick={() => {

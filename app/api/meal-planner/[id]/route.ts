@@ -137,6 +137,14 @@ export async function GET(
   }
 }
 
+// PATCH - Update specific meal plan by ID (partial update)
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  return PUT(request, { params });
+}
+
 // PUT - Update specific meal plan by ID (alternative to main route)
 export async function PUT(
   request: NextRequest,

@@ -53,7 +53,75 @@ export async function GET(request: NextRequest) {
     
     const dateKey = date;
 
-    // Check for existing active recommendations first (cache check)
+    // Always calculate the current score first so we can dismiss stale
+    // recommendations (e.g. a system the user has now fully covered).
+    let score;
+    try {
+      score = await calculate5x5x5Score(userId, dateKey);
+    } catch (err) {
+      console.error('Error calculating score for recommendations:', err);
+      return NextResponse.json(
+        { 
+          error: 'Failed to calculate score',
+          details: err instanceof Error ? err.message : 'Score calculation failed'
+        },
+        { status: 500 }
+      );
+    }
+
+    if (!score) {
+      return NextResponse.json({
+        recommendation: null,
+        cached: false,
+        message: 'No progress data found for this date',
+        allSystemsComplete: false,
+        missedMainMeals: [],
+      });
+    }
+
+    // ── Score context sent with every response so the UI can adapt ────────
+    const allSystemsComplete = score.defenseSystems.every(s => s.foodsConsumed >= 5);
+    const missedMainMeals = score.mealTimes
+      .filter(mt =>
+        !mt.hasFood &&
+        (mt.mealTime === 'BREAKFAST' || mt.mealTime === 'LUNCH' || mt.mealTime === 'DINNER')
+      )
+      .map(mt => mt.mealTime);
+
+    // Build a quick lookup: system → foods consumed today
+    const systemFoodsConsumed = new Map<string, number>(
+      score.defenseSystems.map(s => [s.system as string, s.foodsConsumed])
+    );
+
+    // Auto-dismiss any PENDING recommendations whose target system is now
+    // fully covered (≥5 foods) or fully sufficient (for non-system recs).
+    const pendingRecs = await prisma.recommendation.findMany({
+      where: {
+        userId,
+        status: 'PENDING',
+        expiresAt: { gt: new Date() },
+      },
+    });
+
+    const staleIds: string[] = [];
+    for (const rec of pendingRecs) {
+      if (rec.targetSystem) {
+        const consumed = systemFoodsConsumed.get(rec.targetSystem) ?? 0;
+        if (consumed >= 5) {
+          staleIds.push(rec.id);
+        }
+      }
+    }
+
+    if (staleIds.length > 0) {
+      await prisma.recommendation.updateMany({
+        where: { id: { in: staleIds } },
+        data: { status: 'DISMISSED', dismissedAt: new Date() },
+      });
+      console.log(`✅ Auto-dismissed ${staleIds.length} stale recommendation(s) in next-action`);
+    }
+
+    // Now fetch the next valid PENDING recommendation (after stale ones removed)
     const existingRec = await prisma.recommendation.findFirst({
       where: {
         userId,
@@ -61,7 +129,7 @@ export async function GET(request: NextRequest) {
         expiresAt: { gt: new Date() },
       },
       orderBy: [
-        { priority: 'asc' }, // CRITICAL=0, HIGH=1, MEDIUM=2, LOW=3 (Prisma orders enums by definition order)
+        { priority: 'asc' }, // CRITICAL=0, HIGH=1, MEDIUM=2, LOW=3
         { createdAt: 'desc' },
       ],
     });
@@ -91,34 +159,12 @@ export async function GET(request: NextRequest) {
           createdAt: existingRec.createdAt,
         },
         cached: true,
+        allSystemsComplete,
+        missedMainMeals,
       });
     }
 
-    // No existing recommendations - generate new ones
-    // First, get or calculate today's score
-    let score;
-    try {
-      score = await calculate5x5x5Score(userId, dateKey);
-    } catch (err) {
-      console.error('Error calculating score for recommendations:', err);
-      return NextResponse.json(
-        { 
-          error: 'Failed to calculate score',
-          details: err instanceof Error ? err.message : 'Score calculation failed'
-        },
-        { status: 500 }
-      );
-    }
-
-    if (!score) {
-      return NextResponse.json({
-        recommendation: null,
-        cached: false,
-        message: 'No progress data found for this date',
-      });
-    }
-
-    // Generate recommendations using the engine
+    // No existing (non-stale) recommendations — generate new ones
     let recommendations;
     try {
       recommendations = await recommendationEngine.generateRecommendations(
@@ -142,6 +188,8 @@ export async function GET(request: NextRequest) {
         recommendation: null,
         cached: false,
         message: 'No recommendations needed at this time',
+        allSystemsComplete,
+        missedMainMeals,
       });
     }
 
@@ -190,6 +238,8 @@ export async function GET(request: NextRequest) {
         createdAt: topRec.createdAt,
       },
       cached: false,
+      allSystemsComplete,
+      missedMainMeals,
     });
   } catch (error) {
     console.error('Error fetching next action:', error);

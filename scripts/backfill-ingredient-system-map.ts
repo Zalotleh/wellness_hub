@@ -6,6 +6,7 @@
  *   npx ts-node --project tsconfig.json scripts/backfill-ingredient-system-map.ts
  */
 
+import { Prisma } from '@prisma/client';
 import { prisma } from '../lib/prisma';
 import { buildIngredientSystemMap } from '../lib/utils/food-matcher';
 
@@ -14,7 +15,7 @@ async function backfillIngredientSystemMap() {
 
   // Only process recipes that have no map yet
   const recipes = await prisma.recipe.findMany({
-    where: { ingredientSystemMap: null },
+    where: { ingredientSystemMap: { equals: Prisma.DbNull } },
     select: {
       id: true,
       title: true,
@@ -26,7 +27,7 @@ async function backfillIngredientSystemMap() {
   console.log(`📋 Found ${recipes.length} recipe(s) without an ingredientSystemMap.\n`);
 
   // Load the food database once for all recipes
-  const foodDatabase = await (prisma as any).foodDatabase.findMany();
+  const foodDatabase = await prisma.foodDatabase.findMany();
 
   let updated = 0;
   let skipped = 0;

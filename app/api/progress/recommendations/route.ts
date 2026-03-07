@@ -50,13 +50,21 @@ export async function GET(request: NextRequest) {
     const dateParam = searchParams.get('date');
     
     const targetDate = dateParam ? new Date(dateParam) : new Date();
-    targetDate.setHours(0, 0, 0, 0);
+    // Build a full-day range to match consumptions regardless of how the time
+    // component was stored (midnight, noon UTC, etc.)
+    const startOfDay = new Date(targetDate);
+    startOfDay.setUTCHours(0, 0, 0, 0);
+    const endOfDay = new Date(targetDate);
+    endOfDay.setUTCHours(23, 59, 59, 999);
 
     // Get today's consumption data
     const consumptions = await prisma.foodConsumption.findMany({
       where: {
         userId: session.user.id,
-        date: targetDate,
+        date: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
       },
       include: {
         foodItems: {

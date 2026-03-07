@@ -134,21 +134,13 @@ function calculateSystemScores(progressEntries: any[]): SystemScore[] {
   return allSystems.map((system) => {
     const uniqueFoods = Array.from(systemMap.get(system) || new Set<string>()) as string[];
     const foodsConsumed = uniqueFoods.length;
-    const coveragePercent = Math.min((foodsConsumed / 5) * 100, 100);
 
-    // Score calculation (non-linear to encourage reaching goal):
-    // - 5+ foods = 100 points (goal achieved!)
-    // - 4 foods = 85 points (very good)
-    // - 3 foods = 70 points (good)
-    // - 2 foods = 50 points (okay)
-    // - 1 food = 30 points (minimal)
-    // - 0 foods = 0 points (none)
-    const score = 
-      foodsConsumed >= 5 ? 100 :
-      foodsConsumed === 4 ? 85 :
-      foodsConsumed === 3 ? 70 :
-      foodsConsumed === 2 ? 50 :
-      foodsConsumed === 1 ? 30 : 0;
+    // Linear score: each unique food toward the 5-food goal contributes equally.
+    // Score = min(foodsConsumed / 5, 1) × 100
+    // 0 foods →   0 pts | 1 food → 20 pts | 2 foods → 40 pts
+    // 3 foods →  60 pts | 4 foods → 80 pts | 5+ foods → 100 pts
+    const coveragePercent = Math.min((foodsConsumed / 5) * 100, 100);
+    const score = coveragePercent; // same value, kept as named field for clarity
 
     return {
       system,
