@@ -125,7 +125,8 @@ export default function ProgressPage() {
 
   // Show empty/welcome state whenever today has no logged activity —
   // but differentiate between a brand-new user vs a returning one (isReturningUser).
-  const shouldShowWelcome = !progressLoading && !hasAnyProgress && isToday(selectedDate);
+  // Also exit the welcome state if the user explicitly switches to weekly view.
+  const shouldShowWelcome = !progressLoading && !hasAnyProgress && isToday(selectedDate) && view !== 'weekly';
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
@@ -170,6 +171,11 @@ export default function ProgressPage() {
             <EmptyStateWelcome
               isReturningUser={hasHistoricalProgress}
               userName={userName}
+              onSelectDate={(date) => {
+                setSelectedDate(date);
+                setView('daily');
+              }}
+              onViewWeekly={() => setView('weekly')}
             />
           </div>
         </div>

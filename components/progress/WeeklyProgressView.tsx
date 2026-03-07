@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { format, startOfWeek, endOfWeek, eachDayOfInterval, addWeeks, subWeeks, isToday, isFuture } from 'date-fns';
+import { format, startOfWeek, endOfWeek, eachDayOfInterval, addWeeks, subWeeks, isToday, isFuture, isSameWeek } from 'date-fns';
 import { ChevronLeft, ChevronRight, Calendar, TrendingUp, Award, CheckCircle2, Circle, Clock, CalendarPlus, CheckCheck, ExternalLink } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import WeeklyMealPlannerModal from './WeeklyMealPlannerModal';
@@ -81,6 +81,7 @@ export default function WeeklyProgressView({
   const weekStart = startOfWeek(selectedWeek, { weekStartsOn: 1 }); // 1 = Monday
   const weekEnd = endOfWeek(selectedWeek, { weekStartsOn: 1 });
   const daysInWeek = eachDayOfInterval({ start: weekStart, end: weekEnd });
+  const isCurrentWeek = isSameWeek(selectedWeek, new Date(), { weekStartsOn: 1 });
 
   useEffect(() => {
     fetchWeekData();
@@ -416,8 +417,14 @@ export default function WeeklyProgressView({
               <Calendar className="w-6 h-6 text-purple-600" />
               Weekly Progress
             </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d, yyyy')}
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-2">
+              {format(weekStart, 'MMM d')} – {format(weekEnd, 'MMM d, yyyy')}
+              {isCurrentWeek && (
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 text-[10px] font-semibold uppercase tracking-wide">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                  Current
+                </span>
+              )}
             </p>
           </div>
           
@@ -430,12 +437,20 @@ export default function WeeklyProgressView({
               <ChevronLeft className="w-5 h-5 text-gray-700 dark:text-gray-300" />
             </button>
             
-            <button
-              onClick={handleToday}
-              className="px-4 py-2 rounded-lg bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors font-medium"
-            >
-              This Week
-            </button>
+            {isCurrentWeek ? (
+              <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 font-medium text-sm select-none">
+                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                This Week
+              </span>
+            ) : (
+              <button
+                onClick={handleToday}
+                className="px-4 py-2 rounded-lg bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors font-medium text-sm"
+                title="Go to current week"
+              >
+                ↩ This Week
+              </button>
+            )}
             
             <button
               onClick={handleNextWeek}

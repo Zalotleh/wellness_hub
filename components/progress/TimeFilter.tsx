@@ -119,7 +119,7 @@ export default function TimeFilter({
                 : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
             }`}
           >
-            Daily
+            Today
           </button>
           <button
             onClick={() => onViewChange('weekly')}
@@ -129,18 +129,9 @@ export default function TimeFilter({
                 : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
             }`}
           >
-            Weekly
+            This Week
           </button>
-          <button
-            onClick={() => onViewChange('monthly')}
-            className={`px-3 py-2 rounded-lg font-medium transition-colors text-sm ${
-              view === 'monthly'
-                ? 'bg-purple-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-            }`}
-          >
-            Monthly
-          </button>
+
         </div>
 
         {/* Date Navigation */}

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { subDays } from 'date-fns';
 import {
   Sparkles,
   ChefHat,
@@ -23,6 +24,10 @@ interface EmptyStateWelcomeProps {
   isReturningUser?: boolean;
   /** First name or full name pulled from session */
   userName?: string | null;
+  /** Called when the user selects yesterday — switches to daily view for that date */
+  onSelectDate?: (date: Date) => void;
+  /** Called when the user clicks "View weekly overview" */
+  onViewWeekly?: () => void;
 }
 
 function getTimeOfDay(): { greeting: string; Icon: typeof Sun } {
@@ -155,7 +160,15 @@ function ActionCards() {
 /* ─────────────────────────────────────────────────────────────
    RETURNING USER  — no activity today, but has history
 ───────────────────────────────────────────────────────────── */
-function ReturningUserEmpty({ userName }: { userName?: string | null }) {
+function ReturningUserEmpty({
+  userName,
+  onSelectDate,
+  onViewWeekly,
+}: {
+  userName?: string | null;
+  onSelectDate?: (date: Date) => void;
+  onViewWeekly?: () => void;
+}) {
   const { greeting, Icon: TimeIcon } = getTimeOfDay();
   const firstName = userName?.split(' ')[0] ?? null;
 
@@ -176,9 +189,29 @@ function ReturningUserEmpty({ userName }: { userName?: string | null }) {
           <h2 className="text-3xl md:text-4xl font-bold mb-2 leading-tight">
             {firstName ? `${greeting}, ${firstName}!` : `${greeting}!`}
           </h2>
-          <p className="text-lg text-white/80 mb-7 max-w-xl">
+          <p className="text-lg text-white/80 mb-4 max-w-xl">
             Today is a fresh start — no meals logged yet. Pick up where you left off or try something new.
           </p>
+
+          {/* Quick-access text links */}
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mb-7">
+            {onViewWeekly && (
+              <button
+                onClick={onViewWeekly}
+                className="text-sm font-medium text-white/90 underline underline-offset-2 hover:text-white transition-colors"
+              >
+                View your Weekly Overview
+              </button>
+            )}
+            {onSelectDate && (
+              <button
+                onClick={() => onSelectDate(subDays(new Date(), 1))}
+                className="text-sm font-medium text-white/90 underline underline-offset-2 hover:text-white transition-colors"
+              >
+                View Yesterday&apos;s Progress
+              </button>
+            )}
+          </div>
 
           {/* 5x5x5 mini pillars */}
           <div className="grid grid-cols-3 gap-3 max-w-sm">
@@ -303,9 +336,20 @@ function FirstTimeWelcome() {
 /* ─────────────────────────────────────────────────────────────
    EXPORT
 ───────────────────────────────────────────────────────────── */
-export default function EmptyStateWelcome({ isReturningUser = false, userName }: EmptyStateWelcomeProps) {
+export default function EmptyStateWelcome({
+  isReturningUser = false,
+  userName,
+  onSelectDate,
+  onViewWeekly,
+}: EmptyStateWelcomeProps) {
   if (isReturningUser) {
-    return <ReturningUserEmpty userName={userName} />;
+    return (
+      <ReturningUserEmpty
+        userName={userName}
+        onSelectDate={onSelectDate}
+        onViewWeekly={onViewWeekly}
+      />
+    );
   }
   return <FirstTimeWelcome />;
 }
