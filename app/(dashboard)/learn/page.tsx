@@ -3,14 +3,21 @@
 import { useState } from 'react';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
 import { DefenseSystem } from '@/types';
-import { BookOpen, ChevronDown, ChevronUp, CheckCircle, Lightbulb, Heart } from 'lucide-react';
+import { BookOpen, ChevronDown, ChevronUp, CheckCircle, Lightbulb, Heart, FlaskConical } from 'lucide-react';
 import Footer from '@/components/layout/Footer';
+import DefenseSystemResearch, { RESEARCH_COUNTS } from '@/components/learn/DefenseSystemResearch';
 
 export default function LearnPage() {
   const [expandedSystem, setExpandedSystem] = useState<DefenseSystem | null>(null);
+  const [activeTab, setActiveTab] = useState<'overview' | 'foods' | 'research'>('overview');
 
   const toggleSystem = (system: DefenseSystem) => {
-    setExpandedSystem(expandedSystem === system ? null : system);
+    if (expandedSystem === system) {
+      setExpandedSystem(null);
+    } else {
+      setExpandedSystem(system);
+      setActiveTab('overview');
+    }
   };
 
   return (
@@ -108,9 +115,17 @@ export default function LearnPage() {
                     <div className="flex items-center space-x-4">
                       <div className="text-4xl">{info.icon}</div>
                       <div className="text-left">
-                        <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                          {info.displayName}
-                        </h3>
+                        <div className="flex items-center gap-3 mb-0.5 flex-wrap">
+                          <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                            {info.displayName}
+                          </h3>
+                          {RESEARCH_COUNTS[system] != null && (
+                            <span className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-700 font-semibold">
+                              <FlaskConical size={10} />
+                              {RESEARCH_COUNTS[system]} {RESEARCH_COUNTS[system] === 1 ? 'Study' : 'Studies'}
+                            </span>
+                          )}
+                        </div>
                         <p className="text-gray-700 dark:text-gray-300">{info.description}</p>
                       </div>
                     </div>
@@ -123,63 +138,111 @@ export default function LearnPage() {
 
                   {/* Expanded Content */}
                   {isExpanded && (
-                    <div className="p-6 border-t-2 border-gray-200 dark:border-gray-700 space-y-6">
-                      {/* Key Foods */}
-                      <div>
-                        <h4 className="font-bold text-gray-900 dark:text-white mb-3 flex items-center space-x-2">
-                          <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
-                          <span>Top Foods for {info.displayName}</span>
-                        </h4>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                          {info.keyFoods.map((food) => (
-                            <div
-                              key={food}
-                              className="px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-center font-medium text-gray-900 dark:text-gray-100 hover:border-green-500 dark:hover:border-green-500 transition-colors"
-                            >
-                              {food}
+                    <div className="border-t-2 border-gray-200 dark:border-gray-700">
+
+                      {/* Tab bar */}
+                      <div className="flex gap-1 px-6 pt-4 border-b border-gray-200 dark:border-gray-700">
+                        {(
+                          [
+                            { id: 'overview', label: 'Overview', emoji: '💡' },
+                            { id: 'foods',    label: 'Foods & Nutrients', emoji: '🥦' },
+                            { id: 'research', label: 'Research', emoji: '🔬', count: RESEARCH_COUNTS[system] },
+                          ] as { id: 'overview' | 'foods' | 'research'; label: string; emoji: string; count?: number }[]
+                        ).map((tab) => (
+                          <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 transition-all -mb-px ${
+                              activeTab === tab.id
+                                ? 'border-green-500 text-green-700 dark:text-green-400 bg-white dark:bg-gray-800'
+                                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                            }`}
+                          >
+                            <span>{tab.emoji}</span>
+                            <span>{tab.label}</span>
+                            {tab.count != null && (
+                              <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
+                                activeTab === tab.id
+                                  ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400'
+                                  : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
+                              }`}>
+                                {tab.count}
+                              </span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Tab content */}
+                      <div className="p-6">
+
+                        {/* Overview tab */}
+                        {activeTab === 'overview' && (
+                          <div className="space-y-4">
+                            <div className="bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-700 rounded-lg p-4">
+                              <h4 className="font-bold text-green-900 dark:text-green-300 mb-2">
+                                Why This System Matters
+                              </h4>
+                              <p className="text-green-800 dark:text-green-200 text-sm">
+                                {getSystemBenefits(system)}
+                              </p>
                             </div>
-                          ))}
-                        </div>
-                      </div>
+                            <div className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
+                              <h4 className="font-bold text-yellow-900 dark:text-yellow-300 mb-2 flex items-center space-x-2">
+                                <Lightbulb className="w-5 h-5" />
+                                <span>Quick Tips</span>
+                              </h4>
+                              <ul className="text-yellow-900 dark:text-yellow-200 text-sm space-y-1">
+                                {getSystemTips(system).map((tip, index) => (
+                                  <li key={index}>• {tip}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+                        )}
 
-                      {/* Key Nutrients */}
-                      <div>
-                        <h4 className="font-bold text-gray-900 dark:text-white mb-3">
-                          Important Nutrients
-                        </h4>
-                        <div className="flex flex-wrap gap-2">
-                          {info.nutrients.map((nutrient) => (
-                            <span
-                              key={nutrient}
-                              className="px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-900 dark:text-blue-300 rounded-full text-sm font-medium"
-                            >
-                              {nutrient}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
+                        {/* Foods & Nutrients tab */}
+                        {activeTab === 'foods' && (
+                          <div className="space-y-6">
+                            <div>
+                              <h4 className="font-bold text-gray-900 dark:text-white mb-3 flex items-center space-x-2">
+                                <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+                                <span>Top Foods for {info.displayName}</span>
+                              </h4>
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                {info.keyFoods.map((food) => (
+                                  <div
+                                    key={food}
+                                    className="px-4 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-center font-medium text-gray-900 dark:text-gray-100 hover:border-green-500 dark:hover:border-green-500 transition-colors"
+                                  >
+                                    {food}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-gray-900 dark:text-white mb-3">
+                                Important Nutrients
+                              </h4>
+                              <div className="flex flex-wrap gap-2">
+                                {info.nutrients.map((nutrient) => (
+                                  <span
+                                    key={nutrient}
+                                    className="px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-900 dark:text-blue-300 rounded-full text-sm font-medium"
+                                  >
+                                    {nutrient}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        )}
 
-                      {/* Why It Matters */}
-                      <div className="bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-700 rounded-lg p-4">
-                        <h4 className="font-bold text-green-900 dark:text-green-300 mb-2">
-                          Why This System Matters
-                        </h4>
-                        <p className="text-green-800 dark:text-green-200 text-sm">
-                          {getSystemBenefits(system)}
-                        </p>
-                      </div>
+                        {/* Research tab */}
+                        {activeTab === 'research' && (
+                          <DefenseSystemResearch system={system} alwaysOpen />
+                        )}
 
-                      {/* Quick Tips */}
-                      <div className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
-                        <h4 className="font-bold text-yellow-900 dark:text-yellow-300 mb-2 flex items-center space-x-2">
-                          <Lightbulb className="w-5 h-5" />
-                          <span>Quick Tips</span>
-                        </h4>
-                        <ul className="text-yellow-900 dark:text-yellow-200 text-sm space-y-1">
-                          {getSystemTips(system).map((tip, index) => (
-                            <li key={index}>• {tip}</li>
-                          ))}
-                        </ul>
                       </div>
                     </div>
                   )}
