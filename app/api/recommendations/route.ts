@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { calculate5x5x5Score } from '@/lib/tracking/5x5x5-score';
+import { recommendationEngine } from '@/lib/recommendations/engine';
 
 /**
  * GET /api/recommendations
@@ -76,27 +77,97 @@ export async function GET(request: NextRequest) {
     }
     // ── End auto-dismiss ───────────────────────────────────────────────────
 
-    // Get active recommendations (PENDING, ACTED_ON, SHOPPED)
-    const recommendations = await prisma.recommendation.findMany({
+    // ── Section 1: Defense-system recommendations (DB-backed) ──────────────
+    // Only return RECIPE / MEAL_PLAN / FOOD_SUGGESTION types from DB.
+    let dbRecommendations = await prisma.recommendation.findMany({
       where: {
         userId,
-        status: {
-          in: ['PENDING', 'ACTED_ON', 'SHOPPED'],
-        },
-        expiresAt: {
-          gte: new Date(), // Not expired
-        },
+        status: { in: ['PENDING', 'ACTED_ON', 'SHOPPED'] },
+        expiresAt: { gte: new Date() },
+        // Explicitly exclude WORKFLOW_STEP from the DB — those live in Section 2
+        type: { in: ['RECIPE', 'MEAL_PLAN', 'FOOD_SUGGESTION'] },
       },
       orderBy: [
         { priority: 'asc' }, // CRITICAL first
-        { createdAt: 'desc' }, // Newest first
+        { createdAt: 'desc' },
       ],
     });
 
+    // ── Generate if the DB has no active defense-system recommendations ───
+    // This handles: new users, expired recs, dismissed recs, and any gap
+    // between the last generation and now.
+    if (dbRecommendations.length === 0) {
+      try {
+        const today = new Date();
+        const dateKey = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate(), 12, 0, 0));
+        const scoreForGen = await calculate5x5x5Score(userId, dateKey);
+
+        if (scoreForGen) {
+          const generated = await recommendationEngine.generateDefenseSystemRecommendations(
+            userId,
+            dateKey,
+            scoreForGen
+          );
+
+          if (generated.length > 0) {
+            const saved = await Promise.all(
+              generated.map(rec =>
+                prisma.recommendation.create({
+                  data: {
+                    userId,
+                    type: rec.type,
+                    priority: rec.priority,
+                    status: rec.status,
+                    title: rec.title,
+                    description: rec.description,
+                    reasoning: rec.reasoning,
+                    actionLabel: rec.actionLabel,
+                    actionUrl: rec.actionUrl,
+                    actionData: rec.actionData ?? {},
+                    targetSystem: rec.targetSystem,
+                    targetMealTime: rec.targetMealTime as any,
+                    expiresAt: rec.expiresAt,
+                    viewCount: 0,
+                  },
+                })
+              )
+            );
+            console.log(`✅ Generated ${saved.length} defense-system recommendation(s) in GET /api/recommendations`);
+            dbRecommendations = saved;
+          }
+        }
+      } catch (genErr) {
+        // Non-fatal — return empty rather than a 500
+        console.warn('Could not generate defense-system recommendations:', genErr);
+      }
+    }
+
+    // ── Section 2: Meal-logging recommendations (computed fresh) ─────────────
+    // Derived from today's score — never persisted to DB.
+    let mealLoggingRecs: ReturnType<typeof recommendationEngine.generateMealLoggingRecommendations> = [];
+    try {
+      const today = new Date();
+      const dateKey = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate(), 12, 0, 0));
+      const freshScore = await calculate5x5x5Score(userId, dateKey);
+      if (freshScore) {
+        mealLoggingRecs = recommendationEngine.generateMealLoggingRecommendations(
+          userId,
+          dateKey,
+          freshScore
+        );
+      }
+    } catch (mealErr) {
+      console.warn('Could not compute meal-logging recommendations:', mealErr);
+    }
+
     const response = NextResponse.json({
       success: true,
-      data: recommendations,
-      count: recommendations.length,
+      // Scoped arrays used by the two dashboard sections
+      defenseSystem: dbRecommendations,
+      mealLogging: mealLoggingRecs,
+      // Legacy combined field — kept for backward compatibility
+      data: dbRecommendations,
+      count: dbRecommendations.length,
     });
 
     // Prevent caching to ensure fresh data

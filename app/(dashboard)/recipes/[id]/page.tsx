@@ -58,6 +58,8 @@ export default function RecipeDetailPage() {
   const [selectedMealTime, setSelectedMealTime] = useState('BREAKFAST');
   const [isLoggingMeal, setIsLoggingMeal] = useState(false);
   const [logSuccess, setLogSuccess] = useState(false);
+  const [isLoggedToday, setIsLoggedToday] = useState(false);
+  const [loggedMealTime, setLoggedMealTime] = useState<string | null>(null);
 
   // Map recipe mealType (lowercase) to the uppercase enum used in the tracker
   const mealTypeToEnum = (mt: string | null | undefined): string => {
@@ -83,6 +85,8 @@ export default function RecipeDetailPage() {
       const data = await response.json();
       setRecipe(data);
       setUserRating(data.userRating || 0);
+      setIsLoggedToday(data.isLoggedToday ?? false);
+      setLoggedMealTime(data.loggedMealTime ?? null);
       // Pre-select the meal time from the saved recipe mealType
       if (data.mealType) {
         setSelectedMealTime(mealTypeToEnum(data.mealType));
@@ -217,6 +221,8 @@ export default function RecipeDetailPage() {
         throw new Error(err.error || 'Failed to log meal');
       }
       setLogSuccess(true);
+      setIsLoggedToday(true);
+      setLoggedMealTime(selectedMealTime);
       setTimeout(() => {
         setShowLogModal(false);
         setLogSuccess(false);
@@ -414,6 +420,17 @@ export default function RecipeDetailPage() {
                 {recipe.title}
               </h1>
 
+              {/* Logged-today badge */}
+              {isLoggedToday && (
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 mb-4 rounded-full bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700 text-green-700 dark:text-green-300 text-sm font-semibold">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>
+                    Logged today
+                    {loggedMealTime && ` · ${loggedMealTime.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}`}
+                  </span>
+                </div>
+              )}
+
               {recipe.description && (
                 <p className="text-lg text-gray-600 dark:text-gray-200 mb-4">{recipe.description}</p>
               )}
@@ -534,14 +551,24 @@ export default function RecipeDetailPage() {
                 {session?.user && (
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => recipe?.mealType ? handleLogMeal() : setShowLogModal(true)}
-                      disabled={isLoggingMeal}
-                      className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-lg hover:from-violet-600 hover:to-purple-700 transition-all font-medium shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                      onClick={() => {
+                        if (!isLoggedToday) {
+                          recipe?.mealType ? handleLogMeal() : setShowLogModal(true);
+                        }
+                      }}
+                      disabled={isLoggingMeal || isLoggedToday}
+                      className={`inline-flex items-center space-x-2 px-4 py-2 rounded-lg font-medium shadow-lg transition-all ${
+                        isLoggedToday
+                          ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-300 dark:border-green-700 cursor-default shadow-none'
+                          : 'bg-gradient-to-r from-violet-500 to-purple-600 text-white hover:from-violet-600 hover:to-purple-700 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed'
+                      }`}
                     >
                       {isLoggingMeal ? (
                         <><Loader2 className="w-5 h-5 animate-spin" /><span>Logging…</span></>
+                      ) : isLoggedToday ? (
+                        <><CheckCircle2 className="w-5 h-5" /><span>Recipe Logged</span></>
                       ) : (
-                        <><Activity className="w-5 h-5" /><span>Track This Meal</span></>
+                        <><Activity className="w-5 h-5" /><span>Log This Meal</span></>
                       )}
                     </button>
                     <button
@@ -802,7 +829,7 @@ export default function RecipeDetailPage() {
                       <Activity className="w-5 h-5 text-violet-600 dark:text-violet-400" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">Track This Meal</h3>
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">Log This Meal</h3>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
                         {recipe?.mealType && recipe.mealType !== 'any'
                           ? `Pre-selected based on recipe type`

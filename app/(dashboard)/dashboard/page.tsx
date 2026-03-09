@@ -10,8 +10,8 @@ import SystemProgressChart from '@/components/progress/SystemProgressChart';
 import ShoppingListsSummary from '@/components/progress/ShoppingListsSummary';
 import OverallScoreCard from '@/components/progress/OverallScoreCard';
 import TimeFilter, { ViewType } from '@/components/progress/TimeFilter';
-import SmartActionsPanel from '@/components/progress/SmartActionsPanel';
-import { RecommendationCards } from '@/components/progress/RecommendationCards';
+import { DefenseSystemRecommendationCards } from '@/components/progress/DefenseSystemRecommendationCards';
+import { MealLoggingRecommendationCards } from '@/components/progress/MealLoggingRecommendationCards';
 import { ProgressErrorBoundary } from '@/components/progress/ProgressErrorBoundary';
 import EmptyStateWelcome from '@/components/progress/EmptyStateWelcome';
 import WeeklyProgressView from '@/components/progress/WeeklyProgressView';
@@ -43,7 +43,10 @@ export default function ProgressPage() {
   const [selectedDate, setSelectedDate] = useState(initialDate);
   const [view, setView] = useState<ViewType>('daily');
   const [showInfo, setShowInfo] = useState(false);
-  const [recommendations, setRecommendations] = useState<any[]>([]);
+  // Section 1 — defense system recommendations (DB-backed)
+  const [defenseRecs, setDefenseRecs] = useState<any[]>([]);
+  // Section 2 — meal logging nudges (computed fresh per request)
+  const [mealRecs, setMealRecs] = useState<any[]>([]);
   const [loadingRecs, setLoadingRecs] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0); // Force component refresh
 
@@ -95,8 +98,9 @@ export default function ProgressPage() {
       // Add timestamp to bust cache and get fresh data
       const response = await fetch(`/api/recommendations?t=${Date.now()}`);
       if (response.ok) {
-        const { data } = await response.json();
-        setRecommendations(data || []);
+        const body = await response.json();
+        setDefenseRecs(body.defenseSystem ?? body.data ?? []);
+        setMealRecs(body.mealLogging ?? []);
       }
     } catch (error) {
       console.error('Error fetching recommendations:', error);
@@ -289,51 +293,63 @@ export default function ProgressPage() {
                 <>
                   {(hasAnyProgress || !isToday(selectedDate)) && (
                     <>
-                      {/* Smart Actions — styled section */}
+                      {/* ── Section 1: Defense System Recommendations ─── */}
                       {isToday(selectedDate) && (
                         <section>
-                          <div className="mb-4">
+                          <div className="mb-5">
                             <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                              <span className="inline-flex items-center justify-center w-7 h-7 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg">
-                                <Sparkles className="w-4 h-4 text-white" />
-                              </span>
-                              Next Best Action
-                            </h2>
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5 ml-9">
-                              AI-powered priority recommendation based on your current progress
-                            </p>
-                          </div>
-                          <ProgressErrorBoundary>
-                            <SmartActionsPanel date={selectedDate} />
-                          </ProgressErrorBoundary>
-                        </section>
-                      )}
-
-                      {/* Recommendations — styled like the features grid on the Welcome page */}
-                      {isToday(selectedDate) && (
-                        <section>
-                          <div className="mb-6">
-                            <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                              <span className="inline-flex items-center justify-center w-7 h-7 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-lg">
+                              <span className="inline-flex items-center justify-center w-7 h-7 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg">
                                 <TrendingUp className="w-4 h-4 text-white" />
                               </span>
-                              Personalized Recommendations
+                              Defense System Recommendations
                             </h2>
                             <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5 ml-9">
-                              Action items tailored to strengthen your defense systems today
+                              Personalised actions to strengthen your 5 natural health defense systems today
                             </p>
                           </div>
                           <ProgressErrorBoundary>
                             {!loadingRecs ? (
-                              <RecommendationCards
-                                recommendations={recommendations}
+                              <DefenseSystemRecommendationCards
+                                recommendations={defenseRecs}
                                 onRefresh={fetchRecommendations}
                               />
                             ) : (
                               <div className="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-2xl shadow-lg p-10 text-center">
-                                <div className="animate-spin w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full mx-auto" />
+                                <div className="animate-spin w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full mx-auto" />
                                 <p className="text-gray-500 dark:text-gray-400 mt-4 text-sm">
-                                  Loading your recommendations…
+                                  Loading defense system recommendations…
+                                </p>
+                              </div>
+                            )}
+                          </ProgressErrorBoundary>
+                        </section>
+                      )}
+
+                      {/* ── Section 2: Meal Logging Recommendations ─────── */}
+                      {isToday(selectedDate) && (
+                        <section>
+                          <div className="mb-5">
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                              <span className="inline-flex items-center justify-center w-7 h-7 bg-gradient-to-r from-amber-500 to-orange-500 rounded-lg">
+                                <span className="text-base leading-none">🍽️</span>
+                              </span>
+                              Today&apos;s Meal Logging
+                            </h2>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5 ml-9">
+                              Missing meals for today — create a recipe and log it to complete your daily plan
+                            </p>
+                          </div>
+                          <ProgressErrorBoundary>
+                            {!loadingRecs ? (
+                              <MealLoggingRecommendationCards
+                                recommendations={mealRecs}
+                                onAction={fetchRecommendations}
+                              />
+                            ) : (
+                              <div className="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-2xl shadow-lg p-10 text-center">
+                                <div className="animate-spin w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full mx-auto" />
+                                <p className="text-gray-500 dark:text-gray-400 mt-4 text-sm">
+                                  Loading meal suggestions…
                                 </p>
                               </div>
                             )}

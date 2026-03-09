@@ -167,7 +167,7 @@ export async function GET(request: NextRequest) {
     // No existing (non-stale) recommendations — generate new ones
     let recommendations;
     try {
-      recommendations = await recommendationEngine.generateRecommendations(
+      recommendations = await recommendationEngine.generateDefenseSystemRecommendations(
         userId,
         date,
         score

@@ -2,15 +2,13 @@ import {
   SmartRecommendation,
   RecommendationContext,
   RecommendationPriority,
-  GapAnalysis,
   UserBehaviorProfile,
 } from './types';
-import { analyzeGaps, prioritizeGaps } from './gap-analyzer';
+import { analyzeGaps } from './gap-analyzer';
 import {
   analyzeUserBehavior,
   getPreferredMealTime,
   hasRecentlyDismissedType,
-  calculateEngagementScore,
 } from './behavior-analyzer';
 import type { Score5x5x5, SystemScore } from '@/lib/tracking/types';
 import { DefenseSystem } from '@/types';
@@ -19,30 +17,38 @@ import { addHours, addDays } from 'date-fns';
 
 const MAX_PENDING_RECOMMENDATIONS = 3;
 const MIN_HOURS_BETWEEN_RECOMMENDATIONS = 4;
-const MIN_ACCEPTANCE_RATE = 20; // 20% minimum
 
 export class RecommendationEngine {
   /**
-   * Generate smart recommendations for a user
+   * Generate smart recommendations for a user (backward-compat wrapper).
+   * Delegates entirely to generateDefenseSystemRecommendations so that DB-stored
+   * records remain scoped to defense-system types (RECIPE, MEAL_PLAN, FOOD_SUGGESTION).
+   * Meal-logging nudges (WORKFLOW_STEP) are now computed fresh via
+   * generateMealLoggingRecommendations() and are never persisted to DB.
    */
   async generateRecommendations(
     userId: string,
     date: Date,
     score: Score5x5x5
   ): Promise<SmartRecommendation[]> {
-    // Analyze gaps in current score
+    return this.generateDefenseSystemRecommendations(userId, date, score);
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SECTION 1 — Defense System Recommendations
+  // Scope: RECIPE · FOOD_SUGGESTION · MEAL_PLAN
+  // Source: DB-backed, persisted, smart-dismissed when system reaches ≥5 foods
+  // ─────────────────────────────────────────────────────────────────────────
+  async generateDefenseSystemRecommendations(
+    userId: string,
+    date: Date,
+    score: Score5x5x5
+  ): Promise<SmartRecommendation[]> {
     const gaps = analyzeGaps(score);
-    
-    // Analyze user behavior patterns
     const userProfile = await analyzeUserBehavior(userId);
-    
-    // Get existing recommendations
     const existingRecommendations = await this.getActiveRecommendations(userId);
-    
-    // Auto-dismiss outdated recommendations
     await this.dismissOutdatedRecommendations(userId, score, existingRecommendations);
-    
-    // Build context
+
     const context: RecommendationContext = {
       userId,
       date,
@@ -51,41 +57,26 @@ export class RecommendationEngine {
       userProfile,
       existingRecommendations,
     };
-    
-    // Check if we should generate new recommendations
-    if (!this.shouldGenerateRecommendation(context)) {
+
+    // Only apply throttle when there are already active recs.
+    // When the DB is empty (most common case triggering this method from the
+    // GET route) we should ALWAYS attempt to generate — no throttling.
+    const hasExisting = existingRecommendations.length > 0;
+    if (hasExisting && !this.shouldGenerateRecommendation(context)) {
       return [];
     }
 
-    // ── Priority 0: All defense systems fully covered ──────────────────────
-    // When every system has ≥5 foods, nutrition goals are met for the day.
-    // Skip all system/variety priorities and focus purely on missing main meals
-    // (BREAKFAST, LUNCH, DINNER). This also bypasses the WORKFLOW_STEP dismissal
-    // guard so we always surface the celebratory nudge.
+    // If ALL defense systems are complete → nothing to recommend for Section 1
     const allSystemsComplete = context.score.defenseSystems.every(
       s => s.foodsConsumed >= 5
     );
     if (allSystemsComplete) {
-      const missingMainMeals = (gaps.missedMeals as string[]).filter(
-        mt => mt === 'BREAKFAST' || mt === 'LUNCH' || mt === 'DINNER'
-      );
-      if (missingMainMeals.length === 0) {
-        // Truly all done – show nothing (plain "All Caught Up!")
-        return [];
-      }
-      // Generate one nudge per missing main meal (max 3)
-      return missingMainMeals
-        .slice(0, 3)
-        .map(mt => this.createMealCelebrationNudge(mt, context))
-        .filter((r): r is SmartRecommendation => r !== null);
+      return []; // Section 2 (meal logging) handles the celebration nudge
     }
 
-    // Prioritize gaps
-    const prioritizedGaps = prioritizeGaps(gaps);
     const recommendations: SmartRecommendation[] = [];
-    const usedSystems = new Set<string>(); // Track which systems we've already recommended
-    
-    // Generate recommendations based on priority
+    const usedSystems = new Set<string>();
+
     // Priority 1: Critical gaps (overall < 50 + missing systems with 0 foods)
     if (gaps.overallScore < 50 && gaps.missingSystems.length > 0) {
       const system = gaps.missingSystems[0];
@@ -100,123 +91,156 @@ export class RecommendationEngine {
       }
     }
     
-    // Priority 2: Additional missing defense systems (0 foods - skip already recommended)
+    // Priority 2: Additional missing defense systems (0 foods)
     if (recommendations.length < 3 && gaps.missingSystems.length > 0) {
       for (const system of gaps.missingSystems) {
         if (recommendations.length >= 3) break;
-        if (usedSystems.has(system)) continue; // Skip already recommended systems
-        
-        const systemRec = this.createSystemRecommendation(
-          system,
-          'HIGH',
-          context
-        );
+        if (usedSystems.has(system)) continue;
+
+        const systemRec = this.createSystemRecommendation(system, 'HIGH', context);
         if (systemRec) {
           recommendations.push(systemRec);
           usedSystems.add(system);
         }
       }
     }
-    
-    // Priority 3: Weak systems (1-4 foods - needs strengthening)
+
+    // Priority 3: Weak systems (1-4 foods — needs strengthening)
     if (recommendations.length < 3 && gaps.weakSystems.length > 0) {
       for (const system of gaps.weakSystems) {
         if (recommendations.length >= 3) break;
-        if (usedSystems.has(system)) continue; // Skip already recommended systems
-        
-        const systemRec = this.createSystemRecommendation(
-          system,
-          'MEDIUM', // Weak systems are MEDIUM priority (not HIGH)
-          context
-        );
+        if (usedSystems.has(system)) continue;
+
+        const systemRec = this.createSystemRecommendation(system, 'MEDIUM', context);
         if (systemRec) {
           recommendations.push(systemRec);
           usedSystems.add(system);
         }
       }
     }
-    
-    // Priority 4: Main meals first (BREAKFAST, LUNCH, DINNER)
-    if (recommendations.length < 3 && gaps.missedMeals.length > 0) {
-      const mainMeals = gaps.missedMeals.filter(mt => 
-        mt === 'BREAKFAST' || mt === 'LUNCH' || mt === 'DINNER'
-      );
-      for (const mealTime of mainMeals) {
-        if (recommendations.length >= 3) break;
-        const mealRec = this.createMissedMealRecommendation(mealTime, context);
-        if (mealRec) recommendations.push(mealRec);
-      }
-    }
-    
-    // Priority 5: Snacks (only after main meals are covered)
-    if (recommendations.length < 3 && gaps.missedMeals.length > 0) {
-      const snacks = gaps.missedMeals.filter(mt => 
-        mt === 'MORNING_SNACK' || mt === 'AFTERNOON_SNACK'
-      );
-      // Only recommend snacks if all main meals are logged
-      const mainMeals = ['BREAKFAST', 'LUNCH', 'DINNER'];
-      const loggedMainMeals = context.score.mealTimes
-        .filter(mt => mainMeals.includes(mt.mealTime) && mt.hasFood)
-        .length;
-      
-      if (loggedMainMeals === 3) { // All main meals logged
-        for (const mealTime of snacks) {
-          if (recommendations.length >= 3) break;
-          const mealRec = this.createMissedMealRecommendation(mealTime, context);
-          if (mealRec) recommendations.push(mealRec);
-        }
-      }
-    }
-    
-    // Priority 6: Multiple weak systems → meal plan
+
+    // Priority 4: Multiple weak systems → meal plan
     if (recommendations.length < 3 && gaps.weakSystems.length >= 2) {
       const mealPlanRec = this.createMealPlanRecommendation(gaps.weakSystems, context);
       if (mealPlanRec) recommendations.push(mealPlanRec);
     }
-    
-    // Priority 7: Variety improvement (only after meals are covered)
+
+    // Priority 5: Variety improvement (only after user has logged ≥2 meals)
     if (recommendations.length < 3 && gaps.varietyScore < 60) {
-      // Only recommend variety if user has logged at least 2 meals
       const mealsLogged = context.score.mealTimes.filter(mt => mt.hasFood).length;
       if (mealsLogged >= 2) {
         const varietyRec = this.createVarietyRecommendation(context);
         if (varietyRec) recommendations.push(varietyRec);
       }
     }
-    
-    return recommendations.slice(0, 3); // Max 3 per day
+
+    return recommendations.slice(0, 3); // Max 3 defense-system recs per day
   }
-  
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SECTION 2 — Meal Logging Recommendations
+  // Scope: WORKFLOW_STEP (missing meal types, recipe creation nudges)
+  // Source: Computed fresh from today's score — NOT persisted to DB.
+  //         Nudges auto-disappear as soon as the meal is logged.
+  // ─────────────────────────────────────────────────────────────────────────
+  generateMealLoggingRecommendations(
+    userId: string,
+    date: Date,
+    score: Score5x5x5
+  ): SmartRecommendation[] {
+    const gaps = analyzeGaps(score);
+
+    // Minimal profile — no dismiss throttling; nudges vanish when meal is logged
+    const userProfile: UserBehaviorProfile = {
+      userId,
+      preferredMealTimes: [],
+      favoriteFoods: [],
+      dietaryRestrictions: [],
+      averageDailyScore: gaps.overallScore,
+      consistency: 0,
+      acceptanceRate: 100,
+      dismissedTypes: [],
+      lastRecommendationDate: null,
+    };
+
+    const context: RecommendationContext = {
+      userId,
+      date,
+      score,
+      gaps,
+      userProfile,
+      existingRecommendations: [],
+    };
+
+    const recommendations: SmartRecommendation[] = [];
+
+    // When all defense systems are fully covered → celebration nudge for missing main meals
+    const allSystemsComplete = score.defenseSystems.every(s => s.foodsConsumed >= 5);
+    if (allSystemsComplete) {
+      const missingMainMeals = (gaps.missedMeals as string[]).filter(
+        mt => mt === 'BREAKFAST' || mt === 'LUNCH' || mt === 'DINNER'
+      );
+      if (missingMainMeals.length === 0) return []; // Truly all done — nothing needed
+      return missingMainMeals
+        .slice(0, 3)
+        .map(mt => this.createMealCelebrationNudge(mt, context))
+        .filter((r): r is SmartRecommendation => r !== null);
+    }
+
+    // Main meals first: BREAKFAST · LUNCH · DINNER
+    const mainMeals = (gaps.missedMeals as string[]).filter(
+      mt => mt === 'BREAKFAST' || mt === 'LUNCH' || mt === 'DINNER'
+    );
+    for (const mealTime of mainMeals) {
+      const rec = this.createMealLoggingNudge(mealTime, context);
+      if (rec) recommendations.push(rec);
+    }
+
+    // Snacks — only nudge after all three main meals have been logged
+    const loggedMainMeals = score.mealTimes
+      .filter(mt => ['BREAKFAST', 'LUNCH', 'DINNER'].includes(mt.mealTime) && mt.hasFood)
+      .length;
+
+    if (loggedMainMeals === 3) {
+      const snacks = (gaps.missedMeals as string[]).filter(
+        mt => mt === 'MORNING_SNACK' || mt === 'AFTERNOON_SNACK'
+      );
+      for (const mealTime of snacks) {
+        const rec = this.createMealLoggingNudge(mealTime, context);
+        if (rec) recommendations.push(rec);
+      }
+    }
+
+    return recommendations;
+  }
+
   /**
    * Check if we should generate a new recommendation
    */
   private shouldGenerateRecommendation(context: RecommendationContext): boolean {
     // ALWAYS generate for new users or zero-activity days
-    // This ensures "All Caught Up!" doesn't show when user has done nothing
     if (context.gaps.overallScore === 0 || context.gaps.missingSystems.length === 5) {
       return true;
     }
-    
-    // Don't generate if too many pending
+
+    // Don't generate if already at the cap
     if (context.existingRecommendations.length >= MAX_PENDING_RECOMMENDATIONS) {
       return false;
     }
-    
-    // Check time since last recommendation ONLY if there are pending recommendations
-    // If all previous recommendations are completed, allow immediate new generation
+
+    // Time-based throttle — only applies when there ARE pending recs in the DB
+    // so we don't flood a user who just dismissed everything
     if (context.existingRecommendations.length > 0 && context.userProfile.lastRecommendationDate) {
       const hoursSince = (Date.now() - context.userProfile.lastRecommendationDate.getTime()) / (1000 * 60 * 60);
       if (hoursSince < MIN_HOURS_BETWEEN_RECOMMENDATIONS) {
         return false;
       }
     }
-    
-    // Check acceptance rate (if user keeps dismissing, slow down)
-    if (context.userProfile.acceptanceRate < MIN_ACCEPTANCE_RATE) {
-      // Only generate critical recommendations
-      return context.gaps.overallScore < 40;
-    }
-    
+
+    // NOTE: Acceptance-rate throttle intentionally removed for Section 1.
+    // Defense-system gaps are mandatory health alerts — low acceptance rate
+    // should not silence them. Users with gaps must see recommendations.
+
     return true;
   }
   
@@ -228,10 +252,8 @@ export class RecommendationEngine {
     priority: RecommendationPriority,
     context: RecommendationContext
   ): SmartRecommendation | null {
-    // Check if user recently dismissed recipe recommendations
-    if (hasRecentlyDismissedType(context.userProfile, 'RECIPE')) {
-      return null;
-    }
+    // NOTE: No dismiss guard here. Defense-system gaps are mandatory health
+    // alerts — the user must see them regardless of past dismissal history.
     
     const isMissing = context.gaps.missingSystems.includes(system as DefenseSystem);
     const systemScore = context.score.defenseSystems.find((d: SystemScore) => d.system === system);
@@ -396,6 +418,44 @@ export class RecommendationEngine {
   }
 
   /**
+   * Create a Section-2 meal logging nudge for a specific missing meal time.
+   * Unlike createMissedMealRecommendation, this ALWAYS generates (no dismiss guard)
+   * because the nudge disappears automatically once the meal is logged — no DB record needed.
+   */
+  private createMealLoggingNudge(
+    mealTime: string,
+    context: RecommendationContext
+  ): SmartRecommendation | null {
+    const mealLabel = mealTime
+      .toLowerCase()
+      .replace(/_/g, ' ')
+      .replace(/\b\w/g, c => c.toUpperCase()); // e.g. "Breakfast", "Morning Snack"
+
+    return {
+      id: crypto.randomUUID(),
+      userId: context.userId,
+      type: 'WORKFLOW_STEP',
+      priority: 'MEDIUM',
+      status: 'PENDING',
+      title: `Log Your ${mealLabel}`,
+      description: `You haven't logged ${mealLabel.toLowerCase()} yet. Create a healthy recipe and log it to stay on track with your 5x5x5 goals!`,
+      reasoning: `${mealLabel} hasn't been recorded today. Logging all meals ensures complete 5x5x5 framework coverage.`,
+      actionLabel: `Create ${mealLabel} Recipe`,
+      actionUrl: '/recipes/ai-generate',
+      actionData: {
+        from: 'meal-logging',
+        preferredMealTime: mealTime,
+      },
+      targetSystem: undefined,
+      targetMealTime: mealTime,
+      viewCount: 0,
+      dismissCount: 0,
+      expiresAt: addHours(context.date, 12),
+      createdAt: new Date(),
+    };
+  }
+
+  /**
    * Create a celebratory nudge shown when the user has fully covered all 5
    * defense systems but hasn't logged a main meal yet.
    *
@@ -438,7 +498,10 @@ export class RecommendationEngine {
   }
 
   /**
-   * Get active recommendations for a user
+   * Get active defense-system recommendations for a user (Section 1 only).
+   * Deliberately excludes WORKFLOW_STEP records so that any stale entries
+   * lingering in the DB from before the refactor cannot inflate the pending
+   * count and block new generation.
    */
   private async getActiveRecommendations(userId: string): Promise<SmartRecommendation[]> {
     try {
@@ -447,6 +510,8 @@ export class RecommendationEngine {
           userId,
           status: 'PENDING',
           expiresAt: { gt: new Date() },
+          // Only count defense-system types; WORKFLOW_STEP is never persisted
+          type: { in: ['RECIPE', 'MEAL_PLAN', 'FOOD_SUGGESTION'] },
         },
         orderBy: { createdAt: 'desc' },
       });
