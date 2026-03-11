@@ -77,7 +77,8 @@ export default function ProgressPage() {
       fetchRecommendations();
     } else {
       // Clear recommendations when viewing past dates
-      setRecommendations([]);
+      setDefenseRecs([]);
+      setMealRecs([]);
       setLoadingRecs(false);
     }
   }, [selectedDate]);
