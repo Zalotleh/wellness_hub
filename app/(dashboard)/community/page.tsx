@@ -2,13 +2,37 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Users, Trophy, TrendingUp, MessageSquare, Heart, Award, Star, ChefHat } from 'lucide-react';
+import { Users, Trophy, TrendingUp, MessageSquare, Heart, Award, Star, ChefHat, Loader2 } from 'lucide-react';
 import { DEFENSE_SYSTEMS } from '@/lib/constants/defense-systems';
 import { DefenseSystem } from '@/types';
 import Footer from '@/components/layout/Footer';
 
+interface FeaturedRecipe {
+  id: string;
+  title: string;
+  description: string | null;
+  defenseSystems: string[];
+  imageUrl: string | null;
+  prepTime: string | null;
+  cookTime: string | null;
+  mealType: string | null;
+  user: { name: string | null };
+  _count: { favorites: number; ratings: number; comments: number };
+  favoriteCount: number;
+}
+
 export default function CommunityPage() {
   const [activeTab, setActiveTab] = useState<'contributors' | 'discussions' | 'leaderboard'>('contributors');
+  const [featuredRecipe, setFeaturedRecipe] = useState<FeaturedRecipe | null>(null);
+  const [featuredLoading, setFeaturedLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/community/featured-recipe')
+      .then((r) => r.json())
+      .then((data) => setFeaturedRecipe(data.recipe ?? null))
+      .catch(() => setFeaturedRecipe(null))
+      .finally(() => setFeaturedLoading(false));
+  }, []);
 
   // Mock data - would come from API in production
   const topContributors = [
@@ -79,6 +103,12 @@ export default function CommunityPage() {
               <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Community Hub</h1>
               <p className="text-gray-600 dark:text-gray-300">Connect with others on their health journey</p>
             </div>
+          </div>
+
+          {/* Placeholder notice */}
+          <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg px-4 py-2 text-sm text-amber-800 dark:text-amber-300">
+            <span>⚠️</span>
+            <span>The stats below are placeholder data and will reflect real community activity once the discussion system is live.</span>
           </div>
 
           {/* Stats Bar */}
@@ -323,23 +353,94 @@ export default function CommunityPage() {
               <h3 className="font-bold text-gray-900 dark:text-white mb-4">
                 🌟 Featured Recipe
               </h3>
-              <div className="space-y-3">
-                <div className="h-32 bg-gradient-to-br from-green-400 to-blue-400 rounded-lg flex items-center justify-center">
-                  <ChefHat className="w-16 h-16 text-white opacity-50" />
+              {featuredLoading ? (
+                <div className="flex items-center justify-center h-32">
+                  <Loader2 className="w-8 h-8 animate-spin text-green-500" />
                 </div>
-                <h4 className="font-bold text-gray-900 dark:text-white">
-                  Mediterranean Power Bowl
-                </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  A nutrient-packed bowl supporting all 5 defense systems
-                </p>
-                <Link
-                  href="/recipes/1"
-                  className="block w-full px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 transition-colors text-center font-medium"
-                >
-                  View Recipe
-                </Link>
-              </div>
+              ) : featuredRecipe ? (
+                <div className="space-y-3">
+                  {/* Image or gradient placeholder */}
+                  <div className="h-32 bg-gradient-to-br from-green-400 to-blue-400 rounded-lg flex items-center justify-center overflow-hidden relative">
+                    {featuredRecipe.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={featuredRecipe.imageUrl}
+                        alt={featuredRecipe.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <ChefHat className="w-16 h-16 text-white opacity-50" />
+                    )}
+                    {/* Most liked badge */}
+                    <div className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                      <Heart className="w-3 h-3 fill-red-400 text-red-400" />
+                      {featuredRecipe.favoriteCount}
+                    </div>
+                  </div>
+                  <h4 className="font-bold text-gray-900 dark:text-white line-clamp-2">
+                    {featuredRecipe.title}
+                  </h4>
+                  {featuredRecipe.user.name && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      By {featuredRecipe.user.name}
+                    </p>
+                  )}
+                  {featuredRecipe.description && (
+                    <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                      {featuredRecipe.description}
+                    </p>
+                  )}
+                  {/* Stats row */}
+                  <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                    <span className="flex items-center gap-1">
+                      <Heart className="w-3 h-3" /> {featuredRecipe._count.favorites}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Star className="w-3 h-3" /> {featuredRecipe._count.ratings}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <MessageSquare className="w-3 h-3" /> {featuredRecipe._count.comments}
+                    </span>
+                  </div>
+                  {/* Defense system tags */}
+                  {featuredRecipe.defenseSystems.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {featuredRecipe.defenseSystems.slice(0, 3).map((sys) => (
+                        <span
+                          key={sys}
+                          className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full"
+                        >
+                          {sys.replace(/_/g, ' ')}
+                        </span>
+                      ))}
+                      {featuredRecipe.defenseSystems.length > 3 && (
+                        <span className="text-xs text-gray-400">+{featuredRecipe.defenseSystems.length - 3}</span>
+                      )}
+                    </div>
+                  )}
+                  <Link
+                    href={`/recipes/${featuredRecipe.id}`}
+                    className="block w-full px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 transition-colors text-center font-medium"
+                  >
+                    View Recipe
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="h-32 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 rounded-lg flex items-center justify-center">
+                    <ChefHat className="w-16 h-16 text-gray-400 dark:text-gray-500" />
+                  </div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                    No recipes yet — be the first to share one!
+                  </p>
+                  <Link
+                    href="/recipes/create"
+                    className="block w-full px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-center font-medium"
+                  >
+                    Share a Recipe
+                  </Link>
+                </div>
+              )}
             </div>
 
             {/* Quick Links */}

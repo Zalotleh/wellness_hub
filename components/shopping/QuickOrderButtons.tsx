@@ -1,14 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ExternalLink, ShoppingBag, ChevronDown, ChevronUp, Loader2, AlertCircle } from 'lucide-react';
-import {
-  generateAmazonFreshLink,
-  generateWalmartLink,
-  generateTargetLink,
-  generateKrogerLink,
-  generateWholeFoodsLink,
-} from '@/lib/utils/sharing';
+import { ExternalLink, ShoppingBag, Loader2, AlertCircle } from 'lucide-react';
 
 interface ShoppingItem {
   ingredient: string;
@@ -34,58 +27,6 @@ interface PlatformState {
   error?: string;
 }
 
-interface OtherPlatformConfig {
-  name: string;
-  icon: string;
-  color: string;
-  hoverColor: string;
-  description: string;
-  linkGenerator: (items: string[]) => string;
-}
-
-const OTHER_PLATFORMS: OtherPlatformConfig[] = [
-  {
-    name: 'Amazon Fresh',
-    icon: '📦',
-    color: 'bg-orange-600',
-    hoverColor: 'hover:bg-orange-700',
-    description: 'Free delivery for Prime members',
-    linkGenerator: generateAmazonFreshLink,
-  },
-  {
-    name: 'Walmart',
-    icon: '🏪',
-    color: 'bg-blue-600',
-    hoverColor: 'hover:bg-blue-700',
-    description: 'Pickup & delivery, everyday low prices',
-    linkGenerator: generateWalmartLink,
-  },
-  {
-    name: 'Target',
-    icon: '🎯',
-    color: 'bg-red-600',
-    hoverColor: 'hover:bg-red-700',
-    description: 'Drive up, pickup, or same-day delivery',
-    linkGenerator: generateTargetLink,
-  },
-  {
-    name: 'Kroger',
-    icon: '🛍️',
-    color: 'bg-indigo-600',
-    hoverColor: 'hover:bg-indigo-700',
-    description: 'Pickup or delivery from Kroger family stores',
-    linkGenerator: generateKrogerLink,
-  },
-  {
-    name: 'Whole Foods',
-    icon: '🥬',
-    color: 'bg-emerald-600',
-    hoverColor: 'hover:bg-emerald-700',
-    description: 'Organic & natural products via Amazon',
-    linkGenerator: generateWholeFoodsLink,
-  },
-];
-
 export default function QuickOrderButtons({
   items,
   className = '',
@@ -93,21 +34,12 @@ export default function QuickOrderButtons({
   title = 'Shopping List',
   listId,
 }: QuickOrderButtonsProps) {
-  const [showAll, setShowAll] = useState(false);
   const [instacartState, setInstacartState] = useState<PlatformState>({ status: 'idle' });
 
   // Filter items
   const filteredItems = items.filter((item) =>
     onlyUnchecked ? !item.checked : true
   );
-
-  // Strings used for simple URL-based platforms (first item search)
-  const itemStrings = filteredItems.map((item) => {
-    const parts = [item.ingredient];
-    if (item.quantity && item.quantity > 0) parts.push(item.quantity.toString());
-    if (item.unit?.trim()) parts.push(item.unit);
-    return parts.join(' ');
-  });
 
   const itemCount = filteredItems.length;
 
@@ -169,13 +101,6 @@ export default function QuickOrderButtons({
       setTimeout(() => setInstacartState({ status: 'idle' }), 6000);
     }
   };
-
-  const handleOtherPlatformClick = (platform: OtherPlatformConfig) => {
-    const url = platform.linkGenerator(itemStrings);
-    window.open(url, '_blank', 'noopener,noreferrer');
-  };
-
-  const visibleOtherPlatforms = showAll ? OTHER_PLATFORMS : OTHER_PLATFORMS.slice(0, 1);
 
   const isLoading = instacartState.status === 'loading';
   const hasError = instacartState.status === 'error';
@@ -255,72 +180,14 @@ export default function QuickOrderButtons({
         )}
       </div>
 
-      {/* ── Other platforms (simple URL links) ───────────────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {visibleOtherPlatforms.map((platform) => (
-          <button
-            key={platform.name}
-            onClick={() => handleOtherPlatformClick(platform)}
-            className={`
-              ${platform.color} ${platform.hoverColor}
-              text-white rounded-xl p-4 transition-all duration-200
-              hover:shadow-lg hover:scale-[1.015] active:scale-100
-              focus:outline-none focus:ring-2 focus:ring-offset-2
-              group relative overflow-hidden
-            `}
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="relative flex items-center gap-3">
-              <span className="text-3xl">{platform.icon}</span>
-              <div className="flex-1 text-left">
-                <div className="font-semibold text-lg flex items-center gap-2">
-                  {platform.name}
-                  <ExternalLink className="w-4 h-4 opacity-75" />
-                </div>
-                <div className="text-sm opacity-90 mt-0.5">{platform.description}</div>
-              </div>
-              <div className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">
-                {itemCount}
-              </div>
-            </div>
-          </button>
-        ))}
-      </div>
-
-      {/* Show more / fewer toggle */}
-      {OTHER_PLATFORMS.length > 1 && (
-        <button
-          onClick={() => setShowAll(!showAll)}
-          className="w-full flex items-center justify-center gap-2 py-3 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800"
-        >
-          {showAll ? (
-            <>
-              <ChevronUp className="w-4 h-4" /> Show Fewer Platforms
-            </>
-          ) : (
-            <>
-              <ChevronDown className="w-4 h-4" /> Show {OTHER_PLATFORMS.length - 1} More Platforms
-            </>
-          )}
-        </button>
-      )}
-
       {/* Info */}
       <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
         <div className="flex gap-3">
           <div className="text-2xl flex-shrink-0">ℹ️</div>
           <div>
-            <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-1">How it works</h4>
-            <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
-              <li>
-                <strong>Instacart:</strong> All your unchecked items are sent directly to
-                Instacart via their API. You&apos;ll land on a cart page with everything ready to checkout.
-              </li>
-              <li>
-                <strong>Other platforms:</strong> Opens the store with your first item searched.
-                Add the rest manually once you&apos;re there.
-              </li>
-            </ul>
+            <p className="text-sm text-blue-800 dark:text-blue-200">
+              All your unchecked items are sent directly to Instacart via their API. You&apos;ll land on a cart page with everything ready to checkout.
+            </p>
             <p className="text-xs text-blue-700 dark:text-blue-300 mt-2">
               💡 Check off items you already have at home — only unchecked items are sent to the store.
             </p>

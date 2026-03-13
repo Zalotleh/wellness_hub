@@ -488,7 +488,7 @@ export default function MealPlanHeader({
               </p>
               <button
                 onClick={() => setEditingDescription(true)}
-                className="opacity-0 group-hover/desc:opacity-100 p-1 text-gray-400 dark:text-gray-300 hover:text-gray-600 dark:text-gray-200 hover:bg-gray-50 dark:bg-gray-700 rounded transition-all"
+                className="opacity-0 group-hover/desc:opacity-100 p-1 text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 rounded transition-all"
                 aria-label="Edit description"
               >
                 <Edit2 className="w-3 h-3" />

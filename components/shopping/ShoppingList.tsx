@@ -325,7 +325,7 @@ function ShoppingItem({ item, onUpdate, onDelete, showPricing = true, enableSwip
                 {/* Edit button */}
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="p-1 text-gray-400 dark:text-gray-300 hover:text-gray-600 dark:text-gray-200 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="p-1 text-gray-400 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 opacity-0 group-hover:opacity-100 transition-opacity"
                   aria-label="Edit item"
                 >
                   <Edit3 className="w-4 h-4" />
@@ -565,15 +565,7 @@ export default function ShoppingList({
             <span className="text-sm opacity-75">({stats.unchecked} items)</span>
           </button>
 
-          <button
-            onClick={handleAmazonExport}
-            disabled={stats.unchecked === 0}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-          >
-            <ExternalLink className="w-4 h-4" />
-            <span>Shop on Amazon Fresh</span>
-            <span className="text-sm opacity-75">({stats.unchecked} items)</span>
-          </button>
+
         </div>
       </div>
 
