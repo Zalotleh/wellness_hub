@@ -1,9 +1,21 @@
 import Stripe from 'stripe';
 import { prisma } from './prisma';
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? '', {
-  // Using latest stable API version
-  apiVersion: '2025-09-30.clover',
+// Lazily initialized so the build phase doesn't fail when STRIPE_SECRET_KEY
+// is not available. The actual key is required at runtime for any API calls.
+let _stripeInstance: Stripe | null = null;
+function getStripe(): Stripe {
+  if (!_stripeInstance) {
+    _stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY ?? 'build_placeholder', {
+      apiVersion: '2025-09-30.clover',
+    });
+  }
+  return _stripeInstance;
+}
+export const stripe: Stripe = new Proxy({} as Stripe, {
+  get(_target, prop, receiver) {
+    return Reflect.get(getStripe(), prop, receiver);
+  },
 });
 
 // Product and price definitions
