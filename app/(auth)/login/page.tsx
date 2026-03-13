@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Heart, Mail, Lock, Loader2, AlertCircle } from 'lucide-react';
+import { Heart, Mail, Lock, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,6 +14,7 @@ export default function LoginPage() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -126,13 +127,20 @@ export default function LoginPage() {
                 <input
                   id="password"
                   name="password"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className="block w-full pl-10 pr-3 py-3 border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                  className="block w-full pl-10 pr-10 py-3 border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors placeholder:text-gray-400 dark:placeholder:text-gray-500"
                   placeholder="Enter your password"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
               </div>
             </div>
 
@@ -177,18 +185,6 @@ export default function LoginPage() {
               )}
             </button>
           </form>
-
-          {/* Demo Accounts */}
-          <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-            <p className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-2">
-              🎯 Demo Accounts:
-            </p>
-            <div className="space-y-1 text-xs text-blue-800 dark:text-blue-300">
-              <p>📧 sarah@example.com • 🔑 password123</p>
-              <p>📧 john@example.com • 🔑 password123</p>
-              <p>📧 emma@example.com • 🔑 password123</p>
-            </div>
-          </div>
 
           {/* Sign Up Link */}
           <div className="mt-6 text-center">
