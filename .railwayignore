@@ -1,0 +1,13 @@
+# Development & debug scripts (not needed at runtime)
+scripts/
+debug-limits.js
+
+# Documentation
+docs/
+README.md
+DATABASE-RECOVERY.md
+TODO
+"leep 3"
+
+# Local backups (never deploy these — may contain sensitive data)
+backups/
