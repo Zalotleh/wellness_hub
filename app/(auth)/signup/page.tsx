@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Heart, Mail, Lock, User, Loader2, AlertCircle, CheckCircle2, Ruler, Globe } from 'lucide-react';
+import { Heart, Mail, Lock, User, Loader2, AlertCircle, CheckCircle2, Ruler, Globe, Eye, EyeOff, X } from 'lucide-react';
 import { detectUserTimezone } from '@/lib/utils/timezone';
 
 export default function SignupPage() {
@@ -21,6 +21,8 @@ export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [passwordStrength, setPasswordStrength] = useState(0);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Auto-detect user's timezone on mount
   useEffect(() => {
@@ -259,31 +261,58 @@ export default function SignupPage() {
                 <input
                   id="password"
                   name="password"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className={`block w-full pl-10 pr-3 py-3 border-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors bg-white dark:bg-gray-700 dark:text-white ${
+                  className={`block w-full pl-10 pr-10 py-3 border-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors bg-white dark:bg-gray-700 dark:text-white ${
                     errors.password ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                   }`}
                   placeholder="Create a strong password"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
               </div>
+
+              {/* Password conditions */}
+              {formData.password && (
+                <div className="mt-2 space-y-1">
+                  {[
+                    { label: 'At least 8 characters', met: formData.password.length >= 8 },
+                    { label: 'One uppercase letter (A-Z)', met: /[A-Z]/.test(formData.password) },
+                    { label: 'One lowercase letter (a-z)', met: /[a-z]/.test(formData.password) },
+                    { label: 'One number (0-9)', met: /[0-9]/.test(formData.password) },
+                    { label: 'One special character (!@#$...)', met: /[^a-zA-Z0-9]/.test(formData.password) },
+                  ].map(({ label, met }) => (
+                    <div key={label} className="flex items-center gap-1.5">
+                      {met
+                        ? <CheckCircle2 className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />
+                        : <X className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />}
+                      <span className={`text-xs ${ met ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400' }`}>{label}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Strength bar */}
               {formData.password && (
                 <div className="mt-2">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs text-gray-600 dark:text-gray-300">Password strength:</span>
+                    <span className="text-xs text-gray-600 dark:text-gray-300">Strength:</span>
                     <span className={`text-xs font-medium ${
                       passwordStrength <= 2 ? 'text-red-600 dark:text-red-400' : 
                       passwordStrength <= 3 ? 'text-yellow-600 dark:text-yellow-400' : 
                       'text-green-600 dark:text-green-400'
-                    }`}>
-                      {getPasswordStrengthText()}
-                    </span>
+                    }`}>{getPasswordStrengthText()}</span>
                   </div>
-                  <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                  <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-1.5">
                     <div
-                      className={`h-2 rounded-full transition-all ${getPasswordStrengthColor()}`}
+                      className={`h-1.5 rounded-full transition-all ${getPasswordStrengthColor()}`}
                       style={{ width: `${(passwordStrength / 5) * 100}%` }}
                     />
                   </div>
@@ -309,20 +338,24 @@ export default function SignupPage() {
                 <input
                   id="confirmPassword"
                   name="confirmPassword"
-                  type="password"
+                  type={showConfirmPassword ? 'text' : 'password'}
                   required
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className={`block w-full pl-10 pr-3 py-3 border-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors bg-white dark:bg-gray-700 dark:text-white ${
+                  className={`block w-full pl-10 pr-10 py-3 border-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors bg-white dark:bg-gray-700 dark:text-white ${
                     errors.confirmPassword ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                   }`}
                   placeholder="Confirm your password"
                 />
-                {formData.confirmPassword && formData.password === formData.confirmPassword && (
-                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                    <CheckCircle2 className="h-5 w-5 text-green-500 dark:text-green-400" />
-                  </div>
-                )}
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                >
+                  {formData.confirmPassword && formData.password === formData.confirmPassword
+                    ? <CheckCircle2 className="h-5 w-5 text-green-500 dark:text-green-400" />
+                    : showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
               </div>
               {errors.confirmPassword && (
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.confirmPassword}</p>
