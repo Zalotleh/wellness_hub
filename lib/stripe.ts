@@ -1,11 +1,7 @@
 import Stripe from 'stripe';
 import { prisma } from './prisma';
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY is not set in environment variables');
-}
-
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? '', {
   // Using latest stable API version
   apiVersion: '2025-09-30.clover',
 });
