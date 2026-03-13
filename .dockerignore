@@ -1,0 +1,35 @@
+# Dependencies (rebuilt during Docker build)
+node_modules
+.npm
+
+# Next.js build output
+.next
+out
+
+# Environment files (injected by Railway)
+.env
+.env.local
+.env.development
+.env.production
+
+# Development-only files
+scripts/
+docs/
+backups/
+debug-limits.js
+TODO
+"leep 3"
+README.md
+DATABASE-RECOVERY.md
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+
+# Misc
+*.log
+.DS_Store
