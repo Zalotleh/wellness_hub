@@ -668,7 +668,7 @@ function parseAIRecipe(recipeText: string, defenseSystems: DefenseSystem[]): any
 
   // Add fallback description if not found
   if (!recipe.description) {
-    recipe.description = `A healthy recipe designed to support ${DEFENSE_SYSTEMS[defenseSystem as DefenseSystem]?.displayName || 'your health'}.`;
+    recipe.description = `A healthy recipe designed to support ${DEFENSE_SYSTEMS[defenseSystems[0]]?.displayName || 'your health'}.`;
     console.log('⚠️ No description found, using fallback');
   }
 

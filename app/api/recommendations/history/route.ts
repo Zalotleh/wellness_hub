@@ -71,13 +71,13 @@ export async function GET(request: NextRequest) {
     const stats = {
       total: allRecs.length,
       pending: allRecs.filter(r => r.status === 'PENDING').length,
-      accepted: allRecs.filter(r => r.status === 'ACCEPTED').length,
+      accepted: allRecs.filter(r => r.status === 'COMPLETED').length,
       dismissed: allRecs.filter(r => r.status === 'DISMISSED').length,
       expired: allRecs.filter(r => r.status === 'EXPIRED').length,
       
       // Acceptance rate
       acceptanceRate: allRecs.length > 0
-        ? Math.round((allRecs.filter(r => r.status === 'ACCEPTED').length / allRecs.length) * 100)
+        ? Math.round((allRecs.filter(r => r.status === 'COMPLETED').length / allRecs.length) * 100)
         : 0,
       
       // Dismissal rate
@@ -97,22 +97,22 @@ export async function GET(request: NextRequest) {
       byType: {
         RECIPE: {
           total: allRecs.filter(r => r.type === 'RECIPE').length,
-          accepted: allRecs.filter(r => r.type === 'RECIPE' && r.status === 'ACCEPTED').length,
+          accepted: allRecs.filter(r => r.type === 'RECIPE' && r.status === 'COMPLETED').length,
           dismissed: allRecs.filter(r => r.type === 'RECIPE' && r.status === 'DISMISSED').length,
         },
         MEAL_PLAN: {
           total: allRecs.filter(r => r.type === 'MEAL_PLAN').length,
-          accepted: allRecs.filter(r => r.type === 'MEAL_PLAN' && r.status === 'ACCEPTED').length,
+          accepted: allRecs.filter(r => r.type === 'MEAL_PLAN' && r.status === 'COMPLETED').length,
           dismissed: allRecs.filter(r => r.type === 'MEAL_PLAN' && r.status === 'DISMISSED').length,
         },
         FOOD_SUGGESTION: {
           total: allRecs.filter(r => r.type === 'FOOD_SUGGESTION').length,
-          accepted: allRecs.filter(r => r.type === 'FOOD_SUGGESTION' && r.status === 'ACCEPTED').length,
+          accepted: allRecs.filter(r => r.type === 'FOOD_SUGGESTION' && r.status === 'COMPLETED').length,
           dismissed: allRecs.filter(r => r.type === 'FOOD_SUGGESTION' && r.status === 'DISMISSED').length,
         },
         WORKFLOW_STEP: {
           total: allRecs.filter(r => r.type === 'WORKFLOW_STEP').length,
-          accepted: allRecs.filter(r => r.type === 'WORKFLOW_STEP' && r.status === 'ACCEPTED').length,
+          accepted: allRecs.filter(r => r.type === 'WORKFLOW_STEP' && r.status === 'COMPLETED').length,
           dismissed: allRecs.filter(r => r.type === 'WORKFLOW_STEP' && r.status === 'DISMISSED').length,
         },
       },

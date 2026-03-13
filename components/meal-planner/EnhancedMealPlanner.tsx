@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { format } from 'date-fns';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { CheckCircle2 } from 'lucide-react';
@@ -446,7 +447,7 @@ export default function EnhancedMealPlanner({
               // Skip ghost/empty-named meals — they should not render
               if (!meal.mealName?.trim()) return;
 
-              const transformedMeal = {
+              const transformedMeal: any = {
                 id: meal.id || `week${weekNumber}-${dayName}-${meal.mealType}`,
                 mealName: meal.mealName,
                 mealType: meal.mealType || 'breakfast',
@@ -454,15 +455,15 @@ export default function EnhancedMealPlanner({
                 week: weekNumber,
                 slot: meal.mealType ? meal.mealType.toLowerCase() : 'breakfast',
                 defenseSystems: meal.defenseSystems || [],
+                prepTime: meal.prepTime ? (typeof meal.prepTime === 'string' ? parseInt(meal.prepTime) : meal.prepTime) : 30,
+                cookTime: meal.cookTime ? (typeof meal.cookTime === 'string' ? parseInt(meal.cookTime) : meal.cookTime) : 0,
+                servings: meal.servings || savedPlan.defaultServings || 2,
+                recipeGenerated: !!meal.generatedRecipe,
+                recipeId: meal.generatedRecipe?.id,
+                customInstructions: meal.customInstructions,
               };
               console.log(`🔍 [handleGenerateMealPlan] Transformed:`, transformedMeal);
-              flattenedMeals.push(transformedMeal as any);
-              transformedMeal.prepTime = meal.prepTime ? (typeof meal.prepTime === 'string' ? parseInt(meal.prepTime) : meal.prepTime) : 30;
-              transformedMeal.cookTime = meal.cookTime ? (typeof meal.cookTime === 'string' ? parseInt(meal.cookTime) : meal.cookTime) : 0;
-              transformedMeal.servings = meal.servings || savedPlan.defaultServings || 2;
-              transformedMeal.recipeGenerated = !!meal.generatedRecipe;
-              transformedMeal.recipeId = meal.generatedRecipe?.id;
-              transformedMeal.customInstructions = meal.customInstructions;
+              flattenedMeals.push(transformedMeal);
             });
           }
         });
@@ -991,7 +992,7 @@ export default function EnhancedMealPlanner({
               // Skip ghost/empty-named meals — they should not render
               if (!meal.mealName?.trim()) return;
 
-              const transformedMeal = {
+              const transformedMeal: any = {
                 id: meal.id || `week${weekNumber}-${dayName}-${meal.mealType}`,
                 mealName: meal.mealName,
                 mealType: meal.mealType || 'breakfast',
@@ -999,15 +1000,15 @@ export default function EnhancedMealPlanner({
                 slot: meal.mealType ? meal.mealType.toLowerCase() : 'breakfast',
                 week: weekNumber,
                 defenseSystems: meal.defenseSystems || [],
+                prepTime: meal.prepTime ? (typeof meal.prepTime === 'string' ? parseInt(meal.prepTime) : meal.prepTime) : 30,
+                cookTime: meal.cookTime ? (typeof meal.cookTime === 'string' ? parseInt(meal.cookTime) : meal.cookTime) : 0,
+                servings: meal.servings || rawPlan.defaultServings || 2,
+                recipeGenerated: !!meal.generatedRecipe,
+                recipeId: meal.generatedRecipe?.id,
+                customInstructions: meal.customInstructions,
               };
               console.log(`🔍 [handleSaveMealPlan] Transformed meal:`, transformedMeal);
-              flattenedMeals.push(transformedMeal as any);
-              transformedMeal.prepTime = meal.prepTime ? (typeof meal.prepTime === 'string' ? parseInt(meal.prepTime) : meal.prepTime) : 30;
-              transformedMeal.cookTime = meal.cookTime ? (typeof meal.cookTime === 'string' ? parseInt(meal.cookTime) : meal.cookTime) : 0;
-              transformedMeal.servings = meal.servings || rawPlan.defaultServings || 2;
-              transformedMeal.recipeGenerated = !!meal.generatedRecipe;
-              transformedMeal.recipeId = meal.generatedRecipe?.id;
-              transformedMeal.customInstructions = meal.customInstructions;
+              flattenedMeals.push(transformedMeal);
             });
           }
         });

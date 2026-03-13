@@ -8,17 +8,17 @@ import Footer from '@/components/layout/Footer';
 import ErrorBoundary from '@/components/ui/ErrorBoundary';
 import { ToastContainer, useToast } from '@/components/ui/Toast';
 import { Calendar, ChefHat, Sparkles, Target, ArrowLeft } from 'lucide-react';
+import { DefenseSystem } from '@/types';
 import Link from 'next/link';
 
 interface MealPlannerParams {
-  targetSystems?: string[];
+  targetSystems?: DefenseSystem[];
   dietaryRestrictions?: string[];
   duration?: number;
 }
 
 interface SavedPlan {
   id?: string;
-  [key: string]: unknown;
 }
 
 // Custom error boundary for meal planner
@@ -68,8 +68,8 @@ export default function MealPlannerPage() {
 
       const params: MealPlannerParams = {};
       if (targetSystems) {
-        try { params.targetSystems = JSON.parse(targetSystems); }
-        catch { params.targetSystems = targetSystems.split(','); }
+        try { params.targetSystems = JSON.parse(targetSystems) as DefenseSystem[]; }
+        catch { params.targetSystems = targetSystems.split(',') as DefenseSystem[]; }
       }
       if (dietaryRestrictions) {
         try { params.dietaryRestrictions = JSON.parse(dietaryRestrictions); }

@@ -26,7 +26,7 @@ export interface SystemScore {
  * Score for a single meal time
  */
 export interface MealTimeScore {
-  mealTime: 'BREAKFAST' | 'LUNCH' | 'DINNER' | 'SNACK';
+  mealTime: 'BREAKFAST' | 'MORNING_SNACK' | 'LUNCH' | 'AFTERNOON_SNACK' | 'DINNER' | 'EVENING_SNACK' | 'SNACK';
   hasFood: boolean;
   foodCount: number;
   systemsCovered: DefenseSystem[];
@@ -90,5 +90,5 @@ export interface FoodConsumptionData {
   defenseSystem: DefenseSystem;
   foodsConsumed: string[];
   count: number;
-  mealTime?: 'BREAKFAST' | 'LUNCH' | 'DINNER' | 'SNACK';
+  mealTime?: 'BREAKFAST' | 'MORNING_SNACK' | 'LUNCH' | 'AFTERNOON_SNACK' | 'DINNER' | 'EVENING_SNACK' | 'SNACK';
 }

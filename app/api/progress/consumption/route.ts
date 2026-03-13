@@ -106,8 +106,8 @@ export async function POST(request: NextRequest) {
       where: {
         userId: user.id,
         date: {
-          gte: dayRange.startOfDay,
-          lte: dayRange.endOfDay,
+          gte: dayRange.start,
+          lte: dayRange.end,
         },
       },
       include: {
@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
         where: {
           userId: user.id,
           status: 'PENDING',
-          targetSystem: { in: completedSystems },
+          targetSystem: { in: completedSystems as DefenseSystem[] },
         },
         data: {
           status: 'COMPLETED',

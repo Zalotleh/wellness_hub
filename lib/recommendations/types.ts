@@ -1,10 +1,11 @@
 import { DefenseSystem } from '@/types';
+import type { Score5x5x5 } from '@/lib/tracking/types';
 
 export type RecommendationType = 'RECIPE' | 'MEAL_PLAN' | 'FOOD_SUGGESTION' | 'WORKFLOW_STEP';
 
 export type RecommendationPriority = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
 
-export type RecommendationStatus = 'PENDING' | 'ACCEPTED' | 'DISMISSED' | 'EXPIRED';
+export type RecommendationStatus = 'PENDING' | 'COMPLETED' | 'DISMISSED' | 'EXPIRED';
 
 export interface GapAnalysis {
   // Defense System gaps
@@ -75,7 +76,7 @@ export interface SmartRecommendation {
 export interface RecommendationContext {
   userId: string;
   date: Date;
-  score: any; // Score5x5x5 from scoring engine
+  score: Score5x5x5; // Score5x5x5 from scoring engine
   gaps: GapAnalysis;
   userProfile: UserBehaviorProfile;
   existingRecommendations: SmartRecommendation[];

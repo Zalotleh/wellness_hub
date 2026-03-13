@@ -81,7 +81,7 @@ export async function analyzeUserBehavior(userId: string): Promise<UserBehaviorP
     take: 50,
   }).catch(() => []); // Handle case where table doesn't exist yet
   
-  const acceptedCount = recommendations.filter(r => r.status === 'ACCEPTED').length;
+  const acceptedCount = recommendations.filter(r => r.status === 'COMPLETED').length;
   const acceptanceRate = recommendations.length > 0
     ? (acceptedCount / recommendations.length) * 100
     : 50; // Default to 50% if no history
