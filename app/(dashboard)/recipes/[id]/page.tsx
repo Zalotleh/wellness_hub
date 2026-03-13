@@ -60,6 +60,8 @@ export default function RecipeDetailPage() {
   const [logSuccess, setLogSuccess] = useState(false);
   const [isLoggedToday, setIsLoggedToday] = useState(false);
   const [loggedMealTime, setLoggedMealTime] = useState<string | null>(null);
+  const [lastLoggedAt, setLastLoggedAt] = useState<string | null>(null);
+  const [lastLoggedMealTime, setLastLoggedMealTime] = useState<string | null>(null);
 
   // Map recipe mealType (lowercase) to the uppercase enum used in the tracker
   const mealTypeToEnum = (mt: string | null | undefined): string => {
@@ -87,6 +89,8 @@ export default function RecipeDetailPage() {
       setUserRating(data.userRating || 0);
       setIsLoggedToday(data.isLoggedToday ?? false);
       setLoggedMealTime(data.loggedMealTime ?? null);
+      setLastLoggedAt(data.lastLoggedAt ?? null);
+      setLastLoggedMealTime(data.lastLoggedMealTime ?? null);
       // Pre-select the meal time from the saved recipe mealType
       if (data.mealType) {
         setSelectedMealTime(mealTypeToEnum(data.mealType));
@@ -427,6 +431,17 @@ export default function RecipeDetailPage() {
                   <span>
                     Logged today
                     {loggedMealTime && ` · ${loggedMealTime.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}`}
+                  </span>
+                </div>
+              )}
+
+              {/* Previously logged badge — only shown when NOT logged today but was logged on a prior date */}
+              {!isLoggedToday && lastLoggedAt && (
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 mb-4 rounded-full bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 text-blue-600 dark:text-blue-300 text-sm">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>
+                    Previously logged on {new Date(lastLoggedAt + 'T12:00:00Z').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                    {lastLoggedMealTime && ` · ${lastLoggedMealTime.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}`}
                   </span>
                 </div>
               )}

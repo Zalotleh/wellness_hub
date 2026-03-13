@@ -120,9 +120,11 @@ export async function GET(
 
     const isFavorited = session?.user?.id ? (recipe as any).favorites?.length > 0 : false;
 
-    // Check whether today's user has already logged this recipe
+    // Check whether today's user has already logged this recipe (today) and ever before
     let isLoggedToday = false;
     let loggedMealTime: string | null = null;
+    let lastLoggedAt: string | null = null;
+    let lastLoggedMealTime: string | null = null;
     if (session?.user?.id) {
       const todayStart = new Date();
       todayStart.setUTCHours(0, 0, 0, 0);
@@ -143,6 +145,21 @@ export async function GET(
         isLoggedToday = true;
         loggedMealTime = logEntry.mealTime;
       }
+
+      // Also find the most recent historical log (any date) to surface past activity
+      const lastLog = await prisma.foodConsumption.findFirst({
+        where: {
+          userId: session.user.id,
+          recipeId: id,
+        },
+        select: { date: true, mealTime: true },
+        orderBy: { date: 'desc' },
+      });
+
+      if (lastLog) {
+        lastLoggedAt = lastLog.date.toISOString().split('T')[0]; // YYYY-MM-DD
+        lastLoggedMealTime = lastLog.mealTime;
+      }
     }
 
     // Remove ratings array from response
@@ -156,6 +173,8 @@ export async function GET(
       isFavorited,
       isLoggedToday,
       loggedMealTime,
+      lastLoggedAt,
+      lastLoggedMealTime,
     });
   } catch (error) {
     console.error('Error fetching recipe:', error);
