@@ -583,7 +583,7 @@ export default function RecipeDetailPage() {
                       ) : isLoggedToday ? (
                         <><CheckCircle2 className="w-5 h-5" /><span>Recipe Logged</span></>
                       ) : (
-                        <><Activity className="w-5 h-5" /><span>Log This Meal</span></>
+                        <><Activity className="w-5 h-5" /><span>Log for Today</span></>
                       )}
                     </button>
                     <button
@@ -844,7 +844,7 @@ export default function RecipeDetailPage() {
                       <Activity className="w-5 h-5 text-violet-600 dark:text-violet-400" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">Log This Meal</h3>
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">Log for Today</h3>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
                         {recipe?.mealType && recipe.mealType !== 'any'
                           ? `Pre-selected based on recipe type`
