@@ -61,7 +61,7 @@ export type CommentSchemaType = z.infer<typeof commentSchema>;
 // User registration schema
 export const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').max(50),
-  email: z.string().email('Invalid email address'),
+  email: z.string().email('Invalid email address').transform((v) => v.toLowerCase().trim()),
   password: z.string().min(8, 'Password must be at least 8 characters')
     .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
     .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
@@ -81,7 +81,7 @@ export type RegisterSchemaType = z.infer<typeof registerSchema>;
 
 // Login schema
 export const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
+  email: z.string().email('Invalid email address').transform((v) => v.toLowerCase().trim()),
   password: z.string().min(1, 'Password is required'),
 });
 

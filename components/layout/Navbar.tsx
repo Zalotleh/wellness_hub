@@ -29,6 +29,7 @@ import {
   CheckCircle2,
   ChevronDown,
   PlusCircle,
+  Shield,
 } from 'lucide-react';
 
 
@@ -41,6 +42,8 @@ export default function Navbar() {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showMyKitchenMenu, setShowMyKitchenMenu] = useState(false);
   const [showMealPlansMenu, setShowMealPlansMenu] = useState(false);
+
+  const isAdmin = (session?.user as { role?: string })?.role === 'ADMIN';
 
   // Debug: Log current tier (remove in production)
   if (process.env.NODE_ENV === 'development' && session?.user) {
@@ -73,7 +76,7 @@ export default function Navbar() {
         { href: '/recipes/ai-generate', label: 'AI Generator', icon: Sparkles },
         { href: '/recipes/create', label: 'Add Recipe', icon: PlusCircle },
         { href: '/meal-planner', label: 'Create Meal Plan', icon: Calendar },
-        { href: '/saved-plans', label: 'Browse Meals Plans', icon: Bookmark },
+        { href: '/saved-plans', label: 'Saved Plans', icon: Bookmark },
       ],
     },
     {
@@ -122,17 +125,17 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/dashboard" className="flex items-center gap-2.5 group">
-            <div className="bg-gradient-to-br from-green-500 via-teal-500 to-emerald-500 p-2 rounded-xl shadow-md group-hover:shadow-lg group-hover:shadow-green-500/25 transition-all duration-200 group-hover:scale-105">
+            <div className="bg-gradient-to-br from-violet-500 via-purple-500 to-pink-500 p-2 rounded-xl shadow-md group-hover:shadow-lg group-hover:shadow-violet-500/25 transition-all duration-200 group-hover:scale-105">
               <Heart className="w-5 h-5 text-white" />
             </div>
             <div className="hidden sm:block">
-              <span className="text-lg font-extrabold tracking-tight bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">5×5×5</span>
+              <span className="text-lg font-extrabold tracking-tight bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">5×5×5</span>
               <span className="hidden md:inline text-lg font-extrabold text-gray-700 dark:text-gray-200"> Wellness</span>
             </div>
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center space-x-2">
+          {/* Desktop Navigation — hidden for admins */}
+          <div className={`hidden lg:flex items-center space-x-2 ${isAdmin ? '!hidden' : ''}`}>
             {navGroups.map((group) => {
               const Icon = group.icon;
               
@@ -159,7 +162,7 @@ export default function Navbar() {
                     <button
                       className={`flex items-center space-x-1.5 px-3 py-2 rounded-xl font-medium transition-all duration-200 ${
                         isGroupActive
-                          ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 font-semibold'
+                          ? 'bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-400 font-semibold'
                           : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
                       }`}
                     >
@@ -185,11 +188,11 @@ export default function Navbar() {
                                   href={item.href}
                                   className={`flex items-center space-x-3 px-4 py-2.5 mx-2 rounded-lg transition-all duration-150 ${
                                     isActive(item.href)
-                                      ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400'
+                                      ? 'bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-400'
                                       : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'
                                   }`}
                                 >
-                                  <ItemIcon className={`w-4 h-4 flex-shrink-0 ${isActive(item.href) ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'}`} />
+                                  <ItemIcon className={`w-4 h-4 flex-shrink-0 ${isActive(item.href) ? 'text-violet-600 dark:text-violet-400' : 'text-gray-400 dark:text-gray-500'}`} />
                                   <span className="text-sm font-medium">{item.label}</span>
                                 </Link>
                               </React.Fragment>
@@ -209,7 +212,7 @@ export default function Navbar() {
                   href={group.href!}
                   className={`flex items-center space-x-2 px-3 py-2 rounded-xl font-medium transition-all duration-200 ${
                     isActive(group.href!)
-                      ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 font-semibold'
+                      ? 'bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-400 font-semibold'
                       : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
                   }`}
                 >
@@ -246,7 +249,7 @@ export default function Navbar() {
                 {String(tier) === 'FAMILY' && (
                   <Link
                     href="/subscription/manage"
-                    className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-green-500 to-teal-600 text-white rounded-lg hover:from-green-600 hover:to-teal-700 transition-all font-medium text-sm"
+                    className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 transition-all font-medium text-sm"
                   >
                     <Crown className="w-4 h-4" />
                     <span>Family Plan</span>
@@ -257,7 +260,7 @@ export default function Navbar() {
 
             {/* Usage Limits Badge - Enhanced */}
             {status === 'authenticated' && session?.user && tier === 'FREE' && (
-              <div className="hidden items-center space-x-3 px-4 py-2 bg-gradient-to-r from-blue-50 to-green-50 border border-green-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200">
+              <div className="hidden items-center space-x-3 px-4 py-2 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200">
                 {/* Meal Plans Usage */}
                 <div className="flex flex-col items-center space-y-1 group relative">
                   <div className="flex items-center space-x-1">
@@ -304,7 +307,7 @@ export default function Navbar() {
                   <div className="flex items-center space-x-1">
                     <MessageCircle className={`w-3 h-3 ${
                       typeof aiLimit.maxLimit === 'number' && aiLimit.currentUsage >= aiLimit.maxLimit 
-                        ? 'text-red-500' : 'text-green-600'
+                        ? 'text-red-500' : 'text-purple-600'
                     }`} />
                     <span className={`text-xs font-medium ${
                       typeof aiLimit.maxLimit === 'number' && aiLimit.currentUsage >= aiLimit.maxLimit 
@@ -323,7 +326,7 @@ export default function Navbar() {
                             ? 'bg-red-500' 
                             : aiLimit.isApproachingLimit 
                               ? 'bg-amber-500' 
-                              : 'bg-green-500'
+                              : 'bg-purple-500'
                         }`}
                         style={{ width: `${Math.min(100, (aiLimit.currentUsage / aiLimit.maxLimit) * 100)}%` }}
                       />
@@ -357,7 +360,7 @@ export default function Navbar() {
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center space-x-2 p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200 border border-transparent hover:border-gray-200 dark:hover:border-gray-700"
                 >
-                  <div className="w-9 h-9 bg-gradient-to-br from-green-500 to-teal-600 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-md shadow-green-500/20">
+                  <div className="w-9 h-9 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-md shadow-violet-500/20">
                     {session.user.name?.[0]?.toUpperCase() || 'U'}
                   </div>
                   <span className="hidden md:block text-sm font-medium text-gray-700 dark:text-gray-200">
@@ -387,6 +390,8 @@ export default function Navbar() {
                       </div>
 
                       {/* Subscription & Usage Stats - All Tiers */}
+                      {/* Subscription / plan section — hidden for admins */}
+                      {!isAdmin && (
                       <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-700 dark:to-blue-900/20">
                         {/* FREE Users - Show Usage Limits */}
                         {tier === 'FREE' && (
@@ -432,7 +437,7 @@ export default function Navbar() {
                               <div>
                                 <div className="flex items-center justify-between text-sm mb-1">
                                   <div className="flex items-center space-x-2">
-                                    <MessageCircle className="w-4 h-4 text-green-500" />
+                                    <MessageCircle className="w-4 h-4 text-purple-500" />
                                     <span className="text-gray-700 font-medium">AI Questions</span>
                                   </div>
                                   <span className={`font-semibold ${
@@ -453,7 +458,7 @@ export default function Navbar() {
                                           ? 'bg-red-500'
                                           : aiLimit.isApproachingLimit
                                             ? 'bg-amber-500'
-                                            : 'bg-green-500'
+                                            : 'bg-purple-500'
                                       }`}
                                       style={{ width: `${Math.min(100, (aiLimit.currentUsage / aiLimit.maxLimit) * 100)}%` }}
                                     />
@@ -543,7 +548,7 @@ export default function Navbar() {
                         {/* FAMILY Users - Show Plan Benefits */}
                         {String(tier) === 'FAMILY' && (
                           <>
-                            <h4 className="text-xs font-semibold text-green-600 dark:text-green-400 uppercase tracking-wide mb-2 flex items-center space-x-1">
+                            <h4 className="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wide mb-2 flex items-center space-x-1">
                               <Crown className="w-3 h-3" />
                               <span>Family Plan</span>
                             </h4>
@@ -567,7 +572,7 @@ export default function Navbar() {
                             </div>
                             <Link
                               href="/subscription/manage"
-                              className="flex items-center justify-center space-x-2 w-full mt-3 px-3 py-2 bg-gradient-to-r from-green-500 to-teal-600 text-white rounded-lg hover:from-green-600 hover:to-teal-700 transition-all font-medium text-sm shadow-sm"
+                              className="flex items-center justify-center space-x-2 w-full mt-3 px-3 py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 transition-all font-medium text-sm shadow-sm"
                               onClick={() => setShowUserMenu(false)}
                             >
                               <Settings className="w-4 h-4" />
@@ -576,6 +581,19 @@ export default function Navbar() {
                           </>
                         )}
                       </div>
+                      )}
+
+                      {/* Admin Panel link — only for admins */}
+                      {isAdmin && (
+                        <Link
+                          href="/admin"
+                          className="flex items-center space-x-2 px-4 py-2 text-sm text-violet-700 dark:text-violet-300 hover:bg-violet-50 dark:hover:bg-violet-900/20 font-medium"
+                          onClick={() => setShowUserMenu(false)}
+                        >
+                          <Shield className="w-4 h-4" />
+                          <span>Admin Panel</span>
+                        </Link>
+                      )}
 
                       <Link
                         href="/profile"
@@ -617,7 +635,8 @@ export default function Navbar() {
               </Link>
             )}
 
-            {/* Mobile Menu Toggle */}
+            {/* Mobile Menu Toggle — hidden for admins */}
+            {!isAdmin && (
             <button
               onClick={() => setShowMobileMenu(!showMobileMenu)}
               className="lg:hidden p-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200 border border-transparent hover:border-gray-200 dark:hover:border-gray-700"
@@ -628,15 +647,16 @@ export default function Navbar() {
                 <Menu className="w-6 h-6 text-gray-700 dark:text-gray-200" />
               )}
             </button>
+            )}
           </div>
         </div>
 
-        {/* Mobile Menu */}
-        {showMobileMenu && (
+        {/* Mobile Menu — hidden for admins */}
+        {!isAdmin && showMobileMenu && (
           <div className="lg:hidden py-4 border-t border-gray-200 dark:border-gray-700 bg-gradient-to-b from-gray-50 to-white dark:from-gray-800 dark:to-gray-900">
             {/* Mobile Usage Stats for Free Users - Enhanced */}
             {status === 'authenticated' && session?.user && tier === 'FREE' && (
-              <div className="px-4 py-4 mb-4 bg-gradient-to-br from-blue-50 to-green-50 border border-green-200 rounded-xl mx-4 shadow-md">
+              <div className="px-4 py-4 mb-4 bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-200 rounded-xl mx-4 shadow-md">
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wide">
                     📊 Monthly Usage
@@ -677,11 +697,11 @@ export default function Navbar() {
                       <div className="text-xs text-red-600 mt-1 font-medium">Limit Reached!</div>
                     )}
                   </div>
-                  <div className="text-center p-3 bg-white rounded-lg border border-green-100">
+                  <div className="text-center p-3 bg-white rounded-lg border border-purple-100">
                     <div className="flex items-center justify-center space-x-1 text-xs mb-2">
                       <MessageCircle className={`w-4 h-4 ${
                         typeof aiLimit.maxLimit === 'number' && aiLimit.currentUsage >= aiLimit.maxLimit 
-                          ? 'text-red-500' : 'text-green-600'
+                          ? 'text-red-500' : 'text-purple-600'
                       }`} />
                       <span className="text-gray-700 font-medium">AI Questions</span>
                     </div>
@@ -700,7 +720,7 @@ export default function Navbar() {
                               ? 'bg-red-500' 
                               : aiLimit.isApproachingLimit 
                                 ? 'bg-amber-500' 
-                              : 'bg-green-500'
+                                : 'bg-purple-500'
                           }`}
                           style={{ width: `${Math.min(100, (aiLimit.currentUsage / aiLimit.maxLimit) * 100)}%` }}
                         />
@@ -728,7 +748,7 @@ export default function Navbar() {
                     className={`flex items-center justify-center space-x-2 w-full mt-3 px-3 py-2 text-white rounded-lg transition-all font-medium text-sm ${
                       String(tier) === 'PREMIUM' 
                         ? 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700'
-                        : 'bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700'
+                        : 'bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700'
                     }`}
                   >
                     <Crown className="w-4 h-4" />
@@ -763,11 +783,11 @@ export default function Navbar() {
                               onClick={() => setShowMobileMenu(false)}
                               className={`flex items-center space-x-3 px-4 py-3 ml-2 rounded-xl font-medium transition-all duration-200 ${
                                 isActive(item.href)
-                                  ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 font-semibold'
+                                  ? 'bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-400 font-semibold'
                                   : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
                               }`}
                             >
-                              <ItemIcon className={`w-5 h-5 ${isActive(item.href) ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'}`} />
+                              <ItemIcon className={`w-5 h-5 ${isActive(item.href) ? 'text-violet-600 dark:text-violet-400' : 'text-gray-400 dark:text-gray-500'}`} />
                               <span>{item.label}</span>
                             </Link>
                           </React.Fragment>
@@ -785,11 +805,11 @@ export default function Navbar() {
                     onClick={() => setShowMobileMenu(false)}
                     className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
                       isActive(group.href!)
-                        ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 font-semibold'
+                        ? 'bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-400 font-semibold'
                         : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
                     }`}
                   >
-                    <Icon className={`w-5 h-5 ${isActive(group.href!) ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'}`} />
+                    <Icon className={`w-5 h-5 ${isActive(group.href!) ? 'text-violet-600 dark:text-violet-400' : 'text-gray-400 dark:text-gray-500'}`} />
                     <span>{group.label}</span>
                   </Link>
                 );

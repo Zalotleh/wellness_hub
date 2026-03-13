@@ -62,7 +62,7 @@ export default function SettingsPage() {
 
       if (themeResponse.ok) {
         const data = await themeResponse.json();
-        const savedTheme = data.theme || 'system';
+        const savedTheme = data.theme || 'light';
         setTheme(savedTheme);
       }
 

@@ -29,7 +29,8 @@ export async function PATCH(
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
     }
 
-    const { name, email, password, role, subscriptionTier } = parsed.data;
+    const { name, password, role, subscriptionTier } = parsed.data;
+    const email = parsed.data.email?.toLowerCase().trim();
 
     const target = await prisma.user.findUnique({ where: { id: params.id } });
     if (!target) {
