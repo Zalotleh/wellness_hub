@@ -38,6 +38,21 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Invalid credentials');
         }
 
+        // Track login: update lastLoginAt and create audit log entry
+        await Promise.all([
+          prisma.user.update({
+            where: { id: user.id },
+            data: { lastLoginAt: new Date() },
+          }),
+          prisma.auditLog.create({
+            data: {
+              userId: user.id,
+              action: 'LOGIN',
+              details: { email: user.email },
+            },
+          }),
+        ]).catch((err) => console.error('Failed to record login audit:', err));
+
         return {
           id: user.id,
           email: user.email,

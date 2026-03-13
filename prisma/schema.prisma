@@ -1,6 +1,5 @@
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["native", "debian-openssl-3.0.x", "linux-musl-openssl-3.0.x"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -71,6 +70,7 @@ model User {
   workflowState              UserWorkflowState?
   consents                   UserConsent?
   recommendations            Recommendation[]
+  auditLogs                  AuditLog[]
 }
 
 model Account {
@@ -525,6 +525,25 @@ model UserConsent {
   updatedAt             DateTime      @updatedAt
   
   user                  User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Audit log for user logins and admin actions
+model AuditLog {
+  id           String   @id @default(cuid())
+  userId       String?  // Who performed the action
+  targetUserId String?  // Who the action was performed on
+  action       String   // LOGIN, USER_CREATED, USER_UPDATED, USER_DELETED, etc.
+  details      Json?    // Additional context (changed fields, etc.)
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime @default(now())
+
+  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([targetUserId])
+  @@index([action])
+  @@index([createdAt])
 }
 
 // Deletion log for GDPR compliance audit trail
