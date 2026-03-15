@@ -23,6 +23,7 @@ import {
   ChevronRight,
   Shield,
   LogIn,
+  RefreshCw,
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -394,7 +395,7 @@ function AnalyticsTab({ analytics, period, setPeriod }: { analytics: AnalyticsDa
 
 // ─── Tab: User Management ──────────────────────────────────────────────────
 
-function UsersTab() {
+function UsersTab({ refreshKey }: { refreshKey: number }) {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -417,7 +418,7 @@ function UsersTab() {
     } finally {
       setLoading(false);
     }
-  }, [page, search]);
+  }, [page, search, refreshKey]);
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
@@ -599,7 +600,7 @@ function UsersTab() {
 
 // ─── Tab: Audit Logs ───────────────────────────────────────────────────────
 
-function AuditLogsTab() {
+function AuditLogsTab({ refreshKey }: { refreshKey: number }) {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -619,7 +620,7 @@ function AuditLogsTab() {
     } finally {
       setLoading(false);
     }
-  }, [page, actionFilter]);
+  }, [page, actionFilter, refreshKey]);
 
   useEffect(() => { fetchLogs(); }, [fetchLogs]);
 
@@ -752,6 +753,15 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [period, setPeriod] = useState('30');
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    setRefreshKey((k) => k + 1);
+    if (activeTab === 'analytics') await fetchAnalytics();
+    setTimeout(() => setIsRefreshing(false), 600);
+  };
 
   useEffect(() => {
     if (status === 'unauthenticated') { router.push('/login'); return; }
@@ -815,14 +825,23 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 py-8 px-4">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
+          <div className="flex items-center justify-between mb-6">
+          <div>
           <div className="flex items-center gap-3 mb-1">
             <Shield className="w-8 h-8 text-blue-600 dark:text-blue-400" />
             <h1 className="text-4xl font-bold text-gray-900 dark:text-white">Admin Dashboard</h1>
           </div>
           <p className="text-gray-600 dark:text-gray-400 ml-11">Platform management and monitoring</p>
-        </div>
+          </div>
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm transition-all disabled:opacity-60"
+          >
+            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+          </div>
 
         {/* Tabs */}
         <div className="flex gap-1 bg-white dark:bg-gray-800 rounded-xl p-1 shadow-sm dark:border dark:border-gray-700 mb-6 w-fit">
@@ -846,8 +865,8 @@ export default function AdminDashboard() {
         {activeTab === 'analytics' && analytics && (
           <AnalyticsTab analytics={analytics} period={period} setPeriod={setPeriod} />
         )}
-        {activeTab === 'users' && <UsersTab />}
-        {activeTab === 'audit-logs' && <AuditLogsTab />}
+        {activeTab === 'users' && <UsersTab refreshKey={refreshKey} />}
+        {activeTab === 'audit-logs' && <AuditLogsTab refreshKey={refreshKey} />}
       </div>
     </div>
   );
